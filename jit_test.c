@@ -14,7 +14,7 @@ pj_tree_extract_vars_internal(pj_term_t *term, int **vars, int *nvars)
     if (vars == NULL)
       *vars = (int *)malloc(sizeof(int));
     else
-      *vars = (int *)realloc(*vars, *nvars * sizeof(int));
+      *vars = (int *)realloc(*vars, (*nvars+1) * sizeof(int));
     (*vars)[*nvars] = ((pj_var_t *)term)->ivar;
     (*nvars)++;
   }
