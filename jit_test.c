@@ -125,16 +125,7 @@ pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun)
   jit_function_compile(function);
   jit_context_build_end(context);
 
-  double arg1, arg2;
-  void *args[2];
-  double result;
-  arg1 = 2.;
-  arg2 = 5.;
-  args[0] = &arg1;
-  args[1] = &arg2;
-  jit_function_apply(function, args, &result);
-  printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
-
+  *outfun = function;
   return 0;
 }
 
@@ -142,6 +133,10 @@ int
 main(int argc, char **argv)
 {
   pj_term_t *t;
+
+  /* initialize tree structure */
+
+  /* This example: (2.2+(v1+v0))*v0 */
   t = (pj_term_t *)pj_make_binop(
     pj_binop_multiply,
     (pj_term_t *)pj_make_binop(
@@ -155,26 +150,51 @@ main(int argc, char **argv)
     ),
     (pj_term_t *)pj_make_variable(0)
   );
-/*
+
+  /* This example: 2.2+1.1 */
+  /*
   t = (pj_term_t *)pj_make_binop(
     pj_binop_add,
     (pj_term_t *)pj_make_const(2.2),
     (pj_term_t *)pj_make_const(1.1)
   );
-*/
+  */
+
+  /* Just some debug output for the tree */
   pj_dump_tree(t);
 
+  /* Setup JIT compiler */
   jit_context_t context;
   jit_function_t func = NULL;
 
   context = jit_context_create();
 
+  /* Compile tree to function */
   if (0 == pj_tree_jit(context, t, &func)) {
     printf("JIT succeeded!\n");
   } else {
     printf("JIT failed!\n");
   }
 
+  /* Setup function args */
+  double arg1, arg2;
+  void *args[2];
+  double result;
+  arg1 = 2.;
+  arg2 = 5.;
+  args[0] = &arg1;
+  args[1] = &arg2;
+
+  /* Call function */
+  jit_function_apply(func, args, &result);
+  printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
+
+  /* Call function again, with slightly different input */
+  arg2 = 3.8;
+  jit_function_apply(func, args, &result);
+  printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
+
+  /* cleanup */
   pj_free_tree(t);
   jit_context_destroy(context);
   return 0;
