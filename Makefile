@@ -1,10 +1,12 @@
 LIBJIT_INCLUDE := -Ilibjit-install/include
 LIBJIT_LIB := -Llibjit-install/lib
 
+DEBUG_FLAGS = -ggdb -O0
+
 SOURCES   := $(wildcard *.c)
 OBJECTS   := $(patsubst %.c, %.o, $(wildcard *.c))
 
-CFLAGS  += -pthread $(LIBJIT_INCLUDE)
+CFLAGS  += $(DEBUG_FLAGS) -pthread $(LIBJIT_INCLUDE)
 LDFLAGS += $(LIBJIT_LIB) -ljit -lm
 
 all: jit_test
