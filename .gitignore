@@ -1,0 +1,5 @@
+libjit/
+libjit-install/
+*.o
+jit_test
+.*.sw*
