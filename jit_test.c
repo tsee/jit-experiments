@@ -3,35 +3,8 @@
 #include <stdlib.h>
 #include <jit/jit.h>
 
-#include "pj_terms.h"
-
-void
-pj_tree_extract_vars_internal(pj_term_t *term, int **vars, int *nvars)
-{
-  if (term->type == pj_t_variable)
-  {
-    /* not efficient, but simple */
-    if (vars == NULL)
-      *vars = (int *)malloc(sizeof(int));
-    else
-      *vars = (int *)realloc(*vars, (*nvars+1) * sizeof(int));
-    (*vars)[*nvars] = ((pj_var_t *)term)->ivar;
-    (*nvars)++;
-  }
-  else if (term->type == pj_t_binop)
-  {
-    pj_tree_extract_vars_internal(((pj_binop_t *)term)->op1, vars, nvars);
-    pj_tree_extract_vars_internal(((pj_binop_t *)term)->op2, vars, nvars);
-  }
-}
-
-void
-pj_tree_extract_vars(pj_term_t *term, int **vars, int *nvars)
-{
-  *nvars = 0;
-  *vars = NULL;
-  pj_tree_extract_vars_internal(term, vars, nvars);
-}
+#include <pj_terms.h>
+#include <pj_walkers.h>
 
 jit_value_t pj_jit_internal_binop(jit_function_t function, jit_value_t *var_values, int nvars, pj_binop_t *binop);
 
@@ -89,8 +62,11 @@ pj_jit_internal_binop(jit_function_t function, jit_value_t *var_values, int nvar
 
 
 
+/* Generates outfun and funtype. funtype indicates the type of all parameters as well
+ * as the return value. That's a very serious limitation, but perfectly good enough for
+ * now. funtype will be int if all variables and constants are int, otherwise double. */
 int
-pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun)
+pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun, pj_basic_type *funtype)
 {
   unsigned int i;
   jit_function_t function;
@@ -99,36 +75,52 @@ pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun)
 
   jit_context_build_start(context);
 
-  int *vars;
-  int nvars;
+  /* Get the "function type" which is the type that will be used for the
+   * return value as well as all arguments. Double trumps ints. */
+  *funtype = pj_tree_determine_funtype(term);
+
+  /* Extract all variable occurrances from the AST */
+  pj_var_t **vars;
+  unsigned int nvars;
   pj_tree_extract_vars(term, &vars, &nvars);
   printf("Found %i variable occurrances in tree.\n", nvars);
 
-  int max_var = 0;
-  for (i = 0; (int)i < nvars; ++i) {
-    if (max_var < vars[i])
-      max_var = vars[i];
+  /* Naive assumption: the maximum ivar is the total number if distinct arguments (-1) */
+  unsigned int max_var = 0;
+  for (i = 0; i < nvars; ++i) {
+    if (max_var < vars[i]->ivar)
+      max_var = vars[i]->ivar;
   }
   printf("Found %i distinct variables in tree.\n", 1+max_var);
   nvars = max_var+1;
   free(vars);
 
+  /* Setup libjit func signature */
   params = (jit_type_t *)malloc(nvars*sizeof(jit_type_t));
   for (i = 0; (int)i < nvars; ++i) {
-    params[i] = jit_type_sys_double;
+    params[i] = (*funtype == pj_int_type ? jit_type_sys_int : jit_type_sys_double);
   }
-  signature = jit_type_create_signature(jit_abi_cdecl, jit_type_sys_double, params, nvars, 1);
+  signature = jit_type_create_signature(
+    jit_abi_cdecl,
+    (*funtype == pj_int_type ? jit_type_sys_int : jit_type_sys_double),
+    params,
+    nvars,
+    1
+  );
   function = jit_function_create(context, signature);
 
+  /* Setup libjit values for func params */
   jit_value_t *var_values;
   var_values = (jit_value_t *)malloc(nvars*sizeof(jit_value_t));
   for (i = 0; (int)i < nvars; ++i) {
     var_values[i] = jit_value_get_param(function, i);
   }
 
+  /* Recursively emit instructions for JIT and final return */
   jit_value_t rv = pj_jit_internal(function, var_values, nvars, term);
-
   jit_insn_return(function, rv);
+
+  /* Make it so! */
   jit_function_compile(function);
   jit_context_build_end(context);
 
@@ -144,6 +136,7 @@ main(int argc, char **argv)
   /* initialize tree structure */
 
   /* This example: (2.2+(v1+v0))*v0 */
+  pj_term_t *v0 = 
   t = (pj_term_t *)pj_make_binop(
     pj_binop_multiply,
     (pj_term_t *)pj_make_binop(
@@ -151,11 +144,11 @@ main(int argc, char **argv)
       (pj_term_t *)pj_make_const_dbl(2.2),
       (pj_term_t *)pj_make_binop(
         pj_binop_add,
-        (pj_term_t *)pj_make_variable(1),
-        (pj_term_t *)pj_make_variable(0)
+        (pj_term_t *)pj_make_variable(1, pj_double_type),
+        (pj_term_t *)pj_make_variable(0, pj_double_type)
       )
     ),
-    (pj_term_t *)pj_make_variable(0)
+    (pj_term_t *)pj_make_variable(0, pj_double_type)
   );
 
   /* This example: 2.3+1 */
@@ -177,7 +170,8 @@ main(int argc, char **argv)
   context = jit_context_create();
 
   /* Compile tree to function */
-  if (0 == pj_tree_jit(context, t, &func)) {
+  pj_basic_type funtype;
+  if (0 == pj_tree_jit(context, t, &func, &funtype)) {
     printf("JIT succeeded!\n");
   } else {
     printf("JIT failed!\n");
@@ -193,7 +187,19 @@ main(int argc, char **argv)
   args[1] = &arg2;
 
   /* Call function */
+  //int i;
+  //for (i=0;i<1e7;++i){
   jit_function_apply(func, args, &result);
+  //}
+  printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
+
+
+  void *cl = jit_function_to_closure(func);
+  double (*fptr)(double x, double y) = cl;
+  int i;
+  for (i=0;i<1e8;++i){
+    result = fptr(arg1, arg2);
+  }
   printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
 
   /* Call function again, with slightly different input */

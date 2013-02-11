@@ -46,13 +46,14 @@ typedef struct {
 
 typedef struct {
   pj_term_type type;
+  pj_basic_type var_type;
   int ivar;
 } pj_var_t;
 
 pj_const_t *pj_make_const_dbl(double c);
 pj_const_t *pj_make_const_int(int c);
 pj_const_t *pj_make_const_uint(unsigned int c);
-pj_var_t * pj_make_variable(int iv);
+pj_var_t * pj_make_variable(int iv, pj_basic_type t);
 pj_binop_t * pj_make_binop(pj_optype t, pj_term_t *o1, pj_term_t *o2);
 
 void pj_free_tree(pj_term_t *t);

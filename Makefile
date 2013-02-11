@@ -6,7 +6,7 @@ DEBUG_FLAGS = -ggdb -O0
 SOURCES   := $(wildcard *.c)
 OBJECTS   := $(patsubst %.c, %.o, $(wildcard *.c))
 
-CFLAGS  += $(DEBUG_FLAGS) -pthread $(LIBJIT_INCLUDE)
+CFLAGS  += -I. $(DEBUG_FLAGS) -pthread $(LIBJIT_INCLUDE)
 LDFLAGS += $(LIBJIT_LIB) -ljit -lm
 
 all: jit_test

@@ -35,10 +35,11 @@ pj_make_const_uint(unsigned int c)
 
 
 pj_var_t *
-pj_make_variable(int iv)
+pj_make_variable(int iv, pj_basic_type t)
 {
   pj_var_t *v = (pj_var_t *)malloc(sizeof(pj_var_t));
   v->type = pj_t_variable;
+  v->var_type = t;
   v->ivar = iv;
   return v;
 }
