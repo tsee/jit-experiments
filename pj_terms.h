@@ -10,12 +10,18 @@ typedef enum {
 } pj_term_type;
 
 typedef enum {
+  pj_unop_negate,
   pj_binop_add,
   pj_binop_subtract,
   pj_binop_multiply,
   pj_binop_divide
 } pj_op_type;
 
+extern pj_op_type pj_op_type_unop_first;
+extern pj_op_type pj_op_type_unop_last;
+
+extern pj_op_type pj_op_type_binop_first;
+extern pj_op_type pj_op_type_binop_last;
 
 typedef struct {
   pj_optype type;
@@ -50,11 +56,13 @@ typedef struct {
   int ivar;
 } pj_variable_t;
 
+
 pj_term_t *pj_make_const_dbl(double c);
 pj_term_t *pj_make_const_int(int c);
 pj_term_t *pj_make_const_uint(unsigned int c);
-pj_term_t * pj_make_variable(int iv, pj_basic_type t);
-pj_term_t * pj_make_binop(pj_optype t, pj_term_t *o1, pj_term_t *o2);
+pj_term_t *pj_make_variable(int iv, pj_basic_type t);
+pj_term_t *pj_make_binop(pj_optype t, pj_term_t *o1, pj_term_t *o2);
+pj_term_t *pj_make_unop(pj_optype t, pj_term_t *o1);
 
 void pj_free_tree(pj_term_t *t);
 void pj_dump_tree(pj_term_t *term);

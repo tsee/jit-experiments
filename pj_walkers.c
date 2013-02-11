@@ -17,8 +17,10 @@ pj_tree_extract_vars_internal(pj_term_t *term, pj_variable_t * **vars, unsigned 
   }
   else if (term->type == pj_ttype_op)
   {
-    pj_tree_extract_vars_internal(((pj_op_t *)term)->op1, vars, nvars);
-    pj_tree_extract_vars_internal(((pj_op_t *)term)->op2, vars, nvars);
+    pj_op_t *o = (pj_op_t *)term;
+    pj_tree_extract_vars_internal(o->op1, vars, nvars);
+    if (o->op2 != NULL)
+      pj_tree_extract_vars_internal(o->op2, vars, nvars);
   }
 }
 
@@ -40,13 +42,16 @@ pj_tree_determine_funtype(pj_term_t *term)
     return ((pj_constant_t *)term)->const_type;
   }
   else if (term->type == pj_ttype_op) {
+    pj_op_t *o = (pj_op_t *)term;
     pj_basic_type t1, t2;
-    t1 = pj_tree_determine_funtype(((pj_op_t *)term)->op1);
+    t1 = pj_tree_determine_funtype(o->op1);
     if (t1 == pj_double_type)
       return pj_double_type; /* double >> int */
-    t2 = pj_tree_determine_funtype(((pj_op_t *)term)->op2);
-    if (t2 == pj_double_type)
-      return pj_double_type;
+    if (o->op2 != NULL) {
+      t2 = pj_tree_determine_funtype(o->op2);
+      if (t2 == pj_double_type)
+        return pj_double_type;
+    }
     return pj_int_type; /* no uint support yet */
   }
 }

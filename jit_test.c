@@ -8,7 +8,7 @@
 #include <pj_terms.h>
 #include <pj_walkers.h>
 
-jit_value_t pj_jit_internal_binop(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *binop);
+jit_value_t pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *op);
 
 jit_value_t
 pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_term_t *term)
@@ -29,7 +29,7 @@ pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_
       abort();
   }
   else if (term->type == pj_ttype_op) {
-    return pj_jit_internal_binop(function, var_values, nvars, (pj_op_t *)term);
+    return pj_jit_internal_op(function, var_values, nvars, (pj_op_t *)term);
   }
   else {
     abort();
@@ -37,12 +37,17 @@ pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_
 }
 
 jit_value_t
-pj_jit_internal_binop(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *binop)
+pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *op)
 {
   jit_value_t tmp1, tmp2, rv;
-  tmp1 = pj_jit_internal(function, var_values, nvars, binop->op1);
-  tmp2 = pj_jit_internal(function, var_values, nvars, binop->op2);
-  switch (binop->optype) {
+  tmp1 = pj_jit_internal(function, var_values, nvars, op->op1);
+  if (op->op2 != NULL)
+    tmp2 = pj_jit_internal(function, var_values, nvars, op->op2);
+
+  switch (op->optype) {
+  case pj_unop_negate:
+    rv = jit_insn_neg(function, tmp1);
+    break;
   case pj_binop_add:
     rv = jit_insn_add(function, tmp1, tmp2);
     break;
@@ -161,7 +166,7 @@ main(int argc, char **argv)
 
   /* initialize tree structure */
 
-  /* This example: (2.2+(v1+v0))*v0 */
+  /* This example: (2.2+(v1+v0))* (-v0) */
   pj_term_t *v0 =
   t = pj_make_binop(
     pj_binop_multiply,
@@ -174,7 +179,10 @@ main(int argc, char **argv)
         pj_make_variable(0, pj_double_type)
       )
     ),
-    pj_make_variable(0, pj_double_type)
+    pj_make_unop(
+      pj_unop_negate,
+      pj_make_variable(0, pj_double_type)
+    )
   );
 
   /* This example: 2.3+1 */

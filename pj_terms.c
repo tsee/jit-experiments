@@ -3,6 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+pj_op_type pj_op_type_unop_first  = pj_unop_negate;
+pj_op_type pj_op_type_unop_last   = pj_unop_negate;
+
+pj_op_type pj_op_type_binop_first = pj_binop_add;
+pj_op_type pj_op_type_binop_last  = pj_binop_divide;
+
 pj_term_t *
 pj_make_const_dbl(double c)
 {
@@ -57,9 +63,24 @@ pj_make_binop(pj_optype t, pj_term_t *o1, pj_term_t *o2)
 }
 
 
+pj_term_t *
+pj_make_unop(pj_optype t, pj_term_t *o1)
+{
+  pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
+  o->type = pj_ttype_op;
+  o->optype = t;
+  o->op1 = o1;
+  o->op2 = NULL;
+  return (pj_term_t *)o;
+}
+
+
 void
 pj_free_tree(pj_term_t *t)
 {
+  if (t == NULL)
+    return;
+
   if (t->type == pj_ttype_op) {
     pj_free_tree(((pj_op_t *)t)->op1);
     pj_free_tree(((pj_op_t *)t)->op2);
@@ -102,25 +123,29 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
   }
   else if (term->type == pj_ttype_op)
   {
-    pj_op_t *b = (pj_op_t *)term;
+    pj_op_t *o = (pj_op_t *)term;
 
     pj_dump_tree_indent(lvl);
 
     printf("B '");
-    if (b->optype == pj_binop_add)
+    if (o->optype == pj_unop_negate)
+      printf("unary -");
+    else if (o->optype == pj_binop_add)
       printf("+");
-    else if (b->optype == pj_binop_subtract)
+    else if (o->optype == pj_binop_subtract)
       printf("-");
-    else if (b->optype == pj_binop_multiply)
+    else if (o->optype == pj_binop_multiply)
       printf("*");
-    else if (b->optype == pj_binop_divide)
+    else if (o->optype == pj_binop_divide)
       printf("/");
     else
       abort();
 
     printf("' (\n");
-    pj_dump_tree_internal(b->op1, lvl+1);
-    pj_dump_tree_internal(b->op2, lvl+1);
+    pj_dump_tree_internal(o->op1, lvl+1);
+    if (o->op2 != NULL)
+      pj_dump_tree_internal(o->op2, lvl+1);
+
     pj_dump_tree_indent(lvl);
     printf(")\n");
   }
