@@ -3,66 +3,66 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-pj_const_t *
+pj_term_t *
 pj_make_const_dbl(double c)
 {
-  pj_const_t *co = (pj_const_t *)malloc(sizeof(pj_const_t));
-  co->type = pj_t_constant;
+  pj_constant_t *co = (pj_constant_t *)malloc(sizeof(pj_constant_t));
+  co->type = pj_ttype_constant;
   co->value_u.dbl_value = c;
   co->const_type = pj_double_type;
-  return co;
+  return (pj_term_t *)co;
 }
 
-pj_const_t *
+pj_term_t *
 pj_make_const_int(int c)
 {
-  pj_const_t *co = (pj_const_t *)malloc(sizeof(pj_const_t));
-  co->type = pj_t_constant;
+  pj_constant_t *co = (pj_constant_t *)malloc(sizeof(pj_constant_t));
+  co->type = pj_ttype_constant;
   co->value_u.int_value = c;
   co->const_type = pj_int_type;
-  return co;
+  return (pj_term_t *)co;
 }
 
-pj_const_t *
+pj_term_t *
 pj_make_const_uint(unsigned int c)
 {
-  pj_const_t *co = (pj_const_t *)malloc(sizeof(pj_const_t));
-  co->type = pj_t_constant;
+  pj_constant_t *co = (pj_constant_t *)malloc(sizeof(pj_constant_t));
+  co->type = pj_ttype_constant;
   co->value_u.uint_value = c;
   co->const_type = pj_uint_type;
-  return co;
+  return (pj_term_t *)co;
 }
 
 
-pj_var_t *
+pj_term_t *
 pj_make_variable(int iv, pj_basic_type t)
 {
-  pj_var_t *v = (pj_var_t *)malloc(sizeof(pj_var_t));
-  v->type = pj_t_variable;
+  pj_variable_t *v = (pj_variable_t *)malloc(sizeof(pj_variable_t));
+  v->type = pj_ttype_variable;
   v->var_type = t;
   v->ivar = iv;
-  return v;
+  return (pj_term_t *)v;
 }
 
 
-pj_binop_t *
+pj_term_t *
 pj_make_binop(pj_optype t, pj_term_t *o1, pj_term_t *o2)
 {
-  pj_binop_t *o = (pj_binop_t *)malloc(sizeof(pj_binop_t));
-  o->type = pj_t_binop;
+  pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
+  o->type = pj_ttype_op;
   o->optype = t;
   o->op1 = o1;
   o->op2 = o2;
-  return o;
+  return (pj_term_t *)o;
 }
 
 
 void
 pj_free_tree(pj_term_t *t)
 {
-  if (t->type == pj_t_binop) {
-    pj_free_tree(((pj_binop_t *)t)->op1);
-    pj_free_tree(((pj_binop_t *)t)->op2);
+  if (t->type == pj_ttype_op) {
+    pj_free_tree(((pj_op_t *)t)->op1);
+    pj_free_tree(((pj_op_t *)t)->op2);
   }
 
   free(t);
@@ -82,9 +82,9 @@ pj_dump_tree_indent(int lvl)
 static void
 pj_dump_tree_internal(pj_term_t *term, int lvl)
 {
-  if (term->type == pj_t_constant)
+  if (term->type == pj_ttype_constant)
   {
-    pj_const_t *c = (pj_const_t *)term;
+    pj_constant_t *c = (pj_constant_t *)term;
     pj_dump_tree_indent(lvl);
     if (c->const_type == pj_double_type)
       printf("C = %f\n", (float)c->value_u.dbl_value);
@@ -95,14 +95,14 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
     else
       abort();
   }
-  else if (term->type == pj_t_variable)
+  else if (term->type == pj_ttype_variable)
   {
     pj_dump_tree_indent(lvl);
-    printf("V = %i\n", ((pj_var_t *)term)->ivar);
+    printf("V = %i\n", ((pj_variable_t *)term)->ivar);
   }
-  else if (term->type == pj_t_binop)
+  else if (term->type == pj_ttype_op)
   {
-    pj_binop_t *b = (pj_binop_t *)term;
+    pj_op_t *b = (pj_op_t *)term;
 
     pj_dump_tree_indent(lvl);
 

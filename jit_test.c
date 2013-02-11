@@ -8,17 +8,17 @@
 #include <pj_terms.h>
 #include <pj_walkers.h>
 
-jit_value_t pj_jit_internal_binop(jit_function_t function, jit_value_t *var_values, int nvars, pj_binop_t *binop);
+jit_value_t pj_jit_internal_binop(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *binop);
 
 jit_value_t
 pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_term_t *term)
 {
-  if (term->type == pj_t_variable) {
-    pj_var_t *v = (pj_var_t *)term;
+  if (term->type == pj_ttype_variable) {
+    pj_variable_t *v = (pj_variable_t *)term;
     return var_values[v->ivar];
   }
-  else if (term->type == pj_t_constant) {
-    pj_const_t *c = (pj_const_t *)term;
+  else if (term->type == pj_ttype_constant) {
+    pj_constant_t *c = (pj_constant_t *)term;
     if (c->const_type == pj_int_type)
       return jit_value_create_nint_constant(function, jit_type_sys_int, c->value_u.int_value);
     else if (c->const_type == pj_uint_type) /* FIXME no jit_value_create_nuint_constant defined? */
@@ -28,8 +28,8 @@ pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_
     else
       abort();
   }
-  else if (term->type == pj_t_binop) {
-    return pj_jit_internal_binop(function, var_values, nvars, (pj_binop_t *)term);
+  else if (term->type == pj_ttype_op) {
+    return pj_jit_internal_binop(function, var_values, nvars, (pj_op_t *)term);
   }
   else {
     abort();
@@ -37,7 +37,7 @@ pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_
 }
 
 jit_value_t
-pj_jit_internal_binop(jit_function_t function, jit_value_t *var_values, int nvars, pj_binop_t *binop)
+pj_jit_internal_binop(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *binop)
 {
   jit_value_t tmp1, tmp2, rv;
   tmp1 = pj_jit_internal(function, var_values, nvars, binop->op1);
@@ -82,7 +82,7 @@ pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun, pj_b
   *funtype = pj_tree_determine_funtype(term);
 
   /* Extract all variable occurrances from the AST */
-  pj_var_t **vars;
+  pj_variable_t **vars;
   unsigned int nvars;
   pj_tree_extract_vars(term, &vars, &nvars);
   printf("Found %i variable occurrances in tree.\n", nvars);
@@ -163,18 +163,18 @@ main(int argc, char **argv)
 
   /* This example: (2.2+(v1+v0))*v0 */
   pj_term_t *v0 =
-  t = (pj_term_t *)pj_make_binop(
+  t = pj_make_binop(
     pj_binop_multiply,
-    (pj_term_t *)pj_make_binop(
+    pj_make_binop(
       pj_binop_add,
-      (pj_term_t *)pj_make_const_dbl(2.2),
-      (pj_term_t *)pj_make_binop(
+      pj_make_const_dbl(2.2),
+      pj_make_binop(
         pj_binop_add,
-        (pj_term_t *)pj_make_variable(1, pj_double_type),
-        (pj_term_t *)pj_make_variable(0, pj_double_type)
+        pj_make_variable(1, pj_double_type),
+        pj_make_variable(0, pj_double_type)
       )
     ),
-    (pj_term_t *)pj_make_variable(0, pj_double_type)
+    pj_make_variable(0, pj_double_type)
   );
 
   /* This example: 2.3+1 */
