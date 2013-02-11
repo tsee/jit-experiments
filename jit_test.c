@@ -44,7 +44,14 @@ pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_
   }
   else if (term->type == pj_t_constant) {
     pj_const_t *c = (pj_const_t *)term;
-    return jit_value_create_float64_constant(function, jit_type_sys_double, c->value);
+    if (c->const_type == pj_int_type)
+      return jit_value_create_nint_constant(function, jit_type_sys_int, c->value_u.int_value);
+    else if (c->const_type == pj_uint_type) /* FIXME no jit_value_create_nuint_constant defined? */
+      return jit_value_create_nint_constant(function, jit_type_sys_int, c->value_u.uint_value);
+    else if (c->const_type == pj_double_type)
+      return jit_value_create_float64_constant(function, jit_type_sys_double, c->value_u.dbl_value);
+    else
+      abort();
   }
   else if (term->type == pj_t_binop) {
     return pj_jit_internal_binop(function, var_values, nvars, (pj_binop_t *)term);
@@ -141,7 +148,7 @@ main(int argc, char **argv)
     pj_binop_multiply,
     (pj_term_t *)pj_make_binop(
       pj_binop_add,
-      (pj_term_t *)pj_make_const(2.2),
+      (pj_term_t *)pj_make_const_dbl(2.2),
       (pj_term_t *)pj_make_binop(
         pj_binop_add,
         (pj_term_t *)pj_make_variable(1),
@@ -151,12 +158,12 @@ main(int argc, char **argv)
     (pj_term_t *)pj_make_variable(0)
   );
 
-  /* This example: 2.2+1.1 */
+  /* This example: 2.3+1 */
   /*
   t = (pj_term_t *)pj_make_binop(
     pj_binop_add,
-    (pj_term_t *)pj_make_const(2.2),
-    (pj_term_t *)pj_make_const(1.1)
+    (pj_term_t *)pj_make_const_dbl(2.3),
+    (pj_term_t *)pj_make_const_int(1)
   );
   */
 

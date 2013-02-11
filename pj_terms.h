@@ -28,9 +28,20 @@ typedef struct {
   pj_term_t *op2;
 } pj_binop_t;
 
+typedef enum {
+  pj_double_type,
+  pj_int_type,
+  pj_uint_type
+} pj_basic_type;
+
 typedef struct {
   pj_term_type type;
-  double value;
+  pj_basic_type const_type;
+  union {
+    double dbl_value;
+    int int_value;
+    unsigned int uint_value;
+  } value_u;
 } pj_const_t;
 
 typedef struct {
@@ -38,7 +49,9 @@ typedef struct {
   int ivar;
 } pj_var_t;
 
-pj_const_t *pj_make_const(double c);
+pj_const_t *pj_make_const_dbl(double c);
+pj_const_t *pj_make_const_int(int c);
+pj_const_t *pj_make_const_uint(unsigned int c);
 pj_var_t * pj_make_variable(int iv);
 pj_binop_t * pj_make_binop(pj_optype t, pj_term_t *o1, pj_term_t *o2);
 
