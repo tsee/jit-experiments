@@ -1,6 +1,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+
 #include <jit/jit.h>
 
 #include <pj_terms.h>
@@ -121,12 +123,36 @@ pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun, pj_b
   jit_insn_return(function, rv);
 
   /* Make it so! */
+  /* jit_function_set_optimization_level(function, jit_function_get_max_optimization_level()); */
   jit_function_compile(function);
   jit_context_build_end(context);
 
   *outfun = function;
   return 0;
 }
+
+
+/* Aaaaaaarg! */
+#include "pj_type_switch.h"
+
+typedef void (*pj_invoke_func_t)(void);
+
+/* thanks to the saddest code generation on the
+ * planet, this can handle up to 20 args right now (see make regen) */
+void
+pj_invoke_func(pj_invoke_func_t fptr, void *args, unsigned int nargs, pj_basic_type funtype, void *retval)
+{
+  assert(nargs <= 20);
+  if (funtype == pj_double_type) {
+    PJ_TYPE_SWITCH(double, args, nargs, retval);
+  }
+  else if (funtype == pj_int_type) {
+    PJ_TYPE_SWITCH(int, args, nargs, retval)
+  }
+  else
+    abort();
+}
+#undef PJ_TYPE_SWITCH
 
 int
 main(int argc, char **argv)
@@ -136,7 +162,7 @@ main(int argc, char **argv)
   /* initialize tree structure */
 
   /* This example: (2.2+(v1+v0))*v0 */
-  pj_term_t *v0 = 
+  pj_term_t *v0 =
   t = (pj_term_t *)pj_make_binop(
     pj_binop_multiply,
     (pj_term_t *)pj_make_binop(
@@ -192,9 +218,18 @@ main(int argc, char **argv)
 
   void *cl = jit_function_to_closure(func);
   double (*fptr)(double x, double y) = cl;
+  result = fptr(arg1, arg2);
+  printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
+
+  /* format of the args data structure on pj_invoke_func is different from
+   * jit_function_apply because we only support one argument type for now
+   * anyway. */
+  double args2[2];
+  args2[0] = arg1;
+  args2[1] = arg2;
   //int i;
-  //for (i=0;i<1e7;++i){
-    result = fptr(arg1, arg2);
+  //for (i=0;i<1e8;++i){
+  pj_invoke_func((pj_invoke_func_t)fptr, &args2, 2, funtype, (void *)&result);
   //}
   printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
 

@@ -18,7 +18,12 @@ jit_test: $(OBJECTS)
 %.o: %.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-.PHONY: clean
+regen: pj_type_switch.h
+
+pj_type_switch.h:
+	perl make_function_invoker.pl 20 > $@
 
 clean:
 	rm -f *.o *~ core jit_test
+
+.PHONY: clean regen
