@@ -186,20 +186,16 @@ main(int argc, char **argv)
   args[0] = &arg1;
   args[1] = &arg2;
 
-  /* Call function */
-  //int i;
-  //for (i=0;i<1e7;++i){
+  /* Call function (inefficiently) */
   jit_function_apply(func, args, &result);
-  //}
   printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
-
 
   void *cl = jit_function_to_closure(func);
   double (*fptr)(double x, double y) = cl;
-  int i;
-  for (i=0;i<1e8;++i){
+  //int i;
+  //for (i=0;i<1e7;++i){
     result = fptr(arg1, arg2);
-  }
+  //}
   printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
 
   /* Call function again, with slightly different input */
