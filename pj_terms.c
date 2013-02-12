@@ -133,7 +133,7 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
       printf("sqrt");
     else if (o->optype == pj_unop_log)
       printf("log");
-    else if (o->optype == pj_unop_log)
+    else if (o->optype == pj_unop_exp)
       printf("exp");
 
     else if (o->optype == pj_binop_add)
