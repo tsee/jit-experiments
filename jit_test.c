@@ -48,6 +48,24 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
   case pj_unop_negate:
     rv = jit_insn_neg(function, tmp1);
     break;
+  case pj_unop_sin:
+    rv = jit_insn_sin(function, tmp1);
+    break;
+  case pj_unop_cos:
+    rv = jit_insn_cos(function, tmp1);
+    break;
+  case pj_unop_abs:
+    rv = jit_insn_abs(function, tmp1);
+    break;
+  case pj_unop_sqrt:
+    rv = jit_insn_sqrt(function, tmp1);
+    break;
+  case pj_unop_log:
+    rv = jit_insn_log(function, tmp1);
+    break;
+  case pj_unop_exp:
+    rv = jit_insn_exp(function, tmp1);
+    break;
   case pj_binop_add:
     rv = jit_insn_add(function, tmp1, tmp2);
     break;
@@ -59,6 +77,9 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
     break;
   case pj_binop_divide:
     rv = jit_insn_div(function, tmp1, tmp2);
+    break;
+  case pj_binop_atan2:
+    rv = jit_insn_atan2(function, tmp1, tmp2);
     break;
   default:
     abort();
@@ -166,7 +187,7 @@ main(int argc, char **argv)
 
   /* initialize tree structure */
 
-  /* This example: (2.2+(v1+v0))* (-v0) */
+  /* This example: (2.2+(v1+v0))* sin(-v0) */
   pj_term_t *v0 =
   t = pj_make_binop(
     pj_binop_multiply,
@@ -181,7 +202,10 @@ main(int argc, char **argv)
     ),
     pj_make_unop(
       pj_unop_negate,
-      pj_make_variable(0, pj_double_type)
+      pj_make_unop(
+        pj_unop_sin,
+        pj_make_variable(0, pj_double_type)
+      )
     )
   );
 

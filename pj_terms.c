@@ -93,7 +93,6 @@ pj_dump_tree_indent(int lvl)
     printf("  ");
 }
 
-
 static void
 pj_dump_tree_internal(pj_term_t *term, int lvl)
 {
@@ -124,6 +123,19 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
     printf("B '");
     if (o->optype == pj_unop_negate)
       printf("unary -");
+    else if (o->optype == pj_unop_sin)
+      printf("sin");
+    else if (o->optype == pj_unop_cos)
+      printf("sin");
+    else if (o->optype == pj_unop_abs)
+      printf("abs");
+    else if (o->optype == pj_unop_sqrt)
+      printf("sqrt");
+    else if (o->optype == pj_unop_log)
+      printf("log");
+    else if (o->optype == pj_unop_log)
+      printf("exp");
+
     else if (o->optype == pj_binop_add)
       printf("+");
     else if (o->optype == pj_binop_subtract)
@@ -132,6 +144,8 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
       printf("*");
     else if (o->optype == pj_binop_divide)
       printf("/");
+    else if (o->optype == pj_binop_atan2)
+      printf("atan2");
     else
       abort();
 

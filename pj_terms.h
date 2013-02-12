@@ -11,17 +11,24 @@ typedef enum {
 
 typedef enum {
   pj_unop_negate,
+  pj_unop_sin,
+  pj_unop_cos,
+  pj_unop_abs,
+  pj_unop_sqrt,
+  pj_unop_log,
+  pj_unop_exp,
 
   pj_binop_add,
   pj_binop_subtract,
   pj_binop_multiply,
   pj_binop_divide,
+  pj_binop_atan2,
 
   pj_unop_FIRST  = pj_unop_negate,
-  pj_unop_LAST   = pj_unop_negate,
+  pj_unop_LAST   = pj_unop_exp,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_divide
+  pj_binop_LAST  = pj_binop_atan2
 } pj_op_type;
 
 typedef struct {
@@ -66,6 +73,8 @@ pj_term_t *pj_make_binop(pj_optype t, pj_term_t *o1, pj_term_t *o2);
 pj_term_t *pj_make_unop(pj_optype t, pj_term_t *o1);
 
 void pj_free_tree(pj_term_t *t);
+
+/* purely a debugging aid! */
 void pj_dump_tree(pj_term_t *term);
 
 #endif
