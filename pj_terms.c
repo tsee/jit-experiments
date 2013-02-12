@@ -144,6 +144,8 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
       printf("*");
     else if (o->optype == pj_binop_divide)
       printf("/");
+    else if (o->optype == pj_binop_modulo)
+      printf("%%");
     else if (o->optype == pj_binop_atan2)
       printf("atan2");
     else

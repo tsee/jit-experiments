@@ -77,6 +77,9 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
   case pj_binop_divide:
     rv = jit_insn_div(function, tmp1, tmp2);
     break;
+  case pj_binop_modulo:
+    rv = jit_insn_rem(function, tmp1, tmp2); /* FIXME should this use jit_insn_rem_ieee? */
+    break;
   case pj_binop_atan2:
     rv = jit_insn_atan2(function, tmp1, tmp2);
     break;

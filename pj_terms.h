@@ -22,6 +22,7 @@ typedef enum {
   pj_binop_subtract,
   pj_binop_multiply,
   pj_binop_divide,
+  pj_binop_modulo,
   pj_binop_atan2,
 
   pj_unop_FIRST  = pj_unop_negate,
