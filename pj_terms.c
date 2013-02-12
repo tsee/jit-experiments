@@ -3,12 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-pj_op_type pj_op_type_unop_first  = pj_unop_negate;
-pj_op_type pj_op_type_unop_last   = pj_unop_negate;
-
-pj_op_type pj_op_type_binop_first = pj_binop_add;
-pj_op_type pj_op_type_binop_last  = pj_binop_divide;
-
 pj_term_t *
 pj_make_const_dbl(double c)
 {
