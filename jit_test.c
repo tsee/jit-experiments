@@ -16,7 +16,7 @@ main(int argc, char **argv)
 
   /* initialize tree structure */
 
-  /* This example: (2.2+(v1+v0))* sin(-v0) */
+  /* This example: (2.2+(v1+v0))* sin(-(v0 >> 1)) */
   pj_term_t *v0 =
   t = pj_make_binop(
     pj_binop_multiply,
@@ -33,7 +33,11 @@ main(int argc, char **argv)
       pj_unop_negate,
       pj_make_unop(
         pj_unop_sin,
-        pj_make_variable(0, pj_double_type)
+        pj_make_binop(
+          pj_binop_right_shift,
+          pj_make_variable(0, pj_double_type),
+          pj_make_const_int(1)
+        )
       )
     )
   );

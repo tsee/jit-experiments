@@ -24,12 +24,14 @@ typedef enum {
   pj_binop_divide,
   pj_binop_modulo,
   pj_binop_atan2,
+  pj_binop_left_shift, /* TODO same semantics as perl's? */
+  pj_binop_right_shift, /* TODO same semantics as perl's? */
 
   pj_unop_FIRST  = pj_unop_negate,
   pj_unop_LAST   = pj_unop_exp,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_atan2
+  pj_binop_LAST  = pj_binop_right_shift
 } pj_op_type;
 
 typedef struct {

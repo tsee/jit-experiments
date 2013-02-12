@@ -148,6 +148,10 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
       printf("%%");
     else if (o->optype == pj_binop_atan2)
       printf("atan2");
+    else if (o->optype == pj_binop_left_shift)
+      printf("<<");
+    else if (o->optype == pj_binop_right_shift)
+      printf("<<");
     else
       abort();
 
