@@ -17,7 +17,6 @@ main(int argc, char **argv)
   /* initialize tree structure */
 
   /* This example: (2.2+(v1+v0))* sin(-(v0 >> 1)) */
-  pj_term_t *v0 =
   t = pj_make_binop(
     pj_binop_multiply,
     pj_make_binop(
