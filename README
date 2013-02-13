@@ -18,7 +18,7 @@ what you need to do (after getting a checkout of this repo):
 Install libjit locally:
 
   $ git clone git://git.sv.gnu.org/dotgnu-pnet/libjit.git
-  $ cd libgit
+  $ cd libjit
   $ autoreconf -i -f
   $ ./configure --prefix=$PWD/../libjit-install
   $ make install
