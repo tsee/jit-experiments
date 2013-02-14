@@ -16,6 +16,41 @@ static OP *my_pp_add(pTHX);
 static peep_t orig_peepp;
 
 static void
+fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
+{
+  OP *kid;
+  /* fixup parent's basic order ptr */
+
+  /* TODO fixup op_first or op_last or whatever */
+  if (((BINOP *)parent)->op_first == (OP *)oldkid) {
+    ((BINOP *)parent)->op_first = newkid;
+    printf("Replaced parent pointer!\n");
+    return;
+  }
+
+  for (kid = ((BINOP *)parent)->op_first; kid != NULL; kid = kid->op_sibling) {
+    if (kid->op_sibling == (OP *)oldkid) {
+      ((BINOP *)kid)->op_first = newkid;
+      printf("Replaced parent pointer!\n");
+      return;
+    }
+  }
+
+  if (OP_CLASS(parent) == OA_COP) {
+    /* TODO scan op_sibling list */
+    for (; parent!= NULL; parent = parent->op_sibling) {
+      if (parent->op_sibling == (OP *)oldkid) {
+        ((BINOP *)parent)->op_sibling = newkid;
+        printf("Replaced parent pointer!\n");
+        return;
+      }
+    }
+  }
+
+  abort();
+}
+
+static void
 attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
 {
   OP *jitop;
@@ -28,6 +63,7 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
 
   jitop = newBINOP(OP_CUSTOM, 0, left, right);
   jitop->op_ppaddr = my_pp_add;
+  jitop->op_flags |= OPf_STACKED; /* OP receives some args via the stack */
 
   /* Expected execution order:
    * ---> left -> right -> jitop ---> */
@@ -35,7 +71,10 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   /* wire right -> jitop */
   right->op_next = (OP *)jitop;
 
-  /* Expected basic structure:
+  /* wire jitop -> old pp_next */
+  jitop->op_next = addop->op_next;
+
+  /* Expected final basic structure:
    *  L   R
    *   \ /
    *    J
@@ -43,27 +82,13 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
    *      P
    */
 
+  /* Fixup new OP's sibling ptr to fall into place of the old one (if any) */
+  jitop->op_sibling = addop->op_sibling;
+
   /* fixup parent's basic order ptr */
-  if (OP_CLASS(parent) == OA_COP) {
-    /* TODO scan op_sibling list */
-  }
-  else {
-    /* TODO fixup op_first or op_last or whatever */
-    if (((BINOP *)parent)->op_first == (OP *)addop) {
-      /* TODO NOT YET */
-      printf("Replaced parent pointer!\n");
-    }
-    else {
-      for (kid = ((BINOP *)parent)->op_first; kid != NULL; kid = kid->op_sibling) {
-        if (kid->op_sibling == (OP *)addop) {
-          /* TODO NOT YET */
-          /* FIXME how dow we free oldop after it is no longer used? */
-          printf("Replaced parent pointer!\n");
-          break;
-        }
-      }
-    }
-  }
+  fixup_parent_op(aTHX_ (OP *)parent, (OP *)addop, (OP *)jitop);
+
+  /* FIXME how dow we free oldop after it is no longer used? */
 }
 
 static void my_peep(pTHX_ OP *o)
@@ -128,9 +153,29 @@ static void my_peep(pTHX_ OP *o)
 OP *
 my_pp_add(pTHX)
 {
+  dVAR; dSP; dATARGET; bool useleft; SV *svl, *svr;
+  tryAMAGICbin_MG(add_amg, AMGf_assign|AMGf_numeric);
+  svr = TOPs;
+  svl = TOPm1s;
   printf("Custom op called\n");
-  return NULL;
+  useleft = USE_LEFT(svl);
+
+  /* The real pp_add has a big block of code for PERL_PRESERVE_UV_IV here */
+
+  NV value = SvNV_nomg(svr);
+  (void)POPs;
+
+  if (!useleft) {
+    /* left operand is undef, treat as zero. + 0.0 is identity. */
+    SETn(value);
+    RETURN;
+  }
+  value += SvNV_nomg(svl);
+  SETn( value );
+
+  RETURN;
 }
+
 
 MODULE = Perl::JIT	PACKAGE = Perl::JIT
 
@@ -140,7 +185,7 @@ BOOT:
   PL_peepp = my_peep;
   /* setup our custom op */
   XopENTRY_set(&my_xop_addop, xop_name, "jitaddop");
-  XopENTRY_set(&my_xop_addop, xop_desc, "An addop that makes useless use of JIT");
+  XopENTRY_set(&my_xop_addop, xop_desc, "an addop that makes useless use of JIT");
   XopENTRY_set(&my_xop_addop, xop_class, OA_BINOP);
   Perl_custom_op_register(aTHX_ my_pp_add, &my_xop_addop);
 
