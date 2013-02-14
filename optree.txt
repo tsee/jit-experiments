@@ -1,0 +1,58 @@
+
+
+
+      X   Y
+       \ /
+    Z   -2
+     \ /
+      +2 X   A
+      |   \ /
+      U    -3
+       \  /
+        +1   B
+         \  /
+          -1
+
+exec order:
+Z X Y -2 +2 U X A -3 +1 B -1
+
+
+Desired result:
+
+     X   Y X   A
+      \ /   \ /
+  Z    -2    -3
+   \   |    /
+    \  |   /
+     \ |  /
+      \| /
+       C   B
+        \ /
+         -1
+
+exec order:
+Z X Y -2 X A -3 C B -1
+
+Next stage: Also inline the variable access Z without using the arg stack.
+
+First stab at a half baked algorithm from this morning before coffee:
+
+Data structures:
+a) input stack
+b) candidate list, used in lifo order
+c) reverse execution order pointer table
+
+1) Find root candidate in basic order, depth first, left hugging. Add to candidate list
+2) Obtain next element from candidate list. Consider all immediate children of this node:
+   If not candidate, then push on input stack.
+   If candidate, then add to candidate list.
+3) While unchecked items in candidate list, repeat step 2.
+
+At this point, a) has: Z, -2, -3
+               b) has: +2, U, +1
+
+4) Traverse the entire op tree section (nextstate to nextstate or so) in exec order.
+   As we go, build a back-reference table in c). IOW for each node except the final nextstate,
+   insert it's op_next as a key and append this node to its value.
+
+X) Re-thread the execution order...
