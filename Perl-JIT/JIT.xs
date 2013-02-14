@@ -61,9 +61,12 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   printf("left input: %s (%s)\n", OP_NAME(left), OP_DESC(left));
   printf("right input: %s (%s)\n", OP_NAME(right), OP_DESC(right));
 
+  /* Create a custom op! */
   jitop = newBINOP(OP_CUSTOM, 0, left, right);
-  jitop->op_ppaddr = my_pp_add;
   jitop->op_flags |= OPf_STACKED; /* OP receives some args via the stack */
+
+  /* Set it's implementation ptr */
+  jitop->op_ppaddr = my_pp_add;
 
   /* Expected execution order:
    * ---> left -> right -> jitop ---> */
