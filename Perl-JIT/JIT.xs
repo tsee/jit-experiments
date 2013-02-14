@@ -7,6 +7,8 @@
 
 #include <assert.h>
 
+#include "stack.h"
+
 static XOP my_xop_addop;
 static OP *my_pp_add(pTHX);
 
@@ -14,19 +16,59 @@ static OP *my_pp_add(pTHX);
 static peep_t orig_peepp;
 
 static void
-attempt_add_jit(pTHX_ BINOP *addop)
+attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
 {
+  OP *jitop;
   OP *left  = addop->op_first;
   OP *right = addop->op_last;
+  OP *kid;
 
   printf("left input: %s (%s)\n", OP_NAME(left), OP_DESC(left));
   printf("right input: %s (%s)\n", OP_NAME(right), OP_DESC(right));
 
+  jitop = newBINOP(OP_CUSTOM, 0, left, right);
+  jitop->op_ppaddr = my_pp_add;
+
+  /* Expected execution order:
+   * ---> left -> right -> jitop ---> */
+
+  /* wire right -> jitop */
+  right->op_next = (OP *)jitop;
+
+  /* Expected basic structure:
+   *  L   R
+   *   \ /
+   *    J
+   *     \
+   *      P
+   */
+
+  /* fixup parent's basic order ptr */
+  if (OP_CLASS(parent) == OA_COP) {
+    /* TODO scan op_sibling list */
+  }
+  else {
+    /* TODO fixup op_first or op_last or whatever */
+    if (((BINOP *)parent)->op_first == (OP *)addop) {
+      /* TODO NOT YET */
+      printf("Replaced parent pointer!\n");
+    }
+    else {
+      for (kid = ((BINOP *)parent)->op_first; kid != NULL; kid = kid->op_sibling) {
+        if (kid->op_sibling == (OP *)addop) {
+          /* TODO NOT YET */
+          /* FIXME how dow we free oldop after it is no longer used? */
+          printf("Replaced parent pointer!\n");
+          break;
+        }
+      }
+    }
+  }
 }
 
 static void my_peep(pTHX_ OP *o)
 {
-  const OP const *root = o;
+  OP *root = o;
   /* SV *hint; */
 
   orig_peepp(aTHX_ o);
@@ -43,46 +85,50 @@ static void my_peep(pTHX_ OP *o)
   }
   */
 
-
-#define TOVISIT_PUSH(x) STMT_START { tovisit[iop++] = (x); } STMT_END
-#define TOVISIT_POP tovisit[--iop]
-#define TOVISIT_DONE iop == 0
-  /* FIXME lazy, use a static-size stack for now. This will segfault. */
-  OP *tovisit[1024];
-  unsigned int iop = 0;
+  ptrstack_t *tovisit;
+  tovisit = ptrstack_make(20, 0);
 
   OP *kid = o;
   while (kid->op_sibling != NULL) {
     kid = kid->op_sibling;
-    TOVISIT_PUSH(kid);
+    ptrstack_push(tovisit, root);
+    ptrstack_push(tovisit, kid);
   }
 
-  while (!TOVISIT_DONE) {
-    o = TOVISIT_POP;
+  OP *parent = root;
+  while (!ptrstack_empty(tovisit)) {
+    int do_recurse = 1;
+    o = ptrstack_pop(tovisit);
+    parent = ptrstack_pop(tovisit);
 
-    printf("Walking: Looking at: %s (%s)\n", OP_NAME(o), OP_DESC(o));
+    printf("Walking: Looking at: %s (%s); parent: %s\n", OP_NAME(o), OP_DESC(o), OP_NAME(parent));
 
     if (o->op_type == OP_ADD) {
-      printf("Found candidate!\n");
-      attempt_add_jit(aTHX_ cBINOPo);
+      if (cBINOPo->op_first->op_type == OP_PADSV && cBINOPo->op_last->op_type == OP_PADSV) {
+        printf("Found candidate!\n");
+        attempt_add_jit_proof_of_principle(aTHX_ cBINOPo, parent);
+        do_recurse = 0; /* for now */
+      }
     }
-    else { /* only recurse if not a candidate - for now */
 
-      /* TODO s/// can have more stuff inside (can steal from B::Concise later) */
-      if (o->op_flags & OPf_KIDS) {
-        printf("Who knew? %s has kids.\n", OP_NAME(o));
-        for (kid = cBINOPo->op_first; kid != NULL; kid = kid->op_sibling) {
-          TOVISIT_PUSH(kid);
-        }
+    /* TODO s/// can have more stuff inside but not OPf_KIDS set? (can steal from B::Concise later) */
+    if (do_recurse && o->op_flags & OPf_KIDS) {
+      printf("Who knew? %s has kids.\n", OP_NAME(o));
+      for (kid = cBINOPo->op_first; kid != NULL; kid = kid->op_sibling) {
+        ptrstack_push(tovisit, o);
+        ptrstack_push(tovisit, kid);
       }
     }
   }
+
+  ptrstack_free(tovisit);
 }
 
 
 OP *
 my_pp_add(pTHX)
 {
+  printf("Custom op called\n");
   return NULL;
 }
 
