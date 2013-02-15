@@ -127,7 +127,7 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   /* Set it's implementation ptr */
   jitop->op_ppaddr = my_pp_add;
 
-  /* Expected execution order:
+  /* Expected output execution order:
    * ---> left -> right -> jitop ---> */
 
   /* wire right -> jitop */
