@@ -9,11 +9,33 @@
 
 #include "stack.h"
 
+#include <jit/jit.h>
+
+/* The actual custom op definition structure */
 static XOP my_xop_addop;
+
+/* The generic custom OP implementation - push/pop function */
 static OP *my_pp_add(pTHX);
 
 /* original peephole optimizer */
 static peep_t orig_peepp;
+
+/* Global state. Obviously not thread-safe.
+ * Thread-safety would require this to be dangling off the
+ * interpreter struct in some fashion. */
+static jit_context_t pj_jit_context = NULL; /* jit_context_t is a ptr */
+
+
+/* End-of-global-destruction cleanup hook.
+ * Actually instantiated in BOOT. */
+void
+pj_jit_final_cleanup(pTHX_ void *ptr)
+{
+  printf("pj_jit_final_cleanup after global destruction.\n");
+  if (pj_jit_context == NULL)
+    jit_context_destroy(pj_jit_context);
+}
+
 
 static void
 fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
@@ -189,6 +211,8 @@ BOOT:
   XopENTRY_set(&my_xop_addop, xop_desc, "an addop that makes useless use of JIT");
   XopENTRY_set(&my_xop_addop, xop_class, OA_BINOP);
   Perl_custom_op_register(aTHX_ my_pp_add, &my_xop_addop);
+  /* Register super-late global cleanup hook */
+  Perl_call_atexit(aTHX_ pj_jit_final_cleanup, NULL);
 
 void
 import(char *cl)
