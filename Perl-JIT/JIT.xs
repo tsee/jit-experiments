@@ -21,7 +21,6 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
   OP *kid;
   /* fixup parent's basic order ptr */
 
-  /* TODO fixup op_first or op_last or whatever */
   if (((BINOP *)parent)->op_first == (OP *)oldkid) {
     ((BINOP *)parent)->op_first = newkid;
     printf("Replaced parent pointer!\n");
@@ -37,7 +36,6 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
   }
 
   if (OP_CLASS(parent) == OA_COP) {
-    /* TODO scan op_sibling list */
     for (; parent!= NULL; parent = parent->op_sibling) {
       if (parent->op_sibling == (OP *)oldkid) {
         ((BINOP *)parent)->op_sibling = newkid;
