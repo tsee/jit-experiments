@@ -11,6 +11,14 @@
 
 #include <jit/jit.h>
 
+/* The struct of pertinent per-OP instance
+ * data that we attach to each JIT OP. */
+typedef struct {
+  void (*jit_fun)(void);
+  NV *paramslist;
+  UV nparams;
+} pj_jitop_aux_t;
+
 /* The actual custom op definition structure */
 static XOP my_xop_addop;
 
@@ -27,7 +35,7 @@ static jit_context_t pj_jit_context = NULL; /* jit_context_t is a ptr */
 
 
 /* End-of-global-destruction cleanup hook.
- * Actually instantiated in BOOT. */
+ * Actually installed in BOOT XS section. */
 void
 pj_jit_final_cleanup(pTHX_ void *ptr)
 {
@@ -77,6 +85,7 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   OP *left  = addop->op_first;
   OP *right = addop->op_last;
   OP *kid;
+  pj_jitop_aux_t *jit_aux;
 
   printf("left input: %s (%s)\n", OP_NAME(left), OP_DESC(left));
   printf("right input: %s (%s)\n", OP_NAME(right), OP_DESC(right));
@@ -84,6 +93,14 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   /* Create a custom op! */
   jitop = newBINOP(OP_CUSTOM, 0, left, right);
   jitop->op_flags |= OPf_STACKED; /* OP receives some args via the stack */
+
+  /* Attach JIT info to it (TODO: Not actually used yet) */
+  jit_aux = malloc(sizeof(pj_jitop_aux_t));
+  jit_aux->nparams = 0;
+  jit_aux->paramslist = NULL;
+  jit_aux->jit_fun = NULL;
+
+  jitop->op_targ = (PADOFFSET)PTR2UV(jit_aux);
 
   /* Set it's implementation ptr */
   jitop->op_ppaddr = my_pp_add;
