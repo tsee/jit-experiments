@@ -119,6 +119,9 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   jit_aux->paramslist = NULL;
   jit_aux->jit_fun = NULL;
 
+  /* FIXME FIXME FIXME
+   * It turns out that op_targ is probably not safe to use for custom OPs because
+   * some core functions may meddle with it. */
   jitop->op_targ = (PADOFFSET)PTR2UV(jit_aux);
 
   /* Set it's implementation ptr */
@@ -147,7 +150,7 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   /* fixup parent's basic order ptr */
   fixup_parent_op(aTHX_ (OP *)parent, (OP *)addop, (OP *)jitop);
 
-  /* FIXME how dow we free oldop after it is no longer used? */
+  Perl_op_free(aTHX_ (OP *)addop);
 }
 
 static void my_peep(pTHX_ OP *o)
