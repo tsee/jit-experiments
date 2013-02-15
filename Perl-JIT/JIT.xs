@@ -21,12 +21,13 @@ typedef struct {
 
 /* The actual custom op definition structure */
 static XOP my_xop_addop;
-
 /* The generic custom OP implementation - push/pop function */
 static OP *my_pp_add(pTHX);
-
-/* original peephole optimizer */
+/* Original peephole optimizer */
 static peep_t orig_peepp;
+
+/* Original opfreehook - we wrap this to free JIT OP aux structs */
+static Perl_ophook_t orig_opfreehook;
 
 /* Global state. Obviously not thread-safe.
  * Thread-safety would require this to be dangling off the
@@ -42,6 +43,24 @@ pj_jit_final_cleanup(pTHX_ void *ptr)
   printf("pj_jit_final_cleanup after global destruction.\n");
   if (pj_jit_context == NULL)
     jit_context_destroy(pj_jit_context);
+}
+
+/* Hook that will free the JIT OP aux structure of our custom ops */
+/* FIXME this doesn't appear to actually be called for all ops -
+ *       specifically NOT for our custom OP. Is this because the
+ *       custom OP isn't wired up correctly? */
+static void
+my_opfreehook(pTHX_ OP *o)
+{
+  if (orig_opfreehook != NULL)
+    orig_opfreehook(aTHX_ o);
+
+  /* printf("cleaning %s\n", OP_NAME(o)); */
+  if (o->op_ppaddr == my_pp_add) {
+    printf("Cleaning up custom OP's pj_jitop_aux_t\n");
+    free((void *)o->op_targ);
+    o->op_targ = 0;
+  }
 }
 
 
@@ -220,16 +239,24 @@ my_pp_add(pTHX)
 MODULE = Perl::JIT	PACKAGE = Perl::JIT
 
 BOOT:
-  /* setup our new peephole optimizer */
-  orig_peepp = PL_peepp;
-  PL_peepp = my_peep;
-  /* setup our custom op */
-  XopENTRY_set(&my_xop_addop, xop_name, "jitaddop");
-  XopENTRY_set(&my_xop_addop, xop_desc, "an addop that makes useless use of JIT");
-  XopENTRY_set(&my_xop_addop, xop_class, OA_BINOP);
-  Perl_custom_op_register(aTHX_ my_pp_add, &my_xop_addop);
-  /* Register super-late global cleanup hook */
-  Perl_call_atexit(aTHX_ pj_jit_final_cleanup, NULL);
+  {
+    /* Setup our new peephole optimizer */
+    orig_peepp = PL_peepp;
+    PL_peepp = my_peep;
+
+    /* Setup our callback for cleaning up JIT OPs during global cleanup */
+    orig_opfreehook = PL_opfreehook;
+    PL_opfreehook = my_opfreehook;
+
+    /* Setup our custom op */
+    XopENTRY_set(&my_xop_addop, xop_name, "jitaddop");
+    XopENTRY_set(&my_xop_addop, xop_desc, "an addop that makes useless use of JIT");
+    XopENTRY_set(&my_xop_addop, xop_class, OA_BINOP);
+    Perl_custom_op_register(aTHX_ my_pp_add, &my_xop_addop);
+
+    /* Register super-late global cleanup hook for global JIT state */
+    Perl_call_atexit(aTHX_ pj_jit_final_cleanup, NULL);
+  }
 
 void
 import(char *cl)
