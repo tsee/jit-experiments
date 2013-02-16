@@ -150,7 +150,13 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   /* fixup parent's basic order ptr */
   fixup_parent_op(aTHX_ (OP *)parent, (OP *)addop, (OP *)jitop);
 
-  Perl_op_free(aTHX_ (OP *)addop);
+  /* FIXME something still refers to the addop, so this segfaults.
+   *       Maybe the parent and op_next fixups don't work?
+   *       This would explain why the custom OP free hook never reaches
+   *       the JIT OP. But execution of JIT OP seems to work just fine.
+   *       That suggests that either I'm missing something fundamental, or the
+   *       parent fixup is the part that's not right? */
+  /* Perl_op_free(aTHX_ (OP *)addop); */
 }
 
 static void my_peep(pTHX_ OP *o)
