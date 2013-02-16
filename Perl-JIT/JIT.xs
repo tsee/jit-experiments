@@ -10,6 +10,8 @@
 #include "stack.h"
 
 #include <jit/jit.h>
+#include <pj_terms.h>
+#include <pj_jit.h>
 
 /* The struct of pertinent per-OP instance
  * data that we attach to each JIT OP. */
@@ -58,8 +60,10 @@ my_opfreehook(pTHX_ OP *o)
   /* printf("cleaning %s\n", OP_NAME(o)); */
   if (o->op_ppaddr == my_pp_add) {
     printf("Cleaning up custom OP's pj_jitop_aux_t\n");
-    free((void *)o->op_targ);
-    o->op_targ = 0;
+    pj_jitop_aux_t *aux = (pj_jitop_aux_t *)o->op_targ;
+    free(aux->paramslist);
+    free(aux);
+    o->op_targ = 0; /* important or Perl will use it to access the pad */
   }
 }
 
@@ -105,6 +109,9 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   OP *right = addop->op_last;
   OP *kid;
   pj_jitop_aux_t *jit_aux;
+  pj_term_t *jit_ast;
+  jit_function_t func = NULL;
+  pj_basic_type funtype;
 
   printf("left input: %s (%s)\n", OP_NAME(left), OP_DESC(left));
   printf("right input: %s (%s)\n", OP_NAME(right), OP_DESC(right));
@@ -113,16 +120,35 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   jitop = newBINOP(OP_CUSTOM, 0, left, right);
   jitop->op_flags |= OPf_STACKED; /* OP receives some args via the stack */
 
-  /* Attach JIT info to it (TODO: Not actually used yet) */
+  /* Attach JIT info to it */
   jit_aux = malloc(sizeof(pj_jitop_aux_t));
-  jit_aux->nparams = 0;
-  jit_aux->paramslist = NULL;
+  jit_aux->nparams = 2;
+  jit_aux->paramslist = (NV *)malloc(sizeof(NV) * 2); /* FIXME hardcoded to double params for now */
   jit_aux->jit_fun = NULL;
 
   /* FIXME FIXME FIXME
    * It turns out that op_targ is probably not safe to use for custom OPs because
    * some core functions may meddle with it. */
   jitop->op_targ = (PADOFFSET)PTR2UV(jit_aux);
+
+  /* JIT IT! */
+  jit_ast = pj_make_binop(
+    pj_binop_add,
+    pj_make_variable(0, pj_double_type),
+    pj_make_variable(1, pj_double_type)
+  );
+
+  if (0 == pj_tree_jit(pj_jit_context, jit_ast, &func, &funtype)) {
+    printf("JIT succeeded!\n");
+  } else {
+    printf("JIT failed!\n");
+  }
+  void *cl = jit_function_to_closure(func);
+  jit_aux->jit_fun = cl;
+
+  /* release JIT AST after being done with compilation */
+  free(jit_ast);
+  jit_ast = NULL;
 
   /* Set it's implementation ptr */
   jitop->op_ppaddr = my_pp_add;
@@ -226,6 +252,17 @@ my_pp_add(pTHX)
   svr = TOPs;
   svl = TOPm1s;
   printf("Custom op called\n");
+
+  pj_jitop_aux_t *aux = (pj_jitop_aux_t *) ((BINOP *)PL_op)->op_targ;
+  double result;
+  /* fixme function ret type should be dynamic */
+  double *params = aux->paramslist;
+  params[0] = SvNV_nomg(svr);
+  params[1] = SvNV_nomg(svl);
+  printf("In: %f %f\n", params[0], params[1]);
+  pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
+
+
   useleft = USE_LEFT(svl);
 
   /* The real pp_add has a big block of code for PERL_PRESERVE_UV_IV here */
@@ -241,6 +278,8 @@ my_pp_add(pTHX)
   value += SvNV_nomg(svl);
   SETn( value );
 
+  printf("Add result from JIT: %f Add result from Perl: %f\n", (float)result, (float)value);
+
   RETURN;
 }
 
@@ -252,6 +291,9 @@ BOOT:
     /* Setup our new peephole optimizer */
     orig_peepp = PL_peepp;
     PL_peepp = my_peep;
+
+    /* Set up JIT compiler */
+    pj_jit_context = jit_context_create();
 
     /* Setup our callback for cleaning up JIT OPs during global cleanup */
     orig_opfreehook = PL_opfreehook;
