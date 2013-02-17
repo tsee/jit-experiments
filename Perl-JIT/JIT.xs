@@ -22,9 +22,9 @@ typedef struct {
 } pj_jitop_aux_t;
 
 /* The actual custom op definition structure */
-static XOP my_xop_addop;
+static XOP my_xop_jitop;
 /* The generic custom OP implementation - push/pop function */
-static OP *my_pp_add(pTHX);
+static OP *my_pp_jit(pTHX);
 /* Original peephole optimizer */
 static peep_t orig_peepp;
 
@@ -58,7 +58,7 @@ my_opfreehook(pTHX_ OP *o)
     orig_opfreehook(aTHX_ o);
 
   /* printf("cleaning %s\n", OP_NAME(o)); */
-  if (o->op_ppaddr == my_pp_add) {
+  if (o->op_ppaddr == my_pp_jit) {
     printf("Cleaning up custom OP's pj_jitop_aux_t\n");
     pj_jitop_aux_t *aux = (pj_jitop_aux_t *)o->op_targ;
     free(aux->paramslist);
@@ -76,14 +76,14 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
 
   if (((BINOP *)parent)->op_first == (OP *)oldkid) {
     ((BINOP *)parent)->op_first = newkid;
-    printf("Replaced parent pointer!\n");
+    printf("Replaced parent pointer in op_first!\n");
     return;
   }
 
   for (kid = ((BINOP *)parent)->op_first; kid != NULL; kid = kid->op_sibling) {
     if (kid->op_sibling == (OP *)oldkid) {
       ((BINOP *)kid)->op_first = newkid;
-      printf("Replaced parent pointer!\n");
+      printf("Replaced parent pointer in op_first => op_last list!\n");
       return;
     }
   }
@@ -92,7 +92,7 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
     for (; parent!= NULL; parent = parent->op_sibling) {
       if (parent->op_sibling == (OP *)oldkid) {
         ((BINOP *)parent)->op_sibling = newkid;
-        printf("Replaced parent pointer!\n");
+        printf("Replaced parent pointer in sibling list!\n");
         return;
       }
     }
@@ -151,7 +151,7 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   jit_ast = NULL;
 
   /* Set it's implementation ptr */
-  jitop->op_ppaddr = my_pp_add;
+  jitop->op_ppaddr = my_pp_jit;
 
   /* Expected output execution order:
    * ---> left -> right -> jitop ---> */
@@ -245,17 +245,19 @@ static void my_peep(pTHX_ OP *o)
 
 
 OP *
-my_pp_add(pTHX)
+my_pp_jit(pTHX)
 {
-  dVAR; dSP; dATARGET; bool useleft; SV *svl, *svr;
+  dVAR; dSP; dATARGET;
+  //bool useleft;
+  SV *svl, *svr;
   tryAMAGICbin_MG(add_amg, AMGf_assign|AMGf_numeric);
-  svr = TOPs;
-  svl = TOPm1s;
+  svr = POPs;
+  svl = TOPs;
   printf("Custom op called\n");
 
   pj_jitop_aux_t *aux = (pj_jitop_aux_t *) ((BINOP *)PL_op)->op_targ;
   double result;
-  /* fixme function ret type should be dynamic */
+  /* FIXME function ret type should be dynamic */
   double *params = aux->paramslist;
   params[0] = SvNV_nomg(svr);
   params[1] = SvNV_nomg(svl);
@@ -263,22 +265,32 @@ my_pp_add(pTHX)
   pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
 
 
-  useleft = USE_LEFT(svl);
+
+/* This section is the classical Perl add op, give or take.
+ * Requires changing
+ *   svr = POPs;
+ *   svl = TOPs;
+ * to 
+ *   svr = TOPs;
+ *   svl = TOPm1s;
+ */
+
+  //useleft = USE_LEFT(svl);
 
   /* The real pp_add has a big block of code for PERL_PRESERVE_UV_IV here */
+  //NV value = SvNV_nomg(svr);
+  //(void)POPs;
 
-  NV value = SvNV_nomg(svr);
-  (void)POPs;
-
-  if (!useleft) {
+  //if (!useleft) {
     /* left operand is undef, treat as zero. + 0.0 is identity. */
-    SETn(value);
-    RETURN;
-  }
-  value += SvNV_nomg(svl);
-  SETn( value );
+  //  SETn(value);
+  //  RETURN;
+  //}
+  //value += SvNV_nomg(svl);
+  //SETn( value );
 
-  printf("Add result from JIT: %f Add result from Perl: %f\n", (float)result, (float)value);
+  printf("Add result from JIT: %f\n", (float)result);
+  SETn((NV)result);
 
   RETURN;
 }
@@ -300,10 +312,10 @@ BOOT:
     PL_opfreehook = my_opfreehook;
 
     /* Setup our custom op */
-    XopENTRY_set(&my_xop_addop, xop_name, "jitaddop");
-    XopENTRY_set(&my_xop_addop, xop_desc, "an addop that makes useless use of JIT");
-    XopENTRY_set(&my_xop_addop, xop_class, OA_BINOP);
-    Perl_custom_op_register(aTHX_ my_pp_add, &my_xop_addop);
+    XopENTRY_set(&my_xop_jitop, xop_name, "jitaddop");
+    XopENTRY_set(&my_xop_jitop, xop_desc, "an addop that makes useless use of JIT");
+    XopENTRY_set(&my_xop_jitop, xop_class, OA_BINOP);
+    Perl_custom_op_register(aTHX_ my_pp_jit, &my_xop_jitop);
 
     /* Register super-late global cleanup hook for global JIT state */
     Perl_call_atexit(aTHX_ pj_jit_final_cleanup, NULL);
