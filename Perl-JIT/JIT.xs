@@ -19,6 +19,7 @@ typedef struct {
   void (*jit_fun)(void);
   NV *paramslist;
   UV nparams;
+  PADOFFSET saved_op_targ; /* Replacement for JIT OP's op_targ if necessary */
 } pj_jitop_aux_t;
 
 /* The actual custom op definition structure */
@@ -73,6 +74,7 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
 {
   OP *kid;
   /* fixup parent's basic order ptr */
+  printf("Parent op is a: %s (class %i. OA_LIST==%i)\n", OP_NAME(parent), OP_CLASS(parent), OA_LISTOP);
 
   if (((BINOP *)parent)->op_first == (OP *)oldkid) {
     ((BINOP *)parent)->op_first = newkid;
@@ -80,16 +82,21 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
     return;
   }
 
-  for (kid = ((BINOP *)parent)->op_first; kid != NULL; kid = kid->op_sibling) {
-    if (kid->op_sibling == (OP *)oldkid) {
-      ((BINOP *)kid)->op_first = newkid;
-      printf("Replaced parent pointer in op_first => op_last list!\n");
-      return;
+  if (OP_CLASS(parent) == OA_LISTOP) {
+    kid = ((BINOP *)parent)->op_first;
+    for (; kid != ((BINOP *)parent)->op_last && kid != NULL; kid = kid->op_sibling)
+    {
+      if (kid->op_sibling == (OP *)oldkid) {
+        ((BINOP *)kid)->op_sibling = newkid;
+        printf("Replaced parent pointer in op_first => op_last list!\n");
+        return;
+      }
     }
   }
 
   if (OP_CLASS(parent) == OA_COP) {
-    for (; parent!= NULL; parent = parent->op_sibling) {
+    OP *lastop = ((BINOP *)parent)->op_last;
+    for (; parent != lastop && parent != NULL; parent = parent->op_sibling) {
       if (parent->op_sibling == (OP *)oldkid) {
         ((BINOP *)parent)->op_sibling = newkid;
         printf("Replaced parent pointer in sibling list!\n");
@@ -98,13 +105,14 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
     }
   }
 
+  printf("Failed to find pointer from parent op to op-to-be-replaced.\n");
   abort();
 }
 
 static void
 attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
 {
-  OP *jitop;
+  BINOP *jitop;
   OP *left  = addop->op_first;
   OP *right = addop->op_last;
   OP *kid;
@@ -117,14 +125,41 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   printf("right input: %s (%s)\n", OP_NAME(right), OP_DESC(right));
 
   /* Create a custom op! */
-  jitop = newBINOP(OP_CUSTOM, 0, left, right);
-  jitop->op_flags |= OPf_STACKED; /* OP receives some args via the stack */
+  //jitop = newBINOP(OP_CUSTOM, 0, left, right);
+  NewOp(1101, jitop, 1, BINOP);
+  jitop->op_type = (OPCODE)OP_CUSTOM;
+  jitop->op_first = left;
+  jitop->op_last = right;
+  jitop->op_private = 0;
+  /* Commonly op_flags is:
+   *   OP receives some args via the stack and has kids (OPf_STACKED | OPf_KIDS).
+   * but that's not always true. For the time being, copying from addop is good enough.
+   * That needs proper understanding once we replace entire subtrees. */
+  jitop->op_flags = addop->op_flags;
+
+  if (addop->op_private & OPpTARGET_MY) {
+    /* If this flag is set on the original OP, then we have a nasty situation.
+     * In a nutshell, this is set as an optimization for scalar assignment
+     * to a pad (== lexical) variable. If set, the addop will directly
+     * assign to whichever pad variable would otherwise be set by the sassign
+     * op. It won't bother putting a separate var on the stack.
+     * This is great, but it uses the op_targ member of the OP struct to
+     * define the offset into the pad where the output variable is to be found.
+     * That's a problem because we're using op_targ to hang the jit aux struct
+     * off of.
+     */
+    /* printf("addop TARG is used. Going to SEGV now.\n"); */
+    jitop->op_private |= OPpTARGET_MY;
+  }
 
   /* Attach JIT info to it */
   jit_aux = malloc(sizeof(pj_jitop_aux_t));
   jit_aux->nparams = 2;
   jit_aux->paramslist = (NV *)malloc(sizeof(NV) * 2); /* FIXME hardcoded to double params for now */
   jit_aux->jit_fun = NULL;
+  jit_aux->saved_op_targ = addop->op_targ; /* save in case needed for sassign optimization */
+
+printf("add TARG is %i\n", (int)addop->op_targ);
 
   /* FIXME FIXME FIXME
    * It turns out that op_targ is probably not safe to use for custom OPs because
@@ -247,21 +282,34 @@ static void my_peep(pTHX_ OP *o)
 OP *
 my_pp_jit(pTHX)
 {
-  dVAR; dSP; dATARGET;
+  dVAR; dSP;
+  /* Traditionally, addop uses dATARGET here, but that relies
+   * on being able to use PL_op->op_targ as a PAD offset sometimes.
+   * For the JIT OP, this info comes from the aux struct, so we need
+   * to inline a modified version of dATARGET. */
+  SV *targ;
+
   //bool useleft;
   SV *svl, *svr;
+  pj_jitop_aux_t *aux = (pj_jitop_aux_t *) ((BINOP *)PL_op)->op_targ;
+
+  //printf("Custom op called\n");
+
+  /* inlined modified dATARGET, see above */
+  targ = PL_op->op_flags & OPf_STACKED
+         ? sp[-1]
+         : PAD_SV(aux->saved_op_targ);
+
   tryAMAGICbin_MG(add_amg, AMGf_assign|AMGf_numeric);
   svr = POPs;
   svl = TOPs;
-  printf("Custom op called\n");
 
-  pj_jitop_aux_t *aux = (pj_jitop_aux_t *) ((BINOP *)PL_op)->op_targ;
   double result;
   /* FIXME function ret type should be dynamic */
   double *params = aux->paramslist;
   params[0] = SvNV_nomg(svr);
   params[1] = SvNV_nomg(svl);
-  printf("In: %f %f\n", params[0], params[1]);
+  //printf("In: %f %f\n", params[0], params[1]);
   pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
 
 
@@ -289,7 +337,7 @@ my_pp_jit(pTHX)
   //value += SvNV_nomg(svl);
   //SETn( value );
 
-  printf("Add result from JIT: %f\n", (float)result);
+  //printf("Add result from JIT: %f\n", (float)result);
   SETn((NV)result);
 
   RETURN;
