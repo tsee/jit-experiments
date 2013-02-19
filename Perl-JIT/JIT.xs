@@ -113,7 +113,7 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
 static void
 attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
 {
-  BINOP *jitop;
+  LISTOP *jitop;
   OP *left  = addop->op_first;
   OP *right = addop->op_last;
   pj_jitop_aux_t *jit_aux;
@@ -126,9 +126,10 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
 
   /* Create a custom op! */
   //jitop = newBINOP(OP_CUSTOM, 0, left, right);
-  NewOp(1101, jitop, 1, BINOP);
+  NewOp(1101, jitop, 1, LISTOP);
   jitop->op_type = (OPCODE)OP_CUSTOM;
   jitop->op_first = left;
+  left->op_sibling = right; /* It's a LISTOP, kids must be linked list */
   jitop->op_last = right;
   jitop->op_private = 0;
   /* Commonly op_flags is:
