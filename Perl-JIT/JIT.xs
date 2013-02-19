@@ -203,13 +203,17 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
    * This may need building a backwards-directed linked list? Yuck. */
   /* Wire pointer to -> jitop */
   if (right->op_type == OP_CONST) {
-    /* Remove it from execution thread */
+    /* Remove right op from execution thread */
     left->op_next = (OP *)jitop;
-    right->op_next = NULL; /* just because */
+    Perl_op_null(aTHX_ right); /* just because */
   }
   else {
     /* already the default: left->op_next = (OP *)right; */
     right->op_next = (OP *)jitop;
+  }
+  /* Best we can do right now for left op is nulling */
+  if (left->op_type == OP_CONST) {
+    Perl_op_null(aTHX_ left);
   }
 
   /* wire jitop -> old pp_next */
@@ -279,10 +283,10 @@ static void my_peep(pTHX_ OP *o)
 
     if (o->op_type == OP_ADD)
     {
-      if (cBINOPo->op_first->op_type == OP_PADSV
+      if (   (cBINOPo->op_first->op_type == OP_PADSV || cBINOPo->op_first->op_type == OP_CONST)
           && (cBINOPo->op_last->op_type == OP_PADSV || cBINOPo->op_last->op_type == OP_CONST) )
       {
-        printf("Found candidate!\n");
+        printf("Found candidate with parent of type %s!\n", OP_NAME(parent));
         attempt_add_jit_proof_of_principle(aTHX_ cBINOPo, parent);
         do_recurse = 0; /* for now */
       }
