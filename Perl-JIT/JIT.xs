@@ -290,9 +290,10 @@ my_pp_jit(pTHX)
    * to inline a modified version of dATARGET. */
   SV *targ;
 
-  //bool useleft;
-  SV *svl, *svr;
   pj_jitop_aux_t *aux = (pj_jitop_aux_t *) ((BINOP *)PL_op)->op_targ;
+
+  SV *tmpsv;
+  unsigned int i, n;
 
   //printf("Custom op called\n");
 
@@ -302,44 +303,28 @@ my_pp_jit(pTHX)
          : PAD_SV(aux->saved_op_targ);
 
   tryAMAGICbin_MG(add_amg, AMGf_assign|AMGf_numeric);
-  svr = POPs;
-  svl = TOPs;
 
-  double result;
-  /* FIXME function ret type should be dynamic */
-  double *params = aux->paramslist;
-  params[0] = SvNV_nomg(svr);
-  params[1] = SvNV_nomg(svl);
-  //printf("In: %f %f\n", params[0], params[1]);
-  pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
+  {
+    double result; /* FIXME function ret type should be dynamic */
+    double *params = aux->paramslist;
+    n = aux->nparams;
 
+    /* Pop all args from stack except the last */
+    for (i = 0; i < n-1; ++i) {
+      tmpsv = POPs;
+      params[i] = SvNV_nomg(tmpsv);
+    }
+    /* If there's any args, leave the final one's SV on the stack */
+    if (n != 0) {
+      tmpsv = TOPs;
+      params[n-1] = SvNV_nomg(tmpsv);
+    }
+    //printf("In: %f %f\n", params[0], params[1]);
+    pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
 
-
-/* This section is the classical Perl add op, give or take.
- * Requires changing
- *   svr = POPs;
- *   svl = TOPs;
- * to 
- *   svr = TOPs;
- *   svl = TOPm1s;
- */
-
-  //useleft = USE_LEFT(svl);
-
-  /* The real pp_add has a big block of code for PERL_PRESERVE_UV_IV here */
-  //NV value = SvNV_nomg(svr);
-  //(void)POPs;
-
-  //if (!useleft) {
-    /* left operand is undef, treat as zero. + 0.0 is identity. */
-  //  SETn(value);
-  //  RETURN;
-  //}
-  //value += SvNV_nomg(svl);
-  //SETn( value );
-
-  //printf("Add result from JIT: %f\n", (float)result);
-  SETn((NV)result);
+    //printf("Add result from JIT: %f\n", (float)result);
+    SETn((NV)result);
+  }
 
   RETURN;
 }
