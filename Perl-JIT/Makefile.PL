@@ -7,6 +7,9 @@ my $extra_flags = '';
 if ((grep {/--debug/} @ARGV) or $ENV{DEBUG}) {
   $extra_flags .= '-O0 -ggdb3';
 }
+else {
+  $extra_flags .= '-DNDEBUG';
+}
 
 WriteMakefile(
     NAME              => 'Perl::JIT',
