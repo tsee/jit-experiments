@@ -236,6 +236,8 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
    *       That suggests that either I'm missing something fundamental, or the
    *       parent fixup is the part that's not right? */
   /* Perl_op_free(aTHX_ (OP *)addop); */
+  /* for now, null the OP instead */
+  Perl_op_null(aTHX_ (OP *)addop);
 }
 
 static void my_peep(pTHX_ OP *o)
