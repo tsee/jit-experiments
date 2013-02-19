@@ -43,6 +43,7 @@ static jit_context_t pj_jit_context = NULL; /* jit_context_t is a ptr */
 void
 pj_jit_final_cleanup(pTHX_ void *ptr)
 {
+  (void)ptr;
   printf("pj_jit_final_cleanup after global destruction.\n");
   if (pj_jit_context == NULL)
     jit_context_destroy(pj_jit_context);
@@ -115,7 +116,6 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   BINOP *jitop;
   OP *left  = addop->op_first;
   OP *right = addop->op_last;
-  OP *kid;
   pj_jitop_aux_t *jit_aux;
   pj_term_t *jit_ast;
   jit_function_t func = NULL;
