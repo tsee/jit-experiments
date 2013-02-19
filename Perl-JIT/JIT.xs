@@ -120,6 +120,7 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   pj_term_t *jit_ast;
   jit_function_t func = NULL;
   pj_basic_type funtype;
+  unsigned int iparam = 0;
 
   printf("left input: %s (%s)\n", OP_NAME(left), OP_DESC(left));
   printf("right input: %s (%s)\n", OP_NAME(right), OP_DESC(right));
@@ -155,12 +156,9 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
 
   /* Attach JIT info to it */
   jit_aux = malloc(sizeof(pj_jitop_aux_t));
-  jit_aux->nparams = 2;
   jit_aux->paramslist = (NV *)malloc(sizeof(NV) * 2); /* FIXME hardcoded to double params for now */
   jit_aux->jit_fun = NULL;
   jit_aux->saved_op_targ = addop->op_targ; /* save in case needed for sassign optimization */
-
-printf("add TARG is %i\n", (int)addop->op_targ);
 
   /* FIXME FIXME FIXME
    * It turns out that op_targ is probably not safe to use for custom OPs because
@@ -168,11 +166,19 @@ printf("add TARG is %i\n", (int)addop->op_targ);
   jitop->op_targ = (PADOFFSET)PTR2UV(jit_aux);
 
   /* JIT IT! */
+  /* Right now, we special-case-support $x+$y or $x+const or const+$y */
   jit_ast = pj_make_binop(
     pj_binop_add,
-    pj_make_variable(0, pj_double_type),
-    pj_make_variable(1, pj_double_type)
+    ( left->op_type == OP_CONST
+      ? pj_make_const_dbl( SvNV_nomg(cSVOPx_sv(left)) )
+      : pj_make_variable(iparam++, pj_double_type) ),
+    ( right->op_type == OP_CONST
+      ? pj_make_const_dbl( SvNV_nomg(cSVOPx_sv(right)) )
+      : pj_make_variable(iparam++, pj_double_type) )
   );
+  pj_dump_tree(jit_ast);
+
+  jit_aux->nparams = iparam;
 
   if (0 == pj_tree_jit(pj_jit_context, jit_ast, &func, &funtype)) {
     printf("JIT succeeded!\n");
@@ -182,18 +188,29 @@ printf("add TARG is %i\n", (int)addop->op_targ);
   void *cl = jit_function_to_closure(func);
   jit_aux->jit_fun = cl;
 
-  /* release JIT AST after being done with compilation */
+  /* Release JIT AST after being done with compilation */
   free(jit_ast);
   jit_ast = NULL;
 
   /* Set it's implementation ptr */
   jitop->op_ppaddr = my_pp_jit;
 
-  /* Expected output execution order:
+  /* Expected output execution order for two PADSV ops:
    * ---> left -> right -> jitop ---> */
 
-  /* wire right -> jitop */
-  right->op_next = (OP *)jitop;
+  /* FIXME this doesn't support compiling out the left OP yet because
+   * whichever incoming op_next ptr goes to left can't easily be repointed.
+   * This may need building a backwards-directed linked list? Yuck. */
+  /* Wire pointer to -> jitop */
+  if (right->op_type == OP_CONST) {
+    /* Remove it from execution thread */
+    left->op_next = (OP *)jitop;
+    right->op_next = NULL; /* just because */
+  }
+  else {
+    /* already the default: left->op_next = (OP *)right; */
+    right->op_next = (OP *)jitop;
+  }
 
   /* wire jitop -> old pp_next */
   jitop->op_next = addop->op_next;
@@ -258,8 +275,11 @@ static void my_peep(pTHX_ OP *o)
 
     printf("Walking: Looking at: %s (%s); parent: %s\n", OP_NAME(o), OP_DESC(o), OP_NAME(parent));
 
-    if (o->op_type == OP_ADD) {
-      if (cBINOPo->op_first->op_type == OP_PADSV && cBINOPo->op_last->op_type == OP_PADSV) {
+    if (o->op_type == OP_ADD)
+    {
+      if (cBINOPo->op_first->op_type == OP_PADSV
+          && (cBINOPo->op_last->op_type == OP_PADSV || cBINOPo->op_last->op_type == OP_CONST) )
+      {
         printf("Found candidate!\n");
         attempt_add_jit_proof_of_principle(aTHX_ cBINOPo, parent);
         do_recurse = 0; /* for now */
@@ -322,7 +342,7 @@ my_pp_jit(pTHX)
     //printf("In: %f %f\n", params[0], params[1]);
     pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
 
-    //printf("Add result from JIT: %f\n", (float)result);
+    printf("Add result from JIT: %f\n", (float)result);
     SETn((NV)result);
   }
 
