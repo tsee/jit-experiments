@@ -1,3 +1,6 @@
+/*
+# vim: ts=2 sw=2 et
+*/
 #define PERL_NO_GET_CONTEXT
 #include "EXTERN.h"
 #include "perl.h"
@@ -37,6 +40,8 @@ static Perl_ophook_t orig_opfreehook;
  * interpreter struct in some fashion. */
 static jit_context_t pj_jit_context = NULL; /* jit_context_t is a ptr */
 
+static char* DEBUG;
+
 
 /* End-of-global-destruction cleanup hook.
  * Actually installed in BOOT XS section. */
@@ -44,7 +49,10 @@ void
 pj_jit_final_cleanup(pTHX_ void *ptr)
 {
   (void)ptr;
-  printf("pj_jit_final_cleanup after global destruction.\n");
+  
+  if (DEBUG)
+      printf("pj_jit_final_cleanup after global destruction.\n");
+
   if (pj_jit_context == NULL)
     jit_context_destroy(pj_jit_context);
 }
@@ -61,7 +69,8 @@ my_opfreehook(pTHX_ OP *o)
 
   /* printf("cleaning %s\n", OP_NAME(o)); */
   if (o->op_ppaddr == my_pp_jit) {
-    printf("Cleaning up custom OP's pj_jitop_aux_t\n");
+    if (DEBUG)
+      printf("Cleaning up custom OP's pj_jitop_aux_t\n");
     pj_jitop_aux_t *aux = (pj_jitop_aux_t *)o->op_targ;
     free(aux->paramslist);
     free(aux);
@@ -79,7 +88,8 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
 
   if (((BINOP *)parent)->op_first == (OP *)oldkid) {
     ((BINOP *)parent)->op_first = newkid;
-    printf("Replaced parent pointer in op_first!\n");
+    if (DEBUG)
+      printf("Replaced parent pointer in op_first!\n");
     return;
   }
 
@@ -89,7 +99,8 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
     {
       if (kid->op_sibling == (OP *)oldkid) {
         ((BINOP *)kid)->op_sibling = newkid;
-        printf("Replaced parent pointer in op_first => op_last list!\n");
+        if (DEBUG)
+          printf("Replaced parent pointer in op_first => op_last list!\n");
         return;
       }
     }
@@ -100,13 +111,15 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
     for (; parent != lastop && parent != NULL; parent = parent->op_sibling) {
       if (parent->op_sibling == (OP *)oldkid) {
         ((BINOP *)parent)->op_sibling = newkid;
-        printf("Replaced parent pointer in sibling list!\n");
+        if (DEBUG)
+          printf("Replaced parent pointer in sibling list!\n");
         return;
       }
     }
   }
 
-  printf("Failed to find pointer from parent op to op-to-be-replaced.\n");
+  if (DEBUG)
+    printf("Failed to find pointer from parent op to op-to-be-replaced.\n");
   abort();
 }
 
@@ -122,8 +135,10 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   pj_basic_type funtype;
   unsigned int iparam = 0;
 
-  printf("left input: %s (%s)\n", OP_NAME(left), OP_DESC(left));
-  printf("right input: %s (%s)\n", OP_NAME(right), OP_DESC(right));
+  if (DEBUG) {
+    printf("left input: %s (%s)\n", OP_NAME(left), OP_DESC(left));
+    printf("right input: %s (%s)\n", OP_NAME(right), OP_DESC(right));
+  }
 
   /* Create a custom op! */
   //jitop = newBINOP(OP_CUSTOM, 0, left, right);
@@ -181,9 +196,11 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   jit_aux->nparams = iparam;
 
   if (0 == pj_tree_jit(pj_jit_context, jit_ast, &func, &funtype)) {
-    printf("JIT succeeded!\n");
+    if (DEBUG)
+      printf("JIT succeeded!\n");
   } else {
-    printf("JIT failed!\n");
+    if (DEBUG)
+      printf("JIT failed!\n");
   }
   void *cl = jit_function_to_closure(func);
   jit_aux->jit_fun = cl;
@@ -251,7 +268,8 @@ static void my_peep(pTHX_ OP *o)
 
   orig_peepp(aTHX_ o);
 
-  printf("Looking at: %s (%s)\n", OP_NAME(o), OP_DESC(o));
+  if (DEBUG)
+    printf("Looking at: %s (%s)\n", OP_NAME(o), OP_DESC(o));
   /* Currently disabled lexicalization hacks/experiments */
   /*
   hint = cop_hints_fetch_pvs(PL_curcop, "jit", 0);
@@ -279,14 +297,16 @@ static void my_peep(pTHX_ OP *o)
     o = ptrstack_pop(tovisit);
     parent = ptrstack_pop(tovisit);
 
-    printf("Walking: Looking at: %s (%s); parent: %s\n", OP_NAME(o), OP_DESC(o), OP_NAME(parent));
+    if (DEBUG)
+      printf("Walking: Looking at: %s (%s); parent: %s\n", OP_NAME(o), OP_DESC(o), OP_NAME(parent));
 
     if (o->op_type == OP_ADD)
     {
       if (   (cBINOPo->op_first->op_type == OP_PADSV || cBINOPo->op_first->op_type == OP_CONST)
           && (cBINOPo->op_last->op_type == OP_PADSV || cBINOPo->op_last->op_type == OP_CONST) )
       {
-        printf("Found candidate with parent of type %s!\n", OP_NAME(parent));
+        if (DEBUG)
+          printf("Found candidate with parent of type %s!\n", OP_NAME(parent));
         attempt_add_jit_proof_of_principle(aTHX_ cBINOPo, parent);
         do_recurse = 0; /* for now */
       }
@@ -294,7 +314,8 @@ static void my_peep(pTHX_ OP *o)
 
     /* TODO s/// can have more stuff inside but not OPf_KIDS set? (can steal from B::Concise later) */
     if (do_recurse && o->op_flags & OPf_KIDS) {
-      printf("Who knew? %s has kids.\n", OP_NAME(o));
+      if (DEBUG)
+        printf("Who knew? %s has kids.\n", OP_NAME(o));
       for (kid = cBINOPo->op_first; kid != NULL; kid = kid->op_sibling) {
         ptrstack_push(tovisit, o);
         ptrstack_push(tovisit, kid);
@@ -348,7 +369,8 @@ my_pp_jit(pTHX)
     //printf("In: %f %f\n", params[0], params[1]);
     pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
 
-    printf("Add result from JIT: %f\n", (float)result);
+    if (DEBUG)
+      printf("Add result from JIT: %f\n", (float)result);
     SETn((NV)result);
   }
 
@@ -360,6 +382,7 @@ MODULE = Perl::JIT	PACKAGE = Perl::JIT
 
 BOOT:
   {
+    DEBUG = getenv("PERL_JIT_DEBUG");
     /* Setup our new peephole optimizer */
     orig_peepp = PL_peepp;
     PL_peepp = my_peep;
