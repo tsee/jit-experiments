@@ -16,8 +16,14 @@ main(int argc, char **argv)
 
   /* initialize tree structure */
 
-  /* This example: (2.2+(v1+v0))* sin(-(v0 >> 1)) */
-  t = pj_make_binop(
+  /* This example: !(((2.2+(v1+v0))* sin(-(v0 >> 1))&&1)==0) */
+  t = pj_make_unop(
+      pj_unop_not_bool,
+        pj_make_binop(
+	pj_binop_eq,
+	pj_make_binop(
+      pj_binop_and,
+	pj_make_binop(
     pj_binop_multiply,
     pj_make_binop(
       pj_binop_add,
@@ -39,7 +45,11 @@ main(int argc, char **argv)
         )
       )
     )
+  )
+  , pj_make_const_int(1))
+  , pj_make_const_int(0))
   );
+  ;
 
   /* This example: 2.3+1 */
   /*
@@ -104,6 +114,31 @@ main(int argc, char **argv)
 
   /* cleanup */
   pj_free_tree(t);
+
+  /* another example */
+ 
+  t =  /*   pj_make_unop(
+      pj_unop_not_bool,*/
+      pj_make_binop(
+      pj_binop_ne,
+      pj_make_variable(0, pj_double_type),
+      pj_make_const_dbl(0)
+        )
+	/*)*/
+	;
+  
+  if (0 == pj_tree_jit(context, t, &func, &funtype)) {
+    printf("JIT succeeded again!\n");
+  } else {
+    printf("JIT failed!\n");
+  }
+  pj_dump_tree(t);
+
+  arg1 = 1.;
+  arg2 = 0.;
+  jit_function_apply(func, args, &result);
+  printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
+
   jit_context_destroy(context);
   return 0;
 }
