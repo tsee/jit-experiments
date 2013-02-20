@@ -51,8 +51,10 @@ pj_tree_determine_funtype(pj_term_t *term)
       t2 = pj_tree_determine_funtype(o->op2);
       if (t2 == pj_double_type)
         return pj_double_type;
+      if (t1==t2) return t1;
     }
-    return pj_int_type; /* no uint support yet */
+    else return t1;
   }
+  return pj_int_type; /* no uint support yet */
 }
 
