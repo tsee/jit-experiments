@@ -12,13 +12,15 @@ doubles.
 
 The Makefile is very rudimentary. Sorry.
 
-As stated above, this uses libjit. To get started, this is basically
-what you need to do (after getting a checkout of this repo):
+As stated above, this uses libjit. To get started you need to make sure you
+have flex, bison (Berkely yacc won't work), autoconf and libtool. Then this is
+basically what you need to do (after getting a checkout of this repo):
 
 Install libjit locally:
 
   $ git clone git://git.sv.gnu.org/dotgnu-pnet/libjit.git
   $ cd libjit
+  $ mkdir m4
   $ autoreconf -i -f
   $ ./configure --prefix=$PWD/../libjit-install
   $ make install
