@@ -57,7 +57,9 @@ sub ACTION_libjit {
         and die "Failed to run autoreconf";
     
     $self->log_info("Running ./configure\n");
-    system('./configure', '-enable-shared=false')
+    #system('./configure', '-enable-shared=false')
+    $ENV{CFLAGS} .= " -fPIC";
+    system('./configure')
         and die "Failed to configure libjit!";
     
     $self->log_info("Running make\n");

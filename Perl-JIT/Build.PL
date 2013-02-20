@@ -8,6 +8,14 @@ use lib File::Spec->catdir($Bin, 'inc');
 
 use Module::Build::PerlJIT;
 
+my @extra_compiler_flags;
+if ($ENV{DEBUG}) {
+  push @extra_compiler_flags, qw(-O0 -ggdb3);
+}
+else {
+  push @extra_compiler_flags, qw(-DNDEBUG);
+}
+
 Module::Build::PerlJIT->new(
     ##{ $plugin->get_default('dist_name') ##}
     ##{ $plugin->get_default('all_from') ##}
@@ -23,6 +31,7 @@ Module::Build::PerlJIT->new(
     xs_files => {'JIT.xs' => 'lib/Perl/JIT.xs'},
     include_dirs => [ '.', $Module::Build::PerlJIT::LIBJIT_INCLUDE ],
     extra_linker_flags => [$Module::Build::PerlJIT::LIBJIT_RESULT, '-lpthread'],
+    extra_compiler_flags => \@extra_compiler_flags,
 )->create_build_script;
 
 exit(0);
