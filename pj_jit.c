@@ -65,6 +65,12 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
   case pj_unop_exp:
     rv = jit_insn_exp(function, tmp1);
     break;
+  case pj_unop_not:
+    rv = jit_insn_not(function, tmp1);
+    break;
+  case pj_unop_not_bool:
+    rv = jit_insn_to_not_bool(function, tmp1);
+    break;
   case pj_binop_add:
     rv = jit_insn_add(function, tmp1, tmp2);
     break;
@@ -88,6 +94,33 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
     break;
   case pj_binop_right_shift:
     rv = jit_insn_shr(function, tmp1, tmp2);
+    break;
+  case pj_binop_and:
+    rv = jit_insn_and(function, tmp1, tmp2);
+    break;
+  case pj_binop_or:
+    rv = jit_insn_or(function, tmp1, tmp2);
+    break;
+  case pj_binop_xor:
+    rv = jit_insn_xor(function, tmp1, tmp2);
+    break;
+  case pj_binop_eq:
+    rv = jit_insn_eq(function, tmp1, tmp2);
+    break;
+  case pj_binop_ne:
+    rv = jit_insn_ne(function, tmp1, tmp2);
+    break;
+  case pj_binop_lt:
+    rv = jit_insn_lt(function, tmp1, tmp2);
+    break;
+  case pj_binop_le:
+    rv = jit_insn_le(function, tmp1, tmp2);
+    break;
+  case pj_binop_gt:
+    rv = jit_insn_gt(function, tmp1, tmp2);
+    break;
+  case pj_binop_ge:
+    rv = jit_insn_ge(function, tmp1, tmp2);
     break;
   default:
     abort();

@@ -135,6 +135,10 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
       printf("log");
     else if (o->optype == pj_unop_exp)
       printf("exp");
+    else if (o->optype == pj_unop_not)
+      printf("~");
+    else if (o->optype == pj_unop_not_bool)
+      printf("!");
 
     else if (o->optype == pj_binop_add)
       printf("+");
@@ -152,6 +156,24 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
       printf("<<");
     else if (o->optype == pj_binop_right_shift)
       printf("<<");
+    else if (o->optype == pj_binop_and)
+      printf("&");
+    else if (o->optype == pj_binop_or)
+      printf("|");
+    else if (o->optype == pj_binop_xor)
+      printf("^");
+    else if (o->optype == pj_binop_eq)
+      printf("==");
+    else if (o->optype == pj_binop_ne)
+      printf("!=");
+    else if (o->optype == pj_binop_lt)
+      printf("<");
+    else if (o->optype == pj_binop_le)
+      printf("<=");
+    else if (o->optype == pj_binop_gt)
+      printf(">");
+    else if (o->optype == pj_binop_ge)
+      printf(">=");
     else
       abort();
 
