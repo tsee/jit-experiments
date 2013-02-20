@@ -141,7 +141,6 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   }
 
   /* Create a custom op! */
-  //jitop = newBINOP(OP_CUSTOM, 0, left, right);
   NewOp(1101, jitop, 1, LISTOP);
   jitop->op_type = (OPCODE)OP_CUSTOM;
   jitop->op_first = left;
@@ -175,9 +174,8 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   jit_aux->jit_fun = NULL;
   jit_aux->saved_op_targ = addop->op_targ; /* save in case needed for sassign optimization */
 
-  /* FIXME FIXME FIXME
-   * It turns out that op_targ is probably not safe to use for custom OPs because
-   * some core functions may meddle with it. */
+  /* It may turn out that op_targ is not safe to use for custom OPs because
+   * some core functions may meddle with it. But chances are it's fine. */
   jitop->op_targ = (PADOFFSET)PTR2UV(jit_aux);
 
   /* JIT IT! */
@@ -349,6 +347,7 @@ my_pp_jit(pTHX)
          ? sp[-1]
          : PAD_SV(aux->saved_op_targ);
 
+  /* This implements overload and other magic horribleness */
   tryAMAGICbin_MG(add_amg, AMGf_assign|AMGf_numeric);
 
   {
