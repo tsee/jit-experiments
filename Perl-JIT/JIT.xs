@@ -13,8 +13,9 @@
 #include "stack.h"
 
 #include <jit/jit.h>
-#include <pj_terms.h>
-#include <pj_jit.h>
+#include "pj_terms.h"
+#include "pj_jit.h"
+#include "pj_optree.h"
 
 /* The struct of pertinent per-OP instance
  * data that we attach to each JIT OP. */
@@ -259,12 +260,14 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   Perl_op_null(aTHX_ (OP *)addop);
 }
 
-static void my_peep(pTHX_ OP *o)
+static void jit_peep(pTHX_ OP *o)
 {
   OP *root = o;
   /* SV *hint; */
 
-  orig_peepp(aTHX_ o);
+  pj_find_jit_candidate(aTHX_ root);
+
+  return; /* Do not run old JIT code any more: Being reworked! */
 
   if (DEBUG)
     printf("Looking at: %s (%s)\n", OP_NAME(o), OP_DESC(o));
@@ -322,6 +325,8 @@ static void my_peep(pTHX_ OP *o)
   }
 
   ptrstack_free(tovisit);
+
+  orig_peepp(aTHX_ root);
 }
 
 
@@ -384,7 +389,7 @@ BOOT:
     DEBUG = getenv("PERL_JIT_DEBUG");
     /* Setup our new peephole optimizer */
     orig_peepp = PL_peepp;
-    PL_peepp = my_peep;
+    PL_peepp = jit_peep;
 
     /* Set up JIT compiler */
     pj_jit_context = jit_context_create();
