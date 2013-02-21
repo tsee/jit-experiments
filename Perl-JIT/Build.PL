@@ -10,7 +10,7 @@ use Module::Build::PerlJIT;
 
 my @extra_compiler_flags;
 if ($ENV{DEBUG}) {
-  push @extra_compiler_flags, qw(-O0 -ggdb3);
+  push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra);
 }
 else {
   push @extra_compiler_flags, qw(-DNDEBUG);
