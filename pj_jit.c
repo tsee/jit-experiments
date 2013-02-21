@@ -153,7 +153,7 @@ pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun, pj_b
   /* Naive assumption: the maximum ivar is the total number if distinct arguments (-1) */
   unsigned int max_var = 0;
   for (i = 0; i < nvars; ++i) {
-    if (max_var < vars[i]->ivar)
+    if (max_var < (unsigned int)vars[i]->ivar)
       max_var = vars[i]->ivar;
   }
   printf("Found %i distinct variables in tree.\n", 1+max_var);
@@ -162,7 +162,7 @@ pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun, pj_b
 
   /* Setup libjit func signature */
   params = (jit_type_t *)malloc(nvars*sizeof(jit_type_t));
-  for (i = 0; (int)i < nvars; ++i) {
+  for (i = 0; i < nvars; ++i) {
     params[i] = (*funtype == pj_int_type ? jit_type_sys_int : jit_type_sys_double);
   }
   signature = jit_type_create_signature(
@@ -177,7 +177,7 @@ pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun, pj_b
   /* Setup libjit values for func params */
   jit_value_t *var_values;
   var_values = (jit_value_t *)malloc(nvars*sizeof(jit_value_t));
-  for (i = 0; (int)i < nvars; ++i) {
+  for (i = 0; i < nvars; ++i) {
     var_values[i] = jit_value_get_param(function, i);
   }
 
