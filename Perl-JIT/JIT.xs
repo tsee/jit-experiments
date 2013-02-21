@@ -394,9 +394,9 @@ BOOT:
     PL_opfreehook = my_opfreehook;
 
     /* Setup our custom op */
-    XopENTRY_set(&my_xop_jitop, xop_name, "jitaddop");
-    XopENTRY_set(&my_xop_jitop, xop_desc, "an addop that makes useless use of JIT");
-    XopENTRY_set(&my_xop_jitop, xop_class, OA_BINOP);
+    XopENTRY_set(&my_xop_jitop, xop_name, "jitop");
+    XopENTRY_set(&my_xop_jitop, xop_desc, "a just-in-time compiled composite operation");
+    XopENTRY_set(&my_xop_jitop, xop_class, OA_LISTOP);
     Perl_custom_op_register(aTHX_ my_pp_jit, &my_xop_jitop);
 
     /* Register super-late global cleanup hook for global JIT state */
