@@ -249,12 +249,20 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
 
 static void jit_peep(pTHX_ OP *o)
 {
-  OP *root = o;
-  /* SV *hint; */
+  pj_find_jit_candidate(aTHX_ o);
 
-  pj_find_jit_candidate(aTHX_ root);
+  /* may be called one layer deep into the tree, it seems, so respect siblings. */
+  while (o->op_sibling) {
+    o = o->op_sibling;
+    pj_find_jit_candidate(aTHX_ o);
+  }
+
+  orig_peepp(aTHX_ o);
 
   return; /* Do not run old JIT code any more: Being reworked! */
+
+
+  OP *root = o;
 
   PJ_DEBUG_2("Looking at: %s (%s)\n", OP_NAME(o), OP_DESC(o));
   /* Currently disabled lexicalization hacks/experiments */
@@ -309,8 +317,6 @@ static void jit_peep(pTHX_ OP *o)
   }
 
   ptrstack_free(tovisit);
-
-  orig_peepp(aTHX_ root);
 }
 
 
