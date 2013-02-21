@@ -18,8 +18,10 @@
 static void
 pj_attempt_jit(pTHX_ OP *o)
 {
+  printf("Attempting JIT on %s\n", OP_NAME(o));
 }
 
+#define IS_JITTABLE_OP_TYPE(otype) (otype == OP_ADD)
 
 /* inspired by B.xs */
 #define PMOP_pmreplstart(o)	o->op_pmstashstartu.op_pmreplstart
@@ -34,7 +36,12 @@ pj_find_jit_candidate(pTHX_ OP *o)
    *        stack instead. pj_find_jit_candidate should be relatively easy
    *        to do with a stack (see stack.h in same directory!). */
 
+  const unsigned int otype = o->op_type;
+
   OP *kid;
+
+  if (IS_JITTABLE_OP_TYPE(otype))
+    pj_attempt_jit(aTHX_ o);
 
   if (o && (o->op_flags & OPf_KIDS)) {
     for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
