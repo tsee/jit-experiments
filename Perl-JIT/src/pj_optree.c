@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "ppport.h"
+#include "pj_debug.h"
 
 /* Starting from a candidate for JITing, walk the OP tree to accumulate
  * a subtree that can be replaced with a single JIT OP. */
@@ -18,7 +19,7 @@
 static void
 pj_attempt_jit(pTHX_ OP *o)
 {
-  printf("Attempting JIT on %s\n", OP_NAME(o));
+  PJ_DEBUG_1("Attempting JIT on %s\n", OP_NAME(o));
 }
 
 #define IS_JITTABLE_OP_TYPE(otype) (otype == OP_ADD)
@@ -37,8 +38,9 @@ pj_find_jit_candidate(pTHX_ OP *o)
    *        to do with a stack (see stack.h in same directory!). */
 
   const unsigned int otype = o->op_type;
-
   OP *kid;
+
+  PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
 
   if (IS_JITTABLE_OP_TYPE(otype))
     pj_attempt_jit(aTHX_ o);
