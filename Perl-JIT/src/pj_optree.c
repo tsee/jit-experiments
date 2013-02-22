@@ -6,6 +6,7 @@
 #include "pj_debug.h"
 #include "stack.h"
 #include "pj_ast_terms.h"
+#include "pj_jit_op.h"
 
 #define IS_JITTABLE_ROOT_OP_TYPE(otype) \
         (otype == OP_ADD || otype == OP_SUBTRACT)
@@ -130,10 +131,15 @@ pj_attempt_jit(pTHX_ OP *o)
   ast = pj_build_ast(aTHX_ o, &subtrees, &nvariables);
 
   if (ast != NULL) {
-    /* TODO do stuff */
+    OP *jitop;
+
     PJ_DEBUG("Built actual AST for jitting.\n");
-    if (DEBUGGING)
+    if (PJ_DEBUGGING)
       pj_dump_tree(ast);
+
+    jitop = (OP *)pj_prepare_jit_op(aTHX_ nvariables, o);
+    PJ_DEBUG_1("Have a JIT OP: %s\n", OP_NAME(jitop));
+    /* TODO JIT IT FOR REAL */
   }
 
   pj_free_tree(ast);

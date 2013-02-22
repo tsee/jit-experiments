@@ -7,6 +7,9 @@
 #include <EXTERN.h>
 #include <perl.h>
 
+#include "pj_ast_terms.h"
+#include "stack.h"
+
 /* The struct of pertinent per-OP instance
  * data that we attach to each JIT OP. */
 typedef struct {
@@ -21,5 +24,8 @@ OP *pj_pp_jit(pTHX);
 
 /* Hook that will free the JIT OP aux structure of our custom ops */
 void pj_jitop_free_hook(pTHX_ OP *o);
+
+/* Set up JIT OP without doing actual compilation. */
+LISTOP *pj_prepare_jit_op(pTHX_ const unsigned int nvariables, OP *origop);
 
 #endif

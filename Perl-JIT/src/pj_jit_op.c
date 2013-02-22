@@ -77,3 +77,46 @@ pj_jitop_free_hook(pTHX_ OP *o)
     o->op_targ = 0; /* important or Perl will use it to access the pad */
   }
 }
+
+
+LISTOP *
+pj_prepare_jit_op(pTHX_ const unsigned int nvariables, OP *origop)
+{
+  LISTOP *jitop;
+  pj_jitop_aux_t *jit_aux;
+
+  NewOp(1101, jitop, 1, LISTOP);
+  jitop->op_type = (OPCODE)OP_CUSTOM;
+  jitop->op_private = 0;
+  jitop->op_flags = (nvariables > 0 ? (OPf_STACKED|OPf_KIDS) : 0);
+  if (origop->op_private & OPpTARGET_MY) {
+    /* If OPpTARGET_MY is set on the original OP, then we have a nasty situation.
+     * In a nutshell, this is set as an optimization for scalar assignment
+     * to a pad (== lexical) variable. If set, the addop will directly
+     * assign to whichever pad variable would otherwise be set by the sassign
+     * op. It won't bother putting a separate var on the stack.
+     * This is great, but it uses the op_targ member of the OP struct to
+     * define the offset into the pad where the output variable is to be found.
+     * That's a problem because we're using op_targ to hang the jit aux struct
+     * off of.
+     */
+    jitop->op_private |= OPpTARGET_MY;
+  }
+
+  /* Set it's implementation ptr */
+  jitop->op_ppaddr = pj_pp_jit;
+
+  /* Init jit_aux */
+  jit_aux = malloc(sizeof(pj_jitop_aux_t));
+  jit_aux->paramslist = (NV *)malloc(sizeof(NV) * nvariables);
+  jit_aux->jit_fun = NULL;
+  jit_aux->saved_op_targ = origop->op_targ; /* save in case needed for sassign optimization */
+  /* FIXME is copying op_targ good enough? */
+
+  /* It may turn out that op_targ is not safe to use for custom OPs because
+   * some core functions may meddle with it. But chances are it's fine.
+   * If not, we'll need to become extra-creative... */
+  jitop->op_targ = (PADOFFSET)PTR2UV(jit_aux);
+
+  return jitop;
+}
