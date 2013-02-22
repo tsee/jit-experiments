@@ -1,4 +1,4 @@
-#include "pj_terms.h"
+#include "pj_ast_terms.h"
 
 #include <stdio.h>
 #include <stdlib.h>

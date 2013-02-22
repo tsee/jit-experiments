@@ -5,7 +5,7 @@
 
 #include "pj_debug.h"
 #include "pj_global_state.h"
-#include "pj_jit.h"
+#include "pj_ast_jit.h"
 
 OP *
 pj_pp_jit(pTHX)

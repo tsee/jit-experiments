@@ -1,7 +1,7 @@
 #ifndef PJ_JIT_H_
 #define PJ_JIT_H_
 
-#include <pj_terms.h>
+#include <pj_ast_terms.h>
 #include <jit/jit.h>
 
 /* Generates outfun and funtype. funtype indicates the type of all parameters as well

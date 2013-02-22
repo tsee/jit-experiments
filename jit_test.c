@@ -5,9 +5,9 @@
 
 #include <jit/jit.h>
 
-#include <pj_terms.h>
-#include <pj_walkers.h>
-#include <pj_jit.h>
+#include <pj_ast_terms.h>
+#include <pj_ast_walkers.h>
+#include <pj_ast_jit.h>
 
 int
 main(int argc, char **argv)

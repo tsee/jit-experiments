@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "pj_walkers.h"
+#include "pj_ast_walkers.h"
 
 static void
 pj_tree_extract_vars_internal(pj_term_t *term, pj_variable_t * **vars, unsigned int *nvars)

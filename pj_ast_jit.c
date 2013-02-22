@@ -1,11 +1,11 @@
 
-#include "pj_jit.h"
+#include "pj_ast_jit.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
 
-#include <pj_walkers.h>
+#include <pj_ast_walkers.h>
 
 static jit_value_t pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *op);
 

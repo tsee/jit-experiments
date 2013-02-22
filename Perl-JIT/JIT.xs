@@ -17,8 +17,8 @@
 #include "pj_debug.h"
 
 /* AST and AST -> C fun stuff */
-#include "pj_terms.h"
-#include "pj_jit.h"
+#include "pj_ast_terms.h"
+#include "pj_ast_jit.h"
 
 /* OP-tree walker logic */
 #include "pj_optree.h"
