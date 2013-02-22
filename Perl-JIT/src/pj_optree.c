@@ -63,5 +63,7 @@ pj_find_jit_candidate(pTHX_ OP *o)
       ptrstack_push(backlog, kid);
     }
   }
+
+  ptrstack_free(backlog);
 }
 
