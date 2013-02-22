@@ -1,6 +1,8 @@
 #ifndef PJ_TERMS_H_
 #define PJ_TERMS_H_
 
+/* Definition of types and functions for the Perl JIT AST. */
+
 typedef int pj_optype;
 
 typedef enum {

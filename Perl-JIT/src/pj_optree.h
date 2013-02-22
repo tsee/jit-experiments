@@ -4,6 +4,8 @@
 #include "EXTERN.h"
 #include "perl.h"
 
+/* Code relating to traversing and manipulating the OP tree */
+
 /* Starting from root OP, traverse the tree to find candidate OP for JITing
  * and perform actual replacement if at all. */
 /* This function will internally call pj_attempt_jit on candidates,
