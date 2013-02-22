@@ -18,6 +18,8 @@
 #include "pj_optree.h"
 #include "pj_debug.h"
 
+#include "pj_global_state.h"
+
 /* The struct of pertinent per-OP instance
  * data that we attach to each JIT OP. */
 typedef struct {
@@ -27,20 +29,8 @@ typedef struct {
   PADOFFSET saved_op_targ; /* Replacement for JIT OP's op_targ if necessary */
 } pj_jitop_aux_t;
 
-/* The actual custom op definition structure */
-static XOP my_xop_jitop;
 /* The generic custom OP implementation - push/pop function */
 static OP *my_pp_jit(pTHX);
-/* Original peephole optimizer */
-static peep_t orig_peepp;
-
-/* Original opfreehook - we wrap this to free JIT OP aux structs */
-static Perl_ophook_t orig_opfreehook;
-
-/* Global state. Obviously not thread-safe.
- * Thread-safety would require this to be dangling off the
- * interpreter struct in some fashion. */
-static jit_context_t pj_jit_context = NULL; /* jit_context_t is a ptr */
 
 /* End-of-global-destruction cleanup hook.
  * Actually installed in BOOT XS section. */
@@ -51,8 +41,8 @@ pj_jit_final_cleanup(pTHX_ void *ptr)
   
   PJ_DEBUG("pj_jit_final_cleanup after global destruction.\n");
 
-  if (pj_jit_context == NULL)
-    jit_context_destroy(pj_jit_context);
+  if (PJ_jit_context == NULL)
+    jit_context_destroy(PJ_jit_context);
 }
 
 /* Hook that will free the JIT OP aux structure of our custom ops */
@@ -62,8 +52,8 @@ pj_jit_final_cleanup(pTHX_ void *ptr)
 static void
 my_opfreehook(pTHX_ OP *o)
 {
-  if (orig_opfreehook != NULL)
-    orig_opfreehook(aTHX_ o);
+  if (PJ_orig_opfreehook != NULL)
+    PJ_orig_opfreehook(aTHX_ o);
 
   /* printf("cleaning %s\n", OP_NAME(o)); */
   if (o->op_ppaddr == my_pp_jit) {
@@ -183,7 +173,7 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
 
   jit_aux->nparams = iparam;
 
-  if (0 == pj_tree_jit(pj_jit_context, jit_ast, &func, &funtype)) {
+  if (0 == pj_tree_jit(PJ_jit_context, jit_ast, &func, &funtype)) {
     PJ_DEBUG("JIT succeeded!\n");
   } else {
     PJ_DEBUG("JIT failed!\n");
@@ -257,7 +247,7 @@ static void jit_peep(pTHX_ OP *o)
     pj_find_jit_candidate(aTHX_ o);
   }
 
-  orig_peepp(aTHX_ o);
+  PJ_orig_peepp(aTHX_ o);
 
   return; /* Do not run old JIT code any more: Being reworked! */
 
@@ -376,21 +366,21 @@ MODULE = Perl::JIT	PACKAGE = Perl::JIT
 BOOT:
   {
     /* Setup our new peephole optimizer */
-    orig_peepp = PL_peepp;
+    PJ_orig_peepp = PL_peepp;
     PL_peepp = jit_peep;
 
     /* Set up JIT compiler */
-    pj_jit_context = jit_context_create();
+    PJ_jit_context = jit_context_create();
 
     /* Setup our callback for cleaning up JIT OPs during global cleanup */
-    orig_opfreehook = PL_opfreehook;
+    PJ_orig_opfreehook = PL_opfreehook;
     PL_opfreehook = my_opfreehook;
 
     /* Setup our custom op */
-    XopENTRY_set(&my_xop_jitop, xop_name, "jitop");
-    XopENTRY_set(&my_xop_jitop, xop_desc, "a just-in-time compiled composite operation");
-    XopENTRY_set(&my_xop_jitop, xop_class, OA_LISTOP);
-    Perl_custom_op_register(aTHX_ my_pp_jit, &my_xop_jitop);
+    XopENTRY_set(&PJ_xop_jitop, xop_name, "jitop");
+    XopENTRY_set(&PJ_xop_jitop, xop_desc, "a just-in-time compiled composite operation");
+    XopENTRY_set(&PJ_xop_jitop, xop_class, OA_LISTOP);
+    Perl_custom_op_register(aTHX_ my_pp_jit, &PJ_xop_jitop);
 
     /* Register super-late global cleanup hook for global JIT state */
     Perl_call_atexit(aTHX_ pj_jit_final_cleanup, NULL);
