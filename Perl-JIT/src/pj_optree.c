@@ -4,6 +4,7 @@
 
 #include "ppport.h"
 #include "pj_debug.h"
+#include "stack.h"
 
 /* Starting from a candidate for JITing, walk the OP tree to accumulate
  * a subtree that can be replaced with a single JIT OP. */
@@ -27,34 +28,40 @@ pj_attempt_jit(pTHX_ OP *o)
 /* inspired by B.xs */
 #define PMOP_pmreplstart(o)	o->op_pmstashstartu.op_pmreplstart
 #define PMOP_pmreplroot(o)	o->op_pmreplrootu.op_pmreplroot
+
 /* Traverse OP tree from o until done OR a candidate for JITing was found.
  * For candidates, invoke JIT attempt and then move on without going into
  * the particular sub-tree. */
 void
 pj_find_jit_candidate(pTHX_ OP *o)
 {
-  /* FIXME: limit depth of recursion of write iterative version with
-   *        stack instead. pj_find_jit_candidate should be relatively easy
-   *        to do with a stack (see stack.h in same directory!). */
-
   const unsigned int otype = o->op_type;
   OP *kid;
+  ptrstack_t *backlog;
 
-  PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
+  backlog = ptrstack_make(5, 0);
+  ptrstack_push(backlog, o);
 
-  if (IS_JITTABLE_OP_TYPE(otype))
-    pj_attempt_jit(aTHX_ o);
+  /* Iterative tree traversal using stack */
+  while (!ptrstack_empty(backlog)) {
+    o = ptrstack_pop(backlog);
 
-  if (o && (o->op_flags & OPf_KIDS)) {
-    for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
-      pj_find_jit_candidate(aTHX_ kid);
+    PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
+
+    if (IS_JITTABLE_OP_TYPE(otype))
+      pj_attempt_jit(aTHX_ o);
+
+    if (o && (o->op_flags & OPf_KIDS)) {
+      for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
+        ptrstack_push(backlog, kid);
+      }
     }
-  }
 
-  if (o && OP_CLASS(o) == OA_PMOP && o->op_type != OP_PUSHRE
-        && (kid = PMOP_pmreplroot(cPMOPo)))
-  {
-    pj_find_jit_candidate(aTHX_ kid);
+    if (o && OP_CLASS(o) == OA_PMOP && o->op_type != OP_PUSHRE
+          && (kid = PMOP_pmreplroot(cPMOPo)))
+    {
+      ptrstack_push(backlog, kid);
+    }
   }
 }
 
