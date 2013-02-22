@@ -13,57 +13,24 @@
 #include "stack.h"
 
 #include <jit/jit.h>
-#include "pj_terms.h"
-#include "pj_jit.h"
-#include "pj_optree.h"
+
 #include "pj_debug.h"
 
+/* AST and AST -> C fun stuff */
+#include "pj_terms.h"
+#include "pj_jit.h"
+
+/* OP-tree walker logic */
+#include "pj_optree.h"
+
+/* Global state and initialization routines */
 #include "pj_global_state.h"
 
-/* The struct of pertinent per-OP instance
- * data that we attach to each JIT OP. */
-typedef struct {
-  void (*jit_fun)(void);
-  NV *paramslist;
-  UV nparams;
-  PADOFFSET saved_op_targ; /* Replacement for JIT OP's op_targ if necessary */
-} pj_jitop_aux_t;
+/* Everything related to the actual run-time custom OP implementation */
+#include "pj_jit_op.h"
 
-/* The generic custom OP implementation - push/pop function */
-static OP *my_pp_jit(pTHX);
-
-/* End-of-global-destruction cleanup hook.
- * Actually installed in BOOT XS section. */
-void
-pj_jit_final_cleanup(pTHX_ void *ptr)
-{
-  (void)ptr;
-  
-  PJ_DEBUG("pj_jit_final_cleanup after global destruction.\n");
-
-  if (PJ_jit_context == NULL)
-    jit_context_destroy(PJ_jit_context);
-}
-
-/* Hook that will free the JIT OP aux structure of our custom ops */
-/* FIXME this doesn't appear to actually be called for all ops -
- *       specifically NOT for our custom OP. Is this because the
- *       custom OP isn't wired up correctly? */
-static void
-my_opfreehook(pTHX_ OP *o)
-{
-  if (PJ_orig_opfreehook != NULL)
-    PJ_orig_opfreehook(aTHX_ o);
-
-  /* printf("cleaning %s\n", OP_NAME(o)); */
-  if (o->op_ppaddr == my_pp_jit) {
-    PJ_DEBUG("Cleaning up custom OP's pj_jitop_aux_t\n");
-    pj_jitop_aux_t *aux = (pj_jitop_aux_t *)o->op_targ;
-    free(aux->paramslist);
-    free(aux);
-    o->op_targ = 0; /* important or Perl will use it to access the pad */
-  }
-}
+/* The custom peephole optimizer routines */
+#include "pj_jit_peep.h"
 
 
 static void
@@ -186,7 +153,7 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   jit_ast = NULL;
 
   /* Set it's implementation ptr */
-  jitop->op_ppaddr = my_pp_jit;
+  jitop->op_ppaddr = pj_pp_jit;
 
   /* Expected output execution order for two PADSV ops:
    * ---> left -> right -> jitop ---> */
@@ -237,154 +204,10 @@ attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
   Perl_op_null(aTHX_ (OP *)addop);
 }
 
-static void jit_peep(pTHX_ OP *o)
-{
-  pj_find_jit_candidate(aTHX_ o);
-
-  /* may be called one layer deep into the tree, it seems, so respect siblings. */
-  while (o->op_sibling) {
-    o = o->op_sibling;
-    pj_find_jit_candidate(aTHX_ o);
-  }
-
-  PJ_orig_peepp(aTHX_ o);
-
-  return; /* Do not run old JIT code any more: Being reworked! */
-
-
-  OP *root = o;
-
-  PJ_DEBUG_2("Looking at: %s (%s)\n", OP_NAME(o), OP_DESC(o));
-  /* Currently disabled lexicalization hacks/experiments */
-  /*
-  hint = cop_hints_fetch_pvs(PL_curcop, "jit", 0);
-  if (hint != NULL && SvTRUE(hint)) {
-    printf("Optimizing this op!\n");
-  }
-  else {
-    printf("NOT optimizing this op!\n");
-  }
-  */
-
-  ptrstack_t *tovisit;
-  tovisit = ptrstack_make(20, 0);
-
-  OP *kid = o;
-  while (kid->op_sibling != NULL) {
-    kid = kid->op_sibling;
-    ptrstack_push(tovisit, root);
-    ptrstack_push(tovisit, kid);
-  }
-
-  OP *parent = root;
-  while (!ptrstack_empty(tovisit)) {
-    int do_recurse = 1;
-    o = ptrstack_pop(tovisit);
-    parent = ptrstack_pop(tovisit);
-
-    if (PJ_DEBUGGING)
-      printf("Walking: Looking at: %s (%s); parent: %s\n", OP_NAME(o), OP_DESC(o), OP_NAME(parent));
-
-    if (o->op_type == OP_ADD)
-    {
-      if (   (cBINOPo->op_first->op_type == OP_PADSV || cBINOPo->op_first->op_type == OP_CONST)
-          && (cBINOPo->op_last->op_type == OP_PADSV || cBINOPo->op_last->op_type == OP_CONST) )
-      {
-        PJ_DEBUG_1("Found candidate with parent of type %s!\n", OP_NAME(parent));
-        attempt_add_jit_proof_of_principle(aTHX_ cBINOPo, parent);
-        do_recurse = 0; /* for now */
-      }
-    }
-
-    /* TODO s/// can have more stuff inside but not OPf_KIDS set? (can steal from B::Concise later) */
-    if (do_recurse && o->op_flags & OPf_KIDS) {
-      PJ_DEBUG_1("Who knew? %s has kids.\n", OP_NAME(o));
-      for (kid = cBINOPo->op_first; kid != NULL; kid = kid->op_sibling) {
-        ptrstack_push(tovisit, o);
-        ptrstack_push(tovisit, kid);
-      }
-    }
-  }
-
-  ptrstack_free(tovisit);
-}
-
-
-OP *
-my_pp_jit(pTHX)
-{
-  dVAR; dSP;
-  /* Traditionally, addop uses dATARGET here, but that relies
-   * on being able to use PL_op->op_targ as a PAD offset sometimes.
-   * For the JIT OP, this info comes from the aux struct, so we need
-   * to inline a modified version of dATARGET. */
-  SV *targ;
-
-  pj_jitop_aux_t *aux = (pj_jitop_aux_t *) ((BINOP *)PL_op)->op_targ;
-
-  SV *tmpsv;
-  unsigned int i, n;
-
-  //printf("Custom op called\n");
-
-  /* inlined modified dATARGET, see above */
-  targ = PL_op->op_flags & OPf_STACKED
-         ? sp[-1]
-         : PAD_SV(aux->saved_op_targ);
-
-  /* This implements overload and other magic horribleness */
-  tryAMAGICbin_MG(add_amg, AMGf_assign|AMGf_numeric);
-
-  {
-    double result; /* FIXME function ret type should be dynamic */
-    double *params = aux->paramslist;
-    n = aux->nparams;
-
-    /* Pop all args from stack except the last */
-    for (i = 0; i < n-1; ++i) {
-      tmpsv = POPs;
-      params[i] = SvNV_nomg(tmpsv);
-    }
-    /* If there's any args, leave the final one's SV on the stack */
-    if (n != 0) {
-      tmpsv = TOPs;
-      params[n-1] = SvNV_nomg(tmpsv);
-    }
-    //printf("In: %f %f\n", params[0], params[1]);
-    pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
-
-    PJ_DEBUG_1("Add result from JIT: %f\n", (float)result);
-    SETn((NV)result);
-  }
-
-  RETURN;
-}
-
-
 MODULE = Perl::JIT	PACKAGE = Perl::JIT
 
 BOOT:
-  {
-    /* Setup our new peephole optimizer */
-    PJ_orig_peepp = PL_peepp;
-    PL_peepp = jit_peep;
-
-    /* Set up JIT compiler */
-    PJ_jit_context = jit_context_create();
-
-    /* Setup our callback for cleaning up JIT OPs during global cleanup */
-    PJ_orig_opfreehook = PL_opfreehook;
-    PL_opfreehook = my_opfreehook;
-
-    /* Setup our custom op */
-    XopENTRY_set(&PJ_xop_jitop, xop_name, "jitop");
-    XopENTRY_set(&PJ_xop_jitop, xop_desc, "a just-in-time compiled composite operation");
-    XopENTRY_set(&PJ_xop_jitop, xop_class, OA_LISTOP);
-    Perl_custom_op_register(aTHX_ my_pp_jit, &PJ_xop_jitop);
-
-    /* Register super-late global cleanup hook for global JIT state */
-    Perl_call_atexit(aTHX_ pj_jit_final_cleanup, NULL);
-  }
+    pj_init_global_state(aTHX);
 
 void
 import(char *cl)
