@@ -30,7 +30,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
   unsigned int ikid = 0;
   unsigned int i;
 
-  PJ_DEBUG_1("pj_build_ast running on %s\n", OP_NAME(o));
+  PJ_DEBUG_2("pj_build_ast running on %s. Have %i subtrees right now.\n", OP_NAME(o), (int)(ptrstack_nelems(*subtrees)));
 
   if (o && (o->op_flags & OPf_KIDS)) {
     for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
@@ -59,7 +59,8 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
         /* Can't represent OP with AST. So instead,
          * recursively scan for separate candidates and
          * treat as subtree. */
-        pj_find_jit_candidate(aTHX_ kid);
+        PJ_DEBUG_1("Cannot represent this OP with AST. Emitting variable. (%s)", OP_NAME(kid));
+        pj_find_jit_candidate(aTHX_ kid, o); /* o is parent of kid */
         kid_terms[ikid] = pj_make_variable((*nvariables)++, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
 
         ptrstack_push(*subtrees, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
@@ -140,6 +141,32 @@ pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, ptrstack_t *subtrees)
   }
 }
 
+
+static void
+pj_fixup_parent_op(pTHX_ OP *jitop, OP *origop, UNOP *parentop)
+{
+  OP *kid;
+
+  if (parentop->op_first == origop) {
+    parentop->op_first = jitop;
+  }
+
+  for (kid = parentop->op_first; kid; kid = kid->op_sibling) {
+    if (kid->op_sibling && kid->op_sibling == origop) {
+      kid->op_sibling = jitop;
+      break;
+    }
+  }
+
+  if (OP_CLASS((OP *)parentop) != OA_UNOP) {
+    if (((BINOP *)parentop)->op_last == origop)
+      ((BINOP *)parentop)->op_last = jitop;
+  }
+
+  jitop->op_sibling = origop->op_sibling;
+}
+
+
 /* Starting from a candidate for JITing, walk the OP tree to accumulate
  * a subtree that can be replaced with a single JIT OP. */
 /* TODO: Needs to walk the OPs, checking whether they qualify. If
@@ -152,7 +179,7 @@ pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, ptrstack_t *subtrees)
  *       left-hugging in order to get the sub tree is normal
  *       execution order. */
 static void
-pj_attempt_jit(pTHX_ OP *o)
+pj_attempt_jit(pTHX_ OP *o, OP *parentop)
 {
   /* In reality, we don't use the ptrstack_t as a proper stack,
    * but more of a dynamically growing array */
@@ -169,7 +196,7 @@ pj_attempt_jit(pTHX_ OP *o)
     OP *jitop;
     pj_jitop_aux_t *jitop_aux;
 
-    PJ_DEBUG("Built actual AST for jitting.\n");
+    PJ_DEBUG_2("Built actual AST for jitting. Have %i subtrees which means %i variables.\n", (int)(ptrstack_nelems(subtrees)/2), nvariables);
     if (PJ_DEBUGGING)
       pj_dump_tree(ast);
 
@@ -192,10 +219,11 @@ pj_attempt_jit(pTHX_ OP *o)
      */
     pj_build_jitop_kid_list(aTHX_ (LISTOP *)jitop, subtrees);
 
-    jitop_aux = (pj_jitop_aux_t *)jitop->op_targ;
+    pj_fixup_parent_op(aTHX_ jitop, o, (UNOP *)parentop);
 
-    /* TODO fixup parent OP */
     /* TODO clean up orphaned OPs */
+
+    jitop_aux = (pj_jitop_aux_t *)jitop->op_targ;
     /* TODO JIT IT FOR REAL */
   }
 
@@ -211,29 +239,38 @@ pj_attempt_jit(pTHX_ OP *o)
  * For candidates, invoke JIT attempt and then move on without going into
  * the particular sub-tree. */
 void
-pj_find_jit_candidate(pTHX_ OP *o)
+pj_find_jit_candidate(pTHX_ OP *o, OP *parentop)
 {
   unsigned int otype;
   OP *kid;
   ptrstack_t *backlog;
 
-  backlog = ptrstack_make(5, 0);
+  backlog = ptrstack_make(8, 0);
+  ptrstack_push(backlog, parentop);
   ptrstack_push(backlog, o);
 
   /* Iterative tree traversal using stack */
   while (!ptrstack_empty(backlog)) {
     o = ptrstack_pop(backlog);
+    parentop = ptrstack_pop(backlog);
     otype = o->op_type;
 
     PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
 
     /* Attempt JIT if the right OP type. Don't recurse if so. */
     if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
-      pj_attempt_jit(aTHX_ o);
+      if (parentop != NULL) {
+        /* Can only JIT if we have the parent OP. Some time later, maybe
+         * I'll discover a way to find the parent... */
+        pj_attempt_jit(aTHX_ o, parentop);
+      }
+      else
+        PJ_DEBUG_1("Might have been able to JIT %s, but parent OP is NULL", OP_NAME(o));
     }
     else {
       if (o && (o->op_flags & OPf_KIDS)) {
         for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
+          ptrstack_push(backlog, o); /* parent for kid */
           ptrstack_push(backlog, kid);
         }
       }
@@ -241,6 +278,7 @@ pj_find_jit_candidate(pTHX_ OP *o)
       if (o && OP_CLASS(o) == OA_PMOP && o->op_type != OP_PUSHRE
             && (kid = PMOP_pmreplroot(cPMOPo)))
       {
+        ptrstack_push(backlog, o); /* parent for kid */
         ptrstack_push(backlog, kid);
       }
     } /* end "not a jittable root OP" */

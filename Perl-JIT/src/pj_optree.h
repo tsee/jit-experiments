@@ -11,7 +11,7 @@
 /* This function will internally call pj_attempt_jit on candidates,
  * which will, in turn, call this function on subtrees that it cannot
  * JIT. */
-void pj_find_jit_candidate(pTHX_ OP *o);
+void pj_find_jit_candidate(pTHX_ OP *o, OP *parentop);
 
 
 #endif
