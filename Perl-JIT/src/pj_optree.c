@@ -105,6 +105,35 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
   return retval;
 }
 
+static void
+pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, ptrstack_t *subtrees)
+{
+  if (ptrstack_empty(subtrees)) {
+    jitop->op_first = NULL; /* FIXME is this valid for a LISTOP? */
+    jitop->op_last = NULL;
+  }
+  else {
+    void **subtree_array = ptrstack_data_pointer(subtrees);
+    const unsigned int n = ptrstack_nelems(subtrees);
+    unsigned int i;
+    OP *o = NULL;
+
+    /* TODO for now, we just always impose "numeric". Later, this may need
+     *      to be flexible. */
+    o = (OP *)subtree_array[1];
+    jitop->op_first = o;
+
+    /* Alternating op-imposed-type and actual subtree */
+    for (i = 2; i < n; i += 2) {
+      /* TODO get the imposed type context from subtree_array[i] here */
+      o->op_sibling = subtree_array[i+1];
+      o = o->op_sibling;
+    }
+    jitop->op_last = o;
+    o->op_sibling = NULL;
+  }
+}
+
 /* Starting from a candidate for JITing, walk the OP tree to accumulate
  * a subtree that can be replaced with a single JIT OP. */
 /* TODO: Needs to walk the OPs, checking whether they qualify. If
@@ -132,6 +161,7 @@ pj_attempt_jit(pTHX_ OP *o)
 
   if (ast != NULL) {
     OP *jitop;
+    pj_jitop_aux_t *jitop_aux;
 
     PJ_DEBUG("Built actual AST for jitting.\n");
     if (PJ_DEBUGGING)
@@ -139,6 +169,10 @@ pj_attempt_jit(pTHX_ OP *o)
 
     jitop = (OP *)pj_prepare_jit_op(aTHX_ nvariables, o);
     PJ_DEBUG_1("Have a JIT OP: %s\n", OP_NAME(jitop));
+
+    pj_build_jitop_kid_list(aTHX_ (LISTOP *)jitop, subtrees);
+
+    jitop_aux = (pj_jitop_aux_t *)jitop->op_targ;
     /* TODO JIT IT FOR REAL */
   }
 
