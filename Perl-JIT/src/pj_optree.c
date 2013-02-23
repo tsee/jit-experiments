@@ -187,6 +187,9 @@ pj_attempt_jit(pTHX_ OP *o)
     pj_build_jitop_kid_list(aTHX_ (LISTOP *)jitop, subtrees);
 
     jitop_aux = (pj_jitop_aux_t *)jitop->op_targ;
+
+    /* TODO fixup parent OP */
+    /* TODO clean up orphaned OPs */
     /* TODO JIT IT FOR REAL */
   }
 
