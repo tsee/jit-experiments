@@ -38,12 +38,14 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
 
       const unsigned int otype = kid->op_type;
       if (otype == OP_CONST) {
+        PJ_DEBUG("CONST being inlined.\n");
         kid_terms[ikid] = pj_make_const_dbl(SvNV(cSVOPx_sv(kid))); /* FIXME replace type by inferred type */
       }
       else if (otype == OP_PADSV) {
         kid_terms[ikid] = pj_make_variable((*nvariables)++, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
+        PJ_DEBUG("PADSV being added to subtrees.\n");
         ptrstack_push(*subtrees, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
-        ptrstack_push(*subtrees, o);
+        ptrstack_push(*subtrees, kid);
       }
       else if (IS_JITTABLE_OP_TYPE(otype)) {
         kid_terms[ikid] = pj_build_ast(aTHX_ kid, subtrees, nvariables);
@@ -102,6 +104,8 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
           && (kid = PMOP_pmreplroot(cPMOPo)))
     {}
   */
+
+  PJ_DEBUG_1("Returning from pj_build_ast. Have %i subtrees right now.\n", (int)(ptrstack_nelems(*subtrees)/2));
   return retval;
 }
 
@@ -122,9 +126,11 @@ pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, ptrstack_t *subtrees)
      *      to be flexible. */
     o = (OP *)subtree_array[1];
     jitop->op_first = o;
+    PJ_DEBUG_1("First kid is %s\n", OP_NAME(o));
 
     /* Alternating op-imposed-type and actual subtree */
     for (i = 2; i < n; i += 2) {
+      PJ_DEBUG_2("Kid %u is %s\n", (int)(i/2)+1, OP_NAME(o));
       /* TODO get the imposed type context from subtree_array[i] here */
       o->op_sibling = subtree_array[i+1];
       o = o->op_sibling;
