@@ -9,7 +9,7 @@
 #include "pj_jit_op.h"
 
 #define IS_JITTABLE_ROOT_OP_TYPE(otype) \
-        (otype == OP_ADD || otype == OP_SUBTRACT)
+        (otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE)
 
 #define IS_JITTABLE_OP_TYPE(otype) \
         (IS_JITTABLE_ROOT_OP_TYPE(otype) \
@@ -73,19 +73,19 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     /* FIXME find a way of doing this that is less manual/verbose */
     if (parent_otype == OP_ADD) {
       assert(ikid == 2);
-      retval = pj_make_binop(
-        pj_binop_add,
-        kid_terms[0],
-        kid_terms[1]
-      );
+      retval = pj_make_binop( pj_binop_add, kid_terms[0], kid_terms[1] );
     }
     else if (parent_otype == OP_SUBTRACT) {
       assert(ikid == 2);
-      retval = pj_make_binop(
-        pj_binop_subtract,
-        kid_terms[0],
-        kid_terms[1]
-      );
+      retval = pj_make_binop( pj_binop_subtract, kid_terms[0], kid_terms[1] );
+    }
+    else if (parent_otype == OP_MULTIPLY) {
+      assert(ikid == 2);
+      retval = pj_make_binop( pj_binop_multiply, kid_terms[0], kid_terms[1] );
+    }
+    else if (parent_otype == OP_DIVIDE) {
+      assert(ikid == 2);
+      retval = pj_make_binop( pj_binop_divide, kid_terms[0], kid_terms[1] );
     }
     else {
       PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s", OP_NAME(o));
