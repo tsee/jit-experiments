@@ -170,6 +170,20 @@ pj_attempt_jit(pTHX_ OP *o)
     jitop = (OP *)pj_prepare_jit_op(aTHX_ nvariables, o);
     PJ_DEBUG_1("Have a JIT OP: %s\n", OP_NAME(jitop));
 
+    /* The following function call will build the usual LISTOP
+     * structure where op_first points at the start of the linked
+     * list of kids and op_last points at the end. The kids
+     * are linked using their op_sibling pointer.
+     *
+     *       /-----JITOP------\
+     *      /                  \
+     *     /op_first            \op_last
+     *    /                      \
+     *   OP ---> OP ---> ... ---> OP
+     *      op_s    op_s     op_s
+     *
+     * where op_s is understood to be "op_sibling".
+     */
     pj_build_jitop_kid_list(aTHX_ (LISTOP *)jitop, subtrees);
 
     jitop_aux = (pj_jitop_aux_t *)jitop->op_targ;
