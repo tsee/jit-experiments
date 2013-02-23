@@ -63,7 +63,7 @@ PJ_STATIC_INLINE int ptrstack_empty(ptrstack_t *stack);
 
 
 /* Returns the raw pointer to the stack contents, base at 0. */
-PJ_STATIC_INLINE void *ptrstack_data_pointer(ptrstack_t *stack);
+PJ_STATIC_INLINE void **ptrstack_data_pointer(ptrstack_t *stack);
 
 /* Force the stack to grow to at least the given absolute number of elements.
  * Not necessary to call manually. The stack will grow dynamically. */
@@ -194,10 +194,10 @@ ptrstack_empty(ptrstack_t *stack)
   return (stack->nextpos == 0);
 }
 
-PJ_STATIC_INLINE void *
+PJ_STATIC_INLINE void **
 ptrstack_data_pointer(ptrstack_t *stack)
 {
-  return *stack->data;
+  return stack->data;
 }
 
 
