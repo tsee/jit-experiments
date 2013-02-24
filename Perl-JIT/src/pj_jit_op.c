@@ -22,7 +22,7 @@ pj_pp_jit(pTHX)
   SV *tmpsv;
   unsigned int i, n;
 
-  //printf("Custom op called\n");
+  PJ_DEBUG("Custom op called\n");
 
   /* inlined modified dATARGET, see above */
   targ = PL_op->op_flags & OPf_STACKED

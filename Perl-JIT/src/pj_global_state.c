@@ -22,12 +22,12 @@ pj_init_global_state(pTHX)
   /* Setup our callback for cleaning up JIT OPs during global cleanup */
   PJ_orig_opfreehook = PL_opfreehook;
   PL_opfreehook = pj_jitop_free_hook;
-  Perl_custom_op_register(aTHX_ pj_pp_jit, &PJ_xop_jitop);
 
   /* Setup our custom op */
   XopENTRY_set(&PJ_xop_jitop, xop_name, "jitop");
   XopENTRY_set(&PJ_xop_jitop, xop_desc, "a just-in-time compiled composite operation");
   XopENTRY_set(&PJ_xop_jitop, xop_class, OA_LISTOP);
+  Perl_custom_op_register(aTHX_ pj_pp_jit, &PJ_xop_jitop);
 
   /* Register super-late global cleanup hook for global JIT state */
   Perl_call_atexit(aTHX_ pj_global_state_final_cleanup, NULL);

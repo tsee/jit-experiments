@@ -187,7 +187,8 @@ pj_attempt_jit(pTHX_ OP *o, OP *parentop)
   pj_term_t *ast;
   unsigned int nvariables = 0;
 
-  PJ_DEBUG_1("Attempting JIT on %s\n", OP_NAME(o));
+  if (PJ_DEBUGGING)
+    printf("Attempting JIT on %s (%p, %p)\n", OP_NAME(o), o, o->op_next);
   subtrees = ptrstack_make(3, 0);
 
   ast = pj_build_ast(aTHX_ o, &subtrees, &nvariables);
