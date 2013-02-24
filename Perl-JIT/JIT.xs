@@ -36,6 +36,8 @@
 static void
 fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
 {
+  abort();
+
   OP *kid;
   /* fixup parent's basic order ptr */
   printf("Parent op is a: %s (class %i. OA_LIST==%i)\n", OP_NAME(parent), OP_CLASS(parent), OA_LISTOP);
@@ -76,6 +78,8 @@ fixup_parent_op(pTHX_ OP *parent, OP *oldkid, OP *newkid)
 static void
 attempt_add_jit_proof_of_principle(pTHX_ BINOP *addop, OP *parent)
 {
+  abort();
+
   LISTOP *jitop;
   OP *left  = addop->op_first;
   OP *right = addop->op_last;
