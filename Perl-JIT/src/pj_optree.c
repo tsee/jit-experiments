@@ -63,6 +63,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
       if (otype == OP_CONST) {
         if (ptrstack_empty(*subtrees)) {
           PJ_DEBUG("CONST is first-executed tree element, can't inline.\n");
+          kid->op_ppaddr = PL_ppaddr[OP_NULL]; /* FIXME hobo nulling not nice. Breaks incoming pointers for some reason otherwise. */
           //Perl_op_null(aTHX_ kid);
           ptrstack_push(*subtrees, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
           ptrstack_push(*subtrees, kid);
