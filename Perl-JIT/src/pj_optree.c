@@ -188,18 +188,30 @@ pj_fixup_parent_op(pTHX_ OP *jitop, OP *origop, UNOP *parentop)
 
   PJ_DEBUG_1("Doing parent fixups for %s\n", OP_NAME((OP *)parentop));
 
+  /* FIXME the real question is why parent OP is ENTER? */
+  /*while (!(parentop->op_flags & OPf_KIDS)) {
+    parentop = parentop->op_sibling;
+  }
+  PJ_DEBUG_1("Doing parent fixups for %s\n", OP_NAME((OP *)parentop));
+  */
+  jitop->op_next = origop->op_next;
+
   if (parentop->op_first == origop) {
     parentop->op_first = jitop;
     jitop->op_sibling = origop->op_sibling;
     if (jitop->op_sibling) {
       jitop->op_next = pj_find_first_executed_op(aTHX_ jitop->op_sibling);
     }
+    /*
     else {
       jitop->op_next = (OP *)parentop;
     }
+    */
   }
   else {
     for (kid = parentop->op_first; kid; kid = kid->op_sibling) {
+      PJ_DEBUG_1("%p\n", kid);
+      PJ_DEBUG_1("%s\n", OP_NAME(kid));
       if (kid->op_sibling && kid->op_sibling == origop) {
         kid->op_sibling = jitop;
         jitop->op_sibling = origop->op_sibling;
@@ -207,9 +219,11 @@ pj_fixup_parent_op(pTHX_ OP *jitop, OP *origop, UNOP *parentop)
         if (jitop->op_sibling) {
           jitop->op_next = pj_find_first_executed_op(aTHX_ jitop->op_sibling);
         }
+        /*
         else {
           jitop->op_next = (OP *)parentop;
         }
+        */
         break;
       }
     }
@@ -322,6 +336,7 @@ pj_find_jit_candidate(pTHX_ OP *o, OP *parentop)
       if (parentop != NULL) {
         /* Can only JIT if we have the parent OP. Some time later, maybe
          * I'll discover a way to find the parent... */
+        printf("Attempting JIT with parent OP %s\n", OP_NAME((OP *)parentop));
         pj_attempt_jit(aTHX_ o, parentop);
       }
       else
