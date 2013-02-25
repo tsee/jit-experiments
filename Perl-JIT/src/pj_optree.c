@@ -186,19 +186,36 @@ pj_fixup_parent_op(pTHX_ OP *jitop, OP *origop, UNOP *parentop)
 {
   OP *kid;
 
-  //jitop->op_next = (OP *)parentop; /* FIXME probably wrong? */
+  PJ_DEBUG_1("Doing parent fixups for %s\n", OP_NAME((OP *)parentop));
 
   if (parentop->op_first == origop) {
     parentop->op_first = jitop;
+    jitop->op_sibling = origop->op_sibling;
+    if (jitop->op_sibling) {
+      jitop->op_next = pj_find_first_executed_op(aTHX_ jitop->op_sibling);
+    }
+    else {
+      jitop->op_next = (OP *)parentop;
+    }
   }
-
-  for (kid = parentop->op_first; kid; kid = kid->op_sibling) {
-    if (kid->op_sibling && kid->op_sibling == origop) {
-      kid->op_sibling = jitop;
-      break;
+  else {
+    for (kid = parentop->op_first; kid; kid = kid->op_sibling) {
+      if (kid->op_sibling && kid->op_sibling == origop) {
+        kid->op_sibling = jitop;
+        jitop->op_sibling = origop->op_sibling;
+        /* wire JITOP's op_next to the actual next OP */
+        if (jitop->op_sibling) {
+          jitop->op_next = pj_find_first_executed_op(aTHX_ jitop->op_sibling);
+        }
+        else {
+          jitop->op_next = (OP *)parentop;
+        }
+        break;
+      }
     }
   }
 
+  /* Fixup op_last of parent op */
   if (OP_CLASS((OP *)parentop) != OA_UNOP) {
     if (((BINOP *)parentop)->op_last == origop)
       ((BINOP *)parentop)->op_last = jitop;
