@@ -16,6 +16,29 @@
           || otype == OP_PADSV \
           || otype == OP_CONST)
 
+/* Scan a section of the OP tree and find whichever OP is
+ * going to be executed first. This is done by doing pure
+ * left-hugging depth-first traversal. Ignores op_next. */
+PJ_STATIC_INLINE OP *
+pj_find_first_executed_op(pTHX_ OP *o)
+{
+  while (1) {
+    if (o->op_flags & OPf_KIDS) {
+      o = cUNOPo->op_first;
+    }
+    else {
+      return o;
+    }
+  }
+  /* TODO: handle PMOP? */
+  /*
+    if (o && OP_CLASS(o) == OA_PMOP && o->op_type != OP_PUSHRE
+          && (kid = PMOP_pmreplroot(cPMOPo)))
+    {}
+  */
+  abort(); /* not reached */
+}
+
 /* Walk OP tree recursively, build ASTs, build subtrees */
 static pj_term_t *
 pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
@@ -38,7 +61,15 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
 
       const unsigned int otype = kid->op_type;
       if (otype == OP_CONST) {
-        PJ_DEBUG("CONST being inlined.\n");
+        if (ptrstack_empty(*subtrees)) {
+          PJ_DEBUG("CONST is first-executed tree element, can't inline.\n");
+          //Perl_op_null(aTHX_ kid);
+          ptrstack_push(*subtrees, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
+          ptrstack_push(*subtrees, kid);
+        }
+        else {
+          PJ_DEBUG("CONST being inlined.\n");
+        }
         kid_terms[ikid] = pj_make_const_dbl(SvNV(cSVOPx_sv(kid))); /* FIXME replace type by inferred type */
       }
       else if (otype == OP_PADSV) {
@@ -110,6 +141,9 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
   return retval;
 }
 
+/* Builds op_sibling list between JITOP children, but also
+ * re-wires the direct children's op_next to the following
+ * child's first OP and the last child's op_next to the JITOP itself. */
 static void
 pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, ptrstack_t *subtrees)
 {
@@ -134,9 +168,13 @@ pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, ptrstack_t *subtrees)
       PJ_DEBUG_2("Kid %u is %s\n", (int)(i/2)+1, OP_NAME(o));
       /* TODO get the imposed type context from subtree_array[i] here */
       o->op_sibling = subtree_array[i+1];
+      o->op_next = pj_find_first_executed_op(aTHX_ subtree_array[i+1]);
       o = o->op_sibling;
     }
+
+    /* Wire last child OP to execute JITOP next. */
     jitop->op_last = o;
+    o->op_next = (OP *)jitop;
     o->op_sibling = NULL;
   }
 }
@@ -146,6 +184,8 @@ static void
 pj_fixup_parent_op(pTHX_ OP *jitop, OP *origop, UNOP *parentop)
 {
   OP *kid;
+
+  //jitop->op_next = (OP *)parentop; /* FIXME probably wrong? */
 
   if (parentop->op_first == origop) {
     parentop->op_first = jitop;
@@ -196,6 +236,7 @@ pj_attempt_jit(pTHX_ OP *o, OP *parentop)
   if (ast != NULL) {
     OP *jitop;
     pj_jitop_aux_t *jitop_aux;
+    o->op_next = o;
 
     PJ_DEBUG_2("Built actual AST for jitting. Have %i subtrees which means %i variables.\n", (int)(ptrstack_nelems(subtrees)/2), nvariables);
     if (PJ_DEBUGGING)
