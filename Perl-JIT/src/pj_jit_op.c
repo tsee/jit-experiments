@@ -30,28 +30,32 @@ pj_pp_jit(pTHX)
          : PAD_SV(aux->saved_op_targ);
 
   /* This implements overload and other magic horribleness */
-  tryAMAGICbin_MG(add_amg, AMGf_assign|AMGf_numeric);
+  /* FIXME what should this do for a generic JIT OP replacing a subtree? */
+  //tryAMAGICbin_MG(add_amg, AMGf_assign|AMGf_numeric);
+
+  /* FIXME to prevent segfault */
+  /*(void)POPs;
+  SETn(0.);
+  RETURN;
+  */
 
   {
     double result; /* FIXME function ret type should be dynamic */
     double *params = aux->paramslist;
     n = aux->nparams;
 
-    /* Pop all args from stack except the last */
-    for (i = 0; i < n-1; ++i) {
+    PJ_DEBUG_1("Expecting %u parameters on stack.\n", n);
+    /* FIXME future optimization: Don't pop the last param off the stack but reuse. */
+    /* Pop all args from stack */
+    for (i = 0; i < n; ++i) {
       tmpsv = POPs;
       params[i] = SvNV_nomg(tmpsv);
-    }
-    /* If there's any args, leave the final one's SV on the stack */
-    if (n != 0) {
-      tmpsv = TOPs;
-      params[n-1] = SvNV_nomg(tmpsv);
     }
     //printf("In: %f %f\n", params[0], params[1]);
     pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
 
     PJ_DEBUG_1("Add result from JIT: %f\n", (float)result);
-    SETn((NV)result);
+    PUSHn((NV)result);
   }
 
   RETURN;
@@ -110,6 +114,7 @@ pj_prepare_jit_op(pTHX_ const unsigned int nvariables, OP *origop)
   /* Init jit_aux */
   jit_aux = malloc(sizeof(pj_jitop_aux_t));
   jit_aux->paramslist = (NV *)malloc(sizeof(NV) * nvariables);
+  jit_aux->nparams = nvariables;
   jit_aux->jit_fun = NULL;
   jit_aux->saved_op_targ = origop->op_targ; /* save in case needed for sassign optimization */
   /* FIXME is copying op_targ good enough? */

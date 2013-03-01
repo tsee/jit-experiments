@@ -5,8 +5,12 @@
 #include "ppport.h"
 #include "pj_debug.h"
 #include "stack.h"
+
 #include "pj_ast_terms.h"
+#include "pj_ast_jit.h"
+
 #include "pj_jit_op.h"
+#include "pj_global_state.h"
 
 #define IS_JITTABLE_ROOT_OP_TYPE(otype) \
         (otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE)
@@ -298,7 +302,19 @@ pj_attempt_jit(pTHX_ OP *o, OP *parentop)
     /* TODO clean up orphaned OPs */
 
     jitop_aux = (pj_jitop_aux_t *)jitop->op_targ;
-    /* TODO JIT IT FOR REAL */
+
+    /* JIT it for real */
+    {
+      jit_function_t func = NULL;
+      pj_basic_type funtype;
+
+      if (0 == pj_tree_jit(PJ_jit_context, ast, &func, &funtype)) {
+        PJ_DEBUG("JIT succeeded!\n");
+      } else {
+        PJ_DEBUG("JIT failed!\n");
+      }
+      jitop_aux->jit_fun = (void *)jit_function_to_closure(func);
+    }
   }
 
   pj_free_tree(ast);
