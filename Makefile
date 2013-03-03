@@ -1,5 +1,13 @@
+OS := $(shell uname)
+ARCH := $(shell uname -m)
+
 LIBJIT_INCLUDE := -Ilibjit-install/include
+
+ifeq ($(OS), Darwin)
+LIBJIT_LIB := -Llibjit-install/lib/$(ARCH)/
+else
 LIBJIT_LIB := -Llibjit-install/lib
+endif
 
 DEBUG_FLAGS = -ggdb
 OPTIMIZE = -O3
