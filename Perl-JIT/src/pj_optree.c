@@ -109,46 +109,33 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     } /* end for kids */
 
     /* FIXME find a way of doing this that is less manual/verbose */
-    if (parent_otype == OP_ADD) {
-      assert(ikid == 2);
-      retval = pj_make_binop( pj_binop_add, kid_terms[0], kid_terms[1] );
+    /* TODO modulo may have (very?) different behaviour in Perl than in C (or libjit or the platform...) */
+#define EMIT_BINOP_CODE(perl_op_type, pj_op_type) \
+    if (parent_otype == perl_op_type) { \
+      assert(ikid == 2); \
+      retval = pj_make_binop( pj_op_type, kid_terms[0], kid_terms[1] ); \
     }
-    else if (parent_otype == OP_SUBTRACT) {
-      assert(ikid == 2);
-      retval = pj_make_binop( pj_binop_subtract, kid_terms[0], kid_terms[1] );
+#define EMIT_UNOP_CODE(perl_op_type, pj_op_type) \
+    if (parent_otype == perl_op_type) { \
+      assert(ikid == 1); \
+      retval = pj_make_unop( pj_op_type, kid_terms[0] ); \
     }
-    else if (parent_otype == OP_MULTIPLY) {
-      assert(ikid == 2);
-      retval = pj_make_binop( pj_binop_multiply, kid_terms[0], kid_terms[1] );
-    }
-    else if (parent_otype == OP_DIVIDE) {
-      assert(ikid == 2);
-      retval = pj_make_binop( pj_binop_divide, kid_terms[0], kid_terms[1] );
-    }
-    else if (parent_otype == OP_SIN) {
-      assert(ikid == 1);
-      retval = pj_make_unop( pj_unop_sin, kid_terms[0] );
-    }
-    else if (parent_otype == OP_COS) {
-      assert(ikid == 1);
-      retval = pj_make_unop( pj_unop_cos, kid_terms[0] );
-    }
-    else if (parent_otype == OP_SQRT) {
-      assert(ikid == 1);
-      retval = pj_make_unop( pj_unop_sqrt, kid_terms[0] );
-    }
-    else if (parent_otype == OP_LOG) {
-      assert(ikid == 1);
-      retval = pj_make_unop( pj_unop_log, kid_terms[0] );
-    }
-    else if (parent_otype == OP_EXP) {
-      assert(ikid == 1);
-      retval = pj_make_unop( pj_unop_exp, kid_terms[0] );
-    }
+
+    EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
+    else EMIT_BINOP_CODE(OP_SUBTRACT, pj_binop_subtract)
+    else EMIT_BINOP_CODE(OP_MULTIPLY, pj_binop_multiply)
+    else EMIT_BINOP_CODE(OP_DIVIDE, pj_binop_divide)
+    else EMIT_UNOP_CODE(OP_SIN, pj_unop_sin)
+    else EMIT_UNOP_CODE(OP_COS, pj_unop_cos)
+    else EMIT_UNOP_CODE(OP_SQRT, pj_unop_sqrt)
+    else EMIT_UNOP_CODE(OP_LOG, pj_unop_log)
+    else EMIT_UNOP_CODE(OP_EXP, pj_unop_exp)
     else {
       PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s", OP_NAME(o));
       abort();
     }
+#undef EMIT_BINOP_CODE
+#undef EMIT_UNOP_CODE
 
   } /* end if has kids */
   else { /* OP without kids */
