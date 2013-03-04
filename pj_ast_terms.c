@@ -23,6 +23,7 @@ static char *pj_ast_op_names[] = {
   "/",        /* pj_binop_divide */
   "%",        /* pj_binop_modulo */
   "atan2",    /* pj_binop_atan2 */
+  "pow",      /* pj_binop_pow */
   "<<",       /* pj_binop_left_shift */
   ">>",       /* pj_binop_right_shift */
   "&",        /* pj_binop_and */

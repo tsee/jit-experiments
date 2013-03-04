@@ -11,6 +11,7 @@ typedef enum {
   pj_ttype_op
 } pj_term_type;
 
+/* keep in sync with pj_ast_op_names in .c file */
 typedef enum {
   pj_unop_negate,
   pj_unop_sin,
@@ -28,6 +29,7 @@ typedef enum {
   pj_binop_divide,
   pj_binop_modulo,
   pj_binop_atan2,
+  pj_binop_pow,
   pj_binop_left_shift, /* TODO same semantics as perl's? */
   pj_binop_right_shift, /* TODO same semantics as perl's? */
   pj_binop_and,

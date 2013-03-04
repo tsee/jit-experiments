@@ -90,6 +90,9 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
   case pj_binop_atan2:
     rv = jit_insn_atan2(function, tmp1, tmp2);
     break;
+  case pj_binop_pow:
+    rv = jit_insn_pow(function, tmp1, tmp2);
+    break;
   case pj_binop_left_shift:
     rv = jit_insn_shl(function, tmp1, tmp2);
     break;
