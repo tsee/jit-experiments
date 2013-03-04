@@ -3,6 +3,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/* keep in sync with pj_op_type in .h file */
+static char *pj_ast_op_names[] = {
+  /* unops */
+  "unary -",  /* pj_unop_negate */
+  "sin",      /* pj_unop_sin */
+  "cos",      /* pj_unop_cos */
+  "abs",      /* pj_unop_abs */
+  "sqrt",     /* pj_unop_sqrt */
+  "log",      /* pj_unop_log */
+  "exp",      /* pj_unop_exp */
+  "~",        /* pj_unop_not */
+  "!",        /* pj_unop_not_bool */
+
+  /* binops */
+  "+",        /* pj_binop_add */
+  "-",        /* pj_binop_subtract */
+  "*",        /* pj_binop_multiply */
+  "/",        /* pj_binop_divide */
+  "%",        /* pj_binop_modulo */
+  "atan2",    /* pj_binop_atan2 */
+  "<<",       /* pj_binop_left_shift */
+  ">>",       /* pj_binop_right_shift */
+  "&",        /* pj_binop_and */
+  "|",        /* pj_binop_or */
+  "^",        /* pj_binop_xor */
+  "==",       /* pj_binop_eq */
+  "!=",       /* pj_binop_ne */
+  "<",        /* pj_binop_lt */
+  "<=",       /* pj_binop_le */
+  ">",        /* pj_binop_gt */
+  ">=",       /* pj_binop_ge */
+};
+
 pj_term_t *
 pj_make_const_dbl(double c)
 {
@@ -120,64 +153,7 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
 
     pj_dump_tree_indent(lvl);
 
-    printf("B '");
-    if (o->optype == pj_unop_negate)
-      printf("unary -");
-    else if (o->optype == pj_unop_sin)
-      printf("sin");
-    else if (o->optype == pj_unop_cos)
-      printf("sin");
-    else if (o->optype == pj_unop_abs)
-      printf("abs");
-    else if (o->optype == pj_unop_sqrt)
-      printf("sqrt");
-    else if (o->optype == pj_unop_log)
-      printf("log");
-    else if (o->optype == pj_unop_exp)
-      printf("exp");
-    else if (o->optype == pj_unop_not)
-      printf("~");
-    else if (o->optype == pj_unop_not_bool)
-      printf("!");
-
-    else if (o->optype == pj_binop_add)
-      printf("+");
-    else if (o->optype == pj_binop_subtract)
-      printf("-");
-    else if (o->optype == pj_binop_multiply)
-      printf("*");
-    else if (o->optype == pj_binop_divide)
-      printf("/");
-    else if (o->optype == pj_binop_modulo)
-      printf("%%");
-    else if (o->optype == pj_binop_atan2)
-      printf("atan2");
-    else if (o->optype == pj_binop_left_shift)
-      printf("<<");
-    else if (o->optype == pj_binop_right_shift)
-      printf("<<");
-    else if (o->optype == pj_binop_and)
-      printf("&");
-    else if (o->optype == pj_binop_or)
-      printf("|");
-    else if (o->optype == pj_binop_xor)
-      printf("^");
-    else if (o->optype == pj_binop_eq)
-      printf("==");
-    else if (o->optype == pj_binop_ne)
-      printf("!=");
-    else if (o->optype == pj_binop_lt)
-      printf("<");
-    else if (o->optype == pj_binop_le)
-      printf("<=");
-    else if (o->optype == pj_binop_gt)
-      printf(">");
-    else if (o->optype == pj_binop_ge)
-      printf(">=");
-    else
-      abort();
-
-    printf("' (\n");
+    printf("OP '%s' (\n", pj_ast_op_names[o->optype]);
     pj_dump_tree_internal(o->op1, lvl+1);
     if (o->op2 != NULL)
       pj_dump_tree_internal(o->op2, lvl+1);
