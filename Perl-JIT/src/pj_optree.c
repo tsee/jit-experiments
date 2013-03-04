@@ -352,7 +352,8 @@ pj_find_jit_candidate(pTHX_ OP *o, OP *parentop)
       if (parentop != NULL) {
         /* Can only JIT if we have the parent OP. Some time later, maybe
          * I'll discover a way to find the parent... */
-        printf("Attempting JIT with parent OP %s\n", OP_NAME((OP *)parentop));
+        if (PJ_DEBUGGING)
+          printf("Attempting JIT with parent OP %s\n", OP_NAME((OP *)parentop));
         pj_attempt_jit(aTHX_ o, parentop);
       }
       else

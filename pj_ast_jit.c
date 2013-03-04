@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include <pj_debug.h>
 #include <pj_ast_walkers.h>
 
 static jit_value_t pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *op);
@@ -148,7 +149,7 @@ pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun, pj_b
   pj_variable_t **vars;
   unsigned int nvars;
   pj_tree_extract_vars(term, &vars, &nvars);
-  printf("Found %i variable occurrances in tree.\n", nvars);
+  PJ_DEBUG_1("Found %i variable occurrances in tree.\n", nvars);
 
   /* Naive assumption: the maximum ivar is the total number if distinct arguments (-1) */
   unsigned int max_var = 0;
@@ -156,7 +157,7 @@ pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun, pj_b
     if (max_var < (unsigned int)vars[i]->ivar)
       max_var = vars[i]->ivar;
   }
-  printf("Found %i distinct variables in tree.\n", 1+max_var);
+  PJ_DEBUG_1("Found %i distinct variables in tree.\n", 1+max_var);
   nvars = max_var+1;
   free(vars);
 
