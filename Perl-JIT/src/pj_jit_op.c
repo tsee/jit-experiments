@@ -30,8 +30,9 @@ pj_pp_jit(pTHX)
          : PAD_SV(aux->saved_op_targ);
 
   /* This implements overload and other magic horribleness */
-  /* FIXME what should this do for a generic JIT OP replacing a subtree? */
-  //tryAMAGICbin_MG(add_amg, AMGf_assign|AMGf_numeric);
+  /* FIXME What should this do for a generic JIT OP replacing a subtree?
+   *       Probably, the answer is "not supported". */
+  /* tryAMAGICbin_MG(add_amg, AMGf_assign|AMGf_numeric); */
 
   /* FIXME to prevent segfault */
   /*(void)POPs;
