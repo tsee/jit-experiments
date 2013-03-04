@@ -34,12 +34,6 @@ pj_pp_jit(pTHX)
    *       Probably, the answer is "not supported". */
   /* tryAMAGICbin_MG(add_amg, AMGf_assign|AMGf_numeric); */
 
-  /* FIXME to prevent segfault */
-  /*(void)POPs;
-  SETn(0.);
-  RETURN;
-  */
-
   {
     double result; /* FIXME function ret type should be dynamic */
     double *params = aux->paramslist;
