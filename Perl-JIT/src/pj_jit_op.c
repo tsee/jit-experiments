@@ -87,8 +87,8 @@ pj_prepare_jit_op(pTHX_ const unsigned int nvariables, OP *origop)
 
   NewOp(1101, jitop, 1, LISTOP);
   jitop->op_type = (OPCODE)OP_CUSTOM;
-  jitop->op_next = jitop;
-  jitop->op_private = 0;
+  jitop->op_next = (OP *)jitop;
+  jitop->op_private = (origop->op_private & OPpTARGET_MY ? OPpTARGET_MY : 0);
   jitop->op_flags = (nvariables > 0 ? (OPf_STACKED|OPf_KIDS) : 0);
   if (origop->op_private & OPpTARGET_MY) {
     /* If OPpTARGET_MY is set on the original OP, then we have a nasty situation.
