@@ -11,6 +11,7 @@ our @EXPORT = qw(
   runperl_output_is
   runperl_output_like
   runperl_output
+  is_approx
 );
 
 sub runperl_output_is {
@@ -27,7 +28,7 @@ sub runperl_output_like {
 }
 
 sub runperl_output {
-  my ($cmd, $ref, $name) = @_;
+  my ($cmd, $name) = @_;
   my $stdout = _runperl_exec_ok($cmd, $name);
   return $stdout;
 }
@@ -50,6 +51,12 @@ sub _runperl {
     $rc = system($^X, "-Mblib", (ref($cmd) ? @$cmd : $cmd));
   };
   return ($stdout, $stderr, $rc);
+}
+
+sub is_approx {
+  my ($t, $ref, $name) = @_;
+  ok($t + 1e-9 > $ref && $t - 1e9 < $ref, $name)
+    or diag("$t appears to be different from $ref");
 }
 
 1;
