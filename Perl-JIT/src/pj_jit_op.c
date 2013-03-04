@@ -15,7 +15,7 @@ pj_pp_jit(pTHX)
    * on being able to use PL_op->op_targ as a PAD offset sometimes.
    * For the JIT OP, this info comes from the aux struct, so we need
    * to inline a modified version of dATARGET. */
-  SV *targ;
+  dTARG;
 
   pj_jitop_aux_t *aux = (pj_jitop_aux_t *) ((BINOP *)PL_op)->op_targ;
 
@@ -25,7 +25,7 @@ pj_pp_jit(pTHX)
   PJ_DEBUG("Custom op called\n");
 
   /* inlined modified dATARGET, see above */
-  targ = PL_op->op_flags & OPf_STACKED
+  TARG = PL_op->op_private & OPf_STACKED
          ? sp[-1]
          : PAD_SV(aux->saved_op_targ);
 
