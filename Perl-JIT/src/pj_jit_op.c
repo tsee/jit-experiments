@@ -44,7 +44,8 @@ pj_pp_jit(pTHX)
     /* Pop all args from stack */
     for (i = 0; i < n; ++i) {
       tmpsv = POPs;
-      params[i] = SvNV_nomg(tmpsv);
+      params[n-i-1] = SvNV_nomg(tmpsv);
+      PJ_DEBUG_2("Param %i is %f.\n", n-i-1, params[n-i-1]);
     }
     //printf("In: %f %f\n", params[0], params[1]);
     pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
