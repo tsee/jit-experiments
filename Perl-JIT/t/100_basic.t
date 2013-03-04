@@ -31,6 +31,8 @@ SCOPE: {
     $name
   );
   like($output, qr/\bjitop\[/, $name);
+  like($output, qr/^\S(\s+)<@> jitop.*\n(?:\S\1   <0> padsv\[\$a.*\].*\n){4}\S\1   <0> padsv\[\$b.*\].*\n\S\1   <0> padsv\[\$a.*\].*\n\S\1</m,
+       "$name - right # of PADSVs");
 
   $name .= ' correctly';
   $output = runperl_output(
