@@ -13,7 +13,9 @@
 #include "pj_global_state.h"
 
 #define IS_JITTABLE_ROOT_OP_TYPE(otype) \
-        (otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE)
+        ( otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE \
+          || otype == OP_SIN || otype == OP_COS || otype == OP_SQRT || otype == OP_EXP \
+          || otype == OP_LOG )
 
 #define IS_JITTABLE_OP_TYPE(otype) \
         (IS_JITTABLE_ROOT_OP_TYPE(otype) \
@@ -122,6 +124,26 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     else if (parent_otype == OP_DIVIDE) {
       assert(ikid == 2);
       retval = pj_make_binop( pj_binop_divide, kid_terms[0], kid_terms[1] );
+    }
+    else if (parent_otype == OP_SIN) {
+      assert(ikid == 1);
+      retval = pj_make_unop( pj_unop_sin, kid_terms[0] );
+    }
+    else if (parent_otype == OP_COS) {
+      assert(ikid == 1);
+      retval = pj_make_unop( pj_unop_cos, kid_terms[0] );
+    }
+    else if (parent_otype == OP_SQRT) {
+      assert(ikid == 1);
+      retval = pj_make_unop( pj_unop_sqrt, kid_terms[0] );
+    }
+    else if (parent_otype == OP_LOG) {
+      assert(ikid == 1);
+      retval = pj_make_unop( pj_unop_log, kid_terms[0] );
+    }
+    else if (parent_otype == OP_EXP) {
+      assert(ikid == 1);
+      retval = pj_make_unop( pj_unop_exp, kid_terms[0] );
     }
     else {
       PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s", OP_NAME(o));
