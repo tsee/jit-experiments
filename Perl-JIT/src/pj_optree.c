@@ -15,7 +15,8 @@
 #define IS_JITTABLE_ROOT_OP_TYPE(otype) \
         ( otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE \
           || otype == OP_SIN || otype == OP_COS || otype == OP_SQRT || otype == OP_EXP \
-          || otype == OP_LOG || otype == OP_POW || otype == OP_INT )
+          || otype == OP_LOG || otype == OP_POW || otype == OP_INT || otype == OP_NOT \
+          || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT )
 
 #define IS_JITTABLE_OP_TYPE(otype) \
         (IS_JITTABLE_ROOT_OP_TYPE(otype) \
@@ -126,12 +127,15 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     else EMIT_BINOP_CODE(OP_MULTIPLY, pj_binop_multiply)
     else EMIT_BINOP_CODE(OP_DIVIDE, pj_binop_divide)
     else EMIT_BINOP_CODE(OP_POW, pj_binop_pow)
+    else EMIT_BINOP_CODE(OP_LEFT_SHIFT, pj_binop_left_shift)
+    else EMIT_BINOP_CODE(OP_RIGHT_SHIFT, pj_binop_right_shift)
     else EMIT_UNOP_CODE(OP_SIN, pj_unop_sin)
     else EMIT_UNOP_CODE(OP_COS, pj_unop_cos)
     else EMIT_UNOP_CODE(OP_SQRT, pj_unop_sqrt)
     else EMIT_UNOP_CODE(OP_LOG, pj_unop_log)
     else EMIT_UNOP_CODE(OP_EXP, pj_unop_exp)
     else EMIT_UNOP_CODE(OP_INT, pj_unop_perl_int)
+    else EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not) /* FIXME Modification of a read-only value attempted at -e line 1. */
     else {
       PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s", OP_NAME(o));
       abort();
