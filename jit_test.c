@@ -16,49 +16,14 @@ main(int argc, char **argv)
 
   /* initialize tree structure */
 
-  /* This example: !(((2.2+(v1+v0))* sin(-(v0 >> 1))&&1)==0) */
-  t = pj_make_unop(
-      pj_unop_not_bool,
-        pj_make_binop(
-	pj_binop_eq,
-	pj_make_binop(
-      pj_binop_and,
-	pj_make_binop(
-    pj_binop_multiply,
-    pj_make_binop(
-      pj_binop_add,
-      pj_make_const_dbl(2.2),
-      pj_make_binop(
-        pj_binop_add,
-        pj_make_variable(1, pj_double_type),
-        pj_make_variable(0, pj_double_type)
-      )
-    ),
-    pj_make_unop(
-      pj_unop_negate,
-      pj_make_unop(
-        pj_unop_sin,
-        pj_make_binop(
-          pj_binop_right_shift,
-          pj_make_variable(0, pj_double_type),
-          pj_make_const_int(1)
-        )
-      )
-    )
-  )
-  , pj_make_const_int(1))
-  , pj_make_const_int(0))
-  );
-  ;
-
-  /* This example: 2.3+1 */
-  /*
-  t = (pj_term_t *)pj_make_binop(
+  t = pj_make_binop(
     pj_binop_add,
-    (pj_term_t *)pj_make_const_dbl(2.3),
-    (pj_term_t *)pj_make_const_int(1)
+    pj_make_unop(
+      pj_unop_perl_int,
+      pj_make_variable(0, pj_double_type)
+    ),
+    pj_make_variable(1, pj_double_type)
   );
-  */
 
   /* Just some debug output for the tree */
   pj_dump_tree(t);
@@ -81,8 +46,8 @@ main(int argc, char **argv)
   double arg1, arg2;
   void *args[2];
   double result;
-  arg1 = 2.;
-  arg2 = 5.;
+  arg1 = -2.8;
+  arg1 = 3.5;
   args[0] = &arg1;
   args[1] = &arg2;
 
@@ -91,7 +56,7 @@ main(int argc, char **argv)
   printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
 
   void *cl = jit_function_to_closure(func);
-  double (*fptr)(double x, double y) = cl;
+  double (*fptr)(double, double) = cl;
   result = fptr(arg1, arg2);
   printf("foo(%f, %f) = %f\n", (float)arg1, (float)arg2, (float)result);
 
