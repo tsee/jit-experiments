@@ -45,4 +45,70 @@ SCOPE: {
 }
 
 
+# Testing the int() function
+_run_test(
+  code => 'my $a = TMPL; my $x = int($a);',
+  name => 'int(TMPL)',
+  data => [
+    [0 => 0],
+    [1 => 1],
+    [-1 => -1],
+    [1.9 => 1],
+    [-1.9 => -1],
+    [0.9 => 0],
+    [-0.9 => 0],
+  ]
+);
+
+# Testing left shift operator
+_run_test(
+  code => 'my $a = TMPL; my $b = TMPL; my $x = $a << $b;',
+  name => 'TMPL << TMPL',
+  data => [
+    [1, 0 => 1],
+    [1, 1 => 2],
+    [1, 2 => 4],
+    [2, 2 => 8],
+    #[-1, 3, => (-1 << 3)],
+  ]
+);
+
+# Testing right shift operator
+_run_test(
+  code => 'my $a = TMPL; my $b = TMPL; my $x = $a >> $b;',
+  name => 'TMPL >> TMPL',
+  data => [
+    [1, 0 => 1],
+    [2, 1 => 1],
+    [2, 4 => 0],
+    #[-1, 4 => (-1 >> 4)],
+  ],
+);
+
+sub _run_test {
+  my %args = @_;
+  my $data = $args{data};
+
+  foreach (@$data) {
+    my @d = @$_;
+    my $out = pop @d;
+    my $code = $args{code};
+    $code =~ s/TMPL/$_/ for @d;
+    my $name = $args{name};
+    $name =~ s/TMPL/$_/ for @d;
+
+    runperl_output_like(
+      [qw(-MO=Concise -MPerl::JIT -e), $code],
+      qr/\bjitop\[/,
+      "'$name' is JIT'd"
+    );
+
+    runperl_output_like(
+      [qw(-MPerl::JIT -e), $code . ' print "TEST_OUTPUT: $x\n";'],
+      qr/^TEST_OUTPUT: \Q$out\E/m,
+      "'$name' is JIT'd correctly"
+    );
+  }
+}
+
 done_testing();

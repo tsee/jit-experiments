@@ -6,6 +6,7 @@ use Capture::Tiny qw(capture);
 
 use Exporter 'import';
 use Test::More;
+use Data::Dumper;
 
 our @EXPORT = qw(
   runperl_output_is
@@ -37,9 +38,11 @@ sub _runperl_exec_ok {
   my ($cmd, $name) = @_;
 
   my ($stdout, $stderr, $rc) = _runperl($cmd);
-  is($rc, 0, "$name - Return code is 0");
+  is($rc, 0, "$name - Return code is 0")
+    or diag("Apparently failed to run " . Data::Dumper::Dumper($cmd));
   $stderr =~ s/-e syntax OK\n?//;
-  is($stderr, "", "$name - No output to STDERR");
+  is($stderr, "", "$name - No output to STDERR")
+    or diag("Apparently failed to run " . Data::Dumper::Dumper($cmd));
 
   return $stdout;
 }
