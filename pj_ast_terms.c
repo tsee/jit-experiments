@@ -13,6 +13,7 @@ static char *pj_ast_op_names[] = {
   "sqrt",     /* pj_unop_sqrt */
   "log",      /* pj_unop_log */
   "exp",      /* pj_unop_exp */
+  "int",      /* pj_unop_int */
   "~",        /* pj_unop_not */
   "!",        /* pj_unop_not_bool */
 

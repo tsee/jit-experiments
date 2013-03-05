@@ -66,6 +66,29 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
   case pj_unop_exp:
     rv = jit_insn_exp(function, tmp1);
     break;
+  case pj_unop_perl_int: {
+      jit_label_t endlabel = jit_label_undefined;
+      jit_label_t neglabel = jit_label_undefined;
+      jit_value_t tmprv, tmpval, constval;
+
+      /* if value < 0.0, then goto neglabel */
+      constval = jit_value_create_nfloat_constant(function, jit_type_nfloat, 0.0);
+      tmpval = jit_insn_lt(function, tmp1, constval);
+      jit_insn_branch_if(function, tmpval, &neglabel);
+
+      /* else use floor, then goto endlabel */
+      rv = jit_insn_floor(function, tmp1);
+      jit_insn_branch(function, &endlabel);
+
+      /* neglabel: use ceil, fall through to endlabel */
+      jit_insn_label(function, &neglabel);
+      tmprv = jit_insn_ceil(function, tmp1); /* appears to need intermediary? WTF? */
+      jit_insn_store(function, rv, tmprv);
+
+      /* endlabel; done. */
+      jit_insn_label(function, &endlabel);
+      break;
+    }
   case pj_unop_not:
     rv = jit_insn_not(function, tmp1);
     break;

@@ -20,7 +20,8 @@ typedef enum {
   pj_unop_sqrt,
   pj_unop_log,
   pj_unop_exp,
-  pj_unop_not,
+  pj_unop_perl_int, /* the equivalent to the perl int function */
+  pj_unop_not, /* TODO check */
   pj_unop_not_bool, /* TODO not really working for double args */
 
   pj_binop_add,
@@ -32,15 +33,15 @@ typedef enum {
   pj_binop_pow,
   pj_binop_left_shift, /* TODO same semantics as perl's? */
   pj_binop_right_shift, /* TODO same semantics as perl's? */
-  pj_binop_and,
-  pj_binop_or,
-  pj_binop_xor,
-  pj_binop_eq,
-  pj_binop_ne,
-  pj_binop_lt,
-  pj_binop_le,
-  pj_binop_gt,
-  pj_binop_ge,
+  pj_binop_and, /* TODO check */
+  pj_binop_or, /* TODO check */
+  pj_binop_xor, /* TODO check */
+  pj_binop_eq, /* TODO check */
+  pj_binop_ne, /* TODO check */
+  pj_binop_lt, /* TODO check */
+  pj_binop_le, /* TODO check */
+  pj_binop_gt, /* TODO check */
+  pj_binop_ge, /* TODO check */
 
   pj_unop_FIRST  = pj_unop_negate,
   pj_unop_LAST   = pj_unop_not_bool,
