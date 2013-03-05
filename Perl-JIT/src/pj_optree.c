@@ -16,7 +16,8 @@
         ( otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE \
           || otype == OP_SIN || otype == OP_COS || otype == OP_SQRT || otype == OP_EXP \
           || otype == OP_LOG || otype == OP_POW || otype == OP_INT || otype == OP_NOT \
-          || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT /* || otype == OP_COMPLEMENT */ )
+          || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT /* || otype == OP_COMPLEMENT */ \
+          || otype == OP_EQ )
 
 #define IS_JITTABLE_OP_TYPE(otype) \
         (IS_JITTABLE_ROOT_OP_TYPE(otype) \
@@ -129,6 +130,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     else EMIT_BINOP_CODE(OP_POW, pj_binop_pow)
     else EMIT_BINOP_CODE(OP_LEFT_SHIFT, pj_binop_left_shift)
     else EMIT_BINOP_CODE(OP_RIGHT_SHIFT, pj_binop_right_shift)
+    else EMIT_BINOP_CODE(OP_EQ, pj_binop_eq)
     else EMIT_UNOP_CODE(OP_SIN, pj_unop_sin)
     else EMIT_UNOP_CODE(OP_COS, pj_unop_cos)
     else EMIT_UNOP_CODE(OP_SQRT, pj_unop_sqrt)
