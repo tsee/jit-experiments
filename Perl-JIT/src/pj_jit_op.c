@@ -42,16 +42,22 @@ pj_pp_jit(pTHX)
     PJ_DEBUG_1("Expecting %u parameters on stack.\n", n);
     /* FIXME future optimization: Don't pop the last param off the stack but reuse. */
     /* Pop all args from stack */
-    for (i = 0; i < n; ++i) {
+    for (i = 0; i < n-1; ++i) {
       tmpsv = POPs;
       params[n-i-1] = SvNV_nomg(tmpsv);
       PJ_DEBUG_2("Param %i is %f.\n", n-i-1, params[n-i-1]);
     }
+    if (n != 0) {
+      tmpsv = TOPs;
+      params[0] = SvNV_nomg(tmpsv);
+      PJ_DEBUG_2("Param %i is %f.\n", 0, params[0]);
+    }
+
     //printf("In: %f %f\n", params[0], params[1]);
     pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
 
     PJ_DEBUG_1("Add result from JIT: %f\n", (float)result);
-    PUSHn((NV)result);
+    SETn((NV)result);
   }
 
   RETURN;
