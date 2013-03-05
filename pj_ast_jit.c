@@ -39,32 +39,32 @@ pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_
 static jit_value_t
 pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *op)
 {
-  jit_value_t tmp1, tmp2, rv;
-  tmp1 = pj_jit_internal(function, var_values, nvars, op->op1);
+  jit_value_t arg1, arg2, rv;
+  arg1 = pj_jit_internal(function, var_values, nvars, op->op1);
   if (op->op2 != NULL)
-    tmp2 = pj_jit_internal(function, var_values, nvars, op->op2);
+    arg2 = pj_jit_internal(function, var_values, nvars, op->op2);
 
   switch (op->optype) {
   case pj_unop_negate:
-    rv = jit_insn_neg(function, tmp1);
+    rv = jit_insn_neg(function, arg1);
     break;
   case pj_unop_sin:
-    rv = jit_insn_sin(function, tmp1);
+    rv = jit_insn_sin(function, arg1);
     break;
   case pj_unop_cos:
-    rv = jit_insn_cos(function, tmp1);
+    rv = jit_insn_cos(function, arg1);
     break;
   case pj_unop_abs:
-    rv = jit_insn_abs(function, tmp1);
+    rv = jit_insn_abs(function, arg1);
     break;
   case pj_unop_sqrt:
-    rv = jit_insn_sqrt(function, tmp1);
+    rv = jit_insn_sqrt(function, arg1);
     break;
   case pj_unop_log:
-    rv = jit_insn_log(function, tmp1);
+    rv = jit_insn_log(function, arg1);
     break;
   case pj_unop_exp:
-    rv = jit_insn_exp(function, tmp1);
+    rv = jit_insn_exp(function, arg1);
     break;
   case pj_unop_perl_int: {
       jit_label_t endlabel = jit_label_undefined;
@@ -73,16 +73,16 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
 
       /* if value < 0.0, then goto neglabel */
       constval = jit_value_create_nfloat_constant(function, jit_type_nfloat, 0.0);
-      tmpval = jit_insn_lt(function, tmp1, constval);
+      tmpval = jit_insn_lt(function, arg1, constval);
       jit_insn_branch_if(function, tmpval, &neglabel);
 
       /* else use floor, then goto endlabel */
-      rv = jit_insn_floor(function, tmp1);
+      rv = jit_insn_floor(function, arg1);
       jit_insn_branch(function, &endlabel);
 
       /* neglabel: use ceil, fall through to endlabel */
       jit_insn_label(function, &neglabel);
-      tmprv = jit_insn_ceil(function, tmp1); /* appears to need intermediary? WTF? */
+      tmprv = jit_insn_ceil(function, arg1); /* appears to need intermediary? WTF? */
       jit_insn_store(function, rv, tmprv);
 
       /* endlabel; done. */
@@ -91,66 +91,66 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
     }
   case pj_unop_bitwise_not: {
       /* FIXME still not same as perl */
-      jit_value_t t = jit_insn_convert(function, tmp1, jit_type_sys_ulong, 0); /* FIXME replace jit_type_sys_ulong with whatever a UV is */
+      jit_value_t t = jit_insn_convert(function, arg1, jit_type_sys_ulong, 0); /* FIXME replace jit_type_sys_ulong with whatever a UV is */
       rv = jit_insn_not(function, t);
       break;
   }
   case pj_unop_bool_not:
-    rv = jit_insn_to_not_bool(function, tmp1);
+    rv = jit_insn_to_not_bool(function, arg1);
     break;
   case pj_binop_add:
-    rv = jit_insn_add(function, tmp1, tmp2);
+    rv = jit_insn_add(function, arg1, arg2);
     break;
   case pj_binop_subtract:
-    rv = jit_insn_sub(function, tmp1, tmp2);
+    rv = jit_insn_sub(function, arg1, arg2);
     break;
   case pj_binop_multiply:
-    rv = jit_insn_mul(function, tmp1, tmp2);
+    rv = jit_insn_mul(function, arg1, arg2);
     break;
   case pj_binop_divide:
-    rv = jit_insn_div(function, tmp1, tmp2);
+    rv = jit_insn_div(function, arg1, arg2);
     break;
   case pj_binop_modulo:
-    rv = jit_insn_rem(function, tmp1, tmp2); /* FIXME should this use jit_insn_rem_ieee? */
+    rv = jit_insn_rem(function, arg1, arg2); /* FIXME should this use jit_insn_rem_ieee? */
     break;
   case pj_binop_atan2:
-    rv = jit_insn_atan2(function, tmp1, tmp2);
+    rv = jit_insn_atan2(function, arg1, arg2);
     break;
   case pj_binop_pow:
-    rv = jit_insn_pow(function, tmp1, tmp2);
+    rv = jit_insn_pow(function, arg1, arg2);
     break;
   case pj_binop_left_shift:
-    rv = jit_insn_shl(function, tmp1, tmp2);
+    rv = jit_insn_shl(function, arg1, arg2);
     break;
   case pj_binop_right_shift:
-    rv = jit_insn_ushr(function, tmp1, tmp2);
+    rv = jit_insn_ushr(function, arg1, arg2);
     break;
   case pj_binop_bitwise_and:
-    rv = jit_insn_and(function, tmp1, tmp2);
+    rv = jit_insn_and(function, arg1, arg2);
     break;
   case pj_binop_bitwise_or:
-    rv = jit_insn_or(function, tmp1, tmp2);
+    rv = jit_insn_or(function, arg1, arg2);
     break;
   case pj_binop_bitwise_xor:
-    rv = jit_insn_xor(function, tmp1, tmp2);
+    rv = jit_insn_xor(function, arg1, arg2);
     break;
   case pj_binop_eq:
-    rv = jit_insn_eq(function, tmp1, tmp2);
+    rv = jit_insn_eq(function, arg1, arg2);
     break;
   case pj_binop_ne:
-    rv = jit_insn_ne(function, tmp1, tmp2);
+    rv = jit_insn_ne(function, arg1, arg2);
     break;
   case pj_binop_lt:
-    rv = jit_insn_lt(function, tmp1, tmp2);
+    rv = jit_insn_lt(function, arg1, arg2);
     break;
   case pj_binop_le:
-    rv = jit_insn_le(function, tmp1, tmp2);
+    rv = jit_insn_le(function, arg1, arg2);
     break;
   case pj_binop_gt:
-    rv = jit_insn_gt(function, tmp1, tmp2);
+    rv = jit_insn_gt(function, arg1, arg2);
     break;
   case pj_binop_ge:
-    rv = jit_insn_ge(function, tmp1, tmp2);
+    rv = jit_insn_ge(function, arg1, arg2);
     break;
   default:
     abort();
