@@ -15,7 +15,7 @@
 #define IS_JITTABLE_ROOT_OP_TYPE(otype) \
         ( otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE \
           || otype == OP_SIN || otype == OP_COS || otype == OP_SQRT || otype == OP_EXP \
-          || otype == OP_LOG || otype == OP_POW )
+          || otype == OP_LOG || otype == OP_POW || otype == OP_INT )
 
 #define IS_JITTABLE_OP_TYPE(otype) \
         (IS_JITTABLE_ROOT_OP_TYPE(otype) \
@@ -131,6 +131,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     else EMIT_UNOP_CODE(OP_SQRT, pj_unop_sqrt)
     else EMIT_UNOP_CODE(OP_LOG, pj_unop_log)
     else EMIT_UNOP_CODE(OP_EXP, pj_unop_exp)
+    else EMIT_UNOP_CODE(OP_INT, pj_unop_perl_int)
     else {
       PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s", OP_NAME(o));
       abort();
