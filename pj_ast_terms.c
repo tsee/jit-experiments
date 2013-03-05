@@ -14,8 +14,8 @@ static char *pj_ast_op_names[] = {
   "log",      /* pj_unop_log */
   "exp",      /* pj_unop_exp */
   "int",      /* pj_unop_int */
-  "~",        /* pj_unop_not */
-  "!",        /* pj_unop_not_bool */
+  "~",        /* pj_unop_bitwise_not */
+  "!",        /* pj_unop_bool_not */
 
   /* binops */
   "+",        /* pj_binop_add */
@@ -27,9 +27,9 @@ static char *pj_ast_op_names[] = {
   "pow",      /* pj_binop_pow */
   "<<",       /* pj_binop_left_shift */
   ">>",       /* pj_binop_right_shift */
-  "&",        /* pj_binop_and */
-  "|",        /* pj_binop_or */
-  "^",        /* pj_binop_xor */
+  "&",        /* pj_binop_bitwise_and */
+  "|",        /* pj_binop_bitwise_or */
+  "^",        /* pj_binop_bitwise_xor */
   "==",       /* pj_binop_eq */
   "!=",       /* pj_binop_ne */
   "<",        /* pj_binop_lt */

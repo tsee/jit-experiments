@@ -89,10 +89,10 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
       jit_insn_label(function, &endlabel);
       break;
     }
-  case pj_unop_not:
+  case pj_unop_bitwise_not:
     rv = jit_insn_not(function, tmp1);
     break;
-  case pj_unop_not_bool:
+  case pj_unop_bool_not:
     rv = jit_insn_to_not_bool(function, tmp1);
     break;
   case pj_binop_add:
@@ -120,15 +120,15 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
     rv = jit_insn_shl(function, tmp1, tmp2);
     break;
   case pj_binop_right_shift:
-    rv = jit_insn_shr(function, tmp1, tmp2);
+    rv = jit_insn_ushr(function, tmp1, tmp2);
     break;
-  case pj_binop_and:
+  case pj_binop_bitwise_and:
     rv = jit_insn_and(function, tmp1, tmp2);
     break;
-  case pj_binop_or:
+  case pj_binop_bitwise_or:
     rv = jit_insn_or(function, tmp1, tmp2);
     break;
-  case pj_binop_xor:
+  case pj_binop_bitwise_xor:
     rv = jit_insn_xor(function, tmp1, tmp2);
     break;
   case pj_binop_eq:
