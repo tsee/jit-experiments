@@ -85,6 +85,19 @@ _run_test(
   ],
 );
 
+# FIXME not implemented - not same as perl
+# Testing bitwise not ~
+#_run_test(
+#  code => 'my $a = TMPL; my $x = ~$a;',
+#  name => '~TMPL',
+#  data => [
+#    [1 => ~1],
+#    [2 => ~2],
+#    [-1 => ~(-1)],
+#    [-100 => ~(-100)],
+#  ],
+#);
+
 sub _run_test {
   my %args = @_;
   my $data = $args{data};

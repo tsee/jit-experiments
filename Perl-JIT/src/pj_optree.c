@@ -16,7 +16,7 @@
         ( otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE \
           || otype == OP_SIN || otype == OP_COS || otype == OP_SQRT || otype == OP_EXP \
           || otype == OP_LOG || otype == OP_POW || otype == OP_INT || otype == OP_NOT \
-          || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT )
+          || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT /* || otype == OP_COMPLEMENT */ )
 
 #define IS_JITTABLE_OP_TYPE(otype) \
         (IS_JITTABLE_ROOT_OP_TYPE(otype) \
@@ -136,6 +136,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     else EMIT_UNOP_CODE(OP_EXP, pj_unop_exp)
     else EMIT_UNOP_CODE(OP_INT, pj_unop_perl_int)
     else EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not) /* FIXME Modification of a read-only value attempted at -e line 1. */
+    /* else EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not) */ /* FIXME not same as perl */
     else {
       PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s", OP_NAME(o));
       abort();

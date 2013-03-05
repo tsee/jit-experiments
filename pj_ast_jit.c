@@ -89,9 +89,12 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
       jit_insn_label(function, &endlabel);
       break;
     }
-  case pj_unop_bitwise_not:
-    rv = jit_insn_not(function, tmp1);
-    break;
+  case pj_unop_bitwise_not: {
+      /* FIXME still not same as perl */
+      jit_value_t t = jit_insn_convert(function, tmp1, jit_type_sys_ulong, 0); /* FIXME replace jit_type_sys_ulong with whatever a UV is */
+      rv = jit_insn_not(function, t);
+      break;
+  }
   case pj_unop_bool_not:
     rv = jit_insn_to_not_bool(function, tmp1);
     break;
