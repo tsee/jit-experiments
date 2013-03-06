@@ -94,21 +94,18 @@ pj_prepare_jit_op(pTHX_ const unsigned int nvariables, OP *origop)
   NewOp(1101, jitop, 1, LISTOP);
   jitop->op_type = (OPCODE)OP_CUSTOM;
   jitop->op_next = (OP *)jitop;
+  /* If OPpTARGET_MY is set on the original OP, then we have a nasty situation.
+   * In a nutshell, this is set as an optimization for scalar assignment
+   * to a pad (== lexical) variable. If set, the addop will directly
+   * assign to whichever pad variable would otherwise be set by the sassign
+   * op. It won't bother putting a separate var on the stack.
+   * This is great, but it uses the op_targ member of the OP struct to
+   * define the offset into the pad where the output variable is to be found.
+   * That's a problem because we're using op_targ to hang the jit aux struct
+   * off of.
+   */
   jitop->op_private = (origop->op_private & OPpTARGET_MY ? OPpTARGET_MY : 0);
   jitop->op_flags = (nvariables > 0 ? (OPf_STACKED|OPf_KIDS) : 0);
-  if (origop->op_private & OPpTARGET_MY) {
-    /* If OPpTARGET_MY is set on the original OP, then we have a nasty situation.
-     * In a nutshell, this is set as an optimization for scalar assignment
-     * to a pad (== lexical) variable. If set, the addop will directly
-     * assign to whichever pad variable would otherwise be set by the sassign
-     * op. It won't bother putting a separate var on the stack.
-     * This is great, but it uses the op_targ member of the OP struct to
-     * define the offset into the pad where the output variable is to be found.
-     * That's a problem because we're using op_targ to hang the jit aux struct
-     * off of.
-     */
-    jitop->op_private |= OPpTARGET_MY;
-  }
 
   /* Set it's implementation ptr */
   jitop->op_ppaddr = pj_pp_jit;
