@@ -25,7 +25,7 @@ pj_pp_jit(pTHX)
   PJ_DEBUG_1("Custom op '%s' called\n", OP_NAME(PL_op));
 
   /* inlined modified dATARGET, see above */
-  TARG = PL_op->op_private & OPf_STACKED
+  TARG = PL_op->op_flags & OPf_STACKED
          ? sp[-1]
          : PAD_SV(aux->saved_op_targ);
   if (PJ_DEBUGGING && PL_op->op_private & OPf_STACKED) {
