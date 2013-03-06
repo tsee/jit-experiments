@@ -22,12 +22,20 @@ pj_pp_jit(pTHX)
   SV *tmpsv;
   unsigned int i, n;
 
-  PJ_DEBUG("Custom op called\n");
+  PJ_DEBUG_1("Custom op '%s' called\n", OP_NAME(PL_op));
 
   /* inlined modified dATARGET, see above */
   TARG = PL_op->op_private & OPf_STACKED
          ? sp[-1]
          : PAD_SV(aux->saved_op_targ);
+  if (PJ_DEBUGGING && PL_op->op_private & OPf_STACKED) {
+    PJ_DEBUG("Params arrived on stack -- using sp[-1] as TARG\n");
+    sv_dump(TARG);
+  }
+  else if (PJ_DEBUGGING) {
+    PJ_DEBUG_1("Using PAD_SV(%i) as TARG\n", (int)aux->saved_op_targ);
+    sv_dump(TARG);
+  }
 
   /* This implements overload and other magic horribleness */
   /* FIXME What should this do for a generic JIT OP replacing a subtree?
