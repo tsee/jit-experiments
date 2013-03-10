@@ -2,6 +2,7 @@ use 5.14.2;
 use warnings;
 use strict;
 
+use Config qw(%Config);
 use FindBin qw($Bin);
 use File::Spec;
 use lib File::Spec->catdir($Bin, 'inc');
@@ -11,6 +12,9 @@ use Module::Build::PerlJIT;
 my @extra_compiler_flags;
 if ($ENV{DEBUG}) {
   push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra -Wno-unused-function);
+  if ($ENV{DEBUG} > 1) {
+    push @extra_compiler_flags, qw(-pedantic);
+  }
 }
 else {
   push @extra_compiler_flags, qw(-DNDEBUG);

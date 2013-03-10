@@ -14,13 +14,70 @@ our $LIBJIT_HOME = 'libjit';
 our $LIBJIT_M4 = 'm4';
 our $LIBJIT_INCLUDE = File::Spec->catfile($LIBJIT_HOME, 'include');
 our $LIBJIT_RESULT = File::Spec->catfile($LIBJIT_HOME, 'jit', '.libs', 'libjit'.$Config::Config{lib_ext});
+my $ctest_dir = 'ctest';
 
 sub ACTION_code {
     my ($self) = @_;
     
     $self->depends_on('libjit');
     
-    return $self->SUPER::ACTION_code(@_);
+    my $rv = $self->SUPER::ACTION_code(@_);
+
+    $self->build_ctests() if $ENV{DEBUG};
+
+    return $rv;
+}
+
+sub build_ctests {
+    my ($self) = @_;
+    
+    my @test_cfiles = glob("$ctest_dir/*.c");
+    my @test_exefiles;
+    foreach my $file (@test_cfiles) {
+        (my $exefile = $file) =~ s/\.c$/$Config::Config{exe_ext}/;
+        push @test_exefiles, $exefile;
+    }
+    print "Debug mode. Will build C tests:\n  ",
+        join("\n  ", @test_exefiles), "\n";
+
+    #my @extra_objs = glob("src/*".$Config::Config{obj_ext});
+    my @extra_objs = map File::Spec->catfile('src', "$_$Config::Config{obj_ext}"),
+        qw(
+            pj_ast_jit
+            pj_ast_terms
+            pj_ast_walkers
+        );
+
+    my $cb = $self->cbuilder;
+    for (0..$#test_cfiles) {
+        my $srcfile = $test_cfiles[$_];
+        my $exefile = $test_exefiles[$_];
+        my $obj = $cb->compile(
+            extra_compiler_flags => [qw(-Isrc), @{$self->extra_compiler_flags}],
+            source => $srcfile,
+        );
+        $cb->link_executable(
+            extra_linker_flags => [@{$self->extra_linker_flags}, qw(-lm)],
+            objects => [$obj, @extra_objs]
+        );
+    }
+}
+
+sub ACTION_clean {
+    my ($self) = @_;
+    my @test_cfiles = glob("$ctest_dir/*.c");
+    my @test_exefiles;
+    my @test_objfiles;
+    foreach my $file (@test_cfiles) {
+        (my $exefile = $file) =~ s/\.c$/$Config::Config{exe_ext}/;
+        push @test_exefiles, $exefile;
+        $exefile =~ s/\Q$Config::Config{exe_ext}$//;
+        $exefile .= $Config::Config{obj_ext};
+        push @test_objfiles, $exefile;
+    }
+
+    unlink $_ for (@test_exefiles, @test_objfiles);
+    return $self->SUPER::ACTION_clean(@_);
 }
 
 sub ACTION_depcheck {
