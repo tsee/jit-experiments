@@ -52,25 +52,30 @@ typedef enum {
   pj_binop_LAST  = pj_binop_ge
 } pj_op_type;
 
-typedef struct {
-  pj_optype type;
-} pj_term_t;
-
-typedef struct {
-  pj_term_type type;
-  pj_optype optype;
-  pj_term_t *op1;
-  pj_term_t *op2;
-} pj_op_t;
-
 typedef enum {
   pj_double_type,
   pj_int_type,
   pj_uint_type
 } pj_basic_type;
 
+#define BASE_TERM_MEMBERS   \
+  pj_optype type;           \
+  pj_term_t *op_sibling;
+
+typedef struct pj_term_t pj_term_t;
+struct pj_term_t {
+  BASE_TERM_MEMBERS
+};
+
 typedef struct {
-  pj_term_type type;
+  BASE_TERM_MEMBERS
+  pj_optype optype;
+  pj_term_t *op1;
+  pj_term_t *op2;
+} pj_op_t;
+
+typedef struct {
+  BASE_TERM_MEMBERS
   pj_basic_type const_type;
   union {
     double dbl_value;
@@ -80,7 +85,7 @@ typedef struct {
 } pj_constant_t;
 
 typedef struct {
-  pj_term_type type;
+  BASE_TERM_MEMBERS
   pj_basic_type var_type;
   int ivar;
 } pj_variable_t;

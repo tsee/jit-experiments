@@ -36,6 +36,8 @@ static char *pj_ast_op_names[] = {
   "<=",       /* pj_binop_le */
   ">",        /* pj_binop_gt */
   ">=",       /* pj_binop_ge */
+
+  /* listops */
 };
 
 pj_term_t *
@@ -84,10 +86,13 @@ pj_term_t *
 pj_make_binop(pj_optype t, pj_term_t *o1, pj_term_t *o2)
 {
   pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
+  o->op_sibling = NULL;
   o->type = pj_ttype_op;
   o->optype = t;
   o->op1 = o1;
   o->op2 = o2;
+  o1->op_sibling = o2;
+  o2->op_sibling = NULL;
   return (pj_term_t *)o;
 }
 
@@ -96,10 +101,12 @@ pj_term_t *
 pj_make_unop(pj_optype t, pj_term_t *o1)
 {
   pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
+  o->op_sibling = NULL;
   o->type = pj_ttype_op;
   o->optype = t;
   o->op1 = o1;
   o->op2 = NULL;
+  o1->op_sibling = NULL;
   return (pj_term_t *)o;
 }
 
