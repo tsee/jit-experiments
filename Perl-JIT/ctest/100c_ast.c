@@ -9,8 +9,18 @@
 #include <pj_ast_walkers.h>
 #include <pj_ast_jit.h>
 
+#include "mytap.h"
+
 int
-main(int argc, char **argv)
+main ()
+{
+  ok_m(1, "alive");
+  done_testing();
+  return 0;
+}
+
+int
+old_main(int argc, char **argv)
 {
   pj_term_t *t;
 

@@ -23,7 +23,7 @@ sub ACTION_code {
     
     my $rv = $self->SUPER::ACTION_code(@_);
 
-    $self->build_ctests() if $ENV{DEBUG};
+    $self->build_ctests() if $ENV{DEBUG} or -f 'DEBUGGING';
 
     return $rv;
 }
@@ -77,6 +77,7 @@ sub ACTION_clean {
     }
 
     unlink $_ for (@test_exefiles, @test_objfiles);
+    unlink("DEBUGGING");
     return $self->SUPER::ACTION_clean(@_);
 }
 

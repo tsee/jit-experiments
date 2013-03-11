@@ -15,6 +15,8 @@ if ($ENV{DEBUG}) {
   if ($ENV{DEBUG} > 1) {
     push @extra_compiler_flags, qw(-pedantic);
   }
+  open my $fh, ">", "DEBUGGING" or die $!;
+  close $fh or die $!;
 }
 else {
   push @extra_compiler_flags, qw(-DNDEBUG);
