@@ -23,7 +23,7 @@ sub ACTION_code {
     
     my $rv = $self->SUPER::ACTION_code(@_);
 
-    $self->build_ctests() if $ENV{DEBUG} or -f 'DEBUGGING';
+    $self->build_ctests() if -f 'CTESTS';
 
     return $rv;
 }
@@ -37,7 +37,7 @@ sub build_ctests {
         (my $exefile = $file) =~ s/\.c$/$Config::Config{exe_ext}/;
         push @test_exefiles, $exefile;
     }
-    print "Debug mode. Will build C tests:\n  ",
+    print "--ctests enabled: Will build C tests:\n  ",
         join("\n  ", @test_exefiles), "\n";
 
     #my @extra_objs = glob("src/*".$Config::Config{obj_ext});
@@ -77,8 +77,14 @@ sub ACTION_clean {
     }
 
     unlink $_ for (@test_exefiles, @test_objfiles);
-    unlink("DEBUGGING");
     return $self->SUPER::ACTION_clean(@_);
+}
+
+sub ACTION_realclean {
+    my ($self) = @_;
+    unlink("DEBUGGING");
+    unlink("CTESTS");
+    return $self->SUPER::ACTION_realclean(@_);
 }
 
 sub ACTION_depcheck {

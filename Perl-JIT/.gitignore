@@ -19,3 +19,4 @@ libjit/m4
 DEBUGGING
 dev_Build.PL
 ctest/100c_ast
+CTESTS

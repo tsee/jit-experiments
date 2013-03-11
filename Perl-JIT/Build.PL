@@ -6,13 +6,20 @@ use Config qw(%Config);
 use FindBin qw($Bin);
 use File::Spec;
 use lib File::Spec->catdir($Bin, 'inc');
+use Getopt::Long qw(GetOptions);
+my $DEBUG = $ENV{DEBUG};
+my $CTESTS = $ENV{CTESTS};
+GetOptions(
+  'debug|DEBUG+' => \$DEBUG,
+  'ctest|ctests' => \$CTESTS,
+);
 
 use Module::Build::PerlJIT;
 
 my @extra_compiler_flags;
-if ($ENV{DEBUG}) {
+if ($DEBUG) {
   push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra -Wno-unused-function);
-  if ($ENV{DEBUG} > 1) {
+  if ($DEBUG > 1) {
     push @extra_compiler_flags, qw(-pedantic);
   }
   open my $fh, ">", "DEBUGGING" or die $!;
@@ -20,6 +27,10 @@ if ($ENV{DEBUG}) {
 }
 else {
   push @extra_compiler_flags, qw(-DNDEBUG);
+}
+if ($CTESTS) {
+  open my $fh, ">", "CTESTS" or die $!;
+  close $fh or die $!;
 }
 
 Module::Build::PerlJIT->new(
