@@ -16,6 +16,9 @@
 * Do we need to support multiple specialized JIT ops?
   ->{foo}{bar} => rv2hv - helem - rv2hv - helem could be replaced
   (Rafael's idea).
+* Along the same lines, "foo${a}bar$b" currently generates a giant
+  concat OP tree. If not for overloading and friends, this could be
+  converted to a join-like operation.
 * Review preliminary binary/logical and/or/not... support in AST
   code. Likely still buggy, Anna didn't have time to finish.
 ...
