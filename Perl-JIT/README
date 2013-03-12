@@ -14,7 +14,41 @@ must be a double"). This limitation is there for many reasons,
 including the comparative amount of work it takes to properly JIT
 compile things involving strings and structs.
 
+Getting started
+===============
+
 This uses libjit and ships a copy that is linked statically to the
 Perl::JIT module library. You'll need flex and bison (Berkeley yacc
 won't work), autoconf and libtool. People have managed to get this
 to build on both Linux and Mac OS X.
+
+If you're building this straight out of the repository, then do:
+
+  $ dzil build
+
+which will build a new distribution directory.
+
+  $ cd Perl-JIT-*/
+
+Switch into it and now build for real:
+
+  $ perl Build.PL
+  $ ./Build
+  $ ./Build test
+
+Since that is tedious and Build.PL changes rarely, I usually just
+do "dzil build" once, then do:
+
+  $ cp Perl-JIT-*/Build.PL dev_Build.PL
+  $ rm -rf Perl-JIT-*
+
+and then use dev_Build.PL as the ordinary (non-templated) Build.PL.
+
+Build.PL takes some options:
+
+  --debug causes the code to include LOTS of debugging output and asserts.
+  --ctests causes the tests in ctest/ to be built and run during ./Build test
+
+Both can also be set using the environment variables DEBUG and CTESTS.
+Specifying --debug twice or setting DEBUG to a number higher than 1 will
+cause the -pedantic option to be added to the compiler arguments (gcc).
