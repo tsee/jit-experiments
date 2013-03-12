@@ -1,0 +1,20 @@
+Perl::JIT - Experimental JIT for numerics in Perl
+=================================================
+
+At this point, this is to be considered at best a proof of principle.
+The code is supposed to be able to match candidate subtrees of the
+Perl OP tree (the closest it has to an AST), generate a more useful
+AST out of that, JIT compile that AST to a function, create a custom
+Perl OP, replace the candidate subtree with this new custom OP and
+the parts of the subtree that couldn't be replaced entirely.
+
+Right now, the goal is to handle numeric calculations, so there are
+lots of corresponding assumptions in the code (lots of "this clearly
+must be a double"). This limitation is there for many reasons,
+including the comparative amount of work it takes to properly JIT
+compile things involving strings and structs.
+
+This uses libjit and ships a copy that is linked statically to the
+Perl::JIT module library. You'll need flex and bison (Berkeley yacc
+won't work), autoconf and libtool. People have managed to get this
+to build on both Linux and Mac OS X.
