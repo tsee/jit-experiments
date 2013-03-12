@@ -1,7 +1,7 @@
 #ifndef PJ_DEBUG_H_
 #define PJ_DEBUG_H_
 
-/* Set up debugging output to be compiled out whithout assertions */
+/* Set up debugging output to be compiled out without assertions */
 
 #ifdef NDEBUG
 #  define PJ_DEBUGGING 0

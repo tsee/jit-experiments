@@ -1,0 +1,23 @@
+Brief overview over the code. May become outdated, so
+"mind your step".
+
+First, the parts that are relatively independent of Perl:
+
+pj_ast_terms: Representation of the intermediate AST
+pj_ast_walkers: Aux. routines that walk the intermediate AST
+pj_ast_jit: Logic to actually turn the intermediate AST into a function
+            and logic to actually invoke those functions.
+pj_debug.h: Debugging output macros PJ_DEBUG and friends
+pj_type_switch.h: Aux. header required for invoking generated functions
+pj_inline.h: Minor portability macros
+
+Now, the bits that actually tie the JIT into Perl:
+
+pj_global_state: Perl/XS-related global state such as the JIT context,
+                 the custom OP definition, peephole optimizer, etc.
+pj_jit_peep: The top-level custom  peephole optimizer
+pj_optree: All OP-tree traversing AND OP-tree modification logic.
+           Hic sunt dracones, as they say.
+pj_jit_op: Implementation of the actual custom OP that replaces part of
+           the OP tree.
+
