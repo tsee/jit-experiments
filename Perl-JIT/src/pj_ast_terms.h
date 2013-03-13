@@ -42,14 +42,16 @@ typedef enum {
   pj_binop_le, /* TODO check */
   pj_binop_gt, /* TODO check */
   pj_binop_ge, /* TODO check */
+  pj_binop_bool_and, /* TODO check */
+  pj_binop_bool_or, /* TODO check */
 
-  /* TODO: boolean operators: and/or/... */
+  /* TODO: more boolean operators, ternary */
 
   pj_unop_FIRST  = pj_unop_negate,
   pj_unop_LAST   = pj_unop_bool_not,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_ge
+  pj_binop_LAST  = pj_binop_bool_or
 } pj_op_type;
 
 typedef enum {
@@ -57,6 +59,13 @@ typedef enum {
   pj_int_type,
   pj_uint_type
 } pj_basic_type;
+
+/* Indicates that the given op will only evaluate its arguments
+ * conditionally (eg. short-circuiting boolean and/or). */
+#define PJ_ASTf_CONDITIONAL (1<<0)
+
+extern unsigned int pj_ast_op_flags[];
+#define PJ_OP_FLAGS(op) pj_ast_op_flags[(op)->type]
 
 #define BASE_TERM_MEMBERS   \
   pj_optype type;           \

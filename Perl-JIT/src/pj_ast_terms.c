@@ -36,6 +36,46 @@ static char *pj_ast_op_names[] = {
   "<=",       /* pj_binop_le */
   ">",        /* pj_binop_gt */
   ">=",       /* pj_binop_ge */
+  "&&",       /* pj_binop_bool_and */
+  "||",       /* pj_binop_bool_or */
+
+  /* listops */
+};
+
+unsigned int pj_ast_op_flags[] = {
+  /* unops */
+  0,                              /* pj_unop_negate */
+  0,                              /* pj_unop_sin */
+  0,                              /* pj_unop_cos */
+  0,                              /* pj_unop_abs */
+  0,                              /* pj_unop_sqrt */
+  0,                              /* pj_unop_log */
+  0,                              /* pj_unop_exp */
+  0,                              /* pj_unop_int */
+  0,                              /* pj_unop_bitwise_not */
+  0,                              /* pj_unop_bool_not */
+
+  /* binops */
+  0,                              /* pj_binop_add */
+  0,                              /* pj_binop_subtract */
+  0,                              /* pj_binop_multiply */
+  0,                              /* pj_binop_divide */
+  0,                              /* pj_binop_modulo */
+  0,                              /* pj_binop_atan2 */
+  0,                              /* pj_binop_pow */
+  0,                              /* pj_binop_left_shift */
+  0,                              /* pj_binop_right_shift */
+  0,                              /* pj_binop_bitwise_and */
+  0,                              /* pj_binop_bitwise_or */
+  0,                              /* pj_binop_bitwise_xor */
+  0,                              /* pj_binop_eq */
+  0,                              /* pj_binop_ne */
+  0,                              /* pj_binop_lt */
+  0,                              /* pj_binop_le */
+  0,                              /* pj_binop_gt */
+  0,                              /* pj_binop_ge */
+  PJ_ASTf_CONDITIONAL,            /* pj_binop_bool_and */
+  PJ_ASTf_CONDITIONAL,            /* pj_binop_bool_or */
 
   /* listops */
 };

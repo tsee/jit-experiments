@@ -28,7 +28,7 @@ main ()
 void
 basic_term_tests()
 {
-  const unsigned int ntests = 2;
+  const unsigned int ntests = 7;
   pj_term_t *test_tree[ntests];
   unsigned int test_inputcount[ntests];
   double *test_input[ntests];
@@ -60,7 +60,65 @@ basic_term_tests()
   test_input[i][0] = -5;
   test_output[i] = (-5) * 2.1;
 
+  i = 2;
+  test_name[i] = "($a && 2.1), $a == 0";
+  test_inputcount[i] = 1;
+  test_tree[i] = pj_make_binop(
+    pj_binop_bool_and,
+    pj_make_variable(0, pj_double_type),
+    pj_make_const_dbl(2.1)
+  );
+  test_input[i] = (double *)malloc(sizeof(double)*1);
+  test_input[i][0] = 0.;
+  test_output[i] = 0.;
 
+  i = 3;
+  test_name[i] = "($a && 2.1), $a == 3.3";
+  test_inputcount[i] = 1;
+  test_tree[i] = pj_make_binop(
+    pj_binop_bool_and,
+    pj_make_variable(0, pj_double_type),
+    pj_make_const_dbl(2.1)
+  );
+  test_input[i] = (double *)malloc(sizeof(double)*1);
+  test_input[i][0] = 3.3;
+  test_output[i] = 2.1;
+
+  i = 4;
+  test_name[i] = "($a && 0), $a == 0";
+  test_inputcount[i] = 1;
+  test_tree[i] = pj_make_binop(
+    pj_binop_bool_and,
+    pj_make_variable(0, pj_double_type),
+    pj_make_const_dbl(0.0)
+  );
+  test_input[i] = (double *)malloc(sizeof(double)*1);
+  test_input[i][0] = 0.0;
+  test_output[i] = 0.0;
+
+  i = 5;
+  test_name[i] = "($a || 2.1), $a == 0";
+  test_inputcount[i] = 1;
+  test_tree[i] = pj_make_binop(
+    pj_binop_bool_or,
+    pj_make_variable(0, pj_double_type),
+    pj_make_const_dbl(2.1)
+  );
+  test_input[i] = (double *)malloc(sizeof(double)*1);
+  test_input[i][0] = 0.;
+  test_output[i] = 2.1;
+
+  i = 6;
+  test_name[i] = "($a || 2.1), $a == 3.3";
+  test_inputcount[i] = 1;
+  test_tree[i] = pj_make_binop(
+    pj_binop_bool_or,
+    pj_make_variable(0, pj_double_type),
+    pj_make_const_dbl(2.1)
+  );
+  test_input[i] = (double *)malloc(sizeof(double)*1);
+  test_input[i][0] = 3.3;
+  test_output[i] = 3.3;
 
   for (i = 0; i < ntests; ++i) {
     jit_context_t context;

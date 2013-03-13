@@ -40,9 +40,16 @@ static jit_value_t
 pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *op)
 {
   jit_value_t arg1, arg2, rv;
-  arg1 = pj_jit_internal(function, var_values, nvars, op->op1);
-  if (op->op2 != NULL)
-    arg2 = pj_jit_internal(function, var_values, nvars, op->op2);
+
+#define EVAL_OPERAND1 pj_jit_internal(function, var_values, nvars, op->op1)
+#define EVAL_OPERAND2 pj_jit_internal(function, var_values, nvars, op->op2)
+
+  /* Only do the recursion out here if we know that we'll have to emit that code at all. */
+  if (!(PJ_OP_FLAGS(op) & PJ_ASTf_CONDITIONAL)) {
+    arg1 = EVAL_OPERAND1;
+    if (op->op2 != NULL)
+      arg2 = EVAL_OPERAND2;
+  }
 
   switch (op->optype) {
   case pj_unop_negate:
@@ -152,9 +159,44 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
   case pj_binop_ge:
     rv = jit_insn_ge(function, arg1, arg2);
     break;
+  case pj_binop_bool_and: {
+      jit_label_t endlabel = jit_label_undefined;
+      jit_value_t tmpval, constval;
+
+      rv = EVAL_OPERAND1;
+      /* If value is false, then goto end */
+      jit_insn_branch_if_not(function, rv, &endlabel);
+
+      /* Left is true, move to right operand */
+      arg2 = EVAL_OPERAND2;
+      jit_insn_store(function, rv, arg2);
+
+      /* endlabel; done. */
+      jit_insn_label(function, &endlabel);
+      break;
+    }
+  case pj_binop_bool_or: {
+      jit_label_t endlabel = jit_label_undefined;
+      jit_value_t tmpval, constval;
+
+      rv = EVAL_OPERAND1;
+      /* If value is true, then goto end */
+      jit_insn_branch_if(function, rv, &endlabel);
+
+      /* Left is false, move to right operand */
+      arg2 = EVAL_OPERAND2;
+      jit_insn_store(function, rv, arg2);
+
+      /* endlabel; done. */
+      jit_insn_label(function, &endlabel);
+      break;
+    }
   default:
     abort();
   }
+
+#undef EVAL_OPERAND1
+#undef EVAL_OPERAND2
 
   return rv;
 }
