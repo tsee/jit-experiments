@@ -28,7 +28,7 @@ pj_pp_jit(pTHX)
   TARG = PL_op->op_flags & OPf_STACKED
          ? sp[-1]
          : PAD_SV(aux->saved_op_targ);
-  if (PJ_DEBUGGING && PL_op->op_private & OPf_STACKED) {
+  if (PJ_DEBUGGING && PL_op->op_flags & OPf_STACKED) {
     PJ_DEBUG("Params arrived on stack -- using sp[-1] as TARG\n");
     sv_dump(TARG);
   }
