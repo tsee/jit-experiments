@@ -23,6 +23,7 @@ pj_pp_jit(pTHX)
   unsigned int i, n;
 
   PJ_DEBUG_1("Custom op '%s' called\n", OP_NAME(PL_op));
+  PJ_DEBUG_2("Custom op op_flags are %i STACKED|KIDS==%i.\n", (int)(PL_op->op_flags), (int)(OPf_STACKED|OPf_KIDS));
 
   /* inlined modified dATARGET, see above */
   TARG = PL_op->op_flags & OPf_STACKED
@@ -68,6 +69,7 @@ pj_pp_jit(pTHX)
     SETn((NV)result);
   }
 
+  PJ_DEBUG("Finished executing JIT OP.\n");
   RETURN;
 }
 
