@@ -19,10 +19,19 @@
           || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT /* || otype == OP_COMPLEMENT */ \
           || otype == OP_EQ )
 
+/* AND and OR at top level can be used in "interesting" places such as looping constructs.
+ * Thus, we'll -- for now -- only support them as OPs within a tree.
+ * NULLs may need to be skipped occasionally, so we do something similar.
+ * PADSVs are recognized as subtrees now, so no use making them jittable root OP.
+ * CONSTs would be further constant folded if they were a candidate root OP, so
+ * no sense trying to JIT them if they're free-standing. */
 #define IS_JITTABLE_OP_TYPE(otype) \
         (IS_JITTABLE_ROOT_OP_TYPE(otype) \
           || otype == OP_PADSV \
-          || otype == OP_CONST)
+          || otype == OP_CONST \
+          || otype == OP_AND \
+          || otype == OP_OR \
+          || otype == OP_NULL )
 
 /* Scan a section of the OP tree and find whichever OP is
  * going to be executed first. This is done by doing pure
@@ -87,6 +96,16 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
         ptrstack_push(*subtrees, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
         ptrstack_push(*subtrees, kid);
       }
+      else if (otype == OP_NULL) {
+        /* compiled out -- FIXME most certainly not correct, in particular for incoming op_next */
+        if (kid->op_flags & OPf_KIDS) {
+          /* FIXME Only looking at first kid -- is that a limitation on OP_NULL? */
+          kid_terms[ikid] = pj_build_ast(aTHX_ ((UNOP*)kid)->op_first, subtrees, nvariables);
+        } else {
+          PJ_DEBUG("Umm, unexpected OP_NULL");
+          abort();
+        }
+      }
       else if (IS_JITTABLE_OP_TYPE(otype)) {
         kid_terms[ikid] = pj_build_ast(aTHX_ kid, subtrees, nvariables);
         if (kid_terms[ikid] == NULL) {
@@ -131,6 +150,8 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     else EMIT_BINOP_CODE(OP_LEFT_SHIFT, pj_binop_left_shift)
     else EMIT_BINOP_CODE(OP_RIGHT_SHIFT, pj_binop_right_shift)
     else EMIT_BINOP_CODE(OP_EQ, pj_binop_eq)
+    else EMIT_BINOP_CODE(OP_AND, pj_binop_bool_and)
+    else EMIT_BINOP_CODE(OP_OR, pj_binop_bool_or)
     else EMIT_UNOP_CODE(OP_SIN, pj_unop_sin)
     else EMIT_UNOP_CODE(OP_COS, pj_unop_cos)
     else EMIT_UNOP_CODE(OP_SQRT, pj_unop_sqrt)
