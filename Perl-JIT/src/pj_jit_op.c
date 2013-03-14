@@ -65,8 +65,9 @@ pj_pp_jit(pTHX)
     //printf("In: %f %f\n", params[0], params[1]);
     pj_invoke_func((pj_invoke_func_t) aux->jit_fun, params, aux->nparams, pj_double_type, (void *)&result);
 
-    PJ_DEBUG_1("Add result from JIT: %f\n", (float)result);
-    SETn((NV)result);
+    PJ_DEBUG_1("Result from JIT OP: %f\n", (float)result);
+    //PUSHn((NV)result);
+    SETs(sv_2mortal(newSVnv((NV)result)));
   }
 
   PJ_DEBUG("Finished executing JIT OP.\n");
