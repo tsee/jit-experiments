@@ -54,6 +54,10 @@ typedef enum {
   pj_binop_LAST  = pj_binop_bool_or
 } pj_op_type;
 
+#define PJ_IS_OP_UNOP(o) ((o)->type >= pj_unop_FIRST && (o)->type <= pj_unop_LAST)
+#define PJ_IS_OP_BINOP(o) ((o)->type >= pj_binop_FIRST && (o)->type <= pj_binop_LAST)
+#define PJ_IS_OP_LISTOP(o) ((o)->type >= pj_listop_FIRST && (o)->type <= pj_listop_LAST)
+
 typedef enum {
   pj_double_type,
   pj_int_type,
@@ -106,6 +110,8 @@ pj_term_t *pj_make_const_uint(unsigned int c);
 pj_term_t *pj_make_variable(int iv, pj_basic_type t);
 pj_term_t *pj_make_binop(pj_optype t, pj_term_t *o1, pj_term_t *o2);
 pj_term_t *pj_make_unop(pj_optype t, pj_term_t *o1);
+/* for pj_make_listop, o_start and o_end have to form a linked list of ops alread (using op_sibling) */
+pj_term_t *pj_make_listop(pj_optype t, pj_term_t *o_start, pj_term_t *o_end);
 
 void pj_free_tree(pj_term_t *t);
 

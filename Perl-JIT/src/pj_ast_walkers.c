@@ -32,6 +32,8 @@ pj_tree_extract_vars(pj_term_t *term, pj_variable_t * **vars, unsigned int *nvar
   pj_tree_extract_vars_internal(term, vars, nvars);
 }
 
+/* FIXME this isn't really very useful right now and if it becomes that,
+ *       it could really do with a rewrite */
 pj_basic_type
 pj_tree_determine_funtype(pj_term_t *term)
 {
@@ -47,7 +49,19 @@ pj_tree_determine_funtype(pj_term_t *term)
     t1 = pj_tree_determine_funtype(o->op1);
     if (t1 == pj_double_type)
       return pj_double_type; /* double >> int */
-    if (o->op2 != NULL) {
+
+    if (PJ_IS_OP_LISTOP(o)) {
+      pj_term_t *kid;
+      pj_basic_type t;
+      for (kid = o->op1->op_sibling; kid != NULL; kid = kid->op_sibling) {
+        t = pj_tree_determine_funtype(kid);
+        if (t == pj_double_type)
+          return pj_double_type;
+        if (t != t1)
+          return pj_double_type; /* FIXME correct? */
+      }
+    }
+    else if (PJ_IS_OP_BINOP(o)) {
       t2 = pj_tree_determine_funtype(o->op2);
       if (t2 == pj_double_type)
         return pj_double_type;

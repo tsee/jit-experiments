@@ -151,6 +151,20 @@ pj_make_unop(pj_optype t, pj_term_t *o1)
 }
 
 
+pj_term_t *
+pj_make_listop(pj_optype t, pj_term_t *o_start, pj_term_t *o_end)
+{
+  pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
+  o->op_sibling = NULL;
+  o->type = pj_ttype_op;
+  o->optype = t;
+  o->op1 = o_start;
+  o->op2 = o_end;
+  o_end->op_sibling = NULL; /* just in case... */
+  return (pj_term_t *)o;
+}
+
+
 void
 pj_free_tree(pj_term_t *t)
 {
@@ -158,8 +172,13 @@ pj_free_tree(pj_term_t *t)
     return;
 
   if (t->type == pj_ttype_op) {
-    pj_free_tree(((pj_op_t *)t)->op1);
-    pj_free_tree(((pj_op_t *)t)->op2);
+    pj_term_t *kid;
+    pj_term_t *next;
+    pj_op_t *o = (pj_op_t *)t;
+    for (kid = o->op1; kid; kid = next) {
+      next = kid->op_sibling;
+      pj_free_tree(kid);
+    }
   }
 
   free(t);
@@ -199,13 +218,14 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
   else if (term->type == pj_ttype_op)
   {
     pj_op_t *o = (pj_op_t *)term;
+    pj_term_t *kid;
 
     pj_dump_tree_indent(lvl);
 
     printf("OP '%s' (\n", pj_ast_op_names[o->optype]);
-    pj_dump_tree_internal(o->op1, lvl+1);
-    if (o->op2 != NULL)
-      pj_dump_tree_internal(o->op2, lvl+1);
+    for (kid = o->op1; kid; kid = kid->op_sibling) {
+      pj_dump_tree_internal(kid, lvl+1);
+    }
 
     pj_dump_tree_indent(lvl);
     printf(")\n");
