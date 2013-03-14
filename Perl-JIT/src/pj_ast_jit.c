@@ -162,7 +162,6 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
     break;
   case pj_binop_bool_and: {
       jit_label_t endlabel = jit_label_undefined;
-      jit_value_t tmpval, constval;
 
       rv = EVAL_OPERAND1;
       /* If value is false, then goto end */
@@ -178,7 +177,6 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
     }
   case pj_binop_bool_or: {
       jit_label_t endlabel = jit_label_undefined;
-      jit_value_t tmpval, constval;
 
       rv = EVAL_OPERAND1;
       /* If value is true, then goto end */
