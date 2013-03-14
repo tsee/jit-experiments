@@ -41,8 +41,9 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
 {
   jit_value_t arg1, arg2, rv;
 
-#define EVAL_OPERAND1 pj_jit_internal(function, var_values, nvars, op->op1)
-#define EVAL_OPERAND2 pj_jit_internal(function, var_values, nvars, op->op2)
+#define EVAL_OPERAND(operand) pj_jit_internal(function, var_values, nvars, operand)
+#define EVAL_OPERAND1 EVAL_OPERAND(op->op1)
+#define EVAL_OPERAND2 EVAL_OPERAND(op->op2)
 
   /* Only do the recursion out here if we know that we'll have to emit that code at all. */
   if (!(PJ_OP_FLAGS(op) & PJ_ASTf_CONDITIONAL)) {
