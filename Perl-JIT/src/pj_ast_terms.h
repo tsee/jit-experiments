@@ -42,8 +42,8 @@ typedef enum {
   pj_binop_le, /* TODO check */
   pj_binop_gt, /* TODO check */
   pj_binop_ge, /* TODO check */
-  pj_binop_bool_and, /* TODO check */
-  pj_binop_bool_or, /* TODO check */
+  pj_binop_bool_and,
+  pj_binop_bool_or,
 
   /* TODO: more boolean operators, ternary */
 
