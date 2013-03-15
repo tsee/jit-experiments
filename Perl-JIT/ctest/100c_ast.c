@@ -121,34 +121,38 @@ basic_term_tests()
   test_output[i] = 3.3;
 
   i = 7;
-  test_name[i] = "($a ? 0.1 : 1.1), $a == 0.0";
-  test_inputcount[i] = 1;
+  test_name[i] = "($a ? $b : $c), $a == 0.0, $b = 1.1, $c = 2.1";
+  test_inputcount[i] = 3;
   {
     pj_term_t *v = pj_make_variable(0, pj_double_type);
-    pj_term_t *c1 = pj_make_const_dbl(0.1);
-    pj_term_t *c2 = pj_make_const_dbl(1.1);
+    pj_term_t *c1 = pj_make_variable(1, pj_double_type);
+    pj_term_t *c2 = pj_make_variable(2, pj_double_type);
     v->op_sibling = c1;
     c1->op_sibling = c2;
     test_tree[i] = pj_make_listop(pj_listop_ternary, v, c2);
   }
-  test_input[i] = (double *)malloc(sizeof(double)*1);
+  test_input[i] = (double *)malloc(sizeof(double)*3);
   test_input[i][0] = 0.0;
-  test_output[i] = 1.1;
+  test_input[i][1] = 1.1;
+  test_input[i][2] = 2.1;
+  test_output[i] = 2.1;
 
   i = 8;
-  test_name[i] = "($a ? 0.1 : 1.1), $a == 3.0";
-  test_inputcount[i] = 1;
+  test_name[i] = "($a ? $b : $c), $a == 3.0, $b = 1.2, $c = 2.2";
+  test_inputcount[i] = 3;
   {
     pj_term_t *v = pj_make_variable(0, pj_double_type);
-    pj_term_t *c1 = pj_make_const_dbl(0.1);
-    pj_term_t *c2 = pj_make_const_dbl(1.1);
+    pj_term_t *c1 = pj_make_variable(1, pj_double_type);
+    pj_term_t *c2 = pj_make_variable(2, pj_double_type);
     v->op_sibling = c1;
     c1->op_sibling = c2;
     test_tree[i] = pj_make_listop(pj_listop_ternary, v, c2);
   }
-  test_input[i] = (double *)malloc(sizeof(double)*1);
+  test_input[i] = (double *)malloc(sizeof(double)*3);
   test_input[i][0] = 3.0;
-  test_output[i] = 0.1;
+  test_input[i][1] = 1.2;
+  test_input[i][2] = 2.2;
+  test_output[i] = 1.2;
 
   for (i = 0; i < ntests; ++i) {
     jit_context_t context;
