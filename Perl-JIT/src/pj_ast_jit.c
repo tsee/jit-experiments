@@ -5,7 +5,10 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include <jit/jit-dump.h>
+
 #include <pj_debug.h>
+#include <pj_ast_terms.h>
 #include <pj_ast_walkers.h>
 
 static jit_value_t pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *op);
@@ -80,7 +83,7 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
       jit_value_t tmprv, tmpval, constval;
 
       /* if value < 0.0, then goto neglabel */
-      constval = jit_value_create_nfloat_constant(function, jit_type_nfloat, 0.0);
+      constval = jit_value_create_nfloat_constant(function, jit_type_sys_double, 0.0);
       tmpval = jit_insn_lt(function, arg1, constval);
       jit_insn_branch_if(function, tmpval, &neglabel);
 
@@ -195,13 +198,14 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
       jit_label_t endlabel = jit_label_undefined;
       jit_value_t cond;
       pj_term_t *operand;
+      rv = jit_value_create(function, jit_type_sys_double);
 
       /* operands are linked list of "condition", "true-value (left)", "false-value (right)" */
       operand = op->op1;
 
-      rv = EVAL_OPERAND(operand);
+      cond = EVAL_OPERAND(operand);
       /* If value is false, then goto right branch */
-      jit_insn_branch_if_not(function, rv, &rightlabel);
+      jit_insn_branch_if_not(function, cond, &rightlabel);
 
       /* Left is true, return result of evaluating left operand */
       operand = operand->op_sibling;
@@ -217,6 +221,7 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
 
       /* endlabel; done. */
       jit_insn_label(function, &endlabel);
+      printf("\n");
       break;
     }
   default:
@@ -225,6 +230,11 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
 
 #undef EVAL_OPERAND1
 #undef EVAL_OPERAND2
+
+  /*
+  if (PJ_DEBUGGING)
+    jit_dump_function(stdout, function, "func");
+  */
 
   return rv;
 }
@@ -284,6 +294,10 @@ pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun, pj_b
   /* Recursively emit instructions for JIT and final return */
   jit_value_t rv = pj_jit_internal(function, var_values, nvars, term);
   jit_insn_return(function, rv);
+  /*
+  if (PJ_DEBUGGING)
+    jit_dump_function(stdout, function, "func");
+  */
 
   /* Make it so! */
   /* jit_function_set_optimization_level(function, jit_function_get_max_optimization_level()); */
