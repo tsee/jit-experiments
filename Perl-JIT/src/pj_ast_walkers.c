@@ -18,9 +18,10 @@ pj_tree_extract_vars_internal(pj_term_t *term, pj_variable_t * **vars, unsigned 
   else if (term->type == pj_ttype_op)
   {
     pj_op_t *o = (pj_op_t *)term;
-    pj_tree_extract_vars_internal(o->op1, vars, nvars);
-    if (o->op2 != NULL)
-      pj_tree_extract_vars_internal(o->op2, vars, nvars);
+    pj_term_t *kid;
+    for (kid = o->op1; kid; kid = kid->op_sibling) {
+      pj_tree_extract_vars_internal(kid, vars, nvars);
+    }
   }
 }
 
