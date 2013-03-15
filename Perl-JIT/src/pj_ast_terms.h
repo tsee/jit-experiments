@@ -58,9 +58,9 @@ typedef enum {
   pj_listop_LAST  = pj_listop_ternary,
 } pj_op_type;
 
-#define PJ_IS_OP_UNOP(o) ((o)->type >= pj_unop_FIRST && (o)->type <= pj_unop_LAST)
-#define PJ_IS_OP_BINOP(o) ((o)->type >= pj_binop_FIRST && (o)->type <= pj_binop_LAST)
-#define PJ_IS_OP_LISTOP(o) ((o)->type >= pj_listop_FIRST && (o)->type <= pj_listop_LAST)
+#define PJ_IS_OP_UNOP(o) ((o)->optype >= pj_unop_FIRST && (o)->optype <= pj_unop_LAST)
+#define PJ_IS_OP_BINOP(o) ((o)->optype >= pj_binop_FIRST && (o)->optype <= pj_binop_LAST)
+#define PJ_IS_OP_LISTOP(o) ((o)->optype >= pj_listop_FIRST && (o)->optype <= pj_listop_LAST)
 
 typedef enum {
   pj_double_type,
@@ -73,10 +73,12 @@ typedef enum {
 #define PJ_ASTf_CONDITIONAL (1<<0)
 
 extern unsigned int pj_ast_op_flags[];
-#define PJ_OP_FLAGS(op) pj_ast_op_flags[(op)->type]
+#define PJ_OP_FLAGS(op) (pj_ast_op_flags[(op)->optype])
+extern char *pj_ast_op_names[];
+#define PJ_OP_NAME(op) (pj_ast_op_names[(op)->optype])
 
 #define BASE_TERM_MEMBERS   \
-  pj_optype type;           \
+  pj_term_type type;        \
   pj_term_t *op_sibling;
 
 typedef struct pj_term_t pj_term_t;
