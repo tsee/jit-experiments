@@ -17,7 +17,7 @@
           || otype == OP_SIN || otype == OP_COS || otype == OP_SQRT || otype == OP_EXP \
           || otype == OP_LOG || otype == OP_POW || otype == OP_INT || otype == OP_NOT \
           || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT /* || otype == OP_COMPLEMENT */ \
-          || otype == OP_EQ || otype == OP_COND_EXPR )
+          || otype == OP_EQ || otype == OP_COND_EXPR || otype == OP_NEGATE )
 
 /* AND and OR at top level can be used in "interesting" places such as looping constructs.
  * Thus, we'll -- for now -- only support them as OPs within a tree.
@@ -168,6 +168,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     else EMIT_UNOP_CODE(OP_EXP, pj_unop_exp)
     else EMIT_UNOP_CODE(OP_INT, pj_unop_perl_int)
     else EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not)
+    else EMIT_UNOP_CODE(OP_NEGATE, pj_unop_negate)
     /* else EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not) */ /* FIXME not same as perl */
     else EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
     else {
