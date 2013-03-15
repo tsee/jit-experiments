@@ -190,6 +190,35 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
       jit_insn_label(function, &endlabel);
       break;
     }
+  case pj_listop_ternary: {
+      jit_label_t rightlabel = jit_label_undefined;
+      jit_label_t endlabel = jit_label_undefined;
+      jit_value_t cond;
+      pj_term_t *operand;
+
+      /* operands are linked list of "condition", "true-value (left)", "false-value (right)" */
+      operand = op->op1;
+
+      rv = EVAL_OPERAND(operand);
+      /* If value is false, then goto right branch */
+      jit_insn_branch_if_not(function, rv, &rightlabel);
+
+      /* Left is true, return result of evaluating left operand */
+      operand = operand->op_sibling;
+      arg1 = EVAL_OPERAND(operand);
+      jit_insn_store(function, rv, arg1);
+      jit_insn_branch(function, &endlabel);
+
+      /* Left is false, return result of evaluating right operand */
+      jit_insn_label(function, &rightlabel);
+      operand = operand->op_sibling;
+      arg2 = EVAL_OPERAND(operand);
+      jit_insn_store(function, rv, arg2);
+
+      /* endlabel; done. */
+      jit_insn_label(function, &endlabel);
+      break;
+    }
   default:
     abort();
   }

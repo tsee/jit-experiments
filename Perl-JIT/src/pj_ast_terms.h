@@ -45,13 +45,17 @@ typedef enum {
   pj_binop_bool_and,
   pj_binop_bool_or,
 
+  pj_listop_ternary, /* TODO check */
   /* TODO: more boolean operators, ternary */
 
   pj_unop_FIRST  = pj_unop_negate,
   pj_unop_LAST   = pj_unop_bool_not,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_bool_or
+  pj_binop_LAST  = pj_binop_bool_or,
+
+  pj_listop_FIRST = pj_listop_ternary,
+  pj_listop_LAST  = pj_listop_ternary,
 } pj_op_type;
 
 #define PJ_IS_OP_UNOP(o) ((o)->type >= pj_unop_FIRST && (o)->type <= pj_unop_LAST)
