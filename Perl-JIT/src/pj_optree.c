@@ -17,7 +17,7 @@
           || otype == OP_SIN || otype == OP_COS || otype == OP_SQRT || otype == OP_EXP \
           || otype == OP_LOG || otype == OP_POW || otype == OP_INT || otype == OP_NOT \
           || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT /* || otype == OP_COMPLEMENT */ \
-          || otype == OP_EQ )
+          || otype == OP_EQ || otype == OP_COND_EXPR )
 
 /* AND and OR at top level can be used in "interesting" places such as looping constructs.
  * Thus, we'll -- for now -- only support them as OPs within a tree.
@@ -131,15 +131,24 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
 
     /* FIXME find a way of doing this that is less manual/verbose */
     /* TODO modulo may have (very?) different behaviour in Perl than in C (or libjit or the platform...) */
+#define EMIT_UNOP_CODE(perl_op_type, pj_op_type) \
+    if (parent_otype == perl_op_type) { \
+      assert(ikid == 1); \
+      retval = pj_make_unop( pj_op_type, kid_terms[0] ); \
+    }
 #define EMIT_BINOP_CODE(perl_op_type, pj_op_type) \
     if (parent_otype == perl_op_type) { \
       assert(ikid == 2); \
       retval = pj_make_binop( pj_op_type, kid_terms[0], kid_terms[1] ); \
     }
-#define EMIT_UNOP_CODE(perl_op_type, pj_op_type) \
+#define EMIT_LISTOP_CODE(perl_op_type, pj_op_type) \
     if (parent_otype == perl_op_type) { \
-      assert(ikid == 1); \
-      retval = pj_make_unop( pj_op_type, kid_terms[0] ); \
+      unsigned int i; \
+      assert(ikid > 0); \
+      for (i = 0; i < ikid-1; ++i) \
+        kid_terms[i]->op_sibling = kid_terms[i+1]; \
+      kid_terms[ikid-1]->op_sibling = NULL; \
+      retval = pj_make_listop( pj_op_type, kid_terms[0], kid_terms[ikid-1] ); \
     }
 
     EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
@@ -158,8 +167,9 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     else EMIT_UNOP_CODE(OP_LOG, pj_unop_log)
     else EMIT_UNOP_CODE(OP_EXP, pj_unop_exp)
     else EMIT_UNOP_CODE(OP_INT, pj_unop_perl_int)
-    else EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not) /* FIXME Modification of a read-only value attempted at -e line 1. */
+    else EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not)
     /* else EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not) */ /* FIXME not same as perl */
+    else EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
     else {
       PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s", OP_NAME(o));
       abort();
