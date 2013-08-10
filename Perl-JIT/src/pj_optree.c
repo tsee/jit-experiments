@@ -30,9 +30,9 @@ namespace PerlJIT {
 
 
   void
-  OPTreeWalker::walk(pTHX_ OP *o, OP *parentop)
+  OPTreeVisitor::visit(pTHX_ OP *o, OP *parentop)
   {
-    walk_control_t status;
+    visit_control_t status;
     OP *kid;
     std::list<OP *> backlog;
 
@@ -46,11 +46,11 @@ namespace PerlJIT {
       parentop = backlog.back();
       backlog.pop_back();
 
-      status = this->op_callback(aTHX_ o, parentop);
-      assert(status == WALK_CONT || status == WALK_ABORT || status == WALK_SKIP);
+      status = this->visit_op(aTHX_ o, parentop);
+      assert(status == VISIT_CONT || status == VISIT_ABORT || status == VISIT_SKIP);
 
       switch (status) {
-      case WALK_CONT:
+      case VISIT_CONT:
         // "Recurse": Put kids on stack
         if (o && (o->op_flags & OPf_KIDS)) {
           for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
@@ -66,10 +66,10 @@ namespace PerlJIT {
           backlog.push_back(kid);
         }
         break;
-      case WALK_SKIP:
+      case VISIT_SKIP:
         // fall-through, do not recurse into this OP's kids
         break;
-      case WALK_ABORT:
+      case VISIT_ABORT:
         goto done;
       default:
         abort();
@@ -78,7 +78,7 @@ namespace PerlJIT {
 
   done:
     return;
-  } // end 'OPTreeWalker::walk'
+  } // end 'OPTreeVisitor::visit_op'
 }
 
 using namespace PerlJIT;
@@ -435,12 +435,12 @@ pj_attempt_jit(pTHX_ OP *o, OP *parentop)
 }
 
 namespace PerlJIT {
-  class OPTreeJITCandidateFinder : public OPTreeWalker {
+  class OPTreeJITCandidateFinder : public OPTreeVisitor {
   public:
     OPTreeJITCandidateFinder() {}
 
-    walk_control_t
-    op_callback(pTHX_ OP *o, OP *parentop)
+    visit_control_t
+    visit(pTHX_ OP *o, OP *parentop)
     {
       unsigned int otype;
       otype = o->op_type;
@@ -455,13 +455,13 @@ namespace PerlJIT {
           if (PJ_DEBUGGING)
             printf("Attempting JIT with parent OP %s\n", OP_NAME((OP *)parentop));
           pj_attempt_jit(aTHX_ o, parentop);
-          return WALK_SKIP;
+          return VISIT_SKIP;
         }
         else
           PJ_DEBUG_1("Might have been able to JIT %s, but parent OP is NULL", OP_NAME(o));
       }
-      return WALK_CONT;
-    } // end 'op_callback'
+      return VISIT_CONT;
+    } // end 'visit'
   }; // end class OPTreeJITCandidateFinder
 }
 
@@ -473,6 +473,6 @@ void
 pj_find_jit_candidate(pTHX_ OP *o, OP *parentop)
 {
   OPTreeJITCandidateFinder f;
-  f.walk(aTHX_ o, parentop);
+  f.visit(aTHX_ o, parentop);
 }
 

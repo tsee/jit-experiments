@@ -7,18 +7,22 @@
 /* Code relating to traversing and manipulating the OP tree */
 
 namespace PerlJIT {
-  class OPTreeWalker {
+  class OPTreeVisitor {
   public:
-    enum walk_control_t {WALK_CONT = 0, WALK_SKIP = 1, WALK_ABORT = 2};
+    enum visit_control_t {
+      VISIT_CONT = 0,
+      VISIT_SKIP = 1,
+      VISIT_ABORT = 2
+    };
 
-    /* Walks the OP tree left-hugging, depth-first, invoking the callback
-     * for each op. Besides the regular WALK_CONT, the callback may return
-     * WALK_SKIP to avoid recursing into the OP's children or WALK_ABORT
-     * to stop walking the tree altogether. */
-    void walk(pTHX_ OP *o, OP *parentop);
+    // Walks the OP tree left-hugging, depth-first, invoking the callback
+    // for each op. Besides the regular WALK_CONT, the callback may return
+    // WALK_SKIP to avoid recursing into the OP's children or WALK_ABORT
+    // to stop walking the tree altogether.
+    void visit(pTHX_ OP *o, OP *parentop);
 
-    // To be implemented ins subclass
-    virtual walk_control_t op_callback(pTHX_ OP *o, OP *parentop);
+    // To be implemented in subclass
+    virtual visit_control_t visit_op(pTHX_ OP *o, OP *parentop);
   };
 }
 
