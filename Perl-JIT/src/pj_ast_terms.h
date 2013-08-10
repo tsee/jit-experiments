@@ -88,6 +88,7 @@ struct pj_term_t {
 
   virtual const char *perl_class() const
     { return "Perl::JIT::AST::Term"; }
+  virtual ~pj_term_t() {}
 };
 
 struct pj_op_t : public pj_term_t {
