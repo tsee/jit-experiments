@@ -11,6 +11,7 @@
 
 #include "pj_jit_op.h"
 #include "pj_global_state.h"
+#include <vector>
 
 /* inspired by B.xs */
 #define PMOP_pmreplstart(o)	o->op_pmstashstartu.op_pmreplstart
@@ -122,7 +123,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
 
   /* 2 is the maximum number of children that the supported
    * OP types may have. Will change in future */
-  pj_term_t *kid_terms[2];
+  std::vector<pj_term_t *> kid_terms;
   unsigned int ikid = 0;
   unsigned int i;
 
@@ -144,10 +145,10 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
         else {
           PJ_DEBUG("CONST being inlined.\n");
         }
-        kid_terms[ikid] = pj_make_const_dbl(SvNV(cSVOPx_sv(kid))); /* FIXME replace type by inferred type */
+        kid_terms.push_back(pj_make_const_dbl(SvNV(cSVOPx_sv(kid)))); /* FIXME replace type by inferred type */
       }
       else if (otype == OP_PADSV) {
-        kid_terms[ikid] = pj_make_variable((*nvariables)++, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
+        kid_terms.push_back( pj_make_variable((*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
         PJ_DEBUG("PADSV being added to subtrees.\n");
         ptrstack_push(*subtrees, INT2PTR(void *, pj_double_type)); /* FIXME replace pj_double_type with type that's imposed by the current OP */
         ptrstack_push(*subtrees, kid);
@@ -156,17 +157,18 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
         /* compiled out -- FIXME most certainly not correct, in particular for incoming op_next */
         if (kid->op_flags & OPf_KIDS) {
           /* FIXME Only looking at first kid -- is that a limitation on OP_NULL? */
-          kid_terms[ikid] = pj_build_ast(aTHX_ ((UNOP*)kid)->op_first, subtrees, nvariables);
+          kid_terms.push_back( pj_build_ast(aTHX_ ((UNOP*)kid)->op_first, subtrees, nvariables) );
         } else {
           PJ_DEBUG("Umm, unexpected OP_NULL");
           abort();
         }
       }
       else if (IS_JITTABLE_OP_TYPE(otype)) {
-        kid_terms[ikid] = pj_build_ast(aTHX_ kid, subtrees, nvariables);
-        if (kid_terms[ikid] == NULL) {
-          for (i = 0; i < ikid; ++i)
-            pj_free_tree(kid_terms[ikid]);
+        kid_terms.push_back( pj_build_ast(aTHX_ kid, subtrees, nvariables) );
+        if (kid_terms.back() == NULL) {
+          std::vector<pj_term_t *>::iterator it = kid_terms.begin();
+          for (; it != kid_terms.end(); ++it)
+            pj_free_tree(*it);
           return NULL;
         }
       }
@@ -176,7 +178,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
          * treat as subtree. */
         PJ_DEBUG_1("Cannot represent this OP with AST. Emitting variable. (%s)", OP_NAME(kid));
         pj_find_jit_candidate(aTHX_ kid, o); /* o is parent of kid */
-        kid_terms[ikid] = pj_make_variable((*nvariables)++, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
+        kid_terms.push_back( pj_make_variable((*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
 
         ptrstack_push(*subtrees, INT2PTR(void *, pj_double_type)); /* FIXME replace pj_double_type with type that's imposed by the current OP */
         ptrstack_push(*subtrees, kid);
