@@ -1,0 +1,26 @@
+%module{Perl::JIT};
+
+#include "pj_ast_terms.h"
+
+class pj_term_t {
+  pj_optype type %get %set;
+  pj_term_t *op_sibling %get %set;
+};
+
+class pj_op_t : public pj_term_t {
+  pj_optype optype %get %set;
+  pj_term_t *op1 %get %set;
+  pj_term_t *op2 %get %set;
+};
+
+class pj_constant_t : public pj_term_t {
+  pj_basic_type const_type %get %set;
+  double dbl_value %get %set;
+  int int_value %get %set;
+  unsigned int uint_value %get %set;
+};
+
+class pj_variable_t : public pj_term_t {
+  pj_basic_type var_type %get %set;
+  int ivar %get %set;
+};

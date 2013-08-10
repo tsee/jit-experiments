@@ -1,0 +1,9 @@
+%loadplugin{feature::default_xs_typemap};
+
+%typemap{pj_optype}{simple}{
+    %xs_type{T_ENUM};
+};
+
+%typemap{pj_basic_type}{simple}{
+    %xs_type{T_ENUM};
+};
