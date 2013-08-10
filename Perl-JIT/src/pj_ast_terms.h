@@ -77,37 +77,31 @@ extern unsigned int pj_ast_op_flags[];
 extern char *pj_ast_op_names[];
 #define PJ_OP_NAME(op) (pj_ast_op_names[(op)->optype])
 
-#define BASE_TERM_MEMBERS   \
-  pj_term_type type;        \
-  pj_term_t *op_sibling;
-
-typedef struct pj_term_t pj_term_t;
+ wrapping.
 struct pj_term_t {
-  BASE_TERM_MEMBERS
+  pj_optype type;
+  pj_term_t *op_sibling;
 };
 
-typedef struct {
-  BASE_TERM_MEMBERS
+struct pj_op_t : public pj_term_t {
   pj_optype optype;
   pj_term_t *op1;
   pj_term_t *op2;
-} pj_op_t;
+};
 
-typedef struct {
-  BASE_TERM_MEMBERS
+struct pj_constant_t : public pj_term_t {
   pj_basic_type const_type;
   union {
     double dbl_value;
     int int_value;
     unsigned int uint_value;
-  } value_u;
-} pj_constant_t;
+  };
+};
 
-typedef struct {
-  BASE_TERM_MEMBERS
+struct pj_variable_t : public pj_term_t {
   pj_basic_type var_type;
   int ivar;
-} pj_variable_t;
+};
 
 
 pj_term_t *pj_make_const_dbl(double c);

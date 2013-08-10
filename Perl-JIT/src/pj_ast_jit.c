@@ -23,11 +23,11 @@ pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_
   else if (term->type == pj_ttype_constant) {
     pj_constant_t *c = (pj_constant_t *)term;
     if (c->const_type == pj_int_type)
-      return jit_value_create_nint_constant(function, jit_type_sys_int, c->value_u.int_value);
+      return jit_value_create_nint_constant(function, jit_type_sys_int, c->int_value);
     else if (c->const_type == pj_uint_type) /* FIXME no jit_value_create_nuint_constant defined? */
-      return jit_value_create_nint_constant(function, jit_type_sys_int, c->value_u.uint_value);
+      return jit_value_create_nint_constant(function, jit_type_sys_int, c->uint_value);
     else if (c->const_type == pj_double_type)
-      return jit_value_create_float64_constant(function, jit_type_sys_double, c->value_u.dbl_value);
+      return jit_value_create_float64_constant(function, jit_type_sys_double, c->dbl_value);
     else
       abort();
   }

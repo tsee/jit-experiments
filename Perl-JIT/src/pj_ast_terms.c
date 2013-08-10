@@ -87,7 +87,7 @@ pj_make_const_dbl(double c)
 {
   pj_constant_t *co = (pj_constant_t *)malloc(sizeof(pj_constant_t));
   co->type = pj_ttype_constant;
-  co->value_u.dbl_value = c;
+  co->dbl_value = c;
   co->const_type = pj_double_type;
   return (pj_term_t *)co;
 }
@@ -97,7 +97,7 @@ pj_make_const_int(int c)
 {
   pj_constant_t *co = (pj_constant_t *)malloc(sizeof(pj_constant_t));
   co->type = pj_ttype_constant;
-  co->value_u.int_value = c;
+  co->int_value = c;
   co->const_type = pj_int_type;
   return (pj_term_t *)co;
 }
@@ -107,7 +107,7 @@ pj_make_const_uint(unsigned int c)
 {
   pj_constant_t *co = (pj_constant_t *)malloc(sizeof(pj_constant_t));
   co->type = pj_ttype_constant;
-  co->value_u.uint_value = c;
+  co->uint_value = c;
   co->const_type = pj_uint_type;
   return (pj_term_t *)co;
 }
@@ -204,11 +204,11 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
     pj_constant_t *c = (pj_constant_t *)term;
     pj_dump_tree_indent(lvl);
     if (c->const_type == pj_double_type)
-      printf("C = %f\n", (float)c->value_u.dbl_value);
+      printf("C = %f\n", (float)c->dbl_value);
     else if (c->const_type == pj_int_type)
-      printf("C = %i\n", (int)c->value_u.int_value);
+      printf("C = %i\n", (int)c->int_value);
     else if (c->const_type == pj_uint_type)
-      printf("C = %lu\n", (unsigned long)c->value_u.uint_value);
+      printf("C = %lu\n", (unsigned long)c->uint_value);
     else
       abort();
   }
