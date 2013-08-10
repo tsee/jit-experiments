@@ -130,8 +130,6 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
   pj_term_t *retval = NULL;
   OP *kid;
 
-  /* 2 is the maximum number of children that the supported
-   * OP types may have. Will change in future */
   std::vector<pj_term_t *> kid_terms;
 
   PJ_DEBUG_2("pj_build_ast running on %s. Have %i subtrees right now.\n", OP_NAME(o), (int)(ptrstack_nelems(*subtrees)));
