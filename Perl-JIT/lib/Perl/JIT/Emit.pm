@@ -50,10 +50,16 @@ sub jit_tree {
     # TODO cleanup $thx passing in LibJIT::PerlAPI
     my $thx = jit_value_get_param($fun, 0);
 
-    $self->_jit_emit($fun, $thx, $ast);
+    my $val = $self->_jit_emit($fun, $thx, $ast);
 
     jit_function_compile($fun);
     jit_context_build_end($self->jit_context);
+
+    # TODO this need to switch based on op type, flags, ...
+    my $targ = pa_get_targ($fun, $thx);
+    pa_sv_set_nv($fun, $thx, $targ, $val);
+    pa_push_sv($fun, $thx, $targ);
+    jit_insn_return($fun, pa_get_op_next($fun, $thx));
 
     $op->ppaddr(jit_function_to_closure($fun));
     $op->targ($ast->get_perl_op->targ);
