@@ -174,6 +174,16 @@ pj_make_listop(OP *perl_op, pj_optype t, pj_term_t *o_start, pj_term_t *o_end)
 }
 
 
+pj_term_t *
+pj_make_optree(OP *perl_op)
+{
+  pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
+  o->type = pj_ttype_optree;
+  o->perl_op = perl_op;
+  return (pj_term_t *)o;
+}
+
+
 void
 pj_free_tree(pj_term_t *t)
 {

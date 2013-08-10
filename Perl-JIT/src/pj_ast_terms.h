@@ -8,6 +8,7 @@ typedef int pj_optype;
 typedef enum {
   pj_ttype_constant,
   pj_ttype_variable,
+  pj_ttype_optree,
   pj_ttype_op
 } pj_term_type;
 
@@ -112,6 +113,7 @@ pj_term_t *pj_make_binop(OP *perl_op, pj_optype t, pj_term_t *o1, pj_term_t *o2)
 pj_term_t *pj_make_unop(OP *perl_op, pj_optype t, pj_term_t *o1);
 /* for pj_make_listop, o_start and o_end have to form a linked list of ops alread (using op_sibling) */
 pj_term_t *pj_make_listop(OP *perl_op, pj_optype t, pj_term_t *o_start, pj_term_t *o_end);
+pj_term_t *pj_make_optree(OP *perl_op);
 
 void pj_free_tree(pj_term_t *t);
 
