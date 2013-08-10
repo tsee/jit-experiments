@@ -125,7 +125,6 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
    * OP types may have. Will change in future */
   std::vector<pj_term_t *> kid_terms;
   unsigned int ikid = 0;
-  unsigned int i;
 
   PJ_DEBUG_2("pj_build_ast running on %s. Have %i subtrees right now.\n", OP_NAME(o), (int)(ptrstack_nelems(*subtrees)));
 
@@ -201,9 +200,8 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     }
 #define EMIT_LISTOP_CODE(perl_op_type, pj_op_type) \
     if (parent_otype == perl_op_type) { \
-      unsigned int i; \
       assert(ikid > 0); \
-      for (i = 0; i < ikid-1; ++i) \
+      for (unsigned int i = 0; i < ikid-1; ++i) \
         kid_terms[i]->op_sibling = kid_terms[i+1]; \
       kid_terms[ikid-1]->op_sibling = NULL; \
       retval = pj_make_listop( pj_op_type, kid_terms[0], kid_terms[ikid-1] ); \
@@ -268,7 +266,6 @@ pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, ptrstack_t *subtrees)
   else {
     void **subtree_array = ptrstack_data_pointer(subtrees);
     const unsigned int n = ptrstack_nelems(subtrees);
-    unsigned int i;
     OP *o = NULL;
 
     /* TODO for now, we just always impose "numeric". Later, this may need
@@ -278,7 +275,7 @@ pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, ptrstack_t *subtrees)
     PJ_DEBUG_1("First kid is %s\n", OP_NAME(o));
 
     /* Alternating op-imposed-type and actual subtree */
-    for (i = 2; i < n; i += 2) {
+    for (unsigned int i = 2; i < n; i += 2) {
       PJ_DEBUG_2("Kid %u is %s\n", (int)(i/2)+1, OP_NAME(o));
       /* TODO get the imposed type context from subtree_array[i] here */
       o->op_sibling = (OP *) subtree_array[i+1];
