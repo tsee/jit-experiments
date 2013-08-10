@@ -149,9 +149,6 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
       }
       else if (otype == OP_PADSV) {
         kid_terms.push_back( pj_make_variable((*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
-        PJ_DEBUG("PADSV being added to subtrees.\n");
-        ptrstack_push(*subtrees, INT2PTR(void *, pj_double_type)); /* FIXME replace pj_double_type with type that's imposed by the current OP */
-        ptrstack_push(*subtrees, kid);
       }
       else if (otype == OP_NULL) {
         /* compiled out -- FIXME most certainly not correct, in particular for incoming op_next */
