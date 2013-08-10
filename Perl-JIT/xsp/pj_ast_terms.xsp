@@ -9,6 +9,8 @@
 class pj_term_t {
   pj_optype type %get %set;
   OP *perl_op %get %set;
+
+  void dump();
 };
 
 %name{Perl::JIT::AST::Op}

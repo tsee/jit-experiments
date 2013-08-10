@@ -84,6 +84,8 @@ struct pj_term_t {
   pj_optype type;
   OP *perl_op;
 
+  void dump();
+
   virtual const char *perl_class() const
     { return "Perl::JIT::AST::Term"; }
 };

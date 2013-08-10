@@ -252,3 +252,11 @@ pj_dump_tree(pj_term_t *term)
   int lvl = 0;
   pj_dump_tree_internal(term, lvl);
 }
+
+
+void
+pj_term_t::dump()
+{
+  pj_dump_tree(this);
+}
+
