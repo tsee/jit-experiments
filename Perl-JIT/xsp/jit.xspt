@@ -13,13 +13,6 @@
     %xs_output_code{% sv_setref_pv( $arg, xsp_constructor_class($var->perl_class()), (void*)$var ); %};
 };
 
-%typemap{std::vector<pj_term_t *>}{object}{
-    %xs_type{O_AST_VECTOR};
-    %xs_output_code{%
-      sv_setref_pv( $arg, xsp_constructor_class($var->perl_class()), (void*)$var );
-    %};
-};
-
 %typemap{std::vector<pj_term_t *>}{parsed}{
   %cpp_type{%std::vector<pj_term_t *>%};
   %output_list{%
