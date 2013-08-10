@@ -1,6 +1,8 @@
 #ifndef PJ_TERMS_H_
 #define PJ_TERMS_H_
 
+#include <vector>
+
 /* Definition of types and functions for the Perl JIT AST. */
 typedef struct op OP;
 typedef int pj_optype;
@@ -80,7 +82,6 @@ extern const char *pj_ast_op_names[];
 
 struct pj_term_t {
   pj_optype type;
-  pj_term_t *op_sibling;
   OP *perl_op;
 
   const char *perl_class() const;
@@ -88,8 +89,14 @@ struct pj_term_t {
 
 struct pj_op_t : public pj_term_t {
   pj_optype optype;
-  pj_term_t *op1;
-  pj_term_t *op2;
+  std::vector<pj_term_t *> kids;
+};
+
+struct pj_unop_t : public pj_op_t {
+};
+struct pj_binop_t : public pj_op_t {
+};
+struct pj_listop_t : public pj_op_t {
 };
 
 struct pj_constant_t : public pj_term_t {
@@ -113,8 +120,7 @@ pj_term_t *pj_make_const_uint(OP *perl_op, unsigned int c);
 pj_term_t *pj_make_variable(OP *perl_op, int iv, pj_basic_type t);
 pj_term_t *pj_make_binop(OP *perl_op, pj_optype t, pj_term_t *o1, pj_term_t *o2);
 pj_term_t *pj_make_unop(OP *perl_op, pj_optype t, pj_term_t *o1);
-/* for pj_make_listop, o_start and o_end have to form a linked list of ops alread (using op_sibling) */
-pj_term_t *pj_make_listop(OP *perl_op, pj_optype t, pj_term_t *o_start, pj_term_t *o_end);
+pj_term_t *pj_make_listop(OP *perl_op, pj_optype t, const std::vector<pj_term_t *> &children);
 pj_term_t *pj_make_optree(OP *perl_op);
 
 void pj_free_tree(pj_term_t *t);

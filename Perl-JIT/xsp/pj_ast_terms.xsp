@@ -4,13 +4,24 @@
 
 class pj_term_t {
   pj_optype type %get %set;
-  pj_term_t *op_sibling %get %set;
 };
 
 class pj_op_t : public pj_term_t {
   pj_optype optype %get %set;
-  pj_term_t *op1 %get %set;
-  pj_term_t *op2 %get %set;
+  std::vector<pj_term_t *> kids %get;
+};
+
+class pj_unop_t : public pj_op_t {
+  pj_term_t *get_kid() %code{% RETVAL = THIS->kids[0]; %};
+  void set_kid(pj_term_t *k) %code{% THIS->kids[0] = k; %};
+};
+
+class pj_binop_t : public pj_op_t {
+  pj_term_t *get_left_kid() %code{% RETVAL = THIS->kids[0]; %};
+  void set_left_kid(pj_term_t *k) %code{% THIS->kids[0] = k; %};
+
+  pj_term_t *get_right_kid() %code{% RETVAL = THIS->kids[1]; %};
+  void set_right_kid(pj_term_t *k) %code{% THIS->kids[1] = k; %};
 };
 
 class pj_constant_t : public pj_term_t {

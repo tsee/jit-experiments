@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include <vector>
+
 #include <jit/jit-dump.h>
 
 #include <pj_debug.h>
@@ -45,14 +47,16 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
   jit_value_t arg1, arg2, rv;
 
 #define EVAL_OPERAND(operand) pj_jit_internal(function, var_values, nvars, operand)
-#define EVAL_OPERAND1 EVAL_OPERAND(op->op1)
-#define EVAL_OPERAND2 EVAL_OPERAND(op->op2)
+#define EVAL_OPERAND_N(i) EVAL_OPERAND(op->kids[i])
+#define EVAL_OPERAND1 EVAL_OPERAND_N(0)
+#define EVAL_OPERAND2 EVAL_OPERAND_N(1)
 
   /* Only do the recursion out here if we know that we'll have to emit that code at all. */
   if (!(PJ_OP_FLAGS(op) & PJ_ASTf_CONDITIONAL)) {
-    arg1 = EVAL_OPERAND1;
-    if (op->op2 != NULL)
-      arg2 = EVAL_OPERAND2;
+    std::vector<pj_term_t *> &kids = op->kids;
+    const unsigned int n = kids.size();
+    for (unsigned int i = 0; i < n; ++i)
+      EVAL_OPERAND(kids[i]);
   }
 
   switch (op->optype) {
@@ -197,26 +201,21 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
       jit_label_t rightlabel = jit_label_undefined;
       jit_label_t endlabel = jit_label_undefined;
       jit_value_t cond;
-      pj_term_t *operand;
       rv = jit_value_create(function, jit_type_sys_double);
 
-      /* operands are linked list of "condition", "true-value (left)", "false-value (right)" */
-      operand = op->op1;
-
-      cond = EVAL_OPERAND(operand);
+      /* kids are "condition", "true-value (left)", "false-value (right)" */
+      cond = EVAL_OPERAND(op->kids[0]);
       /* If value is false, then goto right branch */
       jit_insn_branch_if_not(function, cond, &rightlabel);
 
       /* Left is true, return result of evaluating left operand */
-      operand = operand->op_sibling;
-      arg1 = EVAL_OPERAND(operand);
+      arg1 = EVAL_OPERAND(op->kids[1]);
       jit_insn_store(function, rv, arg1);
       jit_insn_branch(function, &endlabel);
 
       /* Left is false, return result of evaluating right operand */
       jit_insn_label(function, &rightlabel);
-      operand = operand->op_sibling;
-      arg2 = EVAL_OPERAND(operand);
+      arg2 = EVAL_OPERAND(op->kids[2]);
       jit_insn_store(function, rv, arg2);
 
       /* endlabel; done. */

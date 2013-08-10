@@ -147,14 +147,12 @@ pj_term_t *
 pj_make_binop(OP *perl_op, pj_optype t, pj_term_t *o1, pj_term_t *o2)
 {
   pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
-  o->op_sibling = NULL;
   o->type = pj_ttype_op;
   o->perl_op = perl_op;
   o->optype = t;
-  o->op1 = o1;
-  o->op2 = o2;
-  o1->op_sibling = o2;
-  o2->op_sibling = NULL;
+  o->kids.resize(2);
+  o->kids[0] = o1;
+  o->kids[1] = o2;
   return (pj_term_t *)o;
 }
 
@@ -163,28 +161,23 @@ pj_term_t *
 pj_make_unop(OP *perl_op, pj_optype t, pj_term_t *o1)
 {
   pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
-  o->op_sibling = NULL;
   o->type = pj_ttype_op;
   o->perl_op = perl_op;
   o->optype = t;
-  o->op1 = o1;
-  o->op2 = NULL;
-  o1->op_sibling = NULL;
+  o->kids.resize(1);
+  o->kids[0] = o1;
   return (pj_term_t *)o;
 }
 
 
 pj_term_t *
-pj_make_listop(OP *perl_op, pj_optype t, pj_term_t *o_start, pj_term_t *o_end)
+pj_make_listop(OP *perl_op, pj_optype t, const std::vector<pj_term_t *> &children)
 {
   pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
-  o->op_sibling = NULL;
   o->type = pj_ttype_op;
   o->perl_op = perl_op;
   o->optype = t;
-  o->op1 = o_start;
-  o->op2 = o_end;
-  o_end->op_sibling = NULL; /* just in case... */
+  o->kids = children;
   return (pj_term_t *)o;
 }
 
@@ -206,13 +199,10 @@ pj_free_tree(pj_term_t *t)
     return;
 
   if (t->type == pj_ttype_op) {
-    pj_term_t *kid;
-    pj_term_t *next;
-    pj_op_t *o = (pj_op_t *)t;
-    for (kid = o->op1; kid; kid = next) {
-      next = kid->op_sibling;
-      pj_free_tree(kid);
-    }
+    std::vector<pj_term_t *> &k = ((pj_op_t *)t)->kids;
+    const unsigned int n = k.size();
+    for (unsigned int i = 0; i < n; ++i)
+      pj_free_tree(k[i]);
   }
 
   free(t);
@@ -252,13 +242,14 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
   else if (term->type == pj_ttype_op)
   {
     pj_op_t *o = (pj_op_t *)term;
-    pj_term_t *kid;
 
     pj_dump_tree_indent(lvl);
 
     printf("OP '%s' (\n", pj_ast_op_names[o->optype]);
-    for (kid = o->op1; kid; kid = kid->op_sibling) {
-      pj_dump_tree_internal(kid, lvl+1);
+
+    const unsigned int n = o->kids.size();
+    for (unsigned int i = 0; i < n; ++i) {
+      pj_dump_tree_internal(o->kids[i], lvl+1);
     }
 
     pj_dump_tree_indent(lvl);

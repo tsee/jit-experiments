@@ -18,10 +18,10 @@ pj_tree_extract_vars_internal(pj_term_t *term, pj_variable_t * **vars, unsigned 
   else if (term->type == pj_ttype_op)
   {
     pj_op_t *o = (pj_op_t *)term;
-    pj_term_t *kid;
-    for (kid = o->op1; kid; kid = kid->op_sibling) {
-      pj_tree_extract_vars_internal(kid, vars, nvars);
-    }
+    const std::vector<pj_term_t *> &kids = o->kids;
+    const unsigned int n = kids.size();
+    for (unsigned int i = 0; i < n; ++i)
+      pj_tree_extract_vars_internal(kids[i], vars, nvars);
   }
 }
 
@@ -46,16 +46,16 @@ pj_tree_determine_funtype(pj_term_t *term)
   }
   else if (term->type == pj_ttype_op) {
     pj_op_t *o = (pj_op_t *)term;
-    pj_basic_type t1, t2;
-    t1 = pj_tree_determine_funtype(o->op1);
+    pj_basic_type t1;
+    t1 = pj_tree_determine_funtype(o->kids[0]);
     if (t1 == pj_double_type)
       return pj_double_type; /* double >> int */
 
     if (PJ_IS_OP_LISTOP(o)) {
-      pj_term_t *kid;
-      pj_basic_type t;
-      for (kid = o->op1->op_sibling; kid != NULL; kid = kid->op_sibling) {
-        t = pj_tree_determine_funtype(kid);
+      const std::vector<pj_term_t *> &kids = o->kids;
+      const unsigned int n = kids.size();
+      for (unsigned int i = 0; i < n; ++i) {
+        pj_basic_type t = pj_tree_determine_funtype(kids[i]);
         if (t == pj_double_type)
           return pj_double_type;
         if (t != t1)
@@ -63,10 +63,11 @@ pj_tree_determine_funtype(pj_term_t *term)
       }
     }
     else if (PJ_IS_OP_BINOP(o)) {
-      t2 = pj_tree_determine_funtype(o->op2);
+      pj_basic_type t2 = pj_tree_determine_funtype(o->kids[1]);
       if (t2 == pj_double_type)
         return pj_double_type;
-      if (t1==t2) return t1;
+      else if (t1 == t2)
+        return t1;
     }
     else return t1;
   }
