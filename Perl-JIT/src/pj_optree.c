@@ -82,7 +82,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
           PJ_DEBUG("CONST is first-executed tree element, can't inline.\n");
           kid->op_ppaddr = PL_ppaddr[OP_NULL]; /* FIXME hobo nulling not nice. Breaks incoming pointers for some reason otherwise. */
           //Perl_op_null(aTHX_ kid);
-          ptrstack_push(*subtrees, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
+          ptrstack_push(*subtrees, INT2PTR(void *, pj_double_type)); /* FIXME replace pj_double_type with type that's imposed by the current OP */
           ptrstack_push(*subtrees, kid);
         }
         else {
@@ -93,7 +93,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
       else if (otype == OP_PADSV) {
         kid_terms[ikid] = pj_make_variable((*nvariables)++, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
         PJ_DEBUG("PADSV being added to subtrees.\n");
-        ptrstack_push(*subtrees, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
+        ptrstack_push(*subtrees, INT2PTR(void *, pj_double_type)); /* FIXME replace pj_double_type with type that's imposed by the current OP */
         ptrstack_push(*subtrees, kid);
       }
       else if (otype == OP_NULL) {
@@ -122,7 +122,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
         pj_find_jit_candidate(aTHX_ kid, o); /* o is parent of kid */
         kid_terms[ikid] = pj_make_variable((*nvariables)++, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
 
-        ptrstack_push(*subtrees, pj_double_type); /* FIXME replace pj_double_type with type that's imposed by the current OP */
+        ptrstack_push(*subtrees, INT2PTR(void *, pj_double_type)); /* FIXME replace pj_double_type with type that's imposed by the current OP */
         ptrstack_push(*subtrees, kid);
       }
 
@@ -211,8 +211,8 @@ pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, ptrstack_t *subtrees)
     for (i = 2; i < n; i += 2) {
       PJ_DEBUG_2("Kid %u is %s\n", (int)(i/2)+1, OP_NAME(o));
       /* TODO get the imposed type context from subtree_array[i] here */
-      o->op_sibling = subtree_array[i+1];
-      o->op_next = pj_find_first_executed_op(aTHX_ subtree_array[i+1]);
+      o->op_sibling = (OP *) subtree_array[i+1];
+      o->op_next = pj_find_first_executed_op(aTHX_ (OP *) subtree_array[i+1]);
       o = o->op_sibling;
     }
 
@@ -352,7 +352,7 @@ pj_attempt_jit(pTHX_ OP *o, OP *parentop)
       } else {
         PJ_DEBUG("JIT failed!\n");
       }
-      jitop_aux->jit_fun = (void *)jit_function_to_closure(func);
+      jitop_aux->jit_fun = (void (*)())jit_function_to_closure(func);
     }
   }
 
@@ -380,8 +380,8 @@ pj_find_jit_candidate(pTHX_ OP *o, OP *parentop)
 
   /* Iterative tree traversal using stack */
   while (!ptrstack_empty(backlog)) {
-    o = ptrstack_pop(backlog);
-    parentop = ptrstack_pop(backlog);
+    o = (OP *) ptrstack_pop(backlog);
+    parentop = (OP *) ptrstack_pop(backlog);
     otype = o->op_type;
 
     PJ_DEBUG_1("Considering %s\n", OP_NAME(o));

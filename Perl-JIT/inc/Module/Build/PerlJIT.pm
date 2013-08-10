@@ -4,7 +4,7 @@ use warnings;
 use strict;
 
 use Module::Build;
-use parent 'Module::Build';
+use parent 'Module::Build::WithXSpp';
 
 use FindBin('$Bin');
 use File::Spec;

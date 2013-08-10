@@ -43,9 +43,6 @@ Module::Build::PerlJIT->new(
     ##{ $plugin->get_prereqs ##}
     ##{ $plugin->get_default('create_readme') ##}
     dynamic_config => 0,
-    needs_compiler => 1,
-    c_source => ['src'],
-    xs_files => {'JIT.xs' => 'lib/Perl/JIT.xs'},
     include_dirs => [ '.', $Module::Build::PerlJIT::LIBJIT_INCLUDE ],
     extra_linker_flags => [$Module::Build::PerlJIT::LIBJIT_RESULT, '-lpthread'],
     extra_compiler_flags => \@extra_compiler_flags,

@@ -91,7 +91,7 @@ ptrstack_make(const unsigned int initsize, unsigned int flags_)
   stack->size = (initsize == 0 ? 16 : initsize);
   stack->nextpos = 0;
   stack->flags = flags_;
-  stack->data = malloc(sizeof(void *) * stack->size);
+  stack->data = (void **) malloc(sizeof(void *) * stack->size);
 
   return stack;
 }
@@ -119,7 +119,7 @@ ptrstack_grow(ptrstack_t *stack, unsigned int nelems)
                           : nelems) + 5 /* some static growth for avoiding lots
                                          * of reallocs on very small stacks */
                       ) * PTRSTACK_GROWTH_FACTOR);
-  stack->data = realloc(stack->data, sizeof(void *) * newsize);
+  stack->data = (void **) realloc(stack->data, sizeof(void *) * newsize);
   if (stack->data == NULL)
     return 1; /* OOM */
   stack->size = newsize;
@@ -208,7 +208,7 @@ ptrstack_compact(ptrstack_t *stack)
 {
   const unsigned int minsize = stack->nextpos + 1;
   if (stack->size > minsize) {
-    stack->data = realloc(stack->data, sizeof(void *) * minsize);
+    stack->data = (void **) realloc(stack->data, sizeof(void *) * minsize);
     stack->size = minsize;
   }
 }

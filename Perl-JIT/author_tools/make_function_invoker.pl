@@ -17,7 +17,7 @@ foreach my $i (0..$n) {
   my $params = join(", ", ("type") x $i)||'void';
   my $args   = $i == 0 ? "" : join(", ", map "a[$_]", 0..($i-1));
   print "    case $i: {";
-  print "      type (*f)($params) = (void *)fptr;";
+  print "      type (*f)($params) = (type (*)($params)) fptr;";
   print "      *((type *)retval) = f($args);";
   print "      break; }";
 }

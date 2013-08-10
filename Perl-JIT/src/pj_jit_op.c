@@ -122,7 +122,7 @@ pj_prepare_jit_op(pTHX_ const unsigned int nvariables, OP *origop)
   jitop->op_ppaddr = pj_pp_jit;
 
   /* Init jit_aux */
-  jit_aux = malloc(sizeof(pj_jitop_aux_t));
+  jit_aux = (pj_jitop_aux_t *) malloc(sizeof(pj_jitop_aux_t));
   jit_aux->paramslist = (NV *)malloc(sizeof(NV) * nvariables);
   jit_aux->nparams = nvariables;
   jit_aux->jit_fun = NULL;
