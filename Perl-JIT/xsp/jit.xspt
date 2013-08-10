@@ -26,3 +26,19 @@
     }
   %};
 };
+
+%typemap{OP *}{simple}{
+    %name{OP};
+    %xs_type{T_OP};
+    %xs_input_code{%
+        if (SvROK($arg)) {
+            IV tmp = SvIV((SV*)SvRV($arg));
+            $var = INT2PTR($type,tmp);
+        }
+        else
+            croak(\"$var is not a reference\")
+    %};
+    %xs_output_code{%
+        sv_setiv(newSVrv($arg, "B::OP"), PTR2IV($var));
+    %};
+};

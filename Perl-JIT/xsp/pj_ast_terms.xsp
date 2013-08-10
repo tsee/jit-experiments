@@ -5,6 +5,7 @@
 %name{Perl::JIT::AST::Term}
 class pj_term_t {
   pj_optype type %get %set;
+  OP *perl_op %get %set;
 };
 
 %name{Perl::JIT::AST::Op}
