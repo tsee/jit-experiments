@@ -14,7 +14,7 @@ pj_init_global_state(pTHX)
 {
   /* Setup our new peephole optimizer */
   PJ_orig_peepp = PL_peepp;
-  PL_peepp = pj_jit_peep;
+  // PL_peepp = pj_jit_peep;
 
   /* Set up JIT compiler */
   PJ_jit_context = jit_context_create();
