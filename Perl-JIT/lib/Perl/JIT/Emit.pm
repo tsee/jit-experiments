@@ -33,7 +33,7 @@ sub jit_sub {
         my $op = $self->jit_tree($ast);
 
         # TODO add B::Generate API taking the CV
-        B::Replace::replace_tree($cv->ROOT, $ast->perl_op, $op);
+        B::Replace::replace_tree($cv->ROOT, $ast->get_perl_op, $op);
     }
 }
 
@@ -56,8 +56,8 @@ sub jit_tree {
     jit_context_build_end($self->jit_context);
 
     $op->ppaddr(jit_function_to_closure($fun));
-    $op->targ($ast->perl_op->targ);
-    $op->next($ast->perl_op->next);
+    $op->targ($ast->get_perl_op->targ);
+    $op->next($ast->get_perl_op->next);
 
     return $op;
 }
@@ -67,12 +67,12 @@ sub _jit_emit {
 
     # TODO wrap integer constants and remove hardcoded values
     # TODO only doubles for now...
-    given ($ast->type) {
+    given ($ast->get_type) {
         when (0) {
             return $self->_jit_emit_const($fun, $thx, $ast);
         }
         when (1) {
-            my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->perl_op->targ);
+            my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_perl_op->targ);
             my $sv = pa_get_pad_sv($fun, $thx, $padix);
 
             return pa_sv_2nv($fun, $thx, $sv);
@@ -89,10 +89,10 @@ sub _jit_emit {
 sub _jit_emit_op {
     my ($self, $fun, $thx, $ast) = @_;
 
-    given ($ast->op) {
+    given ($ast->get_optype) {
         when (10) {
-            my $v1 = $self->_jit_emit($fun, $thx, $ast->op1);
-            my $v2 = $self->_jit_emit($fun, $thx, $ast->op2);
+            my $v1 = $self->_jit_emit($fun, $thx, $ast->get_left_kid);
+            my $v2 = $self->_jit_emit($fun, $thx, $ast->get_right_kid);
 
             return jit_insn_add($fun, $v1, $v2);
         }
@@ -106,15 +106,15 @@ sub _jit_emit_const {
     my ($self, $fun, $thx, $ast) = @_;
 
     # TODO fix the type to match IV/UV/NV
-    given ($ast->var_type) {
+    given ($ast->get_const_type) {
         when (0) {
-            return jit_value_create_float64_constant($fun, jit_type_float64, $ast->as_double);
+            return jit_value_create_float64_constant($fun, jit_type_float64, $ast->get_dbl_value);
         }
         when (1) {
-            return jit_value_create_long_constant($fun, jit_type_long, $ast->as_double);
+            return jit_value_create_long_constant($fun, jit_type_long, $ast->get_int_value);
         }
         when (2) {
-            return jit_value_create_long_constant($fun, jit_type_ulong, $ast->as_double);
+            return jit_value_create_long_constant($fun, jit_type_ulong, $ast->get_uint_value);
         }
     }
 }
