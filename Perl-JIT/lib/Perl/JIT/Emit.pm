@@ -62,7 +62,7 @@ sub jit_tree {
     return $op;
 }
 
-sub _emit {
+sub _jit_emit {
     my ($self, $fun, $thx, $ast) = @_;
 
     # TODO wrap integer constants and remove hardcoded values
@@ -86,7 +86,7 @@ sub _emit {
     }
 }
 
-sub _emit_op {
+sub _jit_emit_op {
     my ($self, $fun, $thx, $ast) = @_;
 
     given ($ast->op) {
@@ -102,7 +102,7 @@ sub _emit_op {
     }
 }
 
-sub _emit_const {
+sub _jit_emit_const {
     my ($self, $fun, $thx, $ast) = @_;
 
     # TODO fix the type to match IV/UV/NV
