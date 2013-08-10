@@ -382,7 +382,7 @@ namespace PerlJIT {
 
       /* Attempt JIT if the right OP type. Don't recurse if so. */
       if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
-          pj_term_t *ast = pj_attempt_jit(aTHX_ o, parentop, this);
+        pj_term_t *ast = pj_attempt_jit(aTHX_ o, parentop, this);
         if (ast)
             candidates.push_back(ast);
         return VISIT_SKIP;
