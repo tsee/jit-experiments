@@ -17,6 +17,22 @@
 #define PMOP_pmreplstart(o)	o->op_pmstashstartu.op_pmreplstart
 #define PMOP_pmreplroot(o)	o->op_pmreplrootu.op_pmreplroot
 
+namespace PerlJIT {
+  // Represents a non-JIT-able subtree below
+  class OPWithImposedType {
+  public:
+    OPWithImposedType(OP *o, const pj_basic_type t)
+      : op(o), imposed_type(t) {}
+
+    OP *op;
+    pj_basic_type imposed_type;
+  };
+}
+
+using namespace PerlJIT;
+using namespace std;
+
+
 void
 pj_walk_optree(pTHX_ OP *o, OP *parentop, pj_op_callback_t cb, void *data)
 {
@@ -124,7 +140,9 @@ pj_free_terms_vector(std::vector<pj_term_t *> &terms)
 
 /* Walk OP tree recursively, build ASTs, build subtrees */
 STATIC pj_term_t *
-pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
+pj_build_ast(pTHX_ OP *o,
+             vector<OPWithImposedType> &subtrees,
+             unsigned int *nvariables)
 {
   const unsigned int parent_otype = o->op_type;
   pj_term_t *retval = NULL;
@@ -132,7 +150,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
 
   std::vector<pj_term_t *> kid_terms;
 
-  PJ_DEBUG_2("pj_build_ast running on %s. Have %i subtrees right now.\n", OP_NAME(o), (int)(ptrstack_nelems(*subtrees)));
+  PJ_DEBUG_2("pj_build_ast running on %s. Have %i subtrees right now.\n", OP_NAME(o), (int)subtrees.size());
 
   unsigned int ikid = 0;
   if (o && (o->op_flags & OPf_KIDS)) {
@@ -170,8 +188,8 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
         pj_find_jit_candidate(aTHX_ kid, o); /* o is parent of kid */
         kid_terms.push_back( pj_make_variable((*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
 
-        ptrstack_push(*subtrees, INT2PTR(void *, pj_double_type)); /* FIXME replace pj_double_type with type that's imposed by the current OP */
-        ptrstack_push(*subtrees, kid);
+        // FIXME replace pj_double_type with type that's imposed by the current OP
+        subtrees.push_back( OPWithImposedType(kid, pj_double_type) );
       }
 
       ++ikid;
@@ -240,7 +258,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     {}
   */
 
-  PJ_DEBUG_1("Returning from pj_build_ast. Have %i subtrees right now.\n", (int)(ptrstack_nelems(*subtrees)/2));
+  PJ_DEBUG_1("Returning from pj_build_ast. Have %i subtrees right now.\n", (int)subtrees.size());
   return retval;
 }
 
@@ -248,29 +266,29 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
  * re-wires the direct children's op_next to the following
  * child's first OP and the last child's op_next to the JITOP itself. */
 static void
-pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, ptrstack_t *subtrees)
+pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, vector<OPWithImposedType> &subtrees)
 {
-  if (ptrstack_empty(subtrees)) {
+  if (subtrees.empty()) {
     jitop->op_first = NULL; /* FIXME is this valid for a LISTOP? */
     jitop->op_last = NULL;
   }
   else {
-    void **subtree_array = ptrstack_data_pointer(subtrees);
-    const unsigned int n = ptrstack_nelems(subtrees);
-    OP *o = NULL;
+    OP *o;
 
     /* TODO for now, we just always impose "numeric". Later, this may need
      *      to be flexible. */
-    o = (OP *)subtree_array[1];
+
+    o = (OP *)subtrees[0].op;
     jitop->op_first = o;
     PJ_DEBUG_1("First kid is %s\n", OP_NAME(o));
 
     /* Alternating op-imposed-type and actual subtree */
-    for (unsigned int i = 2; i < n; i += 2) {
-      PJ_DEBUG_2("Kid %u is %s\n", (int)(i/2)+1, OP_NAME(o));
-      /* TODO get the imposed type context from subtree_array[i] here */
-      o->op_sibling = (OP *) subtree_array[i+1];
-      o->op_next = pj_find_first_executed_op(aTHX_ (OP *) subtree_array[i+1]);
+    const unsigned int n = subtrees.size();
+    for (unsigned int i = 1; i < n; i += 1) {
+      PJ_DEBUG_2("Kid %u is %s\n", i, OP_NAME(o));
+      /* TODO get the imposed type context from subtrees[i].imposed_type here */
+      o->op_sibling = (OP *)subtrees[i].op;
+      o->op_next = pj_find_first_executed_op(aTHX_ subtrees[i].op);
       o = o->op_sibling;
     }
 
@@ -351,27 +369,25 @@ pj_fixup_parent_op(pTHX_ OP *jitop, OP *origop, UNOP *parentop)
  *       "type context" can be inferred. Needs recurse depth-first,
  *       left-hugging in order to get the sub tree is normal
  *       execution order. */
+
 static void
 pj_attempt_jit(pTHX_ OP *o, OP *parentop)
 {
-  /* In reality, we don't use the ptrstack_t as a proper stack,
-   * but more of a dynamically growing array */
-  ptrstack_t *subtrees;
   pj_term_t *ast;
   unsigned int nvariables = 0;
 
   if (PJ_DEBUGGING)
     printf("Attempting JIT on %s (%p, %p)\n", OP_NAME(o), o, o->op_next);
-  subtrees = ptrstack_make(3, 0);
 
-  ast = pj_build_ast(aTHX_ o, &subtrees, &nvariables);
+  std::vector<OPWithImposedType> subtrees;
+  ast = pj_build_ast(aTHX_ o, subtrees, &nvariables);
 
   if (ast != NULL) {
     OP *jitop;
     pj_jitop_aux_t *jitop_aux;
     o->op_next = o;
 
-    PJ_DEBUG_2("Built actual AST for jitting. Have %i subtrees which means %i variables.\n", (int)(ptrstack_nelems(subtrees)/2), nvariables);
+    PJ_DEBUG_2("Built actual AST for jitting. Have %i subtrees which means %i variables.\n", (int)subtrees.size(), nvariables);
     if (PJ_DEBUGGING)
       pj_dump_tree(ast);
 
@@ -415,7 +431,6 @@ pj_attempt_jit(pTHX_ OP *o, OP *parentop)
   }
 
   pj_free_tree(ast);
-  ptrstack_free(subtrees);
 }
 
 PJ_STATIC int
