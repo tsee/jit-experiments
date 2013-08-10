@@ -4,7 +4,6 @@
 
 #include "ppport.h"
 #include "pj_debug.h"
-#include "stack.h"
 
 #include "pj_ast_terms.h"
 #include "pj_ast_jit.h"
@@ -12,6 +11,7 @@
 #include "pj_jit_op.h"
 #include "pj_global_state.h"
 #include <vector>
+#include <list>
 
 /* inspired by B.xs */
 #define PMOP_pmreplstart(o)	o->op_pmstashstartu.op_pmreplstart
@@ -38,35 +38,36 @@ pj_walk_optree(pTHX_ OP *o, OP *parentop, pj_op_callback_t cb, void *data)
 {
   int status;
   OP *kid;
-  ptrstack_t *backlog;
+  std::list<OP *> backlog;
 
-  backlog = ptrstack_make(8, 0);
-  ptrstack_push(backlog, parentop);
-  ptrstack_push(backlog, o);
+  backlog.push_back(parentop);
+  backlog.push_back(o);
 
-  /* Iterative tree traversal using stack */
-  while (!ptrstack_empty(backlog)) {
-    o = (OP *)ptrstack_pop(backlog);
-    parentop = (OP *)ptrstack_pop(backlog);
+  // Iterative tree traversal using stack
+  while ( !backlog.empty() ) {
+    o = backlog.back();
+    backlog.pop_back();
+    parentop = backlog.back();
+    backlog.pop_back();
 
     status = cb(aTHX_ o, parentop, data);
     assert(status == WALK_CONT || status == WALK_ABORT || status == WALK_SKIP);
 
     switch (status) {
     case WALK_CONT:
-      /* "Recurse": Put kids on stack */
+      // "Recurse": Put kids on stack
       if (o && (o->op_flags & OPf_KIDS)) {
         for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
-          ptrstack_push(backlog, o); /* parent for kid */
-          ptrstack_push(backlog, kid);
+          backlog.push_back(o); // parent for kid
+          backlog.push_back(kid);
         }
       }
 
       if (o && OP_CLASS(o) == OA_PMOP && o->op_type != OP_PUSHRE
             && (kid = PMOP_pmreplroot(cPMOPo)))
       {
-        ptrstack_push(backlog, o); /* parent for kid */
-        ptrstack_push(backlog, kid);
+        backlog.push_back(o); /* parent for kid */
+        backlog.push_back(kid);
       }
       break;
     case WALK_SKIP:
@@ -80,7 +81,7 @@ pj_walk_optree(pTHX_ OP *o, OP *parentop, pj_op_callback_t cb, void *data)
   } /* end while stuff on todo stack */
 
 done:
-  ptrstack_free(backlog);
+  return;
 }
 
 
