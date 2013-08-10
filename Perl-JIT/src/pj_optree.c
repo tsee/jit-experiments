@@ -19,6 +19,8 @@
 #define PMOP_pmreplroot(o)	o->op_pmreplrootu.op_pmreplroot
 
 namespace PerlJIT {
+  class OPTreeJITCandidateFinder;
+
   // Represents a non-JIT-able subtree below
   class OPWithImposedType {
   public:
@@ -88,11 +90,14 @@ pj_free_terms_vector(std::vector<pj_term_t *> &terms)
     pj_free_tree(*it);
 }
 
+std::vector<pj_term_t *>
+pj_find_jit_candidates(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder *visitor);
+
 /* Walk OP tree recursively, build ASTs, build subtrees */
 STATIC pj_term_t *
 pj_build_ast(pTHX_ OP *o,
              vector<OPWithImposedType> &subtrees,
-             unsigned int *nvariables)
+             unsigned int *nvariables, OPTreeJITCandidateFinder *visitor)
 {
   const unsigned int parent_otype = o->op_type;
   pj_term_t *retval = NULL;
@@ -120,10 +125,10 @@ pj_build_ast(pTHX_ OP *o,
         /* compiled out -- FIXME most certainly not correct, in particular for incoming op_next */
         assert(kid->op_flags & OPf_KIDS);
         /* FIXME Only looking at first kid -- is that a limitation on OP_NULL or can other OP classes be NULLed as well? */
-        kid_terms.push_back( pj_build_ast(aTHX_ ((UNOP*)kid)->op_first, subtrees, nvariables) );
+        kid_terms.push_back( pj_build_ast(aTHX_ ((UNOP*)kid)->op_first, subtrees, nvariables, visitor) );
       }
       else if (IS_JITTABLE_OP_TYPE(otype)) {
-        kid_terms.push_back( pj_build_ast(aTHX_ kid, subtrees, nvariables) );
+          kid_terms.push_back( pj_build_ast(aTHX_ kid, subtrees, nvariables, visitor) );
         if (kid_terms.back() == NULL) {
           // Failed to build sub-AST
           pj_free_terms_vector(kid_terms);
@@ -135,7 +140,7 @@ pj_build_ast(pTHX_ OP *o,
          * recursively scan for separate candidates and
          * treat as subtree. */
         PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(kid));
-        pj_find_jit_candidate(aTHX_ kid, o); /* o is parent of kid */
+        pj_find_jit_candidates(aTHX_ kid, o, visitor); /* o is parent of kid */
         kid_terms.push_back( pj_make_optree(kid));
 
         // FIXME replace pj_double_type with type that's imposed by the current OP
@@ -321,8 +326,8 @@ pj_fixup_parent_op(pTHX_ OP *jitop, OP *origop, UNOP *parentop)
  *       left-hugging in order to get the sub tree is normal
  *       execution order. */
 
-static void
-pj_attempt_jit(pTHX_ OP *o, OP *parentop)
+static pj_term_t *
+pj_attempt_jit(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder *visitor)
 {
   pj_term_t *ast;
   unsigned int nvariables = 0;
@@ -331,57 +336,9 @@ pj_attempt_jit(pTHX_ OP *o, OP *parentop)
     printf("Attempting JIT on %s (%p, %p)\n", OP_NAME(o), o, o->op_next);
 
   std::vector<OPWithImposedType> subtrees;
-  ast = pj_build_ast(aTHX_ o, subtrees, &nvariables);
+  ast = pj_build_ast(aTHX_ o, subtrees, &nvariables, visitor);
 
-  if (ast != NULL) {
-    OP *jitop;
-    pj_jitop_aux_t *jitop_aux;
-    o->op_next = o;
-
-    PJ_DEBUG_2("Built actual AST for jitting. Have %i subtrees which means %i variables.\n", (int)subtrees.size(), nvariables);
-    if (PJ_DEBUGGING)
-      pj_dump_tree(ast);
-
-    jitop = (OP *)pj_prepare_jit_op(aTHX_ nvariables, o);
-    PJ_DEBUG_1("Have a JIT OP: %s\n", OP_NAME(jitop));
-
-    /* The following function call will build the usual LISTOP
-     * structure where op_first points at the start of the linked
-     * list of kids and op_last points at the end. The kids
-     * are linked using their op_sibling pointer.
-     *
-     *       /-----JITOP------\
-     *      /                  \
-     *     /op_first            \op_last
-     *    /                      \
-     *   OP ---> OP ---> ... ---> OP
-     *      op_s    op_s     op_s
-     *
-     * where op_s is understood to be "op_sibling".
-     */
-    pj_build_jitop_kid_list(aTHX_ (LISTOP *)jitop, subtrees);
-
-    pj_fixup_parent_op(aTHX_ jitop, o, (UNOP *)parentop);
-
-    /* TODO clean up orphaned OPs */
-
-    jitop_aux = (pj_jitop_aux_t *)jitop->op_targ;
-
-    /* JIT it for real */
-    {
-      jit_function_t func = NULL;
-      pj_basic_type funtype;
-
-      if (0 == pj_tree_jit(PJ_jit_context, ast, &func, &funtype)) {
-        PJ_DEBUG("JIT succeeded!\n");
-      } else {
-        PJ_DEBUG("JIT failed!\n");
-      }
-      jitop_aux->jit_fun = (void (*)())jit_function_to_closure(func);
-    }
-  }
-
-  pj_free_tree(ast);
+  return ast;
 }
 
 namespace PerlJIT {
@@ -400,19 +357,15 @@ namespace PerlJIT {
 
       /* Attempt JIT if the right OP type. Don't recurse if so. */
       if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
-        if (parentop != NULL) {
-          /* Can only JIT if we have the parent OP. Some time later, maybe
-           * I'll discover a way to find the parent... */
-          if (PJ_DEBUGGING)
-            printf("Attempting JIT with parent OP %s\n", OP_NAME((OP *)parentop));
-          pj_attempt_jit(aTHX_ o, parentop);
-          return VISIT_SKIP;
-        }
-        else
-          PJ_DEBUG_1("Might have been able to JIT %s, but parent OP is NULL", OP_NAME(o));
+          pj_term_t *ast = pj_attempt_jit(aTHX_ o, parentop, this);
+        if (ast)
+            candidates.push_back(ast);
+        return VISIT_SKIP;
       }
       return VISIT_CONT;
     } // end 'visit_op'
+
+    std::vector<pj_term_t *> candidates;
   }; // end class OPTreeJITCandidateFinder
 }
 
@@ -420,10 +373,26 @@ namespace PerlJIT {
  * For candidates, invoke JIT attempt and then move on without going into
  * the particular sub-tree; tree walking in OPTreeWalker, actual logic in
  * OPTreeJITCandidateFinder! */
-void
-pj_find_jit_candidate(pTHX_ OP *o, OP *parentop)
+std::vector<pj_term_t *>
+pj_find_jit_candidates(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder *visitor)
 {
-  OPTreeJITCandidateFinder f;
-  f.visit(aTHX_ o, parentop);
+  visitor->visit(aTHX_ o, parentop);
+  return visitor->candidates;
 }
 
+std::vector<pj_term_t *>
+pj_find_jit_candidates(pTHX_ OP *o, OP *parentop)
+{
+  OPTreeJITCandidateFinder f;
+  return pj_find_jit_candidates(aTHX_ o, parentop, &f);
+}
+
+std::vector<pj_term_t *>
+pj_find_jit_candidates(pTHX_ SV *coderef)
+{
+  if (!SvROK(coderef) || SvTYPE(SvRV(coderef)) != SVt_PVCV)
+    croak("Need a code reference");
+  CV *cv = (CV *) SvRV(coderef);
+
+  return pj_find_jit_candidates(aTHX_ CvROOT(cv), 0);
+}

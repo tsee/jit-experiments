@@ -1,0 +1,8 @@
+%module{Perl::JIT};
+
+%package{Perl::JIT};
+
+#include "pj_optree.h"
+
+std::vector<pj_term_t *> find_jit_candidates(SV *coderef)
+    %code{% RETVAL = pj_find_jit_candidates(aTHX_ coderef); %};

@@ -11,12 +11,12 @@ void
 pj_jit_peep(pTHX_ OP *o)
 {
   OP *parent = o;
-  pj_find_jit_candidate(aTHX_ o, NULL);
+  pj_find_jit_candidates(aTHX_ o, NULL);
 
   /* May be called one layer deep into the tree, it seems, so respect siblings. */
   while (o->op_sibling) {
     o = o->op_sibling;
-    pj_find_jit_candidate(aTHX_ o, parent);
+    pj_find_jit_candidates(aTHX_ o, parent);
   }
 
   PJ_orig_peepp(aTHX_ o);

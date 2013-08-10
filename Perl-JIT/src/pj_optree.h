@@ -4,6 +4,10 @@
 #include "EXTERN.h"
 #include "perl.h"
 
+#include "pj_ast_terms.h"
+
+#include <vector>
+
 /* Code relating to traversing and manipulating the OP tree */
 
 /* Starting from root OP, traverse the tree to find candidate OP for JITing
@@ -11,7 +15,8 @@
 /* This function will internally call pj_attempt_jit on candidates,
  * which will, in turn, call this function on subtrees that it cannot
  * JIT. */
-void pj_find_jit_candidate(pTHX_ OP *o, OP *parentop);
+std::vector<pj_term_t *> pj_find_jit_candidates(pTHX_ OP *o, OP *parentop);
 
+std::vector<pj_term_t *> pj_find_jit_candidates(pTHX_ SV *coderef);
 
 #endif
