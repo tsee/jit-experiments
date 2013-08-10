@@ -13,7 +13,7 @@ use Perl::JIT;
 use LibJIT::API qw(:all);
 use LibJIT::PerlAPI qw(:all);
 
-no warnings $] < 5.18 ? 'redefine' : 'experimental';
+no warnings $] < 5.018 ? 'redefine' : 'experimental';
 use warnings 'redefine';
 
 has jit_context => ( is => 'ro' );
