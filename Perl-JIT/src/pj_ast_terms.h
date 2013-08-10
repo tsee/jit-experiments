@@ -84,19 +84,29 @@ struct pj_term_t {
   pj_optype type;
   OP *perl_op;
 
-  const char *perl_class() const;
+  virtual const char *perl_class() const
+    { return "Perl::JIT::AST::Term"; }
 };
 
 struct pj_op_t : public pj_term_t {
   pj_optype optype;
   std::vector<pj_term_t *> kids;
+
+  virtual const char *perl_class() const
+    { return "Perl::JIT::AST::Op"; }
 };
 
 struct pj_unop_t : public pj_op_t {
+  virtual const char *perl_class() const
+    { return "Perl::JIT::AST::Unop"; }
 };
 struct pj_binop_t : public pj_op_t {
+  virtual const char *perl_class() const
+    { return "Perl::JIT::AST::Binop"; }
 };
 struct pj_listop_t : public pj_op_t {
+  virtual const char *perl_class() const
+    { return "Perl::JIT::AST::Listop"; }
 };
 
 struct pj_constant_t : public pj_term_t {
@@ -106,11 +116,17 @@ struct pj_constant_t : public pj_term_t {
     int int_value;
     unsigned int uint_value;
   };
+
+  virtual const char *perl_class() const
+    { return "Perl::JIT::AST::Constant"; }
 };
 
 struct pj_variable_t : public pj_term_t {
   pj_basic_type var_type;
   int ivar;
+
+  virtual const char *perl_class() const
+    { return "Perl::JIT::AST::Variable"; }
 };
 
 

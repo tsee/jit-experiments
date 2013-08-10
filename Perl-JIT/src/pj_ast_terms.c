@@ -82,20 +82,6 @@ unsigned int pj_ast_op_flags[] = {
   PJ_ASTf_CONDITIONAL,            /* pj_listop_ternary */
 };
 
-const char *pj_term_t::perl_class() const
-{
-  switch (type)
-  {
-  case pj_ttype_constant:
-    return "Perl::JIT::AST::Constant";
-  case pj_ttype_variable:
-    return "Perl::JIT::AST::Variable";
-  case pj_ttype_optree:
-    return "Perl::JIT::AST::Optree";
-  default:
-    return "Perl::JIT::AST::Op";
-  }
-}
 
 pj_term_t *
 pj_make_const_dbl(OP *perl_op, double c)
