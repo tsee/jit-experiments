@@ -134,7 +134,7 @@ pj_build_ast(pTHX_ OP *o,
         /* Can't represent OP with AST. So instead,
          * recursively scan for separate candidates and
          * treat as subtree. */
-        PJ_DEBUG_1("Cannot represent this OP with AST. Emitting variable. (%s)", OP_NAME(kid));
+        PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(kid));
         pj_find_jit_candidate(aTHX_ kid, o); /* o is parent of kid */
         kid_terms.push_back( pj_make_optree(kid));
 
