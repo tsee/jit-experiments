@@ -1,24 +1,32 @@
-* Lexicalize effect of JIT (hints hash?)
-* Explore corner cases: When does the parent or op_next fixup fail?
-* Inline PADSV accesses: No need to
-  a) use the stack.
-  b) check for LVALUE context as the PADSV op does.
-* Find a better way of executing the JIT output function.
-  A giant switch statement isn't only eventually slow,
-  inflexible, but also limited in what types can be supported
-  (one at a time to avoid combinatorial explosion).
-  Why's libjit's flexible function invoker so slow?
-* Port to LLVM instead of libjit?
-* Add support for logical ops and ternary.
-* Add support for more mathy ops.
 * Find a better way to handle many types of OPs: clearly
   if/else if/else doesn't scale.
-* Do we need to support multiple specialized JIT ops?
-  ->{foo}{bar} => rv2hv - helem - rv2hv - helem could be replaced
-  (Rafael's idea).
 * Along the same lines, "foo${a}bar$b" currently generates a giant
   concat OP tree. If not for overloading and friends, this could be
   converted to a join-like operation.
-* Review preliminary binary/logical and/or/not... support in AST
-  code. Likely still buggy, Anna didn't have time to finish.
 ...
+* Fix B::Replace
+  - handle multiple predecessors (logical ops, ternary)
+  - error handling (fail cleanly)
+  - test!
+* Context
+* LVALUE context for assignments
+* JIT assignments, =, +=
+  - list assignments ($x, $y) = ($y, $x)
+* Port to LLVM instead of libjit?
+* Support everything the old JIT does
+* Export constants and fix Emit code
+* Check support for logical/ternary ops
+* Subtrees
+  - order of evaluation 
+  - check nested runloop
+* Refactor AST construction logic
+  * refactor all term nodes into proper classes
+  * richer type system
+* Support more type than just doubles (at least at the AST level)
+* Fix all TODOs in Emit.pm
+* Think about integrating guards at runtime
+* Extract information from subs
+  - number of argument
+  - inline call for "simple" subs
+    - but think about caller
+* Globals (for $_)
