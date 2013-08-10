@@ -1,0 +1,10 @@
+/Build
+/Build.bat
+/Build.PL
+/Perl-AST*
+/META.*
+/MYMETA.*
+/_build
+/.build
+/blib
+/pod2htm?.tmp
