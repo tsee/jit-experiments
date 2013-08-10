@@ -74,10 +74,9 @@ typedef enum {
 
 extern unsigned int pj_ast_op_flags[];
 #define PJ_OP_FLAGS(op) (pj_ast_op_flags[(op)->optype])
-extern char *pj_ast_op_names[];
+extern const char *pj_ast_op_names[];
 #define PJ_OP_NAME(op) (pj_ast_op_names[(op)->optype])
 
- wrapping.
 struct pj_term_t {
   pj_optype type;
   pj_term_t *op_sibling;
