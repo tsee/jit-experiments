@@ -2,6 +2,9 @@
 
 #include "pj_ast_terms.h"
 
+/* map op to B::*OP class name */
+#include "opclass.h"
+
 %name{Perl::JIT::AST::Term}
 class pj_term_t {
   pj_optype type %get %set;

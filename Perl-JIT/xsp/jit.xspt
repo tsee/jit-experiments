@@ -41,6 +41,6 @@
             croak(\"$var is not a reference\")
     %};
     %xs_output_code{%
-        sv_setiv(newSVrv($arg, "B::OP"), PTR2IV($var));
+        sv_setiv(newSVrv($arg, cc_opclassname(aTHX_ $var)), PTR2IV($var));
     %};
 };
