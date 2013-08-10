@@ -29,9 +29,6 @@
 /* Everything related to the actual run-time custom OP implementation */
 #include "pj_jit_op.h"
 
-/* The custom peephole optimizer routines */
-#include "pj_jit_peep.h"
-
 %{
 
 MODULE = Perl::JIT	PACKAGE = Perl::JIT

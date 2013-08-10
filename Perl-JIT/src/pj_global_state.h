@@ -13,9 +13,6 @@
 /* The custom op definition structure */
 extern XOP PJ_xop_jitop;
 
-/* Original peephole optimizer */
-extern peep_t PJ_orig_peepp;
-
 /* Original opfreehook - we wrap this to free JIT OP aux structs */
 extern Perl_ophook_t PJ_orig_opfreehook;
 
@@ -26,10 +23,6 @@ extern jit_context_t PJ_jit_context;
 
 /* Initialize global JIT state like JIT context, custom op description, etc. */
 void pj_init_global_state(pTHX);
-
-/* End-of-global-destruction cleanup hook.
- * Actually installed in BOOT XS section. */
-void pj_global_state_final_cleanup(pTHX_ void *ptr);
 
 
 #endif
