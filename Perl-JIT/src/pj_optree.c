@@ -422,8 +422,8 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
 
   std::vector<pj_term_t *> tmp = pj_find_jit_candidates(aTHX_ CvROOT(cv), 0);
   if (PJ_DEBUGGING) {
-    printf("%i JIT candidate ASTs:\n", tmp.size());
-    for (unsigned int i = 0; i < tmp.size(); ++i) {
+    printf("%i JIT candidate ASTs:\n", (int)tmp.size());
+    for (unsigned int i = 0; i < (unsigned int)tmp.size(); ++i) {
       printf("===========================\n");
       pj_dump_tree(tmp[i]);
     }
