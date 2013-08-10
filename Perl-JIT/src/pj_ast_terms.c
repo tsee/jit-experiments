@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 /* keep in sync with pj_op_type in .h file */
-char *pj_ast_op_names[] = {
+static const char *pj_ast_op_names[] = {
   /* unops */
   "unary -",  /* pj_unop_negate */
   "sin",      /* pj_unop_sin */
