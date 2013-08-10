@@ -113,8 +113,17 @@ pj_find_first_executed_op(pTHX_ OP *o)
   abort(); /* not reached */
 }
 
+
+STATIC void
+pj_free_terms_vector(std::vector<pj_term_t *> &terms)
+{
+  std::vector<pj_term_t *>::iterator it = terms.begin();
+  for (; it != terms.end(); ++it)
+    pj_free_tree(*it);
+}
+
 /* Walk OP tree recursively, build ASTs, build subtrees */
-static pj_term_t *
+STATIC pj_term_t *
 pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
 {
   const unsigned int parent_otype = o->op_type;
@@ -124,26 +133,18 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
   /* 2 is the maximum number of children that the supported
    * OP types may have. Will change in future */
   std::vector<pj_term_t *> kid_terms;
-  unsigned int ikid = 0;
 
   PJ_DEBUG_2("pj_build_ast running on %s. Have %i subtrees right now.\n", OP_NAME(o), (int)(ptrstack_nelems(*subtrees)));
 
+  unsigned int ikid = 0;
   if (o && (o->op_flags & OPf_KIDS)) {
     for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
       PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
 
       const unsigned int otype = kid->op_type;
       if (otype == OP_CONST) {
-        if (ptrstack_empty(*subtrees)) {
-          PJ_DEBUG("CONST is first-executed tree element, can't inline.\n");
-          kid->op_ppaddr = PL_ppaddr[OP_NULL]; /* FIXME hobo nulling not nice. Breaks incoming pointers for some reason otherwise. */
-          //Perl_op_null(aTHX_ kid);
-          ptrstack_push(*subtrees, INT2PTR(void *, pj_double_type)); /* FIXME replace pj_double_type with type that's imposed by the current OP */
-          ptrstack_push(*subtrees, kid);
-        }
-        else {
-          PJ_DEBUG("CONST being inlined.\n");
-        }
+        PJ_DEBUG("CONST being inlined.\n");
+        /* FIXME OP_CONST can also be an int or a string and who-knows-what-else */
         kid_terms.push_back(pj_make_const_dbl(SvNV(cSVOPx_sv(kid)))); /* FIXME replace type by inferred type */
       }
       else if (otype == OP_PADSV) {
@@ -154,20 +155,15 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
       }
       else if (otype == OP_NULL) {
         /* compiled out -- FIXME most certainly not correct, in particular for incoming op_next */
-        if (kid->op_flags & OPf_KIDS) {
-          /* FIXME Only looking at first kid -- is that a limitation on OP_NULL? */
-          kid_terms.push_back( pj_build_ast(aTHX_ ((UNOP*)kid)->op_first, subtrees, nvariables) );
-        } else {
-          PJ_DEBUG("Umm, unexpected OP_NULL");
-          abort();
-        }
+        assert(kid->op_flags & OPf_KIDS);
+        /* FIXME Only looking at first kid -- is that a limitation on OP_NULL or can other OP classes be NULLed as well? */
+        kid_terms.push_back( pj_build_ast(aTHX_ ((UNOP*)kid)->op_first, subtrees, nvariables) );
       }
       else if (IS_JITTABLE_OP_TYPE(otype)) {
         kid_terms.push_back( pj_build_ast(aTHX_ kid, subtrees, nvariables) );
         if (kid_terms.back() == NULL) {
-          std::vector<pj_term_t *>::iterator it = kid_terms.begin();
-          for (; it != kid_terms.end(); ++it)
-            pj_free_tree(*it);
+          // Failed to build sub-AST
+          pj_free_terms_vector(kid_terms);
           return NULL;
         }
       }
@@ -236,8 +232,8 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
 #undef EMIT_LISTOP_CODE
 
   } /* end if has kids */
-  else { /* OP without kids */
-    /* OP_PADSV and OP_CONST are handled in the caller as other OPs' kids */
+  else { // OP without kids
+    // OP_PADSV and OP_CONST are handled in the caller as other OPs' kids
     PJ_DEBUG_1("ARG! Unsupported OP without kids, %s", OP_NAME(o));
     abort();
   }
