@@ -233,6 +233,7 @@ pj_build_ast(pTHX_ OP *o, ptrstack_t **subtrees, unsigned int *nvariables)
     }
 #undef EMIT_BINOP_CODE
 #undef EMIT_UNOP_CODE
+#undef EMIT_LISTOP_CODE
 
   } /* end if has kids */
   else { /* OP without kids */
