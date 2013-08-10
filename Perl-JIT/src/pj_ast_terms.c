@@ -83,30 +83,33 @@ unsigned int pj_ast_op_flags[] = {
 };
 
 pj_term_t *
-pj_make_const_dbl(double c)
+pj_make_const_dbl(OP *perl_op, double c)
 {
   pj_constant_t *co = (pj_constant_t *)malloc(sizeof(pj_constant_t));
   co->type = pj_ttype_constant;
+  co->perl_op = perl_op;
   co->dbl_value = c;
   co->const_type = pj_double_type;
   return (pj_term_t *)co;
 }
 
 pj_term_t *
-pj_make_const_int(int c)
+pj_make_const_int(OP *perl_op, int c)
 {
   pj_constant_t *co = (pj_constant_t *)malloc(sizeof(pj_constant_t));
   co->type = pj_ttype_constant;
+  co->perl_op = perl_op;
   co->int_value = c;
   co->const_type = pj_int_type;
   return (pj_term_t *)co;
 }
 
 pj_term_t *
-pj_make_const_uint(unsigned int c)
+pj_make_const_uint(OP *perl_op, unsigned int c)
 {
   pj_constant_t *co = (pj_constant_t *)malloc(sizeof(pj_constant_t));
   co->type = pj_ttype_constant;
+  co->perl_op = perl_op;
   co->uint_value = c;
   co->const_type = pj_uint_type;
   return (pj_term_t *)co;
@@ -114,10 +117,11 @@ pj_make_const_uint(unsigned int c)
 
 
 pj_term_t *
-pj_make_variable(int iv, pj_basic_type t)
+pj_make_variable(OP *perl_op, int iv, pj_basic_type t)
 {
   pj_variable_t *v = (pj_variable_t *)malloc(sizeof(pj_variable_t));
   v->type = pj_ttype_variable;
+  v->perl_op = perl_op;
   v->var_type = t;
   v->ivar = iv;
   return (pj_term_t *)v;
@@ -125,11 +129,12 @@ pj_make_variable(int iv, pj_basic_type t)
 
 
 pj_term_t *
-pj_make_binop(pj_optype t, pj_term_t *o1, pj_term_t *o2)
+pj_make_binop(OP *perl_op, pj_optype t, pj_term_t *o1, pj_term_t *o2)
 {
   pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
   o->op_sibling = NULL;
   o->type = pj_ttype_op;
+  o->perl_op = perl_op;
   o->optype = t;
   o->op1 = o1;
   o->op2 = o2;
@@ -140,11 +145,12 @@ pj_make_binop(pj_optype t, pj_term_t *o1, pj_term_t *o2)
 
 
 pj_term_t *
-pj_make_unop(pj_optype t, pj_term_t *o1)
+pj_make_unop(OP *perl_op, pj_optype t, pj_term_t *o1)
 {
   pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
   o->op_sibling = NULL;
   o->type = pj_ttype_op;
+  o->perl_op = perl_op;
   o->optype = t;
   o->op1 = o1;
   o->op2 = NULL;
@@ -154,11 +160,12 @@ pj_make_unop(pj_optype t, pj_term_t *o1)
 
 
 pj_term_t *
-pj_make_listop(pj_optype t, pj_term_t *o_start, pj_term_t *o_end)
+pj_make_listop(OP *perl_op, pj_optype t, pj_term_t *o_start, pj_term_t *o_end)
 {
   pj_op_t *o = (pj_op_t *)malloc(sizeof(pj_op_t));
   o->op_sibling = NULL;
   o->type = pj_ttype_op;
+  o->perl_op = perl_op;
   o->optype = t;
   o->op1 = o_start;
   o->op2 = o_end;

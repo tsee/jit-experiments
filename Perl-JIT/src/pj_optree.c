@@ -111,10 +111,10 @@ pj_build_ast(pTHX_ OP *o,
       if (otype == OP_CONST) {
         PJ_DEBUG("CONST being inlined.\n");
         /* FIXME OP_CONST can also be an int or a string and who-knows-what-else */
-        kid_terms.push_back(pj_make_const_dbl(SvNV(cSVOPx_sv(kid)))); /* FIXME replace type by inferred type */
+        kid_terms.push_back(pj_make_const_dbl(kid, SvNV(cSVOPx_sv(kid)))); /* FIXME replace type by inferred type */
       }
       else if (otype == OP_PADSV) {
-        kid_terms.push_back( pj_make_variable((*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
+        kid_terms.push_back( pj_make_variable(kid, (*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
       }
       else if (otype == OP_NULL) {
         /* compiled out -- FIXME most certainly not correct, in particular for incoming op_next */
@@ -136,7 +136,7 @@ pj_build_ast(pTHX_ OP *o,
          * treat as subtree. */
         PJ_DEBUG_1("Cannot represent this OP with AST. Emitting variable. (%s)", OP_NAME(kid));
         pj_find_jit_candidate(aTHX_ kid, o); /* o is parent of kid */
-        kid_terms.push_back( pj_make_variable((*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
+        kid_terms.push_back( pj_make_variable(kid, (*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
 
         // FIXME replace pj_double_type with type that's imposed by the current OP
         subtrees.push_back( OPWithImposedType(kid, pj_double_type) );
@@ -150,12 +150,12 @@ pj_build_ast(pTHX_ OP *o,
 #define EMIT_UNOP_CODE(perl_op_type, pj_op_type) \
     if (parent_otype == perl_op_type) { \
       assert(ikid == 1); \
-      retval = pj_make_unop( pj_op_type, kid_terms[0] ); \
+      retval = pj_make_unop( o, pj_op_type, kid_terms[0] );      \
     }
 #define EMIT_BINOP_CODE(perl_op_type, pj_op_type) \
     if (parent_otype == perl_op_type) { \
       assert(ikid == 2); \
-      retval = pj_make_binop( pj_op_type, kid_terms[0], kid_terms[1] ); \
+      retval = pj_make_binop( o, pj_op_type, kid_terms[0], kid_terms[1] ); \
     }
 #define EMIT_LISTOP_CODE(perl_op_type, pj_op_type) \
     if (parent_otype == perl_op_type) { \
@@ -163,7 +163,7 @@ pj_build_ast(pTHX_ OP *o,
       for (unsigned int i = 0; i < ikid-1; ++i) \
         kid_terms[i]->op_sibling = kid_terms[i+1]; \
       kid_terms[ikid-1]->op_sibling = NULL; \
-      retval = pj_make_listop( pj_op_type, kid_terms[0], kid_terms[ikid-1] ); \
+      retval = pj_make_listop( o, pj_op_type, kid_terms[0], kid_terms[ikid-1] ); \
     }
 
     EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
