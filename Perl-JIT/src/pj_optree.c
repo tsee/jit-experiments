@@ -420,5 +420,14 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
   CV *cv = (CV *) SvRV(coderef);
   PJ_cur_cv = cv;
 
-  return pj_find_jit_candidates(aTHX_ CvROOT(cv), 0);
+  std::vector<pj_term_t *> tmp = pj_find_jit_candidates(aTHX_ CvROOT(cv), 0);
+  if (PJ_DEBUGGING) {
+    printf("%i JIT candidate ASTs:\n", tmp.size());
+    for (unsigned int i = 0; i < tmp.size(); ++i) {
+      printf("===========================\n");
+      pj_dump_tree(tmp[i]);
+    }
+    printf("===========================\n");
+  }
+  return tmp;
 }
