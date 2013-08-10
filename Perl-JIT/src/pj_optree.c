@@ -29,8 +29,8 @@ pj_walk_optree(pTHX_ OP *o, OP *parentop, pj_op_callback_t cb, void *data)
 
   /* Iterative tree traversal using stack */
   while (!ptrstack_empty(backlog)) {
-    o = ptrstack_pop(backlog);
-    parentop = ptrstack_pop(backlog);
+    o = (OP *)ptrstack_pop(backlog);
+    parentop = (OP *)ptrstack_pop(backlog);
 
     status = cb(aTHX_ o, parentop, data);
     assert(status == WALK_CONT || status == WALK_ABORT || status == WALK_SKIP);
@@ -94,6 +94,7 @@ done:
 PJ_STATIC_INLINE OP *
 pj_find_first_executed_op(pTHX_ OP *o)
 {
+  PERL_UNUSED_CONTEXT;
   while (1) {
     if (o->op_flags & OPf_KIDS) {
       o = cUNOPo->op_first;
@@ -431,6 +432,8 @@ pj_jit_cand_cb(pTHX_ OP *o, OP *parentop, void *data)
 {
   unsigned int otype;
   otype = o->op_type;
+
+  PERL_UNUSED_ARG(data);
 
   PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
 
