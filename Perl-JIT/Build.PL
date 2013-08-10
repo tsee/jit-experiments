@@ -18,10 +18,14 @@ use Module::Build::PerlJIT;
 
 my @extra_compiler_flags;
 if ($DEBUG) {
-  push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra -Wno-unused-function);
+  push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra);
   if ($DEBUG > 1) {
     push @extra_compiler_flags, qw(-pedantic);
   }
+  else {
+    push @extra_compiler_flags, qw(-Wno-unused-function -Wno-unused-parameter -Wno-unused-variable);
+  }
+
   open my $fh, ">", "DEBUGGING" or die $!;
   close $fh or die $!;
 }
