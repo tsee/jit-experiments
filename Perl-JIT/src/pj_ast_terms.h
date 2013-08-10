@@ -82,6 +82,8 @@ struct pj_term_t {
   pj_optype type;
   pj_term_t *op_sibling;
   OP *perl_op;
+
+  const char *perl_class() const;
 };
 
 struct pj_op_t : public pj_term_t {

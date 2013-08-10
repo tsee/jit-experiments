@@ -7,3 +7,8 @@
 %typemap{pj_basic_type}{simple}{
     %xs_type{T_ENUM};
 };
+
+%typemap{pj_term_t *}{object}{
+    %xs_type{O_AST};
+    %xs_output_code{% sv_setref_pv( $arg, xsp_constructor_class($var->perl_class()), (void*)$var ); %};
+};
