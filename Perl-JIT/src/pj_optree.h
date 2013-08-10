@@ -6,18 +6,21 @@
 
 /* Code relating to traversing and manipulating the OP tree */
 
-/* parentop may be NULL on root OP */
-typedef int (*pj_op_callback_t)(pTHX_ OP *o, OP *parentop, void *data);
+namespace PerlJIT {
+  class OPTreeWalker {
+  public:
+    enum walk_control_t {WALK_CONT = 0, WALK_SKIP = 1, WALK_ABORT = 2};
 
-#define WALK_CONT 0
-#define WALK_SKIP 1
-#define WALK_ABORT 2
+    /* Walks the OP tree left-hugging, depth-first, invoking the callback
+     * for each op. Besides the regular WALK_CONT, the callback may return
+     * WALK_SKIP to avoid recursing into the OP's children or WALK_ABORT
+     * to stop walking the tree altogether. */
+    void walk(pTHX_ OP *o, OP *parentop);
 
-/* Walks the OP tree left-hugging, depth-first, invoking the callback
- * for each op. Besides the regular WALK_CONT, the callback may return
- * WALK_SKIP to avoid recursing into the OP's children or WALK_ABORT
- * to stop walking the tree altogether. */
-void pj_walk_optree(pTHX_ OP *o, OP *parentop, pj_op_callback_t cb, void *data);
+    // To be implemented ins subclass
+    virtual walk_control_t op_callback(pTHX_ OP *o, OP *parentop);
+  };
+}
 
 /* Starting from root OP, traverse the tree to find candidate OP for JITing
  * and perform actual replacement if at all. */

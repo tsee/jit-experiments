@@ -27,62 +27,62 @@ namespace PerlJIT {
     OP *op;
     pj_basic_type imposed_type;
   };
+
+
+  void
+  OPTreeWalker::walk(pTHX_ OP *o, OP *parentop)
+  {
+    walk_control_t status;
+    OP *kid;
+    std::list<OP *> backlog;
+
+    backlog.push_back(parentop);
+    backlog.push_back(o);
+
+    // Iterative tree traversal using stack
+    while ( !backlog.empty() ) {
+      o = backlog.back();
+      backlog.pop_back();
+      parentop = backlog.back();
+      backlog.pop_back();
+
+      status = this->op_callback(aTHX_ o, parentop);
+      assert(status == WALK_CONT || status == WALK_ABORT || status == WALK_SKIP);
+
+      switch (status) {
+      case WALK_CONT:
+        // "Recurse": Put kids on stack
+        if (o && (o->op_flags & OPf_KIDS)) {
+          for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
+            backlog.push_back(o); // parent for kid
+            backlog.push_back(kid);
+          }
+        }
+
+        if (o && OP_CLASS(o) == OA_PMOP && o->op_type != OP_PUSHRE
+              && (kid = PMOP_pmreplroot(cPMOPo)))
+        {
+          backlog.push_back(o); /* parent for kid */
+          backlog.push_back(kid);
+        }
+        break;
+      case WALK_SKIP:
+        // fall-through, do not recurse into this OP's kids
+        break;
+      case WALK_ABORT:
+        goto done;
+      default:
+        abort();
+      }
+    } // end while stuff on todo stack
+
+  done:
+    return;
+  } // end 'OPTreeWalker::walk'
 }
 
 using namespace PerlJIT;
 using namespace std;
-
-
-void
-pj_walk_optree(pTHX_ OP *o, OP *parentop, pj_op_callback_t cb, void *data)
-{
-  int status;
-  OP *kid;
-  std::list<OP *> backlog;
-
-  backlog.push_back(parentop);
-  backlog.push_back(o);
-
-  // Iterative tree traversal using stack
-  while ( !backlog.empty() ) {
-    o = backlog.back();
-    backlog.pop_back();
-    parentop = backlog.back();
-    backlog.pop_back();
-
-    status = cb(aTHX_ o, parentop, data);
-    assert(status == WALK_CONT || status == WALK_ABORT || status == WALK_SKIP);
-
-    switch (status) {
-    case WALK_CONT:
-      // "Recurse": Put kids on stack
-      if (o && (o->op_flags & OPf_KIDS)) {
-        for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
-          backlog.push_back(o); // parent for kid
-          backlog.push_back(kid);
-        }
-      }
-
-      if (o && OP_CLASS(o) == OA_PMOP && o->op_type != OP_PUSHRE
-            && (kid = PMOP_pmreplroot(cPMOPo)))
-      {
-        backlog.push_back(o); /* parent for kid */
-        backlog.push_back(kid);
-      }
-      break;
-    case WALK_SKIP:
-      /* fall-through, do not recurse into this OP's kids */
-      break;
-    case WALK_ABORT:
-      goto done;
-    default:
-      abort();
-    }
-  } /* end while stuff on todo stack */
-
-done:
-  return;
-}
 
 
 #define IS_JITTABLE_ROOT_OP_TYPE(otype) \
@@ -434,39 +434,45 @@ pj_attempt_jit(pTHX_ OP *o, OP *parentop)
   pj_free_tree(ast);
 }
 
-PJ_STATIC int
-pj_jit_cand_cb(pTHX_ OP *o, OP *parentop, void *data)
-{
-  unsigned int otype;
-  otype = o->op_type;
+namespace PerlJIT {
+  class OPTreeJITCandidateFinder : public OPTreeWalker {
+  public:
+    OPTreeJITCandidateFinder() {}
 
-  PERL_UNUSED_ARG(data);
+    walk_control_t
+    op_callback(pTHX_ OP *o, OP *parentop)
+    {
+      unsigned int otype;
+      otype = o->op_type;
 
-  PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
+      PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
 
-  /* Attempt JIT if the right OP type. Don't recurse if so. */
-  if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
-    if (parentop != NULL) {
-      /* Can only JIT if we have the parent OP. Some time later, maybe
-       * I'll discover a way to find the parent... */
-      if (PJ_DEBUGGING)
-        printf("Attempting JIT with parent OP %s\n", OP_NAME((OP *)parentop));
-      pj_attempt_jit(aTHX_ o, parentop);
-      return WALK_SKIP;
-    }
-    else
-      PJ_DEBUG_1("Might have been able to JIT %s, but parent OP is NULL", OP_NAME(o));
-  }
-  return WALK_CONT;
+      /* Attempt JIT if the right OP type. Don't recurse if so. */
+      if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
+        if (parentop != NULL) {
+          /* Can only JIT if we have the parent OP. Some time later, maybe
+           * I'll discover a way to find the parent... */
+          if (PJ_DEBUGGING)
+            printf("Attempting JIT with parent OP %s\n", OP_NAME((OP *)parentop));
+          pj_attempt_jit(aTHX_ o, parentop);
+          return WALK_SKIP;
+        }
+        else
+          PJ_DEBUG_1("Might have been able to JIT %s, but parent OP is NULL", OP_NAME(o));
+      }
+      return WALK_CONT;
+    } // end 'op_callback'
+  }; // end class OPTreeJITCandidateFinder
 }
 
 /* Traverse OP tree from o until done OR a candidate for JITing was found.
  * For candidates, invoke JIT attempt and then move on without going into
- * the particular sub-tree; tree walking in pj_walk_optree, actual logic in
- * pj_jit_cand_cb! */
+ * the particular sub-tree; tree walking in OPTreeWalker, actual logic in
+ * OPTreeJITCandidateFinder! */
 void
 pj_find_jit_candidate(pTHX_ OP *o, OP *parentop)
 {
-  pj_walk_optree(aTHX_ o, parentop, &pj_jit_cand_cb, NULL);
+  OPTreeJITCandidateFinder f;
+  f.walk(aTHX_ o, parentop);
 }
 
