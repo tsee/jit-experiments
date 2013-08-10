@@ -128,7 +128,7 @@ pj_build_ast(pTHX_ OP *o,
         kid_terms.push_back( pj_build_ast(aTHX_ ((UNOP*)kid)->op_first, subtrees, nvariables, visitor) );
       }
       else if (IS_JITTABLE_OP_TYPE(otype)) {
-          kid_terms.push_back( pj_build_ast(aTHX_ kid, subtrees, nvariables, visitor) );
+        kid_terms.push_back( pj_build_ast(aTHX_ kid, subtrees, nvariables, visitor) );
         if (kid_terms.back() == NULL) {
           // Failed to build sub-AST
           pj_free_terms_vector(kid_terms);
