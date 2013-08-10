@@ -18,6 +18,13 @@
 #define PMOP_pmreplstart(o)	o->op_pmstashstartu.op_pmreplstart
 #define PMOP_pmreplroot(o)	o->op_pmreplrootu.op_pmreplroot
 
+// FIXME This global should not exist!
+// Has a ptr to the currently-being-converted-to-AST CV. That's necessary
+// because some OPs can only be interpreted in the context of the PAD of
+// their CV. Eg. SVOPs on threaded Perls use op_targ (into the CV's PAD)
+// to refer to the SV that has their constant.
+static CV *PJ_cur_cv;
+
 namespace PerlJIT {
   class OPTreeJITCandidateFinder;
 
@@ -93,6 +100,20 @@ pj_free_terms_vector(std::vector<pj_term_t *> &terms)
 std::vector<pj_term_t *>
 pj_find_jit_candidates(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder *visitor);
 
+/* Fetches the SV* for an SVOP.
+ * Essentially an unrolled cSVOPx_sv(op) that deals with the fact
+ * that the current PAD isn't the PAD we actually want to look at. */
+STATIC SV *
+pj_get_sv_from_svop(pTHX_ SVOP *o)
+{
+  SV *retval = o->op_sv;
+  if (retval == NULL) {
+    PADLIST * padl = CvPADLIST(PJ_cur_cv);
+    retval = PAD_BASE_SV(padl, o->op_targ);
+  }
+  return retval;
+}
+
 /* Walk OP tree recursively, build ASTs, build subtrees */
 STATIC pj_term_t *
 pj_build_ast(pTHX_ OP *o,
@@ -114,9 +135,11 @@ pj_build_ast(pTHX_ OP *o,
 
       const unsigned int otype = kid->op_type;
       if (otype == OP_CONST) {
-        PJ_DEBUG("CONST being inlined.\n");
         /* FIXME OP_CONST can also be an int or a string and who-knows-what-else */
-        kid_terms.push_back(pj_make_const_dbl(kid, SvNV(cSVOPx_sv(kid)))); /* FIXME replace type by inferred type */
+        SV *constsv = pj_get_sv_from_svop(aTHX_ (SVOP *)kid);
+
+        PJ_DEBUG_1("CONST being inlined (%f).\n", SvNV(constsv));
+        kid_terms.push_back(pj_make_const_dbl(kid, SvNV(constsv))); /* FIXME replace type by inferred type */
       }
       else if (otype == OP_PADSV) {
         kid_terms.push_back( pj_make_variable(kid, (*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
@@ -215,6 +238,8 @@ pj_build_ast(pTHX_ OP *o,
   */
 
   PJ_DEBUG_1("Returning from pj_build_ast. Have %i subtrees right now.\n", (int)subtrees.size());
+  if (retval != NULL)
+    pj_dump_tree(retval);
   return retval;
 }
 
@@ -393,6 +418,7 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
   if (!SvROK(coderef) || SvTYPE(SvRV(coderef)) != SVt_PVCV)
     croak("Need a code reference");
   CV *cv = (CV *) SvRV(coderef);
+  PJ_cur_cv = cv;
 
   return pj_find_jit_candidates(aTHX_ CvROOT(cv), 0);
 }
