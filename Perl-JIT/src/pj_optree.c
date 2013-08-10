@@ -12,6 +12,61 @@
 #include "pj_jit_op.h"
 #include "pj_global_state.h"
 
+/* inspired by B.xs */
+#define PMOP_pmreplstart(o)	o->op_pmstashstartu.op_pmreplstart
+#define PMOP_pmreplroot(o)	o->op_pmreplrootu.op_pmreplroot
+
+void
+pj_walk_optree(pTHX_ OP *o, OP *parentop, pj_op_callback_t cb, void *data)
+{
+  int status;
+  OP *kid;
+  ptrstack_t *backlog;
+
+  backlog = ptrstack_make(8, 0);
+  ptrstack_push(backlog, parentop);
+  ptrstack_push(backlog, o);
+
+  /* Iterative tree traversal using stack */
+  while (!ptrstack_empty(backlog)) {
+    o = ptrstack_pop(backlog);
+    parentop = ptrstack_pop(backlog);
+
+    status = cb(aTHX_ o, parentop, data);
+    assert(status == WALK_CONT || status == WALK_ABORT || status == WALK_SKIP);
+
+    switch (status) {
+    case WALK_CONT:
+      /* "Recurse": Put kids on stack */
+      if (o && (o->op_flags & OPf_KIDS)) {
+        for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
+          ptrstack_push(backlog, o); /* parent for kid */
+          ptrstack_push(backlog, kid);
+        }
+      }
+
+      if (o && OP_CLASS(o) == OA_PMOP && o->op_type != OP_PUSHRE
+            && (kid = PMOP_pmreplroot(cPMOPo)))
+      {
+        ptrstack_push(backlog, o); /* parent for kid */
+        ptrstack_push(backlog, kid);
+      }
+      break;
+    case WALK_SKIP:
+      /* fall-through, do not recurse into this OP's kids */
+      break;
+    case WALK_ABORT:
+      goto done;
+    default:
+      abort();
+    }
+  } /* end while stuff on todo stack */
+
+done:
+  ptrstack_free(backlog);
+}
+
+
 #define IS_JITTABLE_ROOT_OP_TYPE(otype) \
         ( otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE \
           || otype == OP_SIN || otype == OP_COS || otype == OP_SQRT || otype == OP_EXP \
@@ -371,61 +426,37 @@ pj_attempt_jit(pTHX_ OP *o, OP *parentop)
   ptrstack_free(subtrees);
 }
 
-/* inspired by B.xs */
-#define PMOP_pmreplstart(o)	o->op_pmstashstartu.op_pmreplstart
-#define PMOP_pmreplroot(o)	o->op_pmreplrootu.op_pmreplroot
+PJ_STATIC int
+pj_jit_cand_cb(pTHX_ OP *o, OP *parentop, void *data)
+{
+  unsigned int otype;
+  otype = o->op_type;
+
+  PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
+
+  /* Attempt JIT if the right OP type. Don't recurse if so. */
+  if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
+    if (parentop != NULL) {
+      /* Can only JIT if we have the parent OP. Some time later, maybe
+       * I'll discover a way to find the parent... */
+      if (PJ_DEBUGGING)
+        printf("Attempting JIT with parent OP %s\n", OP_NAME((OP *)parentop));
+      pj_attempt_jit(aTHX_ o, parentop);
+      return WALK_SKIP;
+    }
+    else
+      PJ_DEBUG_1("Might have been able to JIT %s, but parent OP is NULL", OP_NAME(o));
+  }
+  return WALK_CONT;
+}
 
 /* Traverse OP tree from o until done OR a candidate for JITing was found.
  * For candidates, invoke JIT attempt and then move on without going into
- * the particular sub-tree. */
+ * the particular sub-tree; tree walking in pj_walk_optree, actual logic in
+ * pj_jit_cand_cb! */
 void
 pj_find_jit_candidate(pTHX_ OP *o, OP *parentop)
 {
-  unsigned int otype;
-  OP *kid;
-  ptrstack_t *backlog;
-
-  backlog = ptrstack_make(8, 0);
-  ptrstack_push(backlog, parentop);
-  ptrstack_push(backlog, o);
-
-  /* Iterative tree traversal using stack */
-  while (!ptrstack_empty(backlog)) {
-    o = (OP *) ptrstack_pop(backlog);
-    parentop = (OP *) ptrstack_pop(backlog);
-    otype = o->op_type;
-
-    PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
-
-    /* Attempt JIT if the right OP type. Don't recurse if so. */
-    if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
-      if (parentop != NULL) {
-        /* Can only JIT if we have the parent OP. Some time later, maybe
-         * I'll discover a way to find the parent... */
-        if (PJ_DEBUGGING)
-          printf("Attempting JIT with parent OP %s\n", OP_NAME((OP *)parentop));
-        pj_attempt_jit(aTHX_ o, parentop);
-      }
-      else
-        PJ_DEBUG_1("Might have been able to JIT %s, but parent OP is NULL", OP_NAME(o));
-    }
-    else {
-      if (o && (o->op_flags & OPf_KIDS)) {
-        for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
-          ptrstack_push(backlog, o); /* parent for kid */
-          ptrstack_push(backlog, kid);
-        }
-      }
-
-      if (o && OP_CLASS(o) == OA_PMOP && o->op_type != OP_PUSHRE
-            && (kid = PMOP_pmreplroot(cPMOPo)))
-      {
-        ptrstack_push(backlog, o); /* parent for kid */
-        ptrstack_push(backlog, kid);
-      }
-    } /* end "not a jittable root OP" */
-  } /* end while stuff on todo stack */
-
-  ptrstack_free(backlog);
+  pj_walk_optree(aTHX_ o, parentop, &pj_jit_cand_cb, NULL);
 }
 
