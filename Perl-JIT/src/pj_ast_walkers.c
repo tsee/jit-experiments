@@ -3,22 +3,22 @@
 #include "pj_ast_walkers.h"
 
 static void
-pj_tree_extract_vars_internal(pj_term_t *term, pj_variable_t * **vars, unsigned int *nvars)
+pj_tree_extract_vars_internal(PerlJIT::AST::Term *term, PerlJIT::AST::Variable * **vars, unsigned int *nvars)
 {
   if (term->type == pj_ttype_variable)
   {
     /* not efficient, but simple */
     if (vars == NULL)
-      *vars = (pj_variable_t **)malloc(sizeof(pj_variable_t *));
+      *vars = (PerlJIT::AST::Variable **)malloc(sizeof(PerlJIT::AST::Variable *));
     else
-      *vars = (pj_variable_t **)realloc(*vars, (*nvars+1) * sizeof(pj_variable_t *));
-    (*vars)[*nvars] = (pj_variable_t *)term;
+      *vars = (PerlJIT::AST::Variable **)realloc(*vars, (*nvars+1) * sizeof(PerlJIT::AST::Variable *));
+    (*vars)[*nvars] = (PerlJIT::AST::Variable *)term;
     (*nvars)++;
   }
   else if (term->type == pj_ttype_op)
   {
-    pj_op_t *o = (pj_op_t *)term;
-    const std::vector<pj_term_t *> &kids = o->kids;
+    PerlJIT::AST::Op *o = (PerlJIT::AST::Op *)term;
+    const std::vector<PerlJIT::AST::Term *> &kids = o->kids;
     const unsigned int n = kids.size();
     for (unsigned int i = 0; i < n; ++i)
       pj_tree_extract_vars_internal(kids[i], vars, nvars);
@@ -26,7 +26,7 @@ pj_tree_extract_vars_internal(pj_term_t *term, pj_variable_t * **vars, unsigned 
 }
 
 void
-pj_tree_extract_vars(pj_term_t *term, pj_variable_t * **vars, unsigned int *nvars)
+pj_tree_extract_vars(PerlJIT::AST::Term *term, PerlJIT::AST::Variable * **vars, unsigned int *nvars)
 {
   *nvars = 0;
   *vars = NULL;
@@ -36,23 +36,23 @@ pj_tree_extract_vars(pj_term_t *term, pj_variable_t * **vars, unsigned int *nvar
 /* FIXME this isn't really very useful right now and if it becomes that,
  *       it could really do with a rewrite */
 pj_basic_type
-pj_tree_determine_funtype(pj_term_t *term)
+pj_tree_determine_funtype(PerlJIT::AST::Term *term)
 {
   if (term->type == pj_ttype_variable) {
-    return ((pj_variable_t *)term)->var_type;
+    return ((PerlJIT::AST::Variable *)term)->var_type;
   }
   else if (term->type == pj_ttype_constant) {
-    return ((pj_constant_t *)term)->const_type;
+    return ((PerlJIT::AST::Constant *)term)->const_type;
   }
   else if (term->type == pj_ttype_op) {
-    pj_op_t *o = (pj_op_t *)term;
+    PerlJIT::AST::Op *o = (PerlJIT::AST::Op *)term;
     pj_basic_type t1;
     t1 = pj_tree_determine_funtype(o->kids[0]);
     if (t1 == pj_double_type)
       return pj_double_type; /* double >> int */
 
     if (PJ_IS_OP_LISTOP(o)) {
-      const std::vector<pj_term_t *> &kids = o->kids;
+      const std::vector<PerlJIT::AST::Term *> &kids = o->kids;
       const unsigned int n = kids.size();
       for (unsigned int i = 0; i < n; ++i) {
         pj_basic_type t = pj_tree_determine_funtype(kids[i]);

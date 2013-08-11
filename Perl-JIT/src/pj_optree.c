@@ -90,14 +90,14 @@ pj_find_first_executed_op(pTHX_ OP *o)
 
 
 STATIC void
-pj_free_terms_vector(std::vector<pj_term_t *> &terms)
+pj_free_terms_vector(std::vector<PerlJIT::AST::Term *> &terms)
 {
-  std::vector<pj_term_t *>::iterator it = terms.begin();
+  std::vector<PerlJIT::AST::Term *>::iterator it = terms.begin();
   for (; it != terms.end(); ++it)
     pj_free_tree(*it);
 }
 
-std::vector<pj_term_t *>
+std::vector<PerlJIT::AST::Term *>
 pj_find_jit_candidates(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder *visitor);
 
 /* Fetches the SV* for an SVOP.
@@ -115,16 +115,16 @@ pj_get_sv_from_svop(pTHX_ SVOP *o)
 }
 
 /* Walk OP tree recursively, build ASTs, build subtrees */
-STATIC pj_term_t *
+STATIC PerlJIT::AST::Term *
 pj_build_ast(pTHX_ OP *o,
              vector<OPWithImposedType> &subtrees,
              unsigned int *nvariables, OPTreeJITCandidateFinder *visitor)
 {
   const unsigned int parent_otype = o->op_type;
-  pj_term_t *retval = NULL;
+  PerlJIT::AST::Term *retval = NULL;
   OP *kid;
 
-  std::vector<pj_term_t *> kid_terms;
+  std::vector<PerlJIT::AST::Term *> kid_terms;
 
   PJ_DEBUG_2("pj_build_ast running on %s. Have %i subtrees right now.\n", OP_NAME(o), (int)subtrees.size());
 
@@ -139,7 +139,7 @@ pj_build_ast(pTHX_ OP *o,
         SV *constsv = pj_get_sv_from_svop(aTHX_ (SVOP *)kid);
 
         PJ_DEBUG_1("CONST being inlined (%f).\n", SvNV(constsv));
-        kid_terms.push_back(pj_make_const_dbl(kid, SvNV(constsv))); /* FIXME replace type by inferred type */
+        kid_terms.push_back( new AST::Constant(kid, SvNV(constsv)) ); /* FIXME replace type by inferred type */
       }
       else if (otype == OP_PADSV) {
         kid_terms.push_back( pj_make_variable(kid, (*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
@@ -187,7 +187,7 @@ pj_build_ast(pTHX_ OP *o,
 #define EMIT_LISTOP_CODE(perl_op_type, pj_op_type)    \
     case perl_op_type: {                              \
       assert(ikid > 0);                               \
-      std::vector<pj_term_t *> kids;                  \
+      std::vector<PerlJIT::AST::Term *> kids;                  \
       for (unsigned int i = 0; i < ikid-1; ++i)       \
         kids.push_back(kid_terms[i]);                 \
       retval = pj_make_listop( o, pj_op_type, kids ); \
@@ -351,10 +351,10 @@ pj_fixup_parent_op(pTHX_ OP *jitop, OP *origop, UNOP *parentop)
  *       left-hugging in order to get the sub tree is normal
  *       execution order. */
 
-static pj_term_t *
+static PerlJIT::AST::Term *
 pj_attempt_jit(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder *visitor)
 {
-  pj_term_t *ast;
+  PerlJIT::AST::Term *ast;
   unsigned int nvariables = 0;
 
   if (PJ_DEBUGGING)
@@ -382,7 +382,7 @@ namespace PerlJIT {
 
       /* Attempt JIT if the right OP type. Don't recurse if so. */
       if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
-        pj_term_t *ast = pj_attempt_jit(aTHX_ o, parentop, this);
+        PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, parentop, this);
         if (ast)
             candidates.push_back(ast);
         return VISIT_SKIP;
@@ -390,7 +390,7 @@ namespace PerlJIT {
       return VISIT_CONT;
     } // end 'visit_op'
 
-    std::vector<pj_term_t *> candidates;
+    std::vector<PerlJIT::AST::Term *> candidates;
   }; // end class OPTreeJITCandidateFinder
 }
 
@@ -398,21 +398,21 @@ namespace PerlJIT {
  * For candidates, invoke JIT attempt and then move on without going into
  * the particular sub-tree; tree walking in OPTreeWalker, actual logic in
  * OPTreeJITCandidateFinder! */
-std::vector<pj_term_t *>
+std::vector<PerlJIT::AST::Term *>
 pj_find_jit_candidates(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder *visitor)
 {
   visitor->visit(aTHX_ o, parentop);
   return visitor->candidates;
 }
 
-std::vector<pj_term_t *>
+std::vector<PerlJIT::AST::Term *>
 pj_find_jit_candidates(pTHX_ OP *o, OP *parentop)
 {
   OPTreeJITCandidateFinder f;
   return pj_find_jit_candidates(aTHX_ o, parentop, &f);
 }
 
-std::vector<pj_term_t *>
+std::vector<PerlJIT::AST::Term *>
 pj_find_jit_candidates(pTHX_ SV *coderef)
 {
   if (!SvROK(coderef) || SvTYPE(SvRV(coderef)) != SVt_PVCV)
@@ -420,7 +420,7 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
   CV *cv = (CV *) SvRV(coderef);
   PJ_cur_cv = cv;
 
-  std::vector<pj_term_t *> tmp = pj_find_jit_candidates(aTHX_ CvROOT(cv), 0);
+  std::vector<PerlJIT::AST::Term *> tmp = pj_find_jit_candidates(aTHX_ CvROOT(cv), 0);
   if (PJ_DEBUGGING) {
     printf("%i JIT candidate ASTs:\n", (int)tmp.size());
     for (unsigned int i = 0; i < (unsigned int)tmp.size(); ++i) {

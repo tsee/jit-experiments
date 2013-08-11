@@ -8,7 +8,7 @@
  * as the return value. That's a very serious limitation, but perfectly good enough for
  * now. funtype will be int if all variables and constants are int, otherwise double. */
 int pj_tree_jit(jit_context_t context,
-                pj_term_t *term,
+                PerlJIT::AST::Term *term,
                 jit_function_t *outfun,
                 pj_basic_type *funtype);
 

@@ -13,17 +13,20 @@
 #include <pj_ast_terms.h>
 #include <pj_ast_walkers.h>
 
-static jit_value_t pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *op);
+using namespace PerlJIT;
+using namespace PerlJIT::AST;
+
+static jit_value_t pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, PerlJIT::AST::Op *op);
 
 static jit_value_t
-pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_term_t *term)
+pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, PerlJIT::AST::Term *term)
 {
   if (term->type == pj_ttype_variable) {
-    pj_variable_t *v = (pj_variable_t *)term;
+    PerlJIT::AST::Variable *v = (PerlJIT::AST::Variable *)term;
     return var_values[v->ivar];
   }
   else if (term->type == pj_ttype_constant) {
-    pj_constant_t *c = (pj_constant_t *)term;
+    PerlJIT::AST::Constant *c = (PerlJIT::AST::Constant *)term;
     if (c->const_type == pj_int_type)
       return jit_value_create_nint_constant(function, jit_type_sys_int, c->int_value);
     else if (c->const_type == pj_uint_type) /* FIXME no jit_value_create_nuint_constant defined? */
@@ -34,7 +37,7 @@ pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_
       abort();
   }
   else if (term->type == pj_ttype_op) {
-    return pj_jit_internal_op(function, var_values, nvars, (pj_op_t *)term);
+    return pj_jit_internal_op(function, var_values, nvars, (PerlJIT::AST::Op *)term);
   }
   else {
     abort();
@@ -42,7 +45,7 @@ pj_jit_internal(jit_function_t function, jit_value_t *var_values, int nvars, pj_
 }
 
 static jit_value_t
-pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, pj_op_t *op)
+pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, PerlJIT::AST::Op *op)
 {
   jit_value_t arg1, arg2, rv;
 
@@ -53,7 +56,7 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
 
   /* Only do the recursion out here if we know that we'll have to emit that code at all. */
   if (!(PJ_OP_FLAGS(op) & PJ_ASTf_CONDITIONAL)) {
-    std::vector<pj_term_t *> &kids = op->kids;
+    std::vector<PerlJIT::AST::Term *> &kids = op->kids;
     const unsigned int n = kids.size();
     for (unsigned int i = 0; i < n; ++i)
       EVAL_OPERAND(kids[i]);
@@ -240,7 +243,7 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
 
 
 int
-pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun, pj_basic_type *funtype)
+pj_tree_jit(jit_context_t context, PerlJIT::AST::Term *term, jit_function_t *outfun, pj_basic_type *funtype)
 {
   unsigned int i;
   jit_function_t function;
@@ -254,7 +257,7 @@ pj_tree_jit(jit_context_t context, pj_term_t *term, jit_function_t *outfun, pj_b
   *funtype = pj_tree_determine_funtype(term);
 
   /* Extract all variable occurrances from the AST */
-  pj_variable_t **vars;
+  PerlJIT::AST::Variable **vars;
   unsigned int nvars;
   pj_tree_extract_vars(term, &vars, &nvars);
   PJ_DEBUG_1("Found %i variable occurrances in tree.\n", nvars);

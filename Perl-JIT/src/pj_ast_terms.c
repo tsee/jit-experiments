@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+using namespace PerlJIT;
+using namespace PerlJIT::AST;
+
 /* keep in sync with pj_op_type in .h file */
 const char *pj_ast_op_names[] = {
   /* unops */
@@ -83,109 +86,91 @@ unsigned int pj_ast_op_flags[] = {
 };
 
 
-pj_term_t *
-pj_make_const_dbl(OP *perl_op, double c)
-{
-  pj_constant_t *co = new pj_constant_t();
-  co->type = pj_ttype_constant;
-  co->perl_op = perl_op;
-  co->dbl_value = c;
-  co->const_type = pj_double_type;
-  return (pj_term_t *)co;
-}
+Constant::Constant(OP *p_op, double c)
+  : Term(p_op, pj_ttype_constant), dbl_value(c),
+    const_type(pj_double_type)
+{}
 
-pj_term_t *
-pj_make_const_int(OP *perl_op, int c)
-{
-  pj_constant_t *co = new pj_constant_t();
-  co->type = pj_ttype_constant;
-  co->perl_op = perl_op;
-  co->int_value = c;
-  co->const_type = pj_int_type;
-  return (pj_term_t *)co;
-}
+Constant::Constant(OP *p_op, int c)
+  : Term(p_op, pj_ttype_constant), int_value(c),
+    const_type(pj_int_type)
+{}
 
-pj_term_t *
-pj_make_const_uint(OP *perl_op, unsigned int c)
-{
-  pj_constant_t *co = new pj_constant_t();
-  co->type = pj_ttype_constant;
-  co->perl_op = perl_op;
-  co->uint_value = c;
-  co->const_type = pj_uint_type;
-  return (pj_term_t *)co;
-}
+Constant::Constant(OP *p_op, unsigned int c)
+  : Term(p_op, pj_ttype_constant), uint_value(c),
+    const_type(pj_uint_type)
+{}
 
 
-pj_term_t *
+PerlJIT::AST::Term *
 pj_make_variable(OP *perl_op, int iv, pj_basic_type t)
 {
-  pj_variable_t *v = new pj_variable_t();
+  PerlJIT::AST::Variable *v = new PerlJIT::AST::Variable();
   v->type = pj_ttype_variable;
   v->perl_op = perl_op;
   v->var_type = t;
   v->ivar = iv;
-  return (pj_term_t *)v;
+  return (PerlJIT::AST::Term *)v;
 }
 
 
-pj_term_t *
-pj_make_binop(OP *perl_op, pj_optype t, pj_term_t *o1, pj_term_t *o2)
+PerlJIT::AST::Term *
+pj_make_binop(OP *perl_op, pj_optype t, PerlJIT::AST::Term *o1, PerlJIT::AST::Term *o2)
 {
-  pj_op_t *o = new pj_binop_t();
+  PerlJIT::AST::Op *o = new PerlJIT::AST::Binop();
   o->type = pj_ttype_op;
   o->perl_op = perl_op;
   o->optype = t;
   o->kids.resize(2);
   o->kids[0] = o1;
   o->kids[1] = o2;
-  return (pj_term_t *)o;
+  return (PerlJIT::AST::Term *)o;
 }
 
 
-pj_term_t *
-pj_make_unop(OP *perl_op, pj_optype t, pj_term_t *o1)
+PerlJIT::AST::Term *
+pj_make_unop(OP *perl_op, pj_optype t, PerlJIT::AST::Term *o1)
 {
-  pj_op_t *o = new pj_unop_t();
+  PerlJIT::AST::Op *o = new PerlJIT::AST::Unop();
   o->type = pj_ttype_op;
   o->perl_op = perl_op;
   o->optype = t;
   o->kids.resize(1);
   o->kids[0] = o1;
-  return (pj_term_t *)o;
+  return (PerlJIT::AST::Term *)o;
 }
 
 
-pj_term_t *
-pj_make_listop(OP *perl_op, pj_optype t, const std::vector<pj_term_t *> &children)
+PerlJIT::AST::Term *
+pj_make_listop(OP *perl_op, pj_optype t, const std::vector<PerlJIT::AST::Term *> &children)
 {
-  pj_op_t *o = new pj_listop_t();
+  PerlJIT::AST::Op *o = new PerlJIT::AST::Listop();
   o->type = pj_ttype_op;
   o->perl_op = perl_op;
   o->optype = t;
   o->kids = children;
-  return (pj_term_t *)o;
+  return (PerlJIT::AST::Term *)o;
 }
 
 
-pj_term_t *
+PerlJIT::AST::Term *
 pj_make_optree(OP *perl_op)
 {
-  pj_op_t *o = new pj_op_t();
+  PerlJIT::AST::Op *o = new PerlJIT::AST::Op();
   o->type = pj_ttype_optree;
   o->perl_op = perl_op;
-  return (pj_term_t *)o;
+  return (PerlJIT::AST::Term *)o;
 }
 
 
 void
-pj_free_tree(pj_term_t *t)
+pj_free_tree(PerlJIT::AST::Term *t)
 {
   if (t == NULL)
     return;
 
   if (t->type == pj_ttype_op) {
-    std::vector<pj_term_t *> &k = ((pj_op_t *)t)->kids;
+    std::vector<PerlJIT::AST::Term *> &k = ((PerlJIT::AST::Op *)t)->kids;
     const unsigned int n = k.size();
     for (unsigned int i = 0; i < n; ++i)
       pj_free_tree(k[i]);
@@ -205,11 +190,11 @@ pj_dump_tree_indent(int lvl)
 }
 
 static void
-pj_dump_tree_internal(pj_term_t *term, int lvl)
+pj_dump_tree_internal(PerlJIT::AST::Term *term, int lvl)
 {
   if (term->type == pj_ttype_constant)
   {
-    pj_constant_t *c = (pj_constant_t *)term;
+    PerlJIT::AST::Constant *c = (PerlJIT::AST::Constant *)term;
     pj_dump_tree_indent(lvl);
     if (c->const_type == pj_double_type)
       printf("C = %f\n", (float)c->dbl_value);
@@ -223,11 +208,11 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
   else if (term->type == pj_ttype_variable)
   {
     pj_dump_tree_indent(lvl);
-    printf("V = %i\n", ((pj_variable_t *)term)->ivar);
+    printf("V = %i\n", ((PerlJIT::AST::Variable *)term)->ivar);
   }
   else if (term->type == pj_ttype_op)
   {
-    pj_op_t *o = (pj_op_t *)term;
+    PerlJIT::AST::Op *o = (PerlJIT::AST::Op *)term;
 
     pj_dump_tree_indent(lvl);
 
@@ -247,7 +232,7 @@ pj_dump_tree_internal(pj_term_t *term, int lvl)
 
 
 void
-pj_dump_tree(pj_term_t *term)
+pj_dump_tree(PerlJIT::AST::Term *term)
 {
   int lvl = 0;
   pj_dump_tree_internal(term, lvl);
@@ -255,7 +240,7 @@ pj_dump_tree(pj_term_t *term)
 
 
 void
-pj_term_t::dump()
+Term::dump()
 {
   pj_dump_tree(this);
 }

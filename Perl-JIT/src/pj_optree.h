@@ -15,8 +15,8 @@
 /* This function will internally call pj_attempt_jit on candidates,
  * which will, in turn, call this function on subtrees that it cannot
  * JIT. */
-std::vector<pj_term_t *> pj_find_jit_candidates(pTHX_ OP *o, OP *parentop);
+std::vector<PerlJIT::AST::Term *> pj_find_jit_candidates(pTHX_ OP *o, OP *parentop);
 
-std::vector<pj_term_t *> pj_find_jit_candidates(pTHX_ SV *coderef);
+std::vector<PerlJIT::AST::Term *> pj_find_jit_candidates(pTHX_ SV *coderef);
 
 #endif

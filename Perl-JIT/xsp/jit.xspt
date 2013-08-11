@@ -10,18 +10,18 @@
     %xs_type{T_ENUM};
 };
 
-%typemap{pj_term_t *}{object}{
+%typemap{PerlJIT::AST::Term *}{object}{
     %xs_type{O_AST};
     %xs_output_code{% sv_setref_pv( $arg, xsp_constructor_class($var->perl_class()), (void*)$var ); %};
 };
 
-%typemap{std::vector<pj_term_t *>}{parsed}{
-  %cpp_type{%std::vector<pj_term_t *>%};
+%typemap{std::vector<PerlJIT::AST::Term *>}{parsed}{
+  %cpp_type{%std::vector<PerlJIT::AST::Term *>%};
   %output_list{%
     const unsigned int n = $CVar.size();
     EXTEND(SP, n);
     for (unsigned int i = 0; i < n; ++i) {
-      pj_term_t *t = $CVar[i];
+      PerlJIT::AST::Term *t = $CVar[i];
       SV *retval = sv_newmortal();
       sv_setref_pv( retval, xsp_constructor_class(t->perl_class()), (void*)t );
       PUSHs(retval);

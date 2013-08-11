@@ -6,7 +6,7 @@
 #include "opclass.h"
 
 %name{Perl::JIT::AST::Term}
-class pj_term_t {
+class PerlJIT::AST::Term {
   pj_optype type %get %set;
   OP *perl_op %get %set;
 
@@ -14,35 +14,35 @@ class pj_term_t {
 };
 
 %name{Perl::JIT::AST::Op}
-class pj_op_t : public %name{Perl::JIT::AST::Term} pj_term_t
+class PerlJIT::AST::Op : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
 {
   pj_optype optype %get %set;
-  std::vector<pj_term_t *> kids %get;
+  std::vector<PerlJIT::AST::Term *> kids %get;
 };
 
 %name{Perl::JIT::AST::Unop}
-class pj_unop_t : public %name{Perl::JIT::AST::Op} pj_op_t
+class PerlJIT::AST::Unop : public %name{Perl::JIT::AST::Op} PerlJIT::AST::Op
 {
-  pj_term_t *get_kid() %code{% RETVAL = THIS->kids[0]; %};
-  void set_kid(pj_term_t *k) %code{% THIS->kids[0] = k; %};
+  PerlJIT::AST::Term *get_kid() %code{% RETVAL = THIS->kids[0]; %};
+  void set_kid(PerlJIT::AST::Term *k) %code{% THIS->kids[0] = k; %};
 };
 
 %name{Perl::JIT::AST::Binop}
-class pj_binop_t : public %name{Perl::JIT::AST::Op} pj_op_t
+class PerlJIT::AST::Binop : public %name{Perl::JIT::AST::Op} PerlJIT::AST::Op
 {
-  pj_term_t *get_left_kid() %code{% RETVAL = THIS->kids[0]; %};
-  void set_left_kid(pj_term_t *k) %code{% THIS->kids[0] = k; %};
+  PerlJIT::AST::Term *get_left_kid() %code{% RETVAL = THIS->kids[0]; %};
+  void set_left_kid(PerlJIT::AST::Term *k) %code{% THIS->kids[0] = k; %};
 
-  pj_term_t *get_right_kid() %code{% RETVAL = THIS->kids[1]; %};
-  void set_right_kid(pj_term_t *k) %code{% THIS->kids[1] = k; %};
+  PerlJIT::AST::Term *get_right_kid() %code{% RETVAL = THIS->kids[1]; %};
+  void set_right_kid(PerlJIT::AST::Term *k) %code{% THIS->kids[1] = k; %};
 };
 
 %name{Perl::JIT::AST::Listop}
-class pj_listop_t : public %name{Perl::JIT::AST::Op} pj_op_t
+class PerlJIT::AST::Listop : public %name{Perl::JIT::AST::Op} PerlJIT::AST::Op
 {};
 
 %name{Perl::JIT::AST::Constant}
-class pj_constant_t : public %name{Perl::JIT::AST::Term} pj_term_t
+class PerlJIT::AST::Constant : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
 {
   pj_basic_type const_type %get %set;
   double dbl_value %get %set;
@@ -51,7 +51,7 @@ class pj_constant_t : public %name{Perl::JIT::AST::Term} pj_term_t
 };
 
 %name{Perl::JIT::AST::Variable}
-class pj_variable_t : public %name{Perl::JIT::AST::Term} pj_term_t
+class PerlJIT::AST::Variable : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
 {
   pj_basic_type var_type %get %set;
   int ivar %get %set;

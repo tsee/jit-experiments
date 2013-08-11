@@ -80,71 +80,95 @@ extern unsigned int pj_ast_op_flags[];
 extern const char *pj_ast_op_names[];
 #define PJ_OP_NAME(op) (pj_ast_op_names[(op)->optype])
 
-struct pj_term_t {
-  pj_optype type;
-  OP *perl_op;
+namespace PerlJIT {
+  namespace AST {
+    class Term {
+    public:
+      Term() {}
+      Term(OP *p_op, pj_optype t) : type(t), perl_op(p_op) {}
 
-  void dump();
+      pj_optype type;
+      OP *perl_op;
 
-  virtual const char *perl_class() const
-    { return "Perl::JIT::AST::Term"; }
-  virtual ~pj_term_t() {}
-};
+      void dump();
 
-struct pj_op_t : public pj_term_t {
-  pj_optype optype;
-  std::vector<pj_term_t *> kids;
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Term"; }
+      virtual ~Term() {}
+    };
 
-  virtual const char *perl_class() const
-    { return "Perl::JIT::AST::Op"; }
-};
+    class Constant : public Term {
+    public:
+      Constant() {};
+      Constant(OP *p_op, double c);
+      Constant(OP *p_op, int c);
+      Constant(OP *p_op, unsigned int c);
 
-struct pj_unop_t : public pj_op_t {
-  virtual const char *perl_class() const
-    { return "Perl::JIT::AST::Unop"; }
-};
-struct pj_binop_t : public pj_op_t {
-  virtual const char *perl_class() const
-    { return "Perl::JIT::AST::Binop"; }
-};
-struct pj_listop_t : public pj_op_t {
-  virtual const char *perl_class() const
-    { return "Perl::JIT::AST::Listop"; }
-};
+      pj_basic_type const_type;
+      union {
+        double dbl_value;
+        int int_value;
+        unsigned int uint_value;
+      };
 
-struct pj_constant_t : public pj_term_t {
-  pj_basic_type const_type;
-  union {
-    double dbl_value;
-    int int_value;
-    unsigned int uint_value;
-  };
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Constant"; }
+    };
 
-  virtual const char *perl_class() const
-    { return "Perl::JIT::AST::Constant"; }
-};
+    class Variable : public Term {
+    public:
+      Variable() {}
 
-struct pj_variable_t : public pj_term_t {
-  pj_basic_type var_type;
-  int ivar;
+      pj_basic_type var_type;
+      int ivar;
 
-  virtual const char *perl_class() const
-    { return "Perl::JIT::AST::Variable"; }
-};
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Variable"; }
+    };
+
+    class Op : public Term {
+    public:
+      Op() {}
+
+      pj_optype optype;
+      std::vector<PerlJIT::AST::Term *> kids;
+
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Op"; }
+    };
+
+    class Unop : public Op {
+    public:
+      Unop() {}
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Unop"; }
+    };
+    class Binop : public Op {
+    public:
+      Binop() {}
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Binop"; }
+    };
+    class Listop : public Op {
+    public:
+      Listop() {}
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Listop"; }
+    };
+
+  } // end namespace PerlJIT::AST
+} // end namespace PerlJIT
 
 
-pj_term_t *pj_make_const_dbl(OP *perl_op, double c);
-pj_term_t *pj_make_const_int(OP *perl_op, int c);
-pj_term_t *pj_make_const_uint(OP *perl_op, unsigned int c);
-pj_term_t *pj_make_variable(OP *perl_op, int iv, pj_basic_type t);
-pj_term_t *pj_make_binop(OP *perl_op, pj_optype t, pj_term_t *o1, pj_term_t *o2);
-pj_term_t *pj_make_unop(OP *perl_op, pj_optype t, pj_term_t *o1);
-pj_term_t *pj_make_listop(OP *perl_op, pj_optype t, const std::vector<pj_term_t *> &children);
-pj_term_t *pj_make_optree(OP *perl_op);
+PerlJIT::AST::Term *pj_make_variable(OP *perl_op, int iv, pj_basic_type t);
+PerlJIT::AST::Term *pj_make_binop(OP *perl_op, pj_optype t, PerlJIT::AST::Term *o1, PerlJIT::AST::Term *o2);
+PerlJIT::AST::Term *pj_make_unop(OP *perl_op, pj_optype t, PerlJIT::AST::Term *o1);
+PerlJIT::AST::Term *pj_make_listop(OP *perl_op, pj_optype t, const std::vector<PerlJIT::AST::Term *> &children);
+PerlJIT::AST::Term *pj_make_optree(OP *perl_op);
 
-void pj_free_tree(pj_term_t *t);
+void pj_free_tree(PerlJIT::AST::Term *t);
 
 /* purely a debugging aid! */
-void pj_dump_tree(pj_term_t *term);
+void pj_dump_tree(PerlJIT::AST::Term *term);
 
 #endif

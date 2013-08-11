@@ -7,4 +7,4 @@
 // work around XS++ bug
 #define find_jit_candidates(coderef) pj_find_jit_candidates(aTHX_ coderef)
 
-std::vector<pj_term_t *> find_jit_candidates(SV *coderef);
+std::vector<PerlJIT::AST::Term *> find_jit_candidates(SV *coderef);
