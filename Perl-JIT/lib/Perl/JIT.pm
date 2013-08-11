@@ -6,6 +6,11 @@ our $VERSION = '0.01';
 require XSLoader;
 XSLoader::load("Perl::JIT", $VERSION);
 
+use Exporter 'import';
+
+our @EXPORT_OK; # filled-in by XS code
+our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
+
 #sub import {
 #  $^H{jit} = 1;
 #}

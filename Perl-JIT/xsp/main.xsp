@@ -35,5 +35,6 @@ MODULE = Perl::JIT	PACKAGE = Perl::JIT
 
 BOOT:
     pj_init_global_state(aTHX);
+    pj_define_constants(aTHX);
 
 %}

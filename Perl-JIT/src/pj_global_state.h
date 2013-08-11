@@ -24,5 +24,7 @@ extern jit_context_t PJ_jit_context;
 /* Initialize global JIT state like JIT context, custom op description, etc. */
 void pj_init_global_state(pTHX);
 
+/* export constants to Perl */
+void pj_define_constants(pTHX);
 
 #endif
