@@ -8,7 +8,7 @@ use B::Generate;
 use B::Replace;
 use B;
 
-use Perl::JIT;
+use Perl::JIT qw(:all);
 
 use LibJIT::API qw(:all);
 use LibJIT::PerlAPI qw(:all);
@@ -71,22 +71,21 @@ sub jit_tree {
 sub _jit_emit {
     my ($self, $fun, $thx, $ast) = @_;
 
-    # TODO wrap integer constants and remove hardcoded values
     # TODO only doubles for now...
     given ($ast->get_type) {
-        when (0) {
+        when (pj_ttype_constant) {
             return $self->_jit_emit_const($fun, $thx, $ast);
         }
-        when (1) {
+        when (pj_ttype_variable) {
             my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_perl_op->targ);
             my $sv = pa_get_pad_sv($fun, $thx, $padix);
 
             return pa_sv_2nv($fun, $thx, $sv);
         }
-        when (2) {
+        when (pj_ttype_optree) {
             # nothing to do here
         }
-        when (3) {
+        when (pj_ttype_op) {
             return $self->_jit_emit_op($fun, $thx, $ast);
         }
     }
@@ -96,7 +95,7 @@ sub _jit_emit_op {
     my ($self, $fun, $thx, $ast) = @_;
 
     given ($ast->get_optype) {
-        when (10) {
+        when (pj_binop_add) {
             my $v1 = $self->_jit_emit($fun, $thx, $ast->get_left_kid);
             my $v2 = $self->_jit_emit($fun, $thx, $ast->get_right_kid);
 
@@ -113,13 +112,13 @@ sub _jit_emit_const {
 
     # TODO fix the type to match IV/UV/NV
     given ($ast->get_const_type) {
-        when (0) {
+        when (pj_double_type) {
             return jit_value_create_float64_constant($fun, jit_type_float64, $ast->get_dbl_value);
         }
-        when (1) {
+        when (pj_int_type) {
             return jit_value_create_long_constant($fun, jit_type_long, $ast->get_int_value);
         }
-        when (2) {
+        when (pj_uint_type) {
             return jit_value_create_long_constant($fun, jit_type_ulong, $ast->get_uint_value);
         }
     }
