@@ -44,19 +44,14 @@ sub jit_tree {
 
     jit_context_build_start($self->jit_context);
 
-    my $signature = jit_type_create_signature(
-        jit_abi_cdecl, jit_type_void_ptr, [jit_type_void_ptr], 1);
-    my $fun = jit_function_create($cxt, $signature);
-    # TODO cleanup $thx passing in LibJIT::PerlAPI
-    my $thx = jit_value_get_param($fun, 0);
-
-    my $val = $self->_jit_emit($fun, $thx, $ast);
+    my $fun = pa_create_pp($cxt);
+    my $val = $self->_jit_emit($fun, $ast);
 
     # TODO this need to switch based on op type, flags, ...
-    my $targ = pa_get_targ($fun, $thx);
-    pa_sv_set_nv($fun, $thx, $targ, $val);
-    pa_push_sv($fun, $thx, $targ);
-    jit_insn_return($fun, pa_get_op_next($fun, $thx));
+    my $targ = pa_get_targ($fun);
+    pa_sv_set_nv($fun, $targ, $val);
+    pa_push_sv($fun, $targ);
+    jit_insn_return($fun, pa_get_op_next($fun));
 
     jit_function_compile($fun);
     jit_context_build_end($self->jit_context);
@@ -69,35 +64,35 @@ sub jit_tree {
 }
 
 sub _jit_emit {
-    my ($self, $fun, $thx, $ast) = @_;
+    my ($self, $fun, $ast) = @_;
 
     # TODO only doubles for now...
     given ($ast->get_type) {
         when (pj_ttype_constant) {
-            return $self->_jit_emit_const($fun, $thx, $ast);
+            return $self->_jit_emit_const($fun, $ast);
         }
         when (pj_ttype_variable) {
             my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_perl_op->targ);
-            my $sv = pa_get_pad_sv($fun, $thx, $padix);
+            my $sv = pa_get_pad_sv($fun, $padix);
 
-            return pa_sv_2nv($fun, $thx, $sv);
+            return pa_sv_2nv($fun, $sv);
         }
         when (pj_ttype_optree) {
             # nothing to do here
         }
         when (pj_ttype_op) {
-            return $self->_jit_emit_op($fun, $thx, $ast);
+            return $self->_jit_emit_op($fun, $ast);
         }
     }
 }
 
 sub _jit_emit_op {
-    my ($self, $fun, $thx, $ast) = @_;
+    my ($self, $fun, $ast) = @_;
 
     given ($ast->get_optype) {
         when (pj_binop_add) {
-            my $v1 = $self->_jit_emit($fun, $thx, $ast->get_left_kid);
-            my $v2 = $self->_jit_emit($fun, $thx, $ast->get_right_kid);
+            my $v1 = $self->_jit_emit($fun, $ast->get_left_kid);
+            my $v2 = $self->_jit_emit($fun, $ast->get_right_kid);
 
             return jit_insn_add($fun, $v1, $v2);
         }
@@ -108,7 +103,7 @@ sub _jit_emit_op {
 }
 
 sub _jit_emit_const {
-    my ($self, $fun, $thx, $ast) = @_;
+    my ($self, $fun, $ast) = @_;
 
     # TODO fix the type to match IV/UV/NV
     given ($ast->get_const_type) {
