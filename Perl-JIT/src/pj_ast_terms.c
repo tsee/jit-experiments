@@ -102,16 +102,10 @@ Constant::Constant(OP *p_op, unsigned int c)
 {}
 
 
-PerlJIT::AST::Term *
-pj_make_variable(OP *perl_op, int iv, pj_basic_type t)
-{
-  PerlJIT::AST::Variable *v = new PerlJIT::AST::Variable();
-  v->type = pj_ttype_variable;
-  v->perl_op = perl_op;
-  v->var_type = t;
-  v->ivar = iv;
-  return (PerlJIT::AST::Term *)v;
-}
+Variable::Variable(OP *p_op, int ivariable, pj_basic_type t)
+  : Term(p_op, pj_ttype_variable), ivar(ivariable),
+    var_type(t)
+{}
 
 
 PerlJIT::AST::Term *

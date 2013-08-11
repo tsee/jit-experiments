@@ -142,7 +142,7 @@ pj_build_ast(pTHX_ OP *o,
         kid_terms.push_back( new AST::Constant(kid, SvNV(constsv)) ); /* FIXME replace type by inferred type */
       }
       else if (otype == OP_PADSV) {
-        kid_terms.push_back( pj_make_variable(kid, (*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
+        kid_terms.push_back( new AST::Variable(kid, (*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
       }
       else if (otype == OP_NULL) {
         /* compiled out -- FIXME most certainly not correct, in particular for incoming op_next */
