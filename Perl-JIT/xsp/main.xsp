@@ -36,14 +36,4 @@ MODULE = Perl::JIT	PACKAGE = Perl::JIT
 BOOT:
     pj_init_global_state(aTHX);
 
-void
-import(char *cl)
-  PPCODE:
-    /* Currently disabled lexicalization hacks/experiments */
-    /*
-    const PERL_CONTEXT *cxt = caller_cx(1, NULL);
-    cophh_store_pvs(cxt->cx_u.cx_blk.blku_oldcop->cop_hints_hash, "jit", sv_2mortal(newSViv(1)), 0);
-    */
-    XSRETURN_EMPTY;
-
 %}
