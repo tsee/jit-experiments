@@ -7,7 +7,7 @@
 
 %name{Perl::JIT::AST::Term}
 class PerlJIT::AST::Term {
-  pj_optype type %get %set;
+  pj_term_type type %get %set;
   OP *perl_op %get %set;
 
   void dump();
@@ -16,7 +16,7 @@ class PerlJIT::AST::Term {
 %name{Perl::JIT::AST::Op}
 class PerlJIT::AST::Op : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
 {
-  pj_optype optype %get %set;
+  pj_op_type optype %get %set;
   std::vector<PerlJIT::AST::Term *> kids %get;
 };
 

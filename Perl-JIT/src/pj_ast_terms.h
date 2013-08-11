@@ -5,7 +5,6 @@
 
 /* Definition of types and functions for the Perl JIT AST. */
 typedef struct op OP;
-typedef int pj_optype;
 
 typedef enum {
   pj_ttype_constant,
@@ -85,9 +84,9 @@ namespace PerlJIT {
     class Term {
     public:
       Term() {}
-      Term(OP *p_op, pj_optype t) : type(t), perl_op(p_op) {}
+      Term(OP *p_op, pj_term_type t) : type(t), perl_op(p_op) {}
 
-      pj_optype type;
+      pj_term_type type;
       OP *perl_op;
 
       void dump();
@@ -130,9 +129,9 @@ namespace PerlJIT {
     class Op : public Term {
     public:
       Op() {}
-      Op(OP *p_op, pj_optype t) : Term(p_op, t) {}
+      Op(OP *p_op, pj_term_type t) : Term(p_op, t) {}
 
-      pj_optype optype;
+      pj_op_type optype;
       std::vector<PerlJIT::AST::Term *> kids;
 
       virtual const char *perl_class() const
@@ -164,9 +163,9 @@ namespace PerlJIT {
 } // end namespace PerlJIT
 
 
-PerlJIT::AST::Term *pj_make_binop(OP *perl_op, pj_optype t, PerlJIT::AST::Term *o1, PerlJIT::AST::Term *o2);
-PerlJIT::AST::Term *pj_make_unop(OP *perl_op, pj_optype t, PerlJIT::AST::Term *o1);
-PerlJIT::AST::Term *pj_make_listop(OP *perl_op, pj_optype t, const std::vector<PerlJIT::AST::Term *> &children);
+PerlJIT::AST::Term *pj_make_binop(OP *perl_op, pj_op_type t, PerlJIT::AST::Term *o1, PerlJIT::AST::Term *o2);
+PerlJIT::AST::Term *pj_make_unop(OP *perl_op, pj_op_type t, PerlJIT::AST::Term *o1);
+PerlJIT::AST::Term *pj_make_listop(OP *perl_op, pj_op_type t, const std::vector<PerlJIT::AST::Term *> &children);
 PerlJIT::AST::Term *pj_make_optree(OP *perl_op);
 
 void pj_free_tree(PerlJIT::AST::Term *t);

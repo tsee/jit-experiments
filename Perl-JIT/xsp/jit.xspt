@@ -2,7 +2,11 @@
 
 %typemap{SV *}{simple};
 
-%typemap{pj_optype}{simple}{
+%typemap{pj_op_type}{simple}{
+    %xs_type{T_ENUM};
+};
+
+%typemap{pj_term_type}{simple}{
     %xs_type{T_ENUM};
 };
 

@@ -109,7 +109,7 @@ Variable::Variable(OP *p_op, int ivariable, pj_basic_type t)
 
 
 PerlJIT::AST::Term *
-pj_make_binop(OP *perl_op, pj_optype t, PerlJIT::AST::Term *o1, PerlJIT::AST::Term *o2)
+pj_make_binop(OP *perl_op, pj_op_type t, PerlJIT::AST::Term *o1, PerlJIT::AST::Term *o2)
 {
   PerlJIT::AST::Op *o = new PerlJIT::AST::Binop();
   o->type = pj_ttype_op;
@@ -123,7 +123,7 @@ pj_make_binop(OP *perl_op, pj_optype t, PerlJIT::AST::Term *o1, PerlJIT::AST::Te
 
 
 PerlJIT::AST::Term *
-pj_make_unop(OP *perl_op, pj_optype t, PerlJIT::AST::Term *o1)
+pj_make_unop(OP *perl_op, pj_op_type t, PerlJIT::AST::Term *o1)
 {
   PerlJIT::AST::Op *o = new PerlJIT::AST::Unop();
   o->type = pj_ttype_op;
@@ -136,7 +136,7 @@ pj_make_unop(OP *perl_op, pj_optype t, PerlJIT::AST::Term *o1)
 
 
 PerlJIT::AST::Term *
-pj_make_listop(OP *perl_op, pj_optype t, const std::vector<PerlJIT::AST::Term *> &children)
+pj_make_listop(OP *perl_op, pj_op_type t, const std::vector<PerlJIT::AST::Term *> &children)
 {
   PerlJIT::AST::Op *o = new PerlJIT::AST::Listop();
   o->type = pj_ttype_op;
