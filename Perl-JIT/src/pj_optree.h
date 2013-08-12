@@ -10,13 +10,11 @@
 
 /* Code relating to traversing and manipulating the OP tree */
 
-/* Starting from root OP, traverse the tree to find candidate OP for JITing
+/* Starting from root OP of the CV, traverse the tree to find candidate OP for JITing
  * and perform actual replacement if at all. */
 /* This function will internally call pj_attempt_jit on candidates,
  * which will, in turn, call this function on subtrees that it cannot
  * JIT. */
-std::vector<PerlJIT::AST::Term *> pj_find_jit_candidates(pTHX_ OP *o, OP *parentop);
-
 std::vector<PerlJIT::AST::Term *> pj_find_jit_candidates(pTHX_ SV *coderef);
 
 #endif

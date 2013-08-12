@@ -88,7 +88,7 @@ pj_find_first_executed_op(pTHX_ OP *o)
 }
 
 
-STATIC void
+static void
 pj_free_terms_vector(std::vector<PerlJIT::AST::Term *> &terms)
 {
   std::vector<PerlJIT::AST::Term *>::iterator it = terms.begin();
@@ -96,13 +96,13 @@ pj_free_terms_vector(std::vector<PerlJIT::AST::Term *> &terms)
     delete *it;
 }
 
-std::vector<PerlJIT::AST::Term *>
-pj_find_jit_candidates(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder *visitor);
+static std::vector<PerlJIT::AST::Term *>
+pj_find_jit_candidates_internal(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder &visitor);
 
 /* Fetches the SV* for an SVOP.
  * Essentially an unrolled cSVOPx_sv(op) that deals with the fact
  * that the current PAD isn't the PAD we actually want to look at. */
-STATIC SV *
+static SV *
 pj_get_sv_from_svop(pTHX_ SVOP *o)
 {
   SV *retval = o->op_sv;
@@ -114,10 +114,10 @@ pj_get_sv_from_svop(pTHX_ SVOP *o)
 }
 
 /* Walk OP tree recursively, build ASTs, build subtrees */
-STATIC PerlJIT::AST::Term *
+static PerlJIT::AST::Term *
 pj_build_ast(pTHX_ OP *o,
              vector<OPWithImposedType> &subtrees,
-             unsigned int *nvariables, OPTreeJITCandidateFinder *visitor)
+             unsigned int *nvariables, OPTreeJITCandidateFinder &visitor)
 {
   const unsigned int parent_otype = o->op_type;
   PerlJIT::AST::Term *retval = NULL;
@@ -162,7 +162,7 @@ pj_build_ast(pTHX_ OP *o,
          * recursively scan for separate candidates and
          * treat as subtree. */
         PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(kid));
-        pj_find_jit_candidates(aTHX_ kid, o, visitor); /* o is parent of kid */
+        pj_find_jit_candidates_internal(aTHX_ kid, o, visitor); /* o is parent of kid */
         kid_terms.push_back( new AST::Optree(kid) );
 
         // FIXME replace pj_double_type with type that's imposed by the current OP
@@ -351,7 +351,7 @@ pj_fixup_parent_op(pTHX_ OP *jitop, OP *origop, UNOP *parentop)
  *       execution order. */
 
 static PerlJIT::AST::Term *
-pj_attempt_jit(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder *visitor)
+pj_attempt_jit(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder &visitor)
 {
   PerlJIT::AST::Term *ast;
   unsigned int nvariables = 0;
@@ -381,7 +381,7 @@ namespace PerlJIT {
 
       /* Attempt JIT if the right OP type. Don't recurse if so. */
       if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
-        PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, parentop, this);
+        PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, parentop, *this);
         if (ast)
             candidates.push_back(ast);
         return VISIT_SKIP;
@@ -397,18 +397,11 @@ namespace PerlJIT {
  * For candidates, invoke JIT attempt and then move on without going into
  * the particular sub-tree; tree walking in OPTreeWalker, actual logic in
  * OPTreeJITCandidateFinder! */
-std::vector<PerlJIT::AST::Term *>
-pj_find_jit_candidates(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder *visitor)
+static std::vector<PerlJIT::AST::Term *>
+pj_find_jit_candidates_internal(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder &visitor)
 {
-  visitor->visit(aTHX_ o, parentop);
-  return visitor->candidates;
-}
-
-std::vector<PerlJIT::AST::Term *>
-pj_find_jit_candidates(pTHX_ OP *o, OP *parentop)
-{
-  OPTreeJITCandidateFinder f;
-  return pj_find_jit_candidates(aTHX_ o, parentop, &f);
+  visitor.visit(aTHX_ o, parentop);
+  return visitor.candidates;
 }
 
 std::vector<PerlJIT::AST::Term *>
@@ -419,7 +412,8 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
   CV *cv = (CV *) SvRV(coderef);
   PJ_cur_cv = cv;
 
-  std::vector<PerlJIT::AST::Term *> tmp = pj_find_jit_candidates(aTHX_ CvROOT(cv), 0);
+  OPTreeJITCandidateFinder f;
+  std::vector<PerlJIT::AST::Term *> tmp = pj_find_jit_candidates_internal(aTHX_ CvROOT(cv), 0, f);
   if (PJ_DEBUGGING) {
     printf("%i JIT candidate ASTs:\n", (int)tmp.size());
     for (unsigned int i = 0; i < (unsigned int)tmp.size(); ++i) {
