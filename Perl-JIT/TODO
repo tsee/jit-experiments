@@ -1,5 +1,5 @@
 * Find a better way to handle many types of OPs: clearly
-  if/else if/else doesn't scale.
+  a giant switch isn't pretty.
 * Along the same lines, "foo${a}bar$b" currently generates a giant
   concat OP tree. If not for overloading and friends, this could be
   converted to a join-like operation.
@@ -14,13 +14,12 @@
   - list assignments ($x, $y) = ($y, $x)
 * Port to LLVM instead of libjit?
 * Support everything the old JIT does
-* Export constants and fix Emit code
+* Fix Emit code
 * Check support for logical/ternary ops
 * Subtrees
   - order of evaluation 
   - check nested runloop
 * Refactor AST construction logic
-  * refactor all term nodes into proper classes
   * richer type system
 * Support more type than just doubles (at least at the AST level)
 * Fix all TODOs in Emit.pm
