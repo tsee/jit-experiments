@@ -206,16 +206,9 @@ pj_dump_tree_internal(PerlJIT::AST::Term *term, int lvl)
 
 
 void
-pj_dump_tree(PerlJIT::AST::Term *term)
-{
-  int lvl = 0;
-  pj_dump_tree_internal(term, lvl);
-}
-
-
-void
 Term::dump()
 {
-  pj_dump_tree(this);
+  int lvl = 0;
+  pj_dump_tree_internal(this, lvl);
 }
 

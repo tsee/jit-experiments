@@ -239,7 +239,7 @@ pj_build_ast(pTHX_ OP *o,
 
   PJ_DEBUG_1("Returning from pj_build_ast. Have %i subtrees right now.\n", (int)subtrees.size());
   if (retval != NULL)
-    pj_dump_tree(retval);
+    retval->dump();
   return retval;
 }
 
@@ -425,7 +425,7 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
     printf("%i JIT candidate ASTs:\n", (int)tmp.size());
     for (unsigned int i = 0; i < (unsigned int)tmp.size(); ++i) {
       printf("===========================\n");
-      pj_dump_tree(tmp[i]);
+      tmp[i]->dump();
     }
     printf("===========================\n");
   }

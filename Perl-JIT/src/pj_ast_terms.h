@@ -172,13 +172,6 @@ namespace PerlJIT {
 } // end namespace PerlJIT
 
 
-PerlJIT::AST::Term *pj_make_binop(OP *perl_op, pj_op_type t, PerlJIT::AST::Term *o1, PerlJIT::AST::Term *o2);
-PerlJIT::AST::Term *pj_make_unop(OP *perl_op, pj_op_type t, PerlJIT::AST::Term *o1);
-PerlJIT::AST::Term *pj_make_listop(OP *perl_op, pj_op_type t, const std::vector<PerlJIT::AST::Term *> &children);
-
 void pj_free_tree(PerlJIT::AST::Term *t);
-
-/* purely a debugging aid! */
-void pj_dump_tree(PerlJIT::AST::Term *term);
 
 #endif
