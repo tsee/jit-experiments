@@ -11,15 +11,15 @@
 #include <jit/jit.h>
 
 /* The custom op definition structure */
-extern XOP PJ_xop_jitop;
+/* extern XOP PJ_xop_jitop; */
 
 /* Original opfreehook - we wrap this to free JIT OP aux structs */
-extern Perl_ophook_t PJ_orig_opfreehook;
+/* extern Perl_ophook_t PJ_orig_opfreehook; */
 
 /* Global state. Obviously not thread-safe.
  * Thread-safety would require this to be dangling off the
  * interpreter struct in some fashion. */
-extern jit_context_t PJ_jit_context;
+/* extern jit_context_t PJ_jit_context; */
 
 /* Initialize global JIT state like JIT context, custom op description, etc. */
 void pj_init_global_state(pTHX);

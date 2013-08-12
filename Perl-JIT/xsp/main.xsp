@@ -18,16 +18,12 @@
 
 /* AST and AST -> C fun stuff */
 #include "pj_ast_terms.h"
-#include "pj_ast_jit.h"
 
 /* OP-tree walker logic */
 #include "pj_optree.h"
 
 /* Global state and initialization routines */
 #include "pj_global_state.h"
-
-/* Everything related to the actual run-time custom OP implementation */
-#include "pj_jit_op.h"
 
 %{
 

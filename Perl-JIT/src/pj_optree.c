@@ -5,12 +5,11 @@
 #include <OPTreeVisitor.h>
 
 #include "ppport.h"
+#include "pj_inline.h"
 #include "pj_debug.h"
 
 #include "pj_ast_terms.h"
-#include "pj_ast_jit.h"
 
-#include "pj_jit_op.h"
 #include "pj_global_state.h"
 #include <vector>
 
