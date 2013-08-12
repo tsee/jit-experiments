@@ -136,14 +136,6 @@ Listop::Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children)
   kids = children;
 }
 
-
-void
-pj_free_tree(PerlJIT::AST::Term *t)
-{
-  delete t;
-}
-
-
 /* pinnacle of software engineering, but it's just for debugging anyway...  */
 static void
 pj_dump_tree_indent(int lvl)
