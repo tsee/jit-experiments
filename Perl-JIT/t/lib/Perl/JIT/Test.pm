@@ -8,6 +8,9 @@ use Config '%Config';
 use Exporter 'import';
 use Test::More;
 use Data::Dumper;
+use B;
+use B::Utils qw(walkoptree_filtered opgrep);
+use Perl::JIT::Emit;
 
 our @EXPORT = qw(
   runperl_output_is
@@ -15,6 +18,7 @@ our @EXPORT = qw(
   runperl_output
   is_approx
   run_ctest
+  is_jitting
 );
 
 SCOPE: {
@@ -113,6 +117,73 @@ sub is_approx {
   my ($t, $ref, $name) = @_;
   ok($t + 1e-9 > $ref && $t - 1e9 < $ref, $name)
     or diag("$t appears to be different from $ref");
+}
+
+my $emit = Perl::JIT::Emit->new; # keep it around for now
+
+sub is_jitting {
+  my ($sub, $opgrep_patterns, $diag) = @_;
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+  for my $pat (@$opgrep_patterns) {
+    my $matched;
+
+    walkoptree_filtered(
+      B::svref_2object($sub)->ROOT,
+      sub { opgrep($pat, @_) },
+      sub { $matched = 1 }
+    );
+
+    unless ($matched) {
+      ok(0, "$diag: could not find op matching");
+      diag(Dumper($pat));
+      return 0;
+    }
+  }
+
+  $emit->jit_sub($sub);
+
+  for my $pat (@$opgrep_patterns) {
+    my $matched;
+
+    walkoptree_filtered(
+      B::svref_2object($sub)->ROOT,
+      sub { opgrep($pat, @_) },
+      sub { $matched = 1 }
+    );
+
+    if ($matched) {
+      ok(0, "$diag: some op has not been JITted");
+      diag(Dumper($pat));
+      return 0;
+    }
+  }
+
+  return ok(1, $diag);
+}
+
+package t::lib::Perl::JIT::Test;
+
+use strict;
+use warnings;
+use parent 'Test::Builder::Module';
+
+use Test::More;
+
+Perl::JIT::Test->import;
+
+our @EXPORT = (
+  @Test::More::EXPORT,
+  @Perl::JIT::Test::EXPORT,
+);
+
+sub import {
+    unshift @INC, 't/lib';
+
+    strict->import;
+    warnings->import;
+
+    goto &Test::Builder::Module::import;
 }
 
 1;
