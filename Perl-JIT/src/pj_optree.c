@@ -94,7 +94,7 @@ pj_free_terms_vector(std::vector<PerlJIT::AST::Term *> &terms)
 {
   std::vector<PerlJIT::AST::Term *>::iterator it = terms.begin();
   for (; it != terms.end(); ++it)
-    pj_free_tree(*it);
+    delete *it;
 }
 
 std::vector<PerlJIT::AST::Term *>

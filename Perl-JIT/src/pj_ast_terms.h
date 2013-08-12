@@ -93,7 +93,7 @@ namespace PerlJIT {
 
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Term"; }
-      virtual ~Term() {}
+      virtual ~Term();
     };
 
     class Constant : public Term {
@@ -136,6 +136,7 @@ namespace PerlJIT {
 
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Op"; }
+      virtual ~Op();
     };
 
     class Unop : public Op {
@@ -170,8 +171,5 @@ namespace PerlJIT {
 
   } // end namespace PerlJIT::AST
 } // end namespace PerlJIT
-
-
-void pj_free_tree(PerlJIT::AST::Term *t);
 
 #endif

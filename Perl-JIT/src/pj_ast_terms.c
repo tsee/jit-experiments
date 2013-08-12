@@ -140,16 +140,6 @@ Listop::Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children)
 void
 pj_free_tree(PerlJIT::AST::Term *t)
 {
-  if (t == NULL)
-    return;
-
-  if (t->type == pj_ttype_op) {
-    std::vector<PerlJIT::AST::Term *> &k = ((PerlJIT::AST::Op *)t)->kids;
-    const unsigned int n = k.size();
-    for (unsigned int i = 0; i < n; ++i)
-      pj_free_tree(k[i]);
-  }
-
   delete t;
 }
 
@@ -212,3 +202,14 @@ Term::dump()
   pj_dump_tree_internal(this, lvl);
 }
 
+
+Term::~Term()
+{}
+
+Op::~Op()
+{
+  std::vector<PerlJIT::AST::Term *> &k = kids;
+  const unsigned int n = k.size();
+  for (unsigned int i = 0; i < n; ++i)
+    delete k[i];
+}
