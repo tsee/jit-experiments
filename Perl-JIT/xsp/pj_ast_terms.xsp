@@ -56,3 +56,7 @@ class PerlJIT::AST::Variable : public %name{Perl::JIT::AST::Term} PerlJIT::AST::
   pj_basic_type var_type %get %set;
   int ivar %get %set;
 };
+
+%name{Perl::JIT::AST::Optree}
+class PerlJIT::AST::Optree : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
+{};

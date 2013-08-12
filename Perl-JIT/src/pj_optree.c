@@ -164,7 +164,7 @@ pj_build_ast(pTHX_ OP *o,
          * treat as subtree. */
         PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(kid));
         pj_find_jit_candidates(aTHX_ kid, o, visitor); /* o is parent of kid */
-        kid_terms.push_back( pj_make_optree(kid));
+        kid_terms.push_back( new AST::Optree(kid) );
 
         // FIXME replace pj_double_type with type that's imposed by the current OP
         subtrees.push_back( OPWithImposedType(kid, pj_double_type) );

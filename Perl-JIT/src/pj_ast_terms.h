@@ -159,6 +159,11 @@ namespace PerlJIT {
         { return "Perl::JIT::AST::Listop"; }
     };
 
+    class Optree : public Term {
+    public:
+      Optree(OP *p_op);
+    };
+
   } // end namespace PerlJIT::AST
 } // end namespace PerlJIT
 
@@ -166,7 +171,6 @@ namespace PerlJIT {
 PerlJIT::AST::Term *pj_make_binop(OP *perl_op, pj_op_type t, PerlJIT::AST::Term *o1, PerlJIT::AST::Term *o2);
 PerlJIT::AST::Term *pj_make_unop(OP *perl_op, pj_op_type t, PerlJIT::AST::Term *o1);
 PerlJIT::AST::Term *pj_make_listop(OP *perl_op, pj_op_type t, const std::vector<PerlJIT::AST::Term *> &children);
-PerlJIT::AST::Term *pj_make_optree(OP *perl_op);
 
 void pj_free_tree(PerlJIT::AST::Term *t);
 

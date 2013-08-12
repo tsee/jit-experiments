@@ -108,6 +108,11 @@ Variable::Variable(OP *p_op, int ivariable, pj_basic_type t)
 {}
 
 
+Optree::Optree(OP *p_op)
+  : Term(p_op, pj_ttype_optree)
+{}
+
+
 PerlJIT::AST::Term *
 pj_make_binop(OP *perl_op, pj_op_type t, PerlJIT::AST::Term *o1, PerlJIT::AST::Term *o2)
 {
@@ -143,16 +148,6 @@ pj_make_listop(OP *perl_op, pj_op_type t, const std::vector<PerlJIT::AST::Term *
   o->perl_op = perl_op;
   o->optype = t;
   o->kids = children;
-  return (PerlJIT::AST::Term *)o;
-}
-
-
-PerlJIT::AST::Term *
-pj_make_optree(OP *perl_op)
-{
-  PerlJIT::AST::Op *o = new PerlJIT::AST::Op();
-  o->type = pj_ttype_optree;
-  o->perl_op = perl_op;
   return (PerlJIT::AST::Term *)o;
 }
 
