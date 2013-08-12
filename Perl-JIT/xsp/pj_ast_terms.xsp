@@ -17,6 +17,7 @@ class PerlJIT::AST::Term {
 class PerlJIT::AST::Op : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
 {
   pj_op_type optype %get %set;
+  pj_op_class op_class() const;
   std::vector<PerlJIT::AST::Term *> kids %get;
 };
 
