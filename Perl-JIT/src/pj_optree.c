@@ -89,7 +89,7 @@ pj_find_first_executed_op(pTHX_ OP *o)
 
 
 static std::vector<PerlJIT::AST::Term *>
-pj_find_jit_candidates_internal(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder &visitor);
+pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 
 /* Fetches the SV* for an SVOP.
  * Essentially an unrolled cSVOPx_sv(op) that deals with the fact
@@ -111,117 +111,112 @@ pj_build_ast(pTHX_ OP *o,
              vector<OPWithImposedType> &subtrees,
              unsigned int *nvariables, OPTreeJITCandidateFinder &visitor)
 {
-  const unsigned int parent_otype = o->op_type;
   PerlJIT::AST::Term *retval = NULL;
-  OP *kid;
 
+  assert(o);
+
+  const unsigned int otype = o->op_type;
+  if (!IS_JITTABLE_OP_TYPE(otype)) {
+    // Can't represent OP with AST. So instead, recursively scan for
+    // separate candidates and treat as subtree.
+    PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
+    pj_find_jit_candidates_internal(aTHX_ o, visitor);
+    retval = new AST::Optree(o);
+
+    // FIXME replace pj_double_type with type that's imposed by the current OP
+    subtrees.push_back( OPWithImposedType(o, pj_double_type) );
+  }
+  else if (!(o->op_flags & OPf_KIDS)) {
+    // Handle ops without kids first
+    if (otype == OP_CONST) {
+      /* FIXME OP_CONST can also be an int or a string and who-knows-what-else */
+      SV *constsv = pj_get_sv_from_svop(aTHX_ (SVOP *)o);
+
+      PJ_DEBUG_1("CONST being inlined (%f).\n", SvNV(constsv));
+      retval = new AST::Constant(o, SvNV(constsv)); /* FIXME replace type by inferred type */
+    }
+    else if (otype == OP_PADSV) {
+      retval = new AST::Variable(o, (*nvariables)++, pj_double_type);
+    }
+    else {
+      croak("Shouldn't happen! Unsupported non-ary OP!? %s", OP_NAME(o));
+    }
+  }
+
+  if (retval != NULL) {
+    retval->dump();
+    return retval;
+  }
+
+  // If we reach this, then the OP has kids and we build the child optrees
+  // before building this node.
+
+  // Build child list
   std::vector<PerlJIT::AST::Term *> kid_terms;
-
-  PJ_DEBUG_2("pj_build_ast running on %s. Have %i subtrees right now.\n", OP_NAME(o), (int)subtrees.size());
-
   unsigned int ikid = 0;
-  if (o && (o->op_flags & OPf_KIDS)) {
-    for (kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
-      PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
+  for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
+    PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
 
-      const unsigned int otype = kid->op_type;
-      if (otype == OP_CONST) {
-        /* FIXME OP_CONST can also be an int or a string and who-knows-what-else */
-        SV *constsv = pj_get_sv_from_svop(aTHX_ (SVOP *)kid);
-
-        PJ_DEBUG_1("CONST being inlined (%f).\n", SvNV(constsv));
-        kid_terms.push_back( new AST::Constant(kid, SvNV(constsv)) ); /* FIXME replace type by inferred type */
-      }
-      else if (otype == OP_PADSV) {
-        kid_terms.push_back( new AST::Variable(kid, (*nvariables)++, pj_double_type) ); /* FIXME replace pj_double_type with type that's imposed by the current OP */
-      }
-      else if (otype == OP_NULL) {
-        /* compiled out -- FIXME most certainly not correct, in particular for incoming op_next */
-        assert(kid->op_flags & OPf_KIDS);
-        /* FIXME Only looking at first kid -- is that a limitation on OP_NULL or can other OP classes be NULLed as well? */
-        kid_terms.push_back( pj_build_ast(aTHX_ ((UNOP*)kid)->op_first, subtrees, nvariables, visitor) );
-      }
-      else if (IS_JITTABLE_OP_TYPE(otype)) {
-        kid_terms.push_back( pj_build_ast(aTHX_ kid, subtrees, nvariables, visitor) );
-        if (kid_terms.back() == NULL) {
-          // Failed to build sub-AST, free ASTs build thus far before bailing
-          std::vector<PerlJIT::AST::Term *>::iterator it = terms.begin();
-          for (; it != terms.end(); ++it)
-            delete *it;
-          return NULL;
-        }
-      }
-      else {
-        /* Can't represent OP with AST. So instead,
-         * recursively scan for separate candidates and
-         * treat as subtree. */
-        PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(kid));
-        pj_find_jit_candidates_internal(aTHX_ kid, o, visitor); /* o is parent of kid */
-        kid_terms.push_back( new AST::Optree(kid) );
-
-        // FIXME replace pj_double_type with type that's imposed by the current OP
-        subtrees.push_back( OPWithImposedType(kid, pj_double_type) );
-      }
-
-      ++ikid;
-    } /* end for kids */
-
-    /* TODO modulo may have (very?) different behaviour in Perl than in C (or libjit or the platform...) */
-#define EMIT_UNOP_CODE(perl_op_type, pj_op_type)            \
-    case perl_op_type:                                      \
-      assert(ikid == 1);                                    \
-      retval = new AST::Unop(o, pj_op_type, kid_terms[0]);  \
-      break;
-#define EMIT_BINOP_CODE(perl_op_type, pj_op_type)                           \
-    case perl_op_type:                                                      \
-      assert(ikid == 2);                                                    \
-      retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]);   \
-      break;
-#define EMIT_LISTOP_CODE(perl_op_type, pj_op_type)    \
-    case perl_op_type: {                              \
-      assert(ikid > 0);                               \
-      std::vector<PerlJIT::AST::Term *> kids;                  \
-      for (unsigned int i = 0; i < ikid-1; ++i)       \
-        kids.push_back(kid_terms[i]);                 \
-      retval = new AST::Listop(o, pj_op_type, kids);  \
-      break;                                          \
+    kid_terms.push_back( pj_build_ast(aTHX_ kid, subtrees, nvariables, visitor) );
+    if (kid_terms.back() == NULL) {
+      // Failed to build sub-AST, free ASTs build thus far before bailing
+      kid_terms.pop_back();
+      std::vector<PerlJIT::AST::Term *>::iterator it = kid_terms.begin();
+      for (; it != kid_terms.end(); ++it)
+        delete *it;
+      return NULL;
     }
+    ++ikid;
+  } /* end for kids */
 
-    switch (parent_otype) {
-      EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
-      EMIT_BINOP_CODE(OP_SUBTRACT, pj_binop_subtract)
-      EMIT_BINOP_CODE(OP_MULTIPLY, pj_binop_multiply)
-      EMIT_BINOP_CODE(OP_DIVIDE, pj_binop_divide)
-      EMIT_BINOP_CODE(OP_POW, pj_binop_pow)
-      EMIT_BINOP_CODE(OP_LEFT_SHIFT, pj_binop_left_shift)
-      EMIT_BINOP_CODE(OP_RIGHT_SHIFT, pj_binop_right_shift)
-      EMIT_BINOP_CODE(OP_EQ, pj_binop_eq)
-      EMIT_BINOP_CODE(OP_AND, pj_binop_bool_and)
-      EMIT_BINOP_CODE(OP_OR, pj_binop_bool_or)
-      EMIT_UNOP_CODE(OP_SIN, pj_unop_sin)
-      EMIT_UNOP_CODE(OP_COS, pj_unop_cos)
-      EMIT_UNOP_CODE(OP_SQRT, pj_unop_sqrt)
-      EMIT_UNOP_CODE(OP_LOG, pj_unop_log)
-      EMIT_UNOP_CODE(OP_EXP, pj_unop_exp)
-      EMIT_UNOP_CODE(OP_INT, pj_unop_perl_int)
-      EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not)
-      EMIT_UNOP_CODE(OP_NEGATE, pj_unop_negate)
-      /* EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not) */ /* FIXME not same as perl */
-      EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
-    default:
-      PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s", OP_NAME(o));
-      abort();
-    }
+  /* TODO modulo may have (very?) different behaviour in Perl than in C (or libjit or the platform...) */
+#define EMIT_UNOP_CODE(perl_op_type, pj_op_type)          \
+  case perl_op_type:                                      \
+    assert(ikid == 1);                                    \
+    retval = new AST::Unop(o, pj_op_type, kid_terms[0]);  \
+    break;
+#define EMIT_BINOP_CODE(perl_op_type, pj_op_type)                         \
+  case perl_op_type:                                                      \
+    assert(ikid == 2);                                                    \
+    retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]);   \
+    break;
+#define EMIT_LISTOP_CODE(perl_op_type, pj_op_type)  \
+  case perl_op_type: {                              \
+    std::vector<PerlJIT::AST::Term *> kids;         \
+    for (unsigned int i = 0; i < ikid-1; ++i)       \
+      kids.push_back(kid_terms[i]);                 \
+    retval = new AST::Listop(o, pj_op_type, kids);  \
+    break;                                          \
+  }
+
+  switch (otype) {
+    EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
+    EMIT_BINOP_CODE(OP_SUBTRACT, pj_binop_subtract)
+    EMIT_BINOP_CODE(OP_MULTIPLY, pj_binop_multiply)
+    EMIT_BINOP_CODE(OP_DIVIDE, pj_binop_divide)
+    EMIT_BINOP_CODE(OP_POW, pj_binop_pow)
+    EMIT_BINOP_CODE(OP_LEFT_SHIFT, pj_binop_left_shift)
+    EMIT_BINOP_CODE(OP_RIGHT_SHIFT, pj_binop_right_shift)
+    EMIT_BINOP_CODE(OP_EQ, pj_binop_eq)
+    EMIT_BINOP_CODE(OP_AND, pj_binop_bool_and)
+    EMIT_BINOP_CODE(OP_OR, pj_binop_bool_or)
+    EMIT_UNOP_CODE(OP_SIN, pj_unop_sin)
+    EMIT_UNOP_CODE(OP_COS, pj_unop_cos)
+    EMIT_UNOP_CODE(OP_SQRT, pj_unop_sqrt)
+    EMIT_UNOP_CODE(OP_LOG, pj_unop_log)
+    EMIT_UNOP_CODE(OP_EXP, pj_unop_exp)
+    EMIT_UNOP_CODE(OP_INT, pj_unop_perl_int)
+    EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not)
+    EMIT_UNOP_CODE(OP_NEGATE, pj_unop_negate)
+    /* EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not) */ /* FIXME not same as perl */
+    EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
+  default:
+    PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s", OP_NAME(o));
+    abort();
+  }
 #undef EMIT_BINOP_CODE
 #undef EMIT_UNOP_CODE
 #undef EMIT_LISTOP_CODE
-
-  } /* end if has kids */
-  else { // OP without kids
-    // OP_PADSV and OP_CONST are handled in the caller as other OPs' kids
-    PJ_DEBUG_1("ARG! Unsupported OP without kids, %s", OP_NAME(o));
-    abort();
-  }
 
   /* PMOP doesn't matter for JIT right now */
   /*
@@ -274,64 +269,6 @@ pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, vector<OPWithImposedType> &subtrees
 }
 
 
-static void
-pj_fixup_parent_op(pTHX_ OP *jitop, OP *origop, UNOP *parentop)
-{
-  OP *kid;
-
-  PJ_DEBUG_1("Doing parent fixups for %s\n", OP_NAME((OP *)parentop));
-
-  /* FIXME the real question is why parent OP is ENTER? */
-  /*while (!(parentop->op_flags & OPf_KIDS)) {
-    parentop = parentop->op_sibling;
-  }
-  PJ_DEBUG_1("Doing parent fixups for %s\n", OP_NAME((OP *)parentop));
-  */
-  jitop->op_next = origop->op_next;
-
-  if (parentop->op_first == origop) {
-    parentop->op_first = jitop;
-    jitop->op_sibling = origop->op_sibling;
-    if (jitop->op_sibling) {
-      jitop->op_next = pj_find_first_executed_op(aTHX_ jitop->op_sibling);
-    }
-    /*
-    else {
-      jitop->op_next = (OP *)parentop;
-    }
-    */
-  }
-  else {
-    for (kid = parentop->op_first; kid; kid = kid->op_sibling) {
-      PJ_DEBUG_1("%p\n", kid);
-      PJ_DEBUG_1("%s\n", OP_NAME(kid));
-      if (kid->op_sibling && kid->op_sibling == origop) {
-        kid->op_sibling = jitop;
-        jitop->op_sibling = origop->op_sibling;
-        /* wire JITOP's op_next to the actual next OP */
-        if (jitop->op_sibling) {
-          jitop->op_next = pj_find_first_executed_op(aTHX_ jitop->op_sibling);
-        }
-        /*
-        else {
-          jitop->op_next = (OP *)parentop;
-        }
-        */
-        break;
-      }
-    }
-  }
-
-  /* Fixup op_last of parent op */
-  if (OP_CLASS((OP *)parentop) != OA_UNOP) {
-    if (((BINOP *)parentop)->op_last == origop)
-      ((BINOP *)parentop)->op_last = jitop;
-  }
-
-  jitop->op_sibling = origop->op_sibling;
-}
-
-
 /* Starting from a candidate for JITing, walk the OP tree to accumulate
  * a subtree that can be replaced with a single JIT OP. */
 /* TODO: Needs to walk the OPs, checking whether they qualify. If
@@ -345,7 +282,7 @@ pj_fixup_parent_op(pTHX_ OP *jitop, OP *origop, UNOP *parentop)
  *       execution order. */
 
 static PerlJIT::AST::Term *
-pj_attempt_jit(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder &visitor)
+pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 {
   PerlJIT::AST::Term *ast;
   unsigned int nvariables = 0;
@@ -375,7 +312,7 @@ namespace PerlJIT {
 
       /* Attempt JIT if the right OP type. Don't recurse if so. */
       if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
-        PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, parentop, *this);
+        PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
         if (ast)
             candidates.push_back(ast);
         return VISIT_SKIP;
@@ -392,9 +329,9 @@ namespace PerlJIT {
  * the particular sub-tree; tree walking in OPTreeWalker, actual logic in
  * OPTreeJITCandidateFinder! */
 static std::vector<PerlJIT::AST::Term *>
-pj_find_jit_candidates_internal(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder &visitor)
+pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 {
-  visitor.visit(aTHX_ o, parentop);
+  visitor.visit(aTHX_ o, NULL);
   return visitor.candidates;
 }
 
@@ -407,7 +344,7 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
   PJ_cur_cv = cv;
 
   OPTreeJITCandidateFinder f;
-  std::vector<PerlJIT::AST::Term *> tmp = pj_find_jit_candidates_internal(aTHX_ CvROOT(cv), 0, f);
+  std::vector<PerlJIT::AST::Term *> tmp = pj_find_jit_candidates_internal(aTHX_ CvROOT(cv), f);
   if (PJ_DEBUGGING) {
     printf("%i JIT candidate ASTs:\n", (int)tmp.size());
     for (unsigned int i = 0; i < (unsigned int)tmp.size(); ++i) {

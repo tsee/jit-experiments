@@ -59,5 +59,5 @@ OPTreeVisitor::visit(pTHX_ OP *o, OP *parentop)
 
 done:
   return;
-} // end 'OPTreeVisitor::visit_op'
+} // end 'OPTreeVisitor::visit'
 

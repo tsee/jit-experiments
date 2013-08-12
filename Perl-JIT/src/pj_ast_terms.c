@@ -182,6 +182,10 @@ pj_dump_tree_internal(PerlJIT::AST::Term *term, int lvl)
     pj_dump_tree_indent(lvl);
     printf(")\n");
   }
+  else if (term->type == pj_ttype_optree) {
+    pj_dump_tree_indent(lvl);
+    printf("'UnJITable subtree'\n");
+  }
   else
     abort();
 }
