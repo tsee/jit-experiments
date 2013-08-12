@@ -51,7 +51,7 @@ pj_tree_determine_funtype(PerlJIT::AST::Term *term)
     if (t1 == pj_double_type)
       return pj_double_type; /* double >> int */
 
-    if (PJ_IS_OP_LISTOP(o)) {
+    if (o->op_class() == pj_opc_listop) {
       const std::vector<PerlJIT::AST::Term *> &kids = o->kids;
       const unsigned int n = kids.size();
       for (unsigned int i = 0; i < n; ++i) {
@@ -62,14 +62,14 @@ pj_tree_determine_funtype(PerlJIT::AST::Term *term)
           return pj_double_type; /* FIXME correct? */
       }
     }
-    else if (PJ_IS_OP_BINOP(o)) {
+    else if (o->op_class() == pj_opc_binop) {
       pj_basic_type t2 = pj_tree_determine_funtype(o->kids[1]);
       if (t2 == pj_double_type)
         return pj_double_type;
       else if (t1 == t2)
         return t1;
     }
-    else return t1;
+    else return t1; /* unop */
   }
   return pj_int_type; /* no uint support yet */
 }

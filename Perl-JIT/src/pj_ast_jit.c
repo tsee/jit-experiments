@@ -55,7 +55,7 @@ pj_jit_internal_op(jit_function_t function, jit_value_t *var_values, int nvars, 
 #define EVAL_OPERAND2 EVAL_OPERAND_N(1)
 
   /* Only do the recursion out here if we know that we'll have to emit that code at all. */
-  if (!(PJ_OP_FLAGS(op) & PJ_ASTf_CONDITIONAL)) {
+  if (!(op->flags() & PJ_ASTf_CONDITIONAL)) {
     std::vector<PerlJIT::AST::Term *> &kids = op->kids;
     const unsigned int n = kids.size();
     for (unsigned int i = 0; i < n; ++i)

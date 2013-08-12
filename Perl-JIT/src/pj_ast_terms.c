@@ -7,7 +7,7 @@ using namespace PerlJIT;
 using namespace PerlJIT::AST;
 
 /* keep in sync with pj_op_type in .h file */
-const char *pj_ast_op_names[] = {
+static const char *pj_ast_op_names[] = {
   /* unops */
   "unary -",  /* pj_unop_negate */
   "sin",      /* pj_unop_sin */
@@ -46,7 +46,7 @@ const char *pj_ast_op_names[] = {
   "?:",       /* pj_listop_ternary */
 };
 
-unsigned int pj_ast_op_flags[] = {
+static unsigned int pj_ast_op_flags[] = {
   /* unops */
   0,                              /* pj_unop_negate */
   0,                              /* pj_unop_sin */
@@ -205,3 +205,19 @@ Op::~Op()
   for (unsigned int i = 0; i < n; ++i)
     delete k[i];
 }
+
+
+const char *
+Op::name()
+{
+  return pj_ast_op_names[this->optype];
+}
+
+
+unsigned int
+Op::flags()
+{
+  return pj_ast_op_flags[this->optype];
+}
+
+

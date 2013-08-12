@@ -3,8 +3,8 @@
 
 #include <vector>
 
-/* Definition of types and functions for the Perl JIT AST. */
-typedef struct op OP;
+// Definition of types and functions for the Perl JIT AST.
+typedef struct op OP; // that's the Perl OP
 
 typedef enum {
   pj_ttype_constant,
@@ -12,6 +12,12 @@ typedef enum {
   pj_ttype_optree,
   pj_ttype_op
 } pj_term_type;
+
+typedef enum {
+  pj_opc_unop,
+  pj_opc_binop,
+  pj_opc_listop
+} pj_op_class;
 
 /* keep in sync with pj_ast_op_names in .c file */
 typedef enum {
@@ -60,10 +66,6 @@ typedef enum {
   pj_listop_LAST  = pj_listop_ternary,
 } pj_op_type;
 
-#define PJ_IS_OP_UNOP(o) ((o)->optype >= pj_unop_FIRST && (o)->optype <= pj_unop_LAST)
-#define PJ_IS_OP_BINOP(o) ((o)->optype >= pj_binop_FIRST && (o)->optype <= pj_binop_LAST)
-#define PJ_IS_OP_LISTOP(o) ((o)->optype >= pj_listop_FIRST && (o)->optype <= pj_listop_LAST)
-
 typedef enum {
   pj_double_type,
   pj_int_type,
@@ -73,11 +75,6 @@ typedef enum {
 /* Indicates that the given op will only evaluate its arguments
  * conditionally (eg. short-circuiting boolean and/or). */
 #define PJ_ASTf_CONDITIONAL (1<<0)
-
-extern unsigned int pj_ast_op_flags[];
-#define PJ_OP_FLAGS(op) (pj_ast_op_flags[(op)->optype])
-extern const char *pj_ast_op_names[];
-#define PJ_OP_NAME(op) (pj_ast_op_names[(op)->optype])
 
 namespace PerlJIT {
   namespace AST {
@@ -131,6 +128,10 @@ namespace PerlJIT {
       Op() {}
       Op(OP *p_op, pj_op_type t) : Term(p_op, pj_ttype_op), optype(t) {}
 
+      const char *name();
+      unsigned int flags();
+      virtual pj_op_class op_class() = 0;
+
       pj_op_type optype;
       std::vector<PerlJIT::AST::Term *> kids;
 
@@ -144,6 +145,9 @@ namespace PerlJIT {
       Unop() {}
       Unop(OP *p_op, pj_op_type t, Term *kid);
 
+      pj_op_class op_class()
+        { return pj_opc_unop; }
+
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Unop"; }
     };
@@ -152,6 +156,9 @@ namespace PerlJIT {
     public:
       Binop() {}
       Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2);
+
+      pj_op_class op_class()
+        { return pj_opc_binop; }
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Binop"; }
     };
@@ -160,6 +167,9 @@ namespace PerlJIT {
     public:
       Listop() {}
       Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children);
+
+      pj_op_class op_class()
+        { return pj_opc_listop; }
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Listop"; }
     };
