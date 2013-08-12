@@ -113,42 +113,27 @@ Optree::Optree(OP *p_op)
 {}
 
 
-PerlJIT::AST::Term *
-pj_make_binop(OP *perl_op, pj_op_type t, PerlJIT::AST::Term *o1, PerlJIT::AST::Term *o2)
+Unop::Unop(OP *p_op, pj_op_type t, Term *kid)
+  : Op(p_op, t)
 {
-  PerlJIT::AST::Op *o = new PerlJIT::AST::Binop();
-  o->type = pj_ttype_op;
-  o->perl_op = perl_op;
-  o->optype = t;
-  o->kids.resize(2);
-  o->kids[0] = o1;
-  o->kids[1] = o2;
-  return (PerlJIT::AST::Term *)o;
+  kids.resize(1);
+  kids[0] = kid;
 }
 
 
-PerlJIT::AST::Term *
-pj_make_unop(OP *perl_op, pj_op_type t, PerlJIT::AST::Term *o1)
+Binop::Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2)
+  : Op(p_op, t)
 {
-  PerlJIT::AST::Op *o = new PerlJIT::AST::Unop();
-  o->type = pj_ttype_op;
-  o->perl_op = perl_op;
-  o->optype = t;
-  o->kids.resize(1);
-  o->kids[0] = o1;
-  return (PerlJIT::AST::Term *)o;
+  kids.resize(2);
+  kids[0] = kid1;
+  kids[1] = kid2;
 }
 
 
-PerlJIT::AST::Term *
-pj_make_listop(OP *perl_op, pj_op_type t, const std::vector<PerlJIT::AST::Term *> &children)
+Listop::Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children)
+  : Op(p_op, t)
 {
-  PerlJIT::AST::Op *o = new PerlJIT::AST::Listop();
-  o->type = pj_ttype_op;
-  o->perl_op = perl_op;
-  o->optype = t;
-  o->kids = children;
-  return (PerlJIT::AST::Term *)o;
+  kids = children;
 }
 
 

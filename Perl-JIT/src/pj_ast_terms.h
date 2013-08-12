@@ -129,7 +129,7 @@ namespace PerlJIT {
     class Op : public Term {
     public:
       Op() {}
-      Op(OP *p_op) : Term(p_op, pj_ttype_op) {}
+      Op(OP *p_op, pj_op_type t) : Term(p_op, pj_ttype_op), optype(t) {}
 
       pj_op_type optype;
       std::vector<PerlJIT::AST::Term *> kids;
@@ -141,6 +141,8 @@ namespace PerlJIT {
     class Unop : public Op {
     public:
       Unop() {}
+      Unop(OP *p_op, pj_op_type t, Term *kid);
+
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Unop"; }
     };
@@ -148,6 +150,7 @@ namespace PerlJIT {
     class Binop : public Op {
     public:
       Binop() {}
+      Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2);
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Binop"; }
     };
@@ -155,6 +158,7 @@ namespace PerlJIT {
     class Listop : public Op {
     public:
       Listop() {}
+      Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children);
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Listop"; }
     };
