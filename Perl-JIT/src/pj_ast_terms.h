@@ -86,8 +86,7 @@ namespace PerlJIT {
       pj_term_type type;
       OP *perl_op;
 
-      void dump();
-
+      virtual void dump(int indent_lvl = 0) = 0;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Term"; }
       virtual ~Term();
@@ -107,6 +106,7 @@ namespace PerlJIT {
         unsigned int uint_value;
       };
 
+      virtual void dump(int indent_lvl = 0);
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Constant"; }
     };
@@ -119,6 +119,7 @@ namespace PerlJIT {
       pj_basic_type var_type;
       int ivar;
 
+      virtual void dump(int indent_lvl);
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Variable"; }
     };
@@ -135,6 +136,7 @@ namespace PerlJIT {
       pj_op_type optype;
       std::vector<PerlJIT::AST::Term *> kids;
 
+      virtual void dump(int indent_lvl = 0) = 0;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Op"; }
       virtual ~Op();
@@ -148,6 +150,7 @@ namespace PerlJIT {
       pj_op_class op_class()
         { return pj_opc_unop; }
 
+      virtual void dump(int indent_lvl = 0);
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Unop"; }
     };
@@ -157,6 +160,7 @@ namespace PerlJIT {
       Binop() {}
       Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2);
 
+      virtual void dump(int indent_lvl = 0);
       pj_op_class op_class()
         { return pj_opc_binop; }
       virtual const char *perl_class() const
@@ -168,6 +172,7 @@ namespace PerlJIT {
       Listop() {}
       Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children);
 
+      virtual void dump(int indent_lvl = 0);
       pj_op_class op_class()
         { return pj_opc_listop; }
       virtual const char *perl_class() const
@@ -177,6 +182,8 @@ namespace PerlJIT {
     class Optree : public Term {
     public:
       Optree(OP *p_op);
+
+      virtual void dump(int indent_lvl = 0);
     };
 
   } // end namespace PerlJIT::AST

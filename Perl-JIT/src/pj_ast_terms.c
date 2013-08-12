@@ -138,65 +138,67 @@ Listop::Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children)
 
 /* pinnacle of software engineering, but it's just for debugging anyway...  */
 static void
-pj_dump_tree_indent(int lvl)
+S_dump_tree_indent(int lvl)
 {
   int i;
   for (i = 0; i < lvl; ++i)
     printf("  ");
 }
 
-static void
-pj_dump_tree_internal(PerlJIT::AST::Term *term, int lvl)
+
+void
+Constant::dump(int indent_lvl)
 {
-  if (term->type == pj_ttype_constant)
-  {
-    PerlJIT::AST::Constant *c = (PerlJIT::AST::Constant *)term;
-    pj_dump_tree_indent(lvl);
-    if (c->const_type == pj_double_type)
-      printf("C = %f\n", (float)c->dbl_value);
-    else if (c->const_type == pj_int_type)
-      printf("C = %i\n", (int)c->int_value);
-    else if (c->const_type == pj_uint_type)
-      printf("C = %lu\n", (unsigned long)c->uint_value);
-    else
-      abort();
-  }
-  else if (term->type == pj_ttype_variable)
-  {
-    pj_dump_tree_indent(lvl);
-    printf("V = %i\n", ((PerlJIT::AST::Variable *)term)->ivar);
-  }
-  else if (term->type == pj_ttype_op)
-  {
-    PerlJIT::AST::Op *o = (PerlJIT::AST::Op *)term;
-
-    pj_dump_tree_indent(lvl);
-
-    printf("OP '%s' (\n", pj_ast_op_names[o->optype]);
-
-    const unsigned int n = o->kids.size();
-    for (unsigned int i = 0; i < n; ++i) {
-      pj_dump_tree_internal(o->kids[i], lvl+1);
-    }
-
-    pj_dump_tree_indent(lvl);
-    printf(")\n");
-  }
-  else if (term->type == pj_ttype_optree) {
-    pj_dump_tree_indent(lvl);
-    printf("'UnJITable subtree'\n");
-  }
+  S_dump_tree_indent(indent_lvl);
+  if (this->const_type == pj_double_type)
+    printf("C = %f\n", (float)this->dbl_value);
+  else if (this->const_type == pj_int_type)
+    printf("C = %i\n", (int)this->int_value);
+  else if (this->const_type == pj_uint_type)
+    printf("C = %lu\n", (unsigned long)this->uint_value);
   else
     abort();
 }
 
 
 void
-Term::dump()
+Variable::dump(int indent_lvl)
 {
-  int lvl = 0;
-  pj_dump_tree_internal(this, lvl);
+  S_dump_tree_indent(indent_lvl);
+  printf("V = %i\n", this->ivar);
 }
+
+
+void
+Optree::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("'UnJITable subtree'\n");
+}
+
+
+static void
+S_dump_op(PerlJIT::AST::Op *o, const char *op_str, int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("%s '%s' (\n", op_str, o->name());
+  const unsigned int n = o->kids.size();
+  for (unsigned int i = 0; i < n; ++i) {
+    o->kids[i]->dump(indent_lvl+1);
+  }
+  S_dump_tree_indent(indent_lvl);
+  printf(")\n");
+}
+
+
+void Unop::dump(int indent_lvl)
+{ S_dump_op(this, "Unop", indent_lvl); }
+
+void Binop::dump(int indent_lvl)
+{ S_dump_op(this, "Binop", indent_lvl); }
+
+void Listop::dump(int indent_lvl)
+{ S_dump_op(this, "Listop", indent_lvl); }
 
 
 Term::~Term()
