@@ -139,7 +139,7 @@ pj_build_ast(pTHX_ OP *o,
       retval = new AST::Variable(o, (*nvariables)++, pj_double_type);
     }
     else {
-      croak("Shouldn't happen! Unsupported non-ary OP!? %s", OP_NAME(o));
+      croak("Shouldn't happen! Unsupported nullary OP!? %s", OP_NAME(o));
     }
   }
 
