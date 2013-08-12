@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-use t::lib::Perl::JIT::Test tests => 6;
+use t::lib::Perl::JIT::Test tests => 8;
 
 sub inc {
     my ($a) = @_;
@@ -23,6 +23,13 @@ sub inc_and_assign {
     return $x;
 }
 
+sub add_and_assign {
+    my ($a, $b) = @_;
+    my $x = $a + $b;
+
+    return $x;
+}
+
 # add
 is_jitting(\&inc, [{ name => 'add'}]);
 is(inc(41), 42);
@@ -34,3 +41,6 @@ is(inc_assign(41), 42);
 # add and assign
 is_jitting(\&inc_and_assign, [{ name => 'add'}]);
 is(inc_and_assign(41), 42);
+
+is_jitting(\&add_and_assign, [{ name => 'add'}]);
+is(add_and_assign(41, 1), 42);
