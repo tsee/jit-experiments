@@ -129,7 +129,7 @@ namespace PerlJIT {
     class Op : public Term {
     public:
       Op() {}
-      Op(OP *p_op, pj_term_type t) : Term(p_op, t) {}
+      Op(OP *p_op) : Term(p_op, pj_ttype_op) {}
 
       pj_op_type optype;
       std::vector<PerlJIT::AST::Term *> kids;
