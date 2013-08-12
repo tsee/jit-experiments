@@ -129,15 +129,51 @@ sub _to_nv {
 sub _jit_emit_op {
     my ($self, $fun, $ast) = @_;
 
-    given ($ast->get_optype) {
-        when (pj_binop_add) {
+    given ($ast->op_class) {
+        when (pj_opc_binop) {
             my $v1 = $self->_jit_emit($fun, $ast->get_left_kid);
             my $v2 = $self->_jit_emit($fun, $ast->get_right_kid);
-            my $res = jit_insn_add($fun, $self->_to_nv($fun, $v1), $self->_to_nv($fun, $v2));
+            my $res;
 
-            # this should be a pj_binop_add_assing; or maybe not
+            given ($ast->get_optype) {
+                when (pj_binop_add) {
+                    $res = jit_insn_add($fun, $self->_to_nv($fun, $v1), $self->_to_nv($fun, $v2));
+                }
+                when (pj_binop_subtract) {
+                    $res = jit_insn_sub($fun, $self->_to_nv($fun, $v1), $self->_to_nv($fun, $v2));
+                }
+                when (pj_binop_multiply) {
+                    $res = jit_insn_mul($fun, $self->_to_nv($fun, $v1), $self->_to_nv($fun, $v2));
+                }
+                when (pj_binop_divide) {
+                    $res = jit_insn_div($fun, $self->_to_nv($fun, $v1), $self->_to_nv($fun, $v2));
+                }
+                default {
+                    die "I'm sorry, I've not been implemented yet";
+                }
+            }
+
+            # this should be a pj_binop_<xxx>_assing; or maybe better a flag
             if ($ast->get_perl_op->flags & OPf_STACKED) {
                 pa_sv_set_nv($fun, $v1, $res);
+            }
+
+            return $res;
+        }
+        when (pj_opc_unop) {
+            my $v1 = $self->_jit_emit($fun, $ast->get_kid);
+            my $res;
+
+            given ($ast->get_optype) {
+                when (pj_unop_negate) {
+                    $res = jit_insn_neg($fun, $self->_to_nv($fun, $v1));
+                }
+                when (pj_unop_abs) {
+                    $res = jit_insn_abs($fun, $self->_to_nv($fun, $v1));
+                }
+                default {
+                    die "I'm sorry, I've not been implemented yet";
+                }
             }
 
             return $res;
