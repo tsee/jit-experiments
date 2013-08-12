@@ -6,7 +6,7 @@ use Moo;
 
 use B::Generate;
 use B::Replace;
-use B;
+use B qw(OPf_STACKED);
 
 use Perl::JIT qw(:all);
 
@@ -45,13 +45,7 @@ sub jit_tree {
     jit_context_build_start($self->jit_context);
 
     my $fun = pa_create_pp($cxt);
-    my $val = $self->_jit_emit($fun, $ast);
-
-    # TODO this need to switch based on op type, flags, ...
-    my $targ = pa_get_targ($fun);
-    pa_sv_set_nv($fun, $targ, $val);
-    pa_push_sv($fun, $targ);
-    jit_insn_return($fun, pa_get_op_next($fun));
+    $self->_jit_emit_root($fun, $ast);
 
     jit_function_compile($fun);
     jit_context_build_end($self->jit_context);
@@ -61,6 +55,40 @@ sub jit_tree {
     $op->next($ast->get_perl_op->next);
 
     return $op;
+}
+
+sub _jit_emit_root {
+    my ($self, $fun, $ast) = @_;
+    my $val = $self->_jit_emit($fun, $ast);
+
+    $self->_jit_emit_return($fun, $ast, $val) if $val;
+
+    jit_insn_return($fun, pa_get_op_next($fun));
+}
+
+sub _jit_emit_return {
+    my ($self, $fun, $ast, $val) = @_;
+
+    given ($ast->op_class) {
+        when (pj_opc_binop) {
+            # the assumption here is that the OPf_STACKED assignment
+            # has been handled by _jit_emit below, and here we only need
+            # to handle casses like '$x = $y += 7'
+            my $targ = pa_get_targ($fun);
+
+            pa_sv_set_nv($fun, $targ, $val);
+            pa_push_sv($fun, $targ);
+        }
+        when (pj_opc_unop) {
+            my $targ = pa_get_targ($fun);
+
+            pa_sv_set_nv($fun, $targ, $val);
+            pa_push_sv($fun, $targ);
+        }
+        default {
+            pa_push_sv($fun, pa_sv_2mortal(pa_new_sv_nv($val)));
+        }
+    }
 }
 
 sub _jit_emit {
@@ -73,9 +101,8 @@ sub _jit_emit {
         }
         when (pj_ttype_variable) {
             my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_perl_op->targ);
-            my $sv = pa_get_pad_sv($fun, $padix);
 
-            return pa_sv_2nv($fun, $sv);
+            return pa_get_pad_sv($fun, $padix);
         }
         when (pj_ttype_optree) {
             # nothing to do here
@@ -86,6 +113,19 @@ sub _jit_emit {
     }
 }
 
+sub _to_nv {
+    my ($self, $fun, $val) = @_;
+    my $type = jit_value_get_type($val);
+
+    if ($$type == ${jit_type_float64()}) {
+        return $val;
+    } elsif ($$type == ${jit_type_void_ptr()}) {
+        return pa_sv_nv($fun, $val);
+    } else {
+        die "Handle more coercion cases";
+    }
+}
+
 sub _jit_emit_op {
     my ($self, $fun, $ast) = @_;
 
@@ -93,8 +133,14 @@ sub _jit_emit_op {
         when (pj_binop_add) {
             my $v1 = $self->_jit_emit($fun, $ast->get_left_kid);
             my $v2 = $self->_jit_emit($fun, $ast->get_right_kid);
+            my $res = jit_insn_add($fun, $self->_to_nv($fun, $v1), $self->_to_nv($fun, $v2));
 
-            return jit_insn_add($fun, $v1, $v2);
+            # this should be a pj_binop_add_assing; or maybe not
+            if ($ast->get_perl_op->flags & OPf_STACKED) {
+                pa_sv_set_nv($fun, $v1, $res);
+            }
+
+            return $res;
         }
         default {
             die "I'm sorry, I've not been implemented yet";
