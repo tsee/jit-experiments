@@ -88,14 +88,6 @@ pj_find_first_executed_op(pTHX_ OP *o)
 }
 
 
-static void
-pj_free_terms_vector(std::vector<PerlJIT::AST::Term *> &terms)
-{
-  std::vector<PerlJIT::AST::Term *>::iterator it = terms.begin();
-  for (; it != terms.end(); ++it)
-    delete *it;
-}
-
 static std::vector<PerlJIT::AST::Term *>
 pj_find_jit_candidates_internal(pTHX_ OP *o, OP *parentop, OPTreeJITCandidateFinder &visitor);
 
@@ -152,8 +144,10 @@ pj_build_ast(pTHX_ OP *o,
       else if (IS_JITTABLE_OP_TYPE(otype)) {
         kid_terms.push_back( pj_build_ast(aTHX_ kid, subtrees, nvariables, visitor) );
         if (kid_terms.back() == NULL) {
-          // Failed to build sub-AST
-          pj_free_terms_vector(kid_terms);
+          // Failed to build sub-AST, free ASTs build thus far before bailing
+          std::vector<PerlJIT::AST::Term *>::iterator it = terms.begin();
+          for (; it != terms.end(); ++it)
+            delete *it;
           return NULL;
         }
       }
