@@ -108,9 +108,11 @@ Variable::Variable(OP *p_op, int ivariable, pj_basic_type t)
 {}
 
 
-Optree::Optree(OP *p_op)
+Optree::Optree(OP *p_op, OP *p_start_op)
   : Term(p_op, pj_ttype_optree)
-{}
+{
+  start_op = p_start_op;
+}
 
 
 Unop::Unop(OP *p_op, pj_op_type t, Term *kid)

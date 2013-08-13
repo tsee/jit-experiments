@@ -121,7 +121,7 @@ pj_build_ast(pTHX_ OP *o,
     // separate candidates and treat as subtree.
     PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
     pj_find_jit_candidates_internal(aTHX_ o, visitor);
-    retval = new AST::Optree(o);
+    retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
 
     // FIXME replace pj_double_type with type that's imposed by the current OP
     subtrees.push_back( OPWithImposedType(o, pj_double_type) );

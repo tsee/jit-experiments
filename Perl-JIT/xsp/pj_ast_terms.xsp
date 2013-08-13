@@ -60,4 +60,6 @@ class PerlJIT::AST::Variable : public %name{Perl::JIT::AST::Term} PerlJIT::AST::
 
 %name{Perl::JIT::AST::Optree}
 class PerlJIT::AST::Optree : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
-{};
+{
+  OP *start_op %get %set;
+};
