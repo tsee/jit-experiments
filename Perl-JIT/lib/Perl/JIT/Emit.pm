@@ -32,8 +32,11 @@ sub jit_sub {
     for my $ast (@asts) {
         my $op = $self->jit_tree($ast);
 
+        # TODO there does not seem to be a core function to clone an optree,
+        #      so for now keep the optree around so Optree nodes can call
+        #      into it
         # TODO add B::Generate API taking the CV
-        B::Replace::replace_tree($cv->ROOT, $ast->get_perl_op, $op);
+        B::Replace::replace_tree($cv->ROOT, $ast->get_perl_op, $op, 1);
     }
 }
 
@@ -105,7 +108,14 @@ sub _jit_emit {
             return pa_get_pad_sv($fun, $padix);
         }
         when (pj_ttype_optree) {
-            # nothing to do here
+            $ast->get_perl_op->next(0);
+            # TODO should get the op ptr from a custom op field, and
+            #      clone the sub-optree rather than keeping it around
+            my $op = jit_value_create_long_constant($fun, jit_type_ulong, ${$ast->get_start_op});
+            pa_call_runloop($fun, $op);
+
+            # TODO only works for scalar context
+            return pa_pop_sv($fun);
         }
         when (pj_ttype_op) {
             return $self->_jit_emit_op($fun, $ast);
