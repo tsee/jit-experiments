@@ -21,6 +21,7 @@ our @EXPORT = qw(
   is_jitting
   run_jit_tests
   count_jit_tests
+  build_jit_test_sub
 );
 
 SCOPE: {
@@ -179,6 +180,26 @@ sub run_jit_tests {
                $test->{output},
                "$test->{name}: Checking output");
   }
+}
+
+sub build_jit_test_sub {
+  my ($params, $code, $retval) = @_;
+  my $subcode = qq[
+    \$sub = sub {
+      my ($params) = \@_;
+
+      $code;
+
+      return($retval);
+    }
+  ];
+  my $sub;
+  my $ok = eval $subcode;
+  if (!$ok) {
+    my $err = $@ || 'Zombie error';
+    die "Failed to compile test function code:\n$subcode";
+  }
+  return $sub;
 }
 
 package t::lib::Perl::JIT::Test;
