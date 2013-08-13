@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-use t::lib::Perl::JIT::Test tests => 8;
+use t::lib::Perl::JIT::Test;
 
 sub inc {
     my ($a) = @_;
@@ -16,6 +16,14 @@ sub inc_assign {
     return $a;
 }
 
+sub add_assign {
+    my ($a) = @_;
+
+    $a += $a + 2;
+
+    return $a;
+}
+
 sub inc_and_assign {
     my ($a) = @_;
     my $x = $a + 1;
@@ -25,22 +33,68 @@ sub inc_and_assign {
 
 sub add_and_assign {
     my ($a, $b) = @_;
+
+    # declaration in separate statement
+    my $x;
+    $x = $a + $b;
+
+    return $x;
+}
+
+sub add_and_assign_declare {
+    my ($a, $b) = @_;
+
+    # declaration in same statement (OP flags differ from separate decl)
     my $x = $a + $b;
 
     return $x;
 }
 
-# add
-is_jitting(\&inc, [{ name => 'add'}]);
-is(inc(41), 42);
+sub add_nested {
+    my ($a, $b) = @_;
 
-# add-assign
-is_jitting(\&inc_assign, [{ name => 'add'}]);
-is(inc_assign(41), 42);
+    my $x = abs(abs($a) + abs($b));
 
-# add and assign
-is_jitting(\&inc_and_assign, [{ name => 'add'}]);
-is(inc_and_assign(41), 42);
+    return $x;
+}
 
-is_jitting(\&add_and_assign, [{ name => 'add'}]);
-is(add_and_assign(41, 1), 42);
+my @tests = (
+  { name   => 'add constant',
+    func   => \&inc,
+    input  => [41], },
+  { name   => 'add-assign constant',
+    func   => \&inc_assign,
+    input  => [41], },
+  { name   => 'add-assign with non-constant',
+    func   => \&add_assign,
+    input  => [20], },
+  { name   => 'add and assign with non-constant',
+    func   => \&inc_and_assign,
+    input  => [41], },
+  { name   => 'add variables, no declaration',
+    func   => \&add_and_assign,
+    input  => [41, 1], },
+  { name   => 'add variables, with declaration',
+    func   => \&add_and_assign_declare,
+    input  => [37, 5], },
+  # TODO unjitted subtrees not supported yet
+  #{ name   => 'add op nested in other ops',
+  #  func   => \&add_nested,
+  #  input  => [38, 4], },
+);
+
+plan tests => 2 * scalar(@tests);
+
+my $opgrep = [{ name => 'add' }];
+my $output = 42;
+foreach my $test (@tests) {
+  $test->{opgrep} = $opgrep; # shortcut
+  $test->{output} = $output;
+
+  is_jitting($test->{func}, $test->{opgrep}, $test->{name});
+
+  is_deeply( $test->{func}->(@{$test->{input}}),
+             $test->{output},
+             "$test->{name}: Checking output");
+}
+
