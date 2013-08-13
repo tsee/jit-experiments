@@ -144,7 +144,8 @@ pj_build_ast(pTHX_ OP *o,
   }
 
   if (retval != NULL) {
-    retval->dump();
+    if (PJ_DEBUGGING)
+      retval->dump();
     return retval;
   }
 
@@ -226,7 +227,7 @@ pj_build_ast(pTHX_ OP *o,
   */
 
   PJ_DEBUG_1("Returning from pj_build_ast. Have %i subtrees right now.\n", (int)subtrees.size());
-  if (retval != NULL)
+  if (PJ_DEBUGGING && retval != NULL)
     retval->dump();
   return retval;
 }
