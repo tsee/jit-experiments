@@ -10,9 +10,9 @@
 #  define PJ_DEBUG_2 (void)
 #else
 #  define PJ_DEBUGGING 1
-#  define PJ_DEBUG(s) printf(s)
-#  define PJ_DEBUG_1(s, par1) printf(s, par1)
-#  define PJ_DEBUG_2(s, par1, par2) printf(s, par1, par2)
+#  define PJ_DEBUG(s) do { printf(s); fflush(stdout); } while(0)
+#  define PJ_DEBUG_1(s, par1) do { printf(s, par1); fflush(stdout); } while(0)
+#  define PJ_DEBUG_2(s, par1, par2) do { printf(s, par1, par2); fflush(stdout); } while(0)
 #endif
 
 #endif
