@@ -16,6 +16,7 @@ our @EXPORT = qw(
   runperl_output_is
   runperl_output_like
   runperl_output
+  approx_eq
   is_approx
   run_ctest
   is_jitting
@@ -116,9 +117,13 @@ sub _runperl {
   return ($stdout, $stderr, $rc);
 }
 
+sub approx_eq {
+  my ($t, $ref) = @_;
+  return($t + 1e-9 > $ref && $t - 1e-9 < $ref)
+}
 sub is_approx {
   my ($t, $ref, $name) = @_;
-  ok($t + 1e-9 > $ref && $t - 1e9 < $ref, $name)
+  ok(is_approx($t, $ref), $name)
     or diag("$t appears to be different from $ref");
 }
 
@@ -176,9 +181,16 @@ sub run_jit_tests {
   foreach my $test (@$tests) {
     is_jitting($test->{func}, $test->{opgrep}, $test->{name});
 
-    is_deeply( $test->{func}->(@{$test->{input}}),
-               $test->{output},
-               "$test->{name}: Checking output");
+    my $tname = "$test->{name}: Checking output";
+    if (ref($test->{output}) and ref($test->{output}) eq 'CODE') {
+      ok($test->{output}->( $test->{func}->(@{$test->{input}}) ),
+         $tname);
+    }
+    else {
+      is_deeply( $test->{func}->(@{$test->{input}}),
+                 $test->{output},
+                 $tname);
+    }
   }
 }
 
