@@ -19,6 +19,8 @@ our @EXPORT = qw(
   is_approx
   run_ctest
   is_jitting
+  run_jit_tests
+  count_jit_tests
 );
 
 SCOPE: {
@@ -160,6 +162,23 @@ sub is_jitting {
   }
 
   return ok(1, $diag);
+}
+
+sub count_jit_tests {
+  my $tests = shift;
+  return 2 * @$tests;
+}
+
+sub run_jit_tests {
+  my $tests = shift;
+
+  foreach my $test (@$tests) {
+    is_jitting($test->{func}, $test->{opgrep}, $test->{name});
+
+    is_deeply( $test->{func}->(@{$test->{input}}),
+               $test->{output},
+               "$test->{name}: Checking output");
+  }
 }
 
 package t::lib::Perl::JIT::Test;

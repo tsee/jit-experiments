@@ -83,18 +83,11 @@ my @tests = (
   #  input  => [38, 4], },
 );
 
-plan tests => 2 * scalar(@tests);
+# save typing
+$_->{output} = 42 for @tests;
+$_->{opgrep} = [{ name => 'add' }] for @tests;
 
-my $opgrep = [{ name => 'add' }];
-my $output = 42;
-foreach my $test (@tests) {
-  $test->{opgrep} = $opgrep; # shortcut
-  $test->{output} = $output;
+plan tests => count_jit_tests(\@tests);
 
-  is_jitting($test->{func}, $test->{opgrep}, $test->{name});
-
-  is_deeply( $test->{func}->(@{$test->{input}}),
-             $test->{output},
-             "$test->{name}: Checking output");
-}
+run_jit_tests(\@tests);
 
