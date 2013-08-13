@@ -2,84 +2,48 @@
 
 use t::lib::Perl::JIT::Test;
 
-sub inc {
-    my ($a) = @_;
+sub _build_test_sub {
+  my ($params, $code, $retval) = @_;
+  my $subcode = qq[
+    \$sub = sub {
+      my ($params) = \@_;
 
-    return $a + 1;
-}
+      $code;
 
-sub inc_assign {
-    my ($a) = @_;
-
-    $a += 1;
-
-    return $a;
-}
-
-sub add_assign {
-    my ($a) = @_;
-
-    $a += $a + 2;
-
-    return $a;
-}
-
-sub inc_and_assign {
-    my ($a) = @_;
-    my $x = $a + 1;
-
-    return $x;
-}
-
-sub add_and_assign {
-    my ($a, $b) = @_;
-
-    # declaration in separate statement
-    my $x;
-    $x = $a + $b;
-
-    return $x;
-}
-
-sub add_and_assign_declare {
-    my ($a, $b) = @_;
-
-    # declaration in same statement (OP flags differ from separate decl)
-    my $x = $a + $b;
-
-    return $x;
-}
-
-sub add_nested {
-    my ($a, $b) = @_;
-
-    my $x = abs(abs($a) + abs($b));
-
-    return $x;
+      return($retval);
+    }
+  ];
+  my $sub;
+  my $ok = eval $subcode;
+  if (!$ok) {
+    my $err = $@ || 'Zombie error';
+    die "Failed to compile test function code:\n$subcode";
+  }
+  return $sub;
 }
 
 my @tests = (
   { name   => 'add constant',
-    func   => \&inc,
+    func   => _build_test_sub('$a', '', '$a + 1'),
     input  => [41], },
   { name   => 'add-assign constant',
-    func   => \&inc_assign,
+    func   => _build_test_sub('$a', '$a += 1', '$a'),
     input  => [41], },
   { name   => 'add-assign with non-constant',
-    func   => \&add_assign,
+    func   => _build_test_sub('$a', '$a += $a + 2', '$a'),
     input  => [20], },
   { name   => 'add and assign with non-constant',
-    func   => \&inc_and_assign,
+    func   => _build_test_sub('$a', 'my $x = $a + 1', '$x'),
     input  => [41], },
   { name   => 'add variables, no declaration',
-    func   => \&add_and_assign,
+    func   => _build_test_sub('$a, $b', 'my $x; $x = $a + $b;', '$x'),
     input  => [41, 1], },
   { name   => 'add variables, with declaration',
-    func   => \&add_and_assign_declare,
+    func   => _build_test_sub('$a, $b', 'my $x = $a + $b;', '$x'),
     input  => [37, 5], },
   # TODO unjitted subtrees not supported yet
   #{ name   => 'add op nested in other ops',
-  #  func   => \&add_nested,
+  #  func   => _build_test_sub('$a, $b', 'my $x = abs(abs($a) + abs($b));', '$x'),
   #  input  => [38, 4], },
 );
 
