@@ -141,6 +141,7 @@ static void
 S_dump_tree_indent(int lvl)
 {
   int i;
+  printf("# ");
   for (i = 0; i < lvl; ++i)
     printf("  ");
 }
