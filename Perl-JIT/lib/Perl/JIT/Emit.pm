@@ -128,7 +128,7 @@ sub _to_nv {
     my ($self, $fun, $val) = @_;
     my $type = jit_value_get_type($val);
 
-    if ($$type == ${jit_type_float64()}) {
+    if ($$type == ${jit_type_NV()}) {
         return $val;
     } elsif ($$type == ${jit_type_void_ptr()}) {
         return pa_sv_nv($fun, $val);
@@ -164,7 +164,7 @@ sub _jit_emit_op {
                 }
             }
 
-            # this should be a pj_binop_<xxx>_assing; or maybe better a flag
+            # this should be a pj_binop_<xxx>_assign; or maybe better a flag
             if ($ast->get_perl_op->flags & OPf_STACKED) {
                 pa_sv_set_nv($fun, $v1, $res);
             }
