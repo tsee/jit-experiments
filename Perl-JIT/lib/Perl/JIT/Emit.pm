@@ -56,7 +56,6 @@ sub jit_tree {
 
     $op->ppaddr(jit_function_to_closure($fun));
     $op->targ($ast->get_perl_op->targ);
-    $op->next($ast->get_perl_op->next);
 
     return $op;
 }
