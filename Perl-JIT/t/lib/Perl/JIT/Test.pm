@@ -118,12 +118,13 @@ sub _runperl {
 }
 
 sub approx_eq {
-  my ($t, $ref) = @_;
-  return($t + 1e-9 > $ref && $t - 1e-9 < $ref)
+  my ($t, $ref, $delta) = @_;
+  $delta ||= 1e-9;
+  return($t + $delta > $ref && $t - $delta < $ref)
 }
 sub is_approx {
-  my ($t, $ref, $name) = @_;
-  ok(is_approx($t, $ref), $name)
+  my ($t, $ref, $name, $delta) = @_;
+  ok(is_approx($t, $ref, $delta), $name)
     or diag("$t appears to be different from $ref");
 }
 

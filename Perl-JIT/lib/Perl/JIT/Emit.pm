@@ -182,6 +182,21 @@ sub _jit_emit_op {
                 when (pj_unop_abs) {
                     $res = jit_insn_abs($fun, $self->_to_nv($fun, $v1));
                 }
+                when (pj_unop_sin) {
+                    $res = jit_insn_sin($fun, $self->_to_nv($fun, $v1));
+                }
+                when (pj_unop_cos) {
+                    $res = jit_insn_cos($fun, $self->_to_nv($fun, $v1));
+                }
+                when (pj_unop_sqrt) {
+                    $res = jit_insn_sqrt($fun, $self->_to_nv($fun, $v1));
+                }
+                when (pj_unop_log) {
+                    $res = jit_insn_log($fun, $self->_to_nv($fun, $v1));
+                }
+                when (pj_unop_exp) {
+                    $res = jit_insn_exp($fun, $self->_to_nv($fun, $v1));
+                }
                 default {
                     die "I'm sorry, I've not been implemented yet";
                 }
