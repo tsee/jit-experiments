@@ -10,7 +10,7 @@ use Moo;
 
 use B::Generate;
 use B::Replace;
-use B qw(OPf_STACKED);
+use B qw(OPf_STACKED OPf_KIDS);
 
 use Perl::JIT qw(:all);
 
@@ -18,6 +18,8 @@ use LibJIT::API qw(:all);
 use LibJIT::PerlAPI qw(:all);
 
 has jit_context => ( is => 'ro' );
+has current_cv  => ( is => 'ro' );
+has subtrees    => ( is => 'ro' );
 
 sub BUILD {
     my ($self) = @_;
@@ -27,24 +29,31 @@ sub BUILD {
 
 sub jit_sub {
     my ($self, $sub) = @_;
-    my $cv = B::svref_2object($sub);
     my @asts = Perl::JIT::find_jit_candidates($sub);
+    local $self->{current_cv} = B::svref_2object($sub);
+    local $self->{subtrees} = [];
 
     for my $ast (@asts) {
         my $op = $self->jit_tree($ast);
 
-        # TODO there does not seem to be a core function to clone an optree,
-        #      so for now keep the optree around so Optree nodes can call
-        #      into it
         # TODO add B::Generate API taking the CV
-        B::Replace::replace_tree($cv->ROOT, $ast->get_perl_op, $op, 1);
+        B::Replace::replace_tree($self->current_cv->ROOT, $ast->get_perl_op, $op);
     }
 }
 
 sub jit_tree {
     my ($self, $ast) = @_;
-    my $op = B::OP->new('null', 0);
     my $cxt = $self->jit_context;
+    my $op;
+
+    if (@{$self->subtrees}) {
+        my $tree = $self->subtrees;
+
+        $tree->[$_]->sibling($tree->[$_ + 1]) for 0 .. $#$tree;
+        $op = B::LISTOP->new('stub', OPf_KIDS, $tree->[0], $tree->[-1]);
+    } else {
+        $op = B::OP->new('stub', 0);
+    }
 
     jit_context_build_start($self->jit_context);
 
@@ -108,9 +117,12 @@ sub _jit_emit {
             return pa_get_pad_sv($fun, $padix);
         }
         when (pj_ttype_optree) {
+            # unfortunately there is (currently) no way to clone an optree,
+            # so just detach the ops from the root tree
+            B::Replace::detach_tree($self->current_cv->ROOT, $ast->get_perl_op, 1);
             $ast->get_perl_op->next(0);
-            # TODO should get the op ptr from a custom op field, and
-            #      clone the sub-optree rather than keeping it around
+            push @{$self->subtrees}, $ast->get_perl_op;
+
             my $op = jit_value_create_long_constant($fun, jit_type_ulong, ${$ast->get_start_op});
             pa_call_runloop($fun, $op);
 
