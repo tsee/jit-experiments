@@ -198,16 +198,15 @@ sub _jit_emit_op {
 sub _jit_emit_const {
     my ($self, $fun, $ast) = @_;
 
-    # TODO fix the type to match IV/UV/NV
     given ($ast->get_const_type) {
         when (pj_double_type) {
-            return jit_value_create_float64_constant($fun, jit_type_float64, $ast->get_dbl_value);
+            return jit_value_create_NV_constant($fun, $ast->get_dbl_value);
         }
         when (pj_int_type) {
-            return jit_value_create_long_constant($fun, jit_type_long, $ast->get_int_value);
+            return jit_value_create_IV_constant($fun, $ast->get_int_value);
         }
         when (pj_uint_type) {
-            return jit_value_create_long_constant($fun, jit_type_ulong, $ast->get_uint_value);
+            return jit_value_create_UV_constant($fun, $ast->get_uint_value);
         }
     }
 }
