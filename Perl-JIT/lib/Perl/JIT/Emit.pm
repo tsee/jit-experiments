@@ -1,12 +1,14 @@
 package Perl::JIT::Emit;
 
 use v5.14;
-use warnings;
-# This is to make given/when work on 5.14 and 5.18. *sigh*
-no warnings $] < 5.018 ? 'redefine' : 'experimental';
-use warnings 'redefine';
 
 use Moo;
+
+use warnings;
+# This is to make given/when work on 5.14 and 5.18. *sigh*, and it
+# needs to be after 'use Moo'
+no warnings $] < 5.018 ? 'redefine' : 'experimental';
+use warnings 'redefine';
 
 use B::Generate;
 use B::Replace;
