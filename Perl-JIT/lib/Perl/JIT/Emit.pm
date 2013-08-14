@@ -1,6 +1,10 @@
 package Perl::JIT::Emit;
 
 use v5.14;
+use warnings;
+# This is to make given/when work on 5.14 and 5.18. *sigh*
+no warnings $] < 5.018 ? 'redefine' : 'experimental';
+use warnings 'redefine';
 
 use Moo;
 
@@ -12,9 +16,6 @@ use Perl::JIT qw(:all);
 
 use LibJIT::API qw(:all);
 use LibJIT::PerlAPI qw(:all);
-
-no warnings $] < 5.018 ? 'redefine' : 'experimental';
-use warnings 'redefine';
 
 has jit_context => ( is => 'ro' );
 
