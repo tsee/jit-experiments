@@ -130,6 +130,16 @@ sub is_approx {
 
 my $emit = Perl::JIT::Emit->new; # keep it around for now
 
+sub _maybe_concise_dump {
+  my ($sub, $name) = @_;
+  if ($ENV{CONCISE_DUMP}) {
+    require B::Concise;
+    print "\n\nConcise dump for '$name'\n";
+    my $walker = B::Concise::compile('','',$sub);
+    $walker->();
+  }
+}
+
 sub is_jitting {
   my ($sub, $opgrep_patterns, $diag) = @_;
   local $Test::Builder::Level = $Test::Builder::Level + 1;
@@ -146,6 +156,7 @@ sub is_jitting {
     unless ($matched) {
       ok(0, "$diag: could not find op matching");
       diag(Dumper($pat));
+      _maybe_concise_dump("$diag: expected OP could not be found", $sub);
       return 0;
     }
   }
@@ -164,6 +175,7 @@ sub is_jitting {
     if ($matched) {
       ok(0, "$diag: some op has not been JITted");
       diag(Dumper($pat));
+      _maybe_concise_dump("$diag: OP-to-be-JITted still found ", $sub);
       return 0;
     }
   }
