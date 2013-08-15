@@ -26,16 +26,6 @@ static CV *PJ_cur_cv;
 
 namespace PerlJIT {
   class OPTreeJITCandidateFinder;
-
-  // Represents a non-JIT-able subtree below
-  class OPWithImposedType {
-  public:
-    OPWithImposedType(OP *o, const pj_type_id t)
-      : op(o), imposed_type(t) {}
-
-    OP *op;
-    pj_type_id imposed_type;
-  };
 }
 
 using namespace PerlJIT;
@@ -108,7 +98,6 @@ pj_get_sv_from_svop(pTHX_ SVOP *o)
 /* Walk OP tree recursively, build ASTs, build subtrees */
 static PerlJIT::AST::Term *
 pj_build_ast(pTHX_ OP *o,
-             vector<OPWithImposedType> &subtrees,
              unsigned int *nvariables, OPTreeJITCandidateFinder &visitor)
 {
   PerlJIT::AST::Term *retval = NULL;
@@ -122,9 +111,6 @@ pj_build_ast(pTHX_ OP *o,
     PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
     pj_find_jit_candidates_internal(aTHX_ o, visitor);
     retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
-
-    // FIXME replace pj_double_type with type that's imposed by the current OP
-    subtrees.push_back( OPWithImposedType(o, pj_double_type) );
   }
   else if (!(o->op_flags & OPf_KIDS)) {
     // Handle ops without kids first
@@ -158,7 +144,7 @@ pj_build_ast(pTHX_ OP *o,
   for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
     PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
 
-    kid_terms.push_back( pj_build_ast(aTHX_ kid, subtrees, nvariables, visitor) );
+    kid_terms.push_back( pj_build_ast(aTHX_ kid, nvariables, visitor) );
     if (kid_terms.back() == NULL) {
       // Failed to build sub-AST, free ASTs build thus far before bailing
       kid_terms.pop_back();
@@ -226,49 +212,10 @@ pj_build_ast(pTHX_ OP *o,
     {}
   */
 
-  PJ_DEBUG_1("Returning from pj_build_ast. Have %i subtrees right now.\n", (int)subtrees.size());
   if (PJ_DEBUGGING && retval != NULL)
     retval->dump();
   return retval;
 }
-
-/* Builds op_sibling list between JITOP children, but also
- * re-wires the direct children's op_next to the following
- * child's first OP and the last child's op_next to the JITOP itself. */
-static void
-pj_build_jitop_kid_list(pTHX_ LISTOP *jitop, vector<OPWithImposedType> &subtrees)
-{
-  if (subtrees.empty()) {
-    jitop->op_first = NULL; /* FIXME is this valid for a LISTOP? */
-    jitop->op_last = NULL;
-  }
-  else {
-    OP *o;
-
-    /* TODO for now, we just always impose "numeric". Later, this may need
-     *      to be flexible. */
-
-    o = (OP *)subtrees[0].op;
-    jitop->op_first = o;
-    PJ_DEBUG_1("First kid is %s\n", OP_NAME(o));
-
-    /* Alternating op-imposed-type and actual subtree */
-    const unsigned int n = subtrees.size();
-    for (unsigned int i = 1; i < n; i += 1) {
-      PJ_DEBUG_2("Kid %u is %s\n", i, OP_NAME(o));
-      /* TODO get the imposed type context from subtrees[i].imposed_type here */
-      o->op_sibling = (OP *)subtrees[i].op;
-      o->op_next = pj_find_first_executed_op(aTHX_ subtrees[i].op);
-      o = o->op_sibling;
-    }
-
-    /* Wire last child OP to execute JITOP next. */
-    jitop->op_last = o;
-    o->op_next = (OP *)jitop;
-    o->op_sibling = NULL;
-  }
-}
-
 
 /* Starting from a candidate for JITing, walk the OP tree to accumulate
  * a subtree that can be replaced with a single JIT OP. */
@@ -291,8 +238,7 @@ pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   if (PJ_DEBUGGING)
     printf("Attempting JIT on %s (%p, %p)\n", OP_NAME(o), o, o->op_next);
 
-  std::vector<OPWithImposedType> subtrees;
-  ast = pj_build_ast(aTHX_ o, subtrees, &nvariables, visitor);
+  ast = pj_build_ast(aTHX_ o, &nvariables, visitor);
 
   return ast;
 }
