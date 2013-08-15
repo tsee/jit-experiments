@@ -12,6 +12,7 @@ typedef enum {
   pj_ttype_constant,
   pj_ttype_variable,
   pj_ttype_optree,
+  pj_ttype_nulloptree,
   pj_ttype_op
 } pj_term_type;
 
@@ -183,6 +184,15 @@ namespace PerlJIT {
       virtual void dump(int indent_lvl = 0);
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Optree"; }
+    };
+
+    class NullOptree : public Term {
+    public:
+      NullOptree(OP *p_op);
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::NullOptree"; }
     };
 
   } // end namespace PerlJIT::AST

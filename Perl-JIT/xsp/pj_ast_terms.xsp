@@ -62,3 +62,8 @@ class PerlJIT::AST::Optree : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Te
 {
   OP *start_op %get %set;
 };
+
+%name{Perl::JIT::AST::NullOptree}
+class PerlJIT::AST::NullOptree : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
+{
+};

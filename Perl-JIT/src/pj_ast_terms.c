@@ -115,6 +115,12 @@ Optree::Optree(OP *p_op, OP *p_start_op)
 }
 
 
+NullOptree::NullOptree(OP *p_op)
+  : Term(p_op, pj_ttype_nulloptree)
+{
+}
+
+
 Unop::Unop(OP *p_op, pj_op_type t, Term *kid)
   : Op(p_op, t)
 {
@@ -177,6 +183,13 @@ Optree::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
   printf("'UnJITable subtree'\n");
+}
+
+
+void
+NullOptree::dump(int indent_lvl)
+{
+  printf("'UnJITable nulled subtree'\n");
 }
 
 
