@@ -152,6 +152,20 @@ sub _to_nv {
     }
 }
 
+sub _to_numeric_type {
+    my ($self, $fun, $val) = @_;
+    my $type = jit_value_get_type($val);
+
+    if (jit_type_is_primitive($type) and $$type != ${jit_type_void()}) {
+        return $val;
+    } elsif ($$type == ${jit_type_void_ptr()}) {
+        return pa_sv_nv($fun, $val); # somewhat dubious
+    } else {
+        die "Handle more coercion cases";
+    }
+}
+
+
 sub _jit_emit_op {
     my ($self, $fun, $ast) = @_;
 
@@ -211,6 +225,9 @@ sub _jit_emit_op {
                 }
                 when (pj_unop_exp) {
                     $res = jit_insn_exp($fun, $self->_to_nv($fun, $v1));
+                }
+                when (pj_unop_bool_not) {
+                    $res = jit_insn_to_not_bool($fun, $self->_to_numeric_type($fun, $v1));
                 }
                 default {
                     die "I'm sorry, I've not been implemented yet";
