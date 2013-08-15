@@ -87,24 +87,24 @@ static unsigned int pj_ast_op_flags[] = {
 
 
 Constant::Constant(OP *p_op, double c)
-  : Term(p_op, pj_ttype_constant),
-    const_type(pj_double_type), dbl_value(c)
+  : Term(p_op, pj_ttype_constant, new Scalar(pj_double_type)),
+    dbl_value(c)
 {}
 
 Constant::Constant(OP *p_op, int c)
-  : Term(p_op, pj_ttype_constant),
-    const_type(pj_int_type), int_value(c)
+  : Term(p_op, pj_ttype_constant, new Scalar(pj_int_type)),
+    int_value(c)
 {}
 
 Constant::Constant(OP *p_op, unsigned int c)
-  : Term(p_op, pj_ttype_constant),
-    const_type(pj_uint_type), uint_value(c)
+  : Term(p_op, pj_ttype_constant, new Scalar(pj_uint_type)),
+    uint_value(c)
 {}
 
 
-Variable::Variable(OP *p_op, int ivariable, pj_basic_type t)
-  : Term(p_op, pj_ttype_variable),
-    var_type(t), ivar(ivariable)
+Variable::Variable(OP *p_op, int ivariable)
+  : Term(p_op, pj_ttype_variable, new Scalar(pj_unspecified_type)),
+    ivar(ivariable)
 {}
 
 
@@ -153,11 +153,11 @@ void
 Constant::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  if (this->const_type == pj_double_type)
+  if (this->value_type->tag() == pj_double_type)
     printf("C = %f\n", (float)this->dbl_value);
-  else if (this->const_type == pj_int_type)
+  else if (this->value_type->tag() == pj_int_type)
     printf("C = %i\n", (int)this->int_value);
-  else if (this->const_type == pj_uint_type)
+  else if (this->value_type->tag() == pj_uint_type)
     printf("C = %lu\n", (unsigned long)this->uint_value);
   else
     abort();

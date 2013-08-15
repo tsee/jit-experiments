@@ -1,6 +1,8 @@
 #ifndef PJ_TERMS_H_
 #define PJ_TERMS_H_
 
+#include "types.h"
+
 #include <vector>
 
 // Definition of types and functions for the Perl JIT AST.
@@ -66,12 +68,6 @@ typedef enum {
   pj_listop_LAST  = pj_listop_ternary,
 } pj_op_type;
 
-typedef enum {
-  pj_double_type,
-  pj_int_type,
-  pj_uint_type
-} pj_basic_type;
-
 /* Indicates that the given op will only evaluate its arguments
  * conditionally (eg. short-circuiting boolean and/or). */
 #define PJ_ASTf_CONDITIONAL (1<<0)
@@ -80,11 +76,13 @@ namespace PerlJIT {
   namespace AST {
     class Term {
     public:
-      Term() {}
-      Term(OP *p_op, pj_term_type t) : type(t), perl_op(p_op) {}
+      Term(Type *v_type = 0) {}
+      Term(OP *p_op, pj_term_type t, Type *v_type = 0) :
+        type(t), perl_op(p_op), value_type(v_type) {}
 
       pj_term_type type;
       OP *perl_op;
+      Type *value_type;
 
       virtual void dump(int indent_lvl = 0) = 0;
       virtual const char *perl_class() const
@@ -99,7 +97,6 @@ namespace PerlJIT {
       Constant(OP *p_op, int c);
       Constant(OP *p_op, unsigned int c);
 
-      pj_basic_type const_type;
       union {
         double dbl_value;
         int int_value;
@@ -114,9 +111,8 @@ namespace PerlJIT {
     class Variable : public Term {
     public:
       Variable() {}
-      Variable(OP *p_op, int ivariable, pj_basic_type t);
+      Variable(OP *p_op, int ivariable);
 
-      pj_basic_type var_type;
       int ivar;
 
       virtual void dump(int indent_lvl);

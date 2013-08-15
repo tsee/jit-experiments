@@ -30,11 +30,11 @@ namespace PerlJIT {
   // Represents a non-JIT-able subtree below
   class OPWithImposedType {
   public:
-    OPWithImposedType(OP *o, const pj_basic_type t)
+    OPWithImposedType(OP *o, const pj_type_id t)
       : op(o), imposed_type(t) {}
 
     OP *op;
-    pj_basic_type imposed_type;
+    pj_type_id imposed_type;
   };
 }
 
@@ -136,7 +136,7 @@ pj_build_ast(pTHX_ OP *o,
       retval = new AST::Constant(o, SvNV(constsv)); /* FIXME replace type by inferred type */
     }
     else if (otype == OP_PADSV) {
-      retval = new AST::Variable(o, (*nvariables)++, pj_double_type);
+      retval = new AST::Variable(o, (*nvariables)++);
     }
     else {
       croak("Shouldn't happen! Unsupported nullary OP!? %s", OP_NAME(o));

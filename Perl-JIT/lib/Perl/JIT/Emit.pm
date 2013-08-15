@@ -245,7 +245,7 @@ sub _jit_emit_op {
 sub _jit_emit_const {
     my ($self, $fun, $ast) = @_;
 
-    given ($ast->get_const_type) {
+    given ($ast->const_type) {
         when (pj_double_type) {
             return jit_value_create_NV_constant($fun, $ast->get_dbl_value);
         }

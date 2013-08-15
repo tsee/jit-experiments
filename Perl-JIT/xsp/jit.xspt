@@ -10,7 +10,7 @@
     %xs_type{T_ENUM};
 };
 
-%typemap{pj_basic_type}{simple}{
+%typemap{pj_type_id}{simple}{
     %xs_type{T_ENUM};
 };
 

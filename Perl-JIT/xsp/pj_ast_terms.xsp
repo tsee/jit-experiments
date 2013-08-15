@@ -45,7 +45,7 @@ class PerlJIT::AST::Listop : public %name{Perl::JIT::AST::Op} PerlJIT::AST::Op
 %name{Perl::JIT::AST::Constant}
 class PerlJIT::AST::Constant : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
 {
-  pj_basic_type const_type %get %set;
+  pj_type_id const_type() %code{% RETVAL = THIS->value_type->tag(); %};
   double dbl_value %get %set;
   int int_value %get %set;
   unsigned int uint_value %get %set;
@@ -54,7 +54,6 @@ class PerlJIT::AST::Constant : public %name{Perl::JIT::AST::Term} PerlJIT::AST::
 %name{Perl::JIT::AST::Variable}
 class PerlJIT::AST::Variable : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
 {
-  pj_basic_type var_type %get %set;
   int ivar %get %set;
 };
 
