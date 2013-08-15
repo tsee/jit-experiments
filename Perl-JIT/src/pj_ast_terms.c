@@ -87,24 +87,24 @@ static unsigned int pj_ast_op_flags[] = {
 
 
 Constant::Constant(OP *p_op, double c)
-  : Term(p_op, pj_ttype_constant), dbl_value(c),
-    const_type(pj_double_type)
+  : Term(p_op, pj_ttype_constant),
+    const_type(pj_double_type), dbl_value(c)
 {}
 
 Constant::Constant(OP *p_op, int c)
-  : Term(p_op, pj_ttype_constant), int_value(c),
-    const_type(pj_int_type)
+  : Term(p_op, pj_ttype_constant),
+    const_type(pj_int_type), int_value(c)
 {}
 
 Constant::Constant(OP *p_op, unsigned int c)
-  : Term(p_op, pj_ttype_constant), uint_value(c),
-    const_type(pj_uint_type)
+  : Term(p_op, pj_ttype_constant),
+    const_type(pj_uint_type), uint_value(c)
 {}
 
 
 Variable::Variable(OP *p_op, int ivariable, pj_basic_type t)
-  : Term(p_op, pj_ttype_variable), ivar(ivariable),
-    var_type(t)
+  : Term(p_op, pj_ttype_variable),
+    var_type(t), ivar(ivariable)
 {}
 
 
