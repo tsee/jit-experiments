@@ -143,6 +143,8 @@ sub _to_nv {
 
     if ($$type == ${jit_type_NV()}) {
         return $val;
+    } elsif (jit_type_is_primitive($type) and $$type != ${jit_type_void()}) {
+        return jit_insn_convert($fun, $val, jit_type_NV, 0);
     } elsif ($$type == ${jit_type_void_ptr()}) {
         return pa_sv_nv($fun, $val);
     } else {
