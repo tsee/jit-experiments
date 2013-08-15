@@ -279,8 +279,16 @@ pj_build_ast(pTHX_ OP *o,
     EMIT_UNOP_CODE(OP_NEGATE, pj_unop_negate)
     /* EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not) */ /* FIXME not same as perl */
     EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
+  case OP_NULL:
+    if (kid_terms.size() == 1 && o->op_targ == 0) {
+      // attempt a pass-through this null-op. FIXME likely WRONG
+      retval = kid_terms[0];
+      break;
+    }
   default:
-    PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s", OP_NAME(o));
+    PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
+    if (otype == OP_NULL)
+      PJ_DEBUG_1("This is an OP_NULL that might have been a %s before\n", PL_op_name[o->op_targ]);
     abort();
   }
 #undef EMIT_BINOP_CODE
