@@ -274,6 +274,33 @@ sub _jit_emit_op {
                 when (pj_unop_bool_not) {
                     $res = jit_insn_to_not_bool($fun, $self->_to_numeric_type($fun, $v1));
                 }
+                when (pj_unop_perl_int) {
+                    if (_value_is_integer($v1)) {
+                        $res = $v1;
+                    }
+                    else {
+                        my $val = $self->_to_numeric_type($fun, $v1);
+                        my $endlabel = jit_label_undefined;
+                        my $neglabel = jit_label_undefined;
+
+                        # if value < 0.0, then goto neglabel
+                        my $constval = jit_value_create_NV_constant($fun, 0.0);
+                        my $tmpval = jit_insn_lt($fun, $val, $constval);
+                        jit_insn_branch_if($fun, $tmpval, $neglabel);
+
+                        # else use floor, then goto endlabel
+                        $res = jit_insn_floor($fun, $val);
+                        jit_insn_branch($fun, $endlabel);
+
+                        # neglabel: use ceil, fall through to endlabel
+                        jit_insn_label($fun, $neglabel);
+                        my $tmprv = jit_insn_ceil($fun, $val);
+                        jit_insn_store($fun, $res, $tmprv);
+
+                        # endlabel; done.
+                        jit_insn_label($fun, $endlabel);
+                    }
+                }
                 default {
                     die "I'm sorry, I've not been implemented yet";
                 }

@@ -4,7 +4,7 @@ use t::lib::Perl::JIT::Test;
 
 my %ops = map {$_ => { name => $_ }} qw(
   multiply divide add subtract sin cos
-  sqrt log exp
+  sqrt log exp int
 );
 my @tests = (
   { name   => 'multiply identity',
@@ -45,6 +45,10 @@ my @tests = (
     opgrep => [@ops{qw(sqrt exp add)}],
     output => sub {approx_eq($_[0], 2 + sqrt(exp(3)), 1e-6)},
     input  => [3, 2], },
+  { name   => 'int(42.1)',
+    func   => build_jit_test_sub('$a', '', 'int($a)'),
+    opgrep => [@ops{qw(int)}],
+    input  => [42.1], },
 );
 
 # save typing
