@@ -218,7 +218,9 @@ void Listop::dump(int indent_lvl)
 
 
 Term::~Term()
-{}
+{
+  delete value_type;
+}
 
 Op::~Op()
 {
