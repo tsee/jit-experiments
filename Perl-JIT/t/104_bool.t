@@ -3,7 +3,7 @@
 use t::lib::Perl::JIT::Test;
 
 my %ops = map {$_ => { name => $_ }} qw(
-  not
+  not and or
 );
 my @tests = (
   { name   => 'boolean not false to true',
@@ -16,6 +16,21 @@ my @tests = (
     opgrep => [$ops{not}],
     output => 1,
     input  => [1], },
+  { name   => 'boolean and (yes)',
+    func   => build_jit_test_sub('$a, $b', 'my $x = 1+($a && $b);', '$x'),
+    opgrep => [$ops{and}],
+    output => 1000,
+    input  => [99, 999], },
+  { name   => 'boolean and (left no)',
+    func   => build_jit_test_sub('$a, $b', 'my $x = 1+($a && $b);', '$x'),
+    opgrep => [$ops{and}],
+    output => 1,
+    input  => [0, 9999], },
+  { name   => 'boolean and (right no)',
+    func   => build_jit_test_sub('$a, $b', 'my $x = 1+($a && $b);', '$x'),
+    opgrep => [$ops{and}],
+    output => 1,
+    input  => [2, 0], },
 );
 
 # save typing

@@ -62,6 +62,7 @@ sub jit_tree {
     my $fun = pa_create_pp($cxt);
     $self->_jit_emit_root($fun, $ast);
 
+    #jit_dump_function(\*STDOUT, $fun, "foo");
     jit_function_compile($fun);
     jit_context_build_end($self->jit_context);
 
@@ -216,9 +217,12 @@ sub _jit_emit_op {
 
     given ($ast->op_class) {
         when (pj_opc_binop) {
-            my $v1 = $self->_jit_emit($fun, $ast->get_left_kid);
-            my $v2 = $self->_jit_emit($fun, $ast->get_right_kid);
             my $res;
+            my ($v1, $v2);
+            if (not $ast->evaluates_kids_conditionally) {
+                $v1 = $self->_jit_emit($fun, $ast->get_left_kid);
+                $v2 = $self->_jit_emit($fun, $ast->get_right_kid);
+            }
 
             given ($ast->get_optype) {
                 when (pj_binop_add) {
@@ -232,6 +236,29 @@ sub _jit_emit_op {
                 }
                 when (pj_binop_divide) {
                     $res = jit_insn_div($fun, $self->_to_nv($fun, $v1), $self->_to_nv($fun, $v2));
+                }
+                when (pj_binop_bool_and) {
+                    # This is all a bit awkward because we need to check $a
+                    # of $a && $b first, then return $a (but not the converted
+                    # value of $a!) then return unconverted $b. On top of that,
+                    # we need to only evaluate $b (which could be a big subtree)
+                    # only if $a was false - Perl's short-circuiting doesn't happen
+                    # automatically at this level.
+                    my $endlabel = jit_label_undefined;
+                    $res = jit_value_create($fun, jit_type_void_ptr);
+
+                    # If value is false, then go with v1 and never look at v2
+                    $v1 = $self->_jit_emit($fun, $ast->get_left_kid);
+                    jit_insn_store($fun, $res, $v1);
+                    my $tmp = $self->_to_numeric_type($fun, $v1);
+                    jit_insn_branch_if_not($fun, $tmp, $endlabel);
+
+                    # Left is true, move to right operand
+                    $v2 = $self->_jit_emit($fun, $ast->get_right_kid);
+                    jit_insn_store($fun, $res, $v2);
+
+                    # endlabel; done.
+                    jit_insn_label($fun, $endlabel);
                 }
                 default {
                     die "I'm sorry, I've not been implemented yet";
