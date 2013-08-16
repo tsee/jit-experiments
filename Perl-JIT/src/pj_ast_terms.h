@@ -71,7 +71,7 @@ typedef enum {
 
 /* Indicates that the given op will only evaluate its arguments
  * conditionally (eg. short-circuiting boolean and/or). */
-#define PJ_ASTf_CONDITIONAL (1<<0)
+#define PJ_ASTf_KIDS_CONDITIONAL (1<<0)
 
 namespace PerlJIT {
   namespace AST {

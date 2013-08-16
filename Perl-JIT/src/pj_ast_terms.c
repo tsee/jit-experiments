@@ -78,11 +78,11 @@ static unsigned int pj_ast_op_flags[] = {
   0,                              /* pj_binop_le */
   0,                              /* pj_binop_gt */
   0,                              /* pj_binop_ge */
-  PJ_ASTf_CONDITIONAL,            /* pj_binop_bool_and */
-  PJ_ASTf_CONDITIONAL,            /* pj_binop_bool_or */
+  PJ_ASTf_KIDS_CONDITIONAL,            /* pj_binop_bool_and */
+  PJ_ASTf_KIDS_CONDITIONAL,            /* pj_binop_bool_or */
 
   /* listops */
-  PJ_ASTf_CONDITIONAL,            /* pj_listop_ternary */
+  PJ_ASTf_KIDS_CONDITIONAL,            /* pj_listop_ternary */
 };
 
 
