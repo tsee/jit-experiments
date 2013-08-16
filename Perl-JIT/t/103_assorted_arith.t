@@ -49,6 +49,22 @@ my @tests = (
     func   => build_jit_test_sub('$a', '', 'int($a)'),
     opgrep => [@ops{qw(int)}],
     input  => [42.1], },
+  { name   => 'int(42)',
+    func   => build_jit_test_sub('$a', '', 'int($a)'),
+    opgrep => [@ops{qw(int)}],
+    input  => [42], },
+  { name   => '-int(-42.9999)',
+    func   => build_jit_test_sub('$a', '', '-int($a)'),
+    opgrep => [@ops{qw(int)}],
+    input  => [-42.9999], },
+  { name   => '-int(-42)',
+    func   => build_jit_test_sub('$a', '', '-int($a)'),
+    opgrep => [@ops{qw(int)}],
+    input  => [-42], },
+  { name   => '42+int(0)',
+    func   => build_jit_test_sub('$a', '', '42+int($a)'),
+    opgrep => [@ops{qw(int)}],
+    input  => [0], },
 );
 
 # save typing
