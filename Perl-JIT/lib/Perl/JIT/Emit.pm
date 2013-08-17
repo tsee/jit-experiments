@@ -145,6 +145,9 @@ sub _jit_emit {
         when (pj_ttype_op) {
             return $self->_jit_emit_op($fun, $ast);
         }
+        default {
+            die "I'm sorry, I've not been implemented yet";
+        }
     }
 }
 
