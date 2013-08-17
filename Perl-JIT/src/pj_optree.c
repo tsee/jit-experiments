@@ -31,7 +31,7 @@ namespace PerlJIT {
 using namespace PerlJIT;
 using namespace std;
 
-static std::vector<PerlJIT::AST::Term *>
+static vector<PerlJIT::AST::Term *>
 pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 static PerlJIT::AST::Term *
 pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
@@ -91,7 +91,7 @@ namespace PerlJIT {
       return VISIT_CONT;
     } // end 'visit_op'
 
-    std::vector<PerlJIT::AST::Term *> candidates;
+    vector<PerlJIT::AST::Term *> candidates;
   }; // end class OPTreeJITCandidateFinder
 }
 
@@ -265,7 +265,7 @@ pj_build_ast(pTHX_ OP *o,
   // before building this node.
 
   // Build child list
-  std::vector<PerlJIT::AST::Term *> kid_terms;
+  vector<PerlJIT::AST::Term *> kid_terms;
   unsigned int ikid = 0;
   for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
     PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
@@ -274,7 +274,7 @@ pj_build_ast(pTHX_ OP *o,
     if (kid_terms.back() == NULL) {
       // Failed to build sub-AST, free ASTs build thus far before bailing
       kid_terms.pop_back();
-      std::vector<PerlJIT::AST::Term *>::iterator it = kid_terms.begin();
+      vector<PerlJIT::AST::Term *>::iterator it = kid_terms.begin();
       for (; it != kid_terms.end(); ++it)
         delete *it;
       return NULL;
@@ -295,7 +295,7 @@ pj_build_ast(pTHX_ OP *o,
     break;
 #define EMIT_LISTOP_CODE(perl_op_type, pj_op_type)  \
   case perl_op_type: {                              \
-    std::vector<PerlJIT::AST::Term *> kids;         \
+    vector<PerlJIT::AST::Term *> kids;              \
     for (unsigned int i = 0; i < ikid-1; ++i)       \
       kids.push_back(kid_terms[i]);                 \
     retval = new AST::Listop(o, pj_op_type, kids);  \
@@ -381,14 +381,14 @@ pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
  * For candidates, invoke JIT attempt and then move on without going into
  * the particular sub-tree; tree walking in OPTreeWalker, actual logic in
  * OPTreeJITCandidateFinder! */
-static std::vector<PerlJIT::AST::Term *>
+static vector<PerlJIT::AST::Term *>
 pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 {
   visitor.visit(aTHX_ o, NULL);
   return visitor.candidates;
 }
 
-std::vector<PerlJIT::AST::Term *>
+vector<PerlJIT::AST::Term *>
 pj_find_jit_candidates(pTHX_ SV *coderef)
 {
   if (!SvROK(coderef) || SvTYPE(SvRV(coderef)) != SVt_PVCV)
@@ -397,7 +397,7 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
   PJ_cur_cv = cv;
 
   OPTreeJITCandidateFinder f;
-  std::vector<PerlJIT::AST::Term *> tmp = pj_find_jit_candidates_internal(aTHX_ CvROOT(cv), f);
+  vector<PerlJIT::AST::Term *> tmp = pj_find_jit_candidates_internal(aTHX_ CvROOT(cv), f);
   if (PJ_DEBUGGING) {
     printf("%i JIT candidate ASTs:\n", (int)tmp.size());
     for (unsigned int i = 0; i < (unsigned int)tmp.size(); ++i) {
