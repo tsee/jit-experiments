@@ -74,15 +74,16 @@ namespace PerlJIT {
 
       PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
 
-      /* Attempt JIT if the right OP type. Don't recurse if so. */
-      if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
-        PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
+      /* Grab attribute information */
+      if (otype == OP_ENTERSUB) {
+        PerlJIT::AST::Term *ast = pj_check_attributes(aTHX_ cLISTOPo);
         if (ast)
             candidates.push_back(ast);
         return VISIT_SKIP;
       }
-      if (otype == OP_ENTERSUB) {
-        PerlJIT::AST::Term *ast = pj_check_attributes(aTHX_ cLISTOPo);
+      /* Attempt JIT if the right OP type. Don't recurse if so. */
+      if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
+        PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
         if (ast)
             candidates.push_back(ast);
         return VISIT_SKIP;
