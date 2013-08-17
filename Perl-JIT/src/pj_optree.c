@@ -64,7 +64,7 @@ namespace PerlJIT {
   class OPTreeJITCandidateFinder : public OPTreeVisitor
   {
   public:
-    OPTreeJITCandidateFinder() {}
+    OPTreeJITCandidateFinder() : variable_id(0) {}
 
     visit_control_t
     visit_op(pTHX_ OP *o, OP *parentop)
@@ -92,6 +92,7 @@ namespace PerlJIT {
     } // end 'visit_op'
 
     vector<PerlJIT::AST::Term *> candidates;
+    unsigned int variable_id;
   }; // end class OPTreeJITCandidateFinder
 }
 
@@ -211,8 +212,7 @@ pj_check_attributes(pTHX_ LISTOP *o)
 
 /* Walk OP tree recursively, build ASTs, build subtrees */
 static PerlJIT::AST::Term *
-pj_build_ast(pTHX_ OP *o,
-             unsigned int *nvariables, OPTreeJITCandidateFinder &visitor)
+pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 {
   PerlJIT::AST::Term *retval = NULL;
 
@@ -248,7 +248,7 @@ pj_build_ast(pTHX_ OP *o,
       retval = new AST::Constant(o, SvNV(constsv)); /* FIXME replace type by inferred type */
     }
     else if (otype == OP_PADSV) {
-      retval = new AST::Variable(o, (*nvariables)++);
+      retval = new AST::Variable(o, visitor.variable_id++);
     }
     else {
       croak("Shouldn't happen! Unsupported nullary OP!? %s", OP_NAME(o));
@@ -270,7 +270,7 @@ pj_build_ast(pTHX_ OP *o,
   for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
     PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
 
-    kid_terms.push_back( pj_build_ast(aTHX_ kid, nvariables, visitor) );
+    kid_terms.push_back( pj_build_ast(aTHX_ kid, visitor) );
     if (kid_terms.back() == NULL) {
       // Failed to build sub-AST, free ASTs build thus far before bailing
       kid_terms.pop_back();
@@ -367,12 +367,11 @@ static PerlJIT::AST::Term *
 pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 {
   PerlJIT::AST::Term *ast;
-  unsigned int nvariables = 0;
 
   if (PJ_DEBUGGING)
     printf("Attempting JIT on %s (%p, %p)\n", OP_NAME(o), o, o->op_next);
 
-  ast = pj_build_ast(aTHX_ o, &nvariables, visitor);
+  ast = pj_build_ast(aTHX_ o, visitor);
 
   return ast;
 }
