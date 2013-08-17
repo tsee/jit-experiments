@@ -116,8 +116,7 @@ pj_check_attributes(pTHX_ LISTOP *o)
   // check that the first 3 arguments and the invocant are what we expect
   if (attrpackage->op_type != OP_CONST
       || currpackage->op_type != OP_CONST
-      || makeref->op_type != OP_SREFGEN
-      || attr->op_type != OP_CONST)
+      || makeref->op_type != OP_SREFGEN)
     return 0;
 
   // and an additional check that the 2nd argument is a scalar reference
@@ -133,14 +132,19 @@ pj_check_attributes(pTHX_ LISTOP *o)
              "attributes") != 0)
     return 0;
 
+  // check all arguments are constants
+  for (OP *arg = attr; arg && arg != cLOOPo->op_last; arg = arg->op_sibling)
+    if (arg->op_type != OP_CONST)
+      return 0;
+
   // we have a winner! now try parsing the attributes as a type
   AST::Type *result = 0;
   int remaining = 0;
 
   for (OP *pred = makeref; attr && attr != cLOOPo->op_last; pred = attr, attr = attr->op_sibling) {
     ++remaining;
-    if (attr->op_type != OP_CONST || result)
-      continue;
+    if (result)
+      break;
     SV *cval = pj_get_sv_from_svop(aTHX_ cSVOPx(attr));
 
     PJ_DEBUG_1("Checking potential type (%s)\n", SvPV_nolen(cval));
