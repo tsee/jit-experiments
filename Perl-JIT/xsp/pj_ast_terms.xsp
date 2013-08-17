@@ -1,23 +1,22 @@
 %module{Perl::JIT};
 
 #include "pj_ast_terms.h"
+#include "xsp_typedefs.h"
 
 /* map op to B::*OP class name */
 #include "opclass.h"
 
-%name{Perl::JIT::AST::Term}
-class PerlJIT::AST::Term {
+class Perl::JIT::AST::Term {
   pj_term_type type %get %set;
   OP *perl_op %get %set;
 
   void dump();
 };
 
-%name{Perl::JIT::AST::Op}
-class PerlJIT::AST::Op : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
+class Perl::JIT::AST::Op : public Perl::JIT::AST::Term
 {
   pj_op_type optype %get %set;
-  std::vector<PerlJIT::AST::Term *> kids %get;
+  std::vector<Perl::JIT::AST::Term *> kids %get;
 
   const char * name() const;
   pj_op_class op_class() const;
@@ -25,29 +24,25 @@ class PerlJIT::AST::Op : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
     %code{% RETVAL = THIS->flags() & PJ_ASTf_KIDS_CONDITIONAL; %};
 };
 
-%name{Perl::JIT::AST::Unop}
-class PerlJIT::AST::Unop : public %name{Perl::JIT::AST::Op} PerlJIT::AST::Op
+class Perl::JIT::AST::Unop : public Perl::JIT::AST::Op
 {
-  PerlJIT::AST::Term *get_kid() %code{% RETVAL = THIS->kids[0]; %};
-  void set_kid(PerlJIT::AST::Term *k) %code{% THIS->kids[0] = k; %};
+  Perl::JIT::AST::Term *get_kid() %code{% RETVAL = THIS->kids[0]; %};
+  void set_kid(Perl::JIT::AST::Term *k) %code{% THIS->kids[0] = k; %};
 };
 
-%name{Perl::JIT::AST::Binop}
-class PerlJIT::AST::Binop : public %name{Perl::JIT::AST::Op} PerlJIT::AST::Op
+class Perl::JIT::AST::Binop : public Perl::JIT::AST::Op
 {
-  PerlJIT::AST::Term *get_left_kid() %code{% RETVAL = THIS->kids[0]; %};
-  void set_left_kid(PerlJIT::AST::Term *k) %code{% THIS->kids[0] = k; %};
+  Perl::JIT::AST::Term *get_left_kid() %code{% RETVAL = THIS->kids[0]; %};
+  void set_left_kid(Perl::JIT::AST::Term *k) %code{% THIS->kids[0] = k; %};
 
-  PerlJIT::AST::Term *get_right_kid() %code{% RETVAL = THIS->kids[1]; %};
-  void set_right_kid(PerlJIT::AST::Term *k) %code{% THIS->kids[1] = k; %};
+  Perl::JIT::AST::Term *get_right_kid() %code{% RETVAL = THIS->kids[1]; %};
+  void set_right_kid(Perl::JIT::AST::Term *k) %code{% THIS->kids[1] = k; %};
 };
 
-%name{Perl::JIT::AST::Listop}
-class PerlJIT::AST::Listop : public %name{Perl::JIT::AST::Op} PerlJIT::AST::Op
+class Perl::JIT::AST::Listop : public Perl::JIT::AST::Op
 {};
 
-%name{Perl::JIT::AST::Constant}
-class PerlJIT::AST::Constant : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
+class Perl::JIT::AST::Constant : public Perl::JIT::AST::Term
 {
   pj_type_id const_type() %code{% RETVAL = THIS->value_type->tag(); %};
   double dbl_value %get %set;
@@ -55,30 +50,25 @@ class PerlJIT::AST::Constant : public %name{Perl::JIT::AST::Term} PerlJIT::AST::
   unsigned int uint_value %get %set;
 };
 
-%name{Perl::JIT::AST::Identifier}
-class PerlJIT::AST::Identifier : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
+class Perl::JIT::AST::Identifier : public Perl::JIT::AST::Term
 {
 };
 
-%name{Perl::JIT::AST::VariableDeclaration}
-class PerlJIT::AST::VariableDeclaration : public %name{Perl::JIT::AST::Identifier} PerlJIT::AST::Identifier
+class Perl::JIT::AST::VariableDeclaration : public Perl::JIT::AST::Identifier
 {
   int ivar %get %set;
 };
 
-%name{Perl::JIT::AST::Variable}
-class PerlJIT::AST::Variable : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Identifier
+class Perl::JIT::AST::Variable : public Perl::JIT::AST::Identifier
 {
   int get_ivar() const %code{% RETVAL = THIS->declaration->ivar; %};
 };
 
-%name{Perl::JIT::AST::Optree}
-class PerlJIT::AST::Optree : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
+class Perl::JIT::AST::Optree : public Perl::JIT::AST::Term
 {
   OP *start_op %get %set;
 };
 
-%name{Perl::JIT::AST::NullOptree}
-class PerlJIT::AST::NullOptree : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
+class Perl::JIT::AST::NullOptree : public Perl::JIT::AST::Term
 {
 };

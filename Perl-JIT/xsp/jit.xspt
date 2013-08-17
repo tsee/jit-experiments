@@ -18,12 +18,12 @@
     %xs_type{T_ENUM};
 };
 
-%typemap{PerlJIT::AST::Term *}{object}{
+%typemap{Perl::JIT::AST::Term *}{object}{
     %xs_type{O_AST};
     %xs_output_code{% sv_setref_pv( $arg, xsp_constructor_class($var->perl_class()), (void*)$var ); %};
 };
 
-%typemap{std::vector<PerlJIT::AST::Term *>}{parsed}{
+%typemap{std::vector<Perl::JIT::AST::Term *>}{parsed}{
   %cpp_type{%std::vector<PerlJIT::AST::Term *>%};
   %output_list{%
     const unsigned int n = $CVar.size();
