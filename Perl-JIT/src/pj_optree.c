@@ -31,6 +31,12 @@ namespace PerlJIT {
 using namespace PerlJIT;
 using namespace std;
 
+static std::vector<PerlJIT::AST::Term *>
+pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
+static PerlJIT::AST::Term *
+pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
+static PerlJIT::AST::Term *
+pj_check_attributes(pTHX_ LISTOP *o);
 
 #define IS_JITTABLE_ROOT_OP_TYPE(otype) \
         ( otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE \
@@ -52,6 +58,42 @@ using namespace std;
           || otype == OP_AND \
           || otype == OP_OR \
           || otype == OP_NULL )
+
+
+namespace PerlJIT {
+  class OPTreeJITCandidateFinder : public OPTreeVisitor
+  {
+  public:
+    OPTreeJITCandidateFinder() {}
+
+    visit_control_t
+    visit_op(pTHX_ OP *o, OP *parentop)
+    {
+      unsigned int otype;
+      otype = o->op_type;
+
+      PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
+
+      /* Attempt JIT if the right OP type. Don't recurse if so. */
+      if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
+        PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
+        if (ast)
+            candidates.push_back(ast);
+        return VISIT_SKIP;
+      }
+      if (otype == OP_ENTERSUB) {
+        PerlJIT::AST::Term *ast = pj_check_attributes(aTHX_ cLISTOPo);
+        if (ast)
+            candidates.push_back(ast);
+        return VISIT_SKIP;
+      }
+      return VISIT_CONT;
+    } // end 'visit_op'
+
+    std::vector<PerlJIT::AST::Term *> candidates;
+  }; // end class OPTreeJITCandidateFinder
+}
+
 
 /* Scan a section of the OP tree and find whichever OP is
  * going to be executed first. This is done by doing pure
@@ -77,9 +119,6 @@ pj_find_first_executed_op(pTHX_ OP *o)
   abort(); /* not reached */
 }
 
-
-static std::vector<PerlJIT::AST::Term *>
-pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 
 /* Fetches the SV* for an SVOP.
  * Essentially an unrolled cSVOPx_sv(op) that deals with the fact
@@ -335,40 +374,6 @@ pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   ast = pj_build_ast(aTHX_ o, &nvariables, visitor);
 
   return ast;
-}
-
-namespace PerlJIT {
-  class OPTreeJITCandidateFinder : public OPTreeVisitor
-  {
-  public:
-    OPTreeJITCandidateFinder() {}
-
-    visit_control_t
-    visit_op(pTHX_ OP *o, OP *parentop)
-    {
-      unsigned int otype;
-      otype = o->op_type;
-
-      PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
-
-      /* Attempt JIT if the right OP type. Don't recurse if so. */
-      if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
-        PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
-        if (ast)
-            candidates.push_back(ast);
-        return VISIT_SKIP;
-      }
-      if (otype == OP_ENTERSUB) {
-        PerlJIT::AST::Term *ast = pj_check_attributes(aTHX_ cLISTOPo);
-        if (ast)
-            candidates.push_back(ast);
-        return VISIT_SKIP;
-      }
-      return VISIT_CONT;
-    } // end 'visit_op'
-
-    std::vector<PerlJIT::AST::Term *> candidates;
-  }; // end class OPTreeJITCandidateFinder
 }
 
 /* Traverse OP tree from o until done OR a candidate for JITing was found.
