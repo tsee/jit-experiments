@@ -9,6 +9,7 @@
 class Perl::JIT::AST::Term {
   pj_term_type type %get %set;
   OP *perl_op %get %set;
+  std::vector<Perl::JIT::AST::Term *> get_kids() %code{% THIS; %};
 
   void dump();
 };
