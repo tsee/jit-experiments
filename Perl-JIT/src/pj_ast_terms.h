@@ -77,7 +77,6 @@ namespace PerlJIT {
   namespace AST {
     class Term {
     public:
-      Term(Type *v_type = 0) {}
       Term(OP *p_op, pj_term_type t, Type *v_type = 0) :
         type(t), perl_op(p_op), value_type(v_type) {}
 
@@ -93,7 +92,6 @@ namespace PerlJIT {
 
     class Constant : public Term {
     public:
-      Constant() {};
       Constant(OP *p_op, double c);
       Constant(OP *p_op, int c);
       Constant(OP *p_op, unsigned int c);
@@ -111,7 +109,6 @@ namespace PerlJIT {
 
     class Variable : public Term {
     public:
-      Variable() {}
       Variable(OP *p_op, int ivariable);
 
       int ivar;
@@ -123,7 +120,6 @@ namespace PerlJIT {
 
     class Op : public Term {
     public:
-      Op() {}
       Op(OP *p_op, pj_op_type t) : Term(p_op, pj_ttype_op), optype(t) {}
 
       const char *name();
@@ -141,7 +137,6 @@ namespace PerlJIT {
 
     class Unop : public Op {
     public:
-      Unop() {}
       Unop(OP *p_op, pj_op_type t, Term *kid);
 
       pj_op_class op_class()
@@ -154,7 +149,6 @@ namespace PerlJIT {
 
     class Binop : public Op {
     public:
-      Binop() {}
       Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2);
 
       virtual void dump(int indent_lvl = 0);
@@ -166,7 +160,6 @@ namespace PerlJIT {
 
     class Listop : public Op {
     public:
-      Listop() {}
       Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children);
 
       virtual void dump(int indent_lvl = 0);
