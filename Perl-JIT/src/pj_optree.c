@@ -11,7 +11,9 @@
 #include "pj_ast_terms.h"
 
 #include "pj_global_state.h"
+
 #include <vector>
+#include <tr1/unordered_map>
 
 /* inspired by B.xs */
 #define PMOP_pmreplstart(o)	o->op_pmstashstartu.op_pmreplstart
@@ -29,6 +31,7 @@ namespace PerlJIT {
 }
 
 using namespace PerlJIT;
+using namespace std::tr1;
 using namespace std;
 
 static vector<PerlJIT::AST::Term *>
@@ -64,7 +67,7 @@ namespace PerlJIT {
   class OPTreeJITCandidateFinder : public OPTreeVisitor
   {
   public:
-    OPTreeJITCandidateFinder() : variable_id(0) {}
+    OPTreeJITCandidateFinder() {}
 
     visit_control_t
     visit_op(pTHX_ OP *o, OP *parentop)
@@ -91,8 +94,26 @@ namespace PerlJIT {
       return VISIT_CONT;
     } // end 'visit_op'
 
+    // declaration points to an op with OPpLVAL_INTRO, reference points
+    // the op that is being processed (which might or might not have the
+    // OPpLVAL_INTRO flag)
+    // this is required because we might process a variable reference
+    // before seeing the declaration
+    AST::VariableDeclaration *
+    get_declaration(OP *declaration, OP *reference)
+    {
+      AST::VariableDeclaration *decl = variables[reference->op_targ];
+      if (decl)
+        return decl;
+
+      decl = new AST::VariableDeclaration(declaration, variables.size());
+      variables[reference->op_targ] = decl;
+
+      return decl;
+    }
+
     vector<PerlJIT::AST::Term *> candidates;
-    unsigned int variable_id;
+    unordered_map<PADOFFSET, AST::VariableDeclaration *> variables;
   }; // end class OPTreeJITCandidateFinder
 }
 
@@ -248,7 +269,10 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       retval = new AST::Constant(o, SvNV(constsv)); /* FIXME replace type by inferred type */
     }
     else if (otype == OP_PADSV) {
-      retval = new AST::Variable(o, visitor.variable_id++);
+      if (o->op_flags & OPpLVAL_INTRO)
+        retval = visitor.get_declaration(o, o);
+      else
+        retval = new AST::Variable(o, visitor.get_declaration(0, o));
     }
     else {
       croak("Shouldn't happen! Unsupported nullary OP!? %s", OP_NAME(o));

@@ -11,6 +11,7 @@ typedef struct op OP; // that's the Perl OP
 typedef enum {
   pj_ttype_constant,
   pj_ttype_variable,
+  pj_ttype_variabledeclaration,
   pj_ttype_optree,
   pj_ttype_nulloptree,
   pj_ttype_op
@@ -107,11 +108,28 @@ namespace PerlJIT {
         { return "Perl::JIT::AST::Constant"; }
     };
 
-    class Variable : public Term {
+    // abstract
+    class Identifier : public Term {
     public:
-      Variable(OP *p_op, int ivariable);
+      Identifier(OP *p_op, pj_term_type t, Type *v_type = 0);
+    };
+
+    class VariableDeclaration : public Identifier {
+    public:
+      VariableDeclaration(OP *p_op, int ivariable);
 
       int ivar;
+
+      virtual void dump(int indent_lvl);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::VariableDeclaration"; }
+    };
+
+    class Variable : public Identifier {
+    public:
+      Variable(OP *p_op, VariableDeclaration *decl);
+
+      VariableDeclaration *declaration;
 
       virtual void dump(int indent_lvl);
       virtual const char *perl_class() const

@@ -55,10 +55,21 @@ class PerlJIT::AST::Constant : public %name{Perl::JIT::AST::Term} PerlJIT::AST::
   unsigned int uint_value %get %set;
 };
 
-%name{Perl::JIT::AST::Variable}
-class PerlJIT::AST::Variable : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
+%name{Perl::JIT::AST::Identifier}
+class PerlJIT::AST::Identifier : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Term
+{
+};
+
+%name{Perl::JIT::AST::VariableDeclaration}
+class PerlJIT::AST::VariableDeclaration : public %name{Perl::JIT::AST::Identifier} PerlJIT::AST::Identifier
 {
   int ivar %get %set;
+};
+
+%name{Perl::JIT::AST::Variable}
+class PerlJIT::AST::Variable : public %name{Perl::JIT::AST::Term} PerlJIT::AST::Identifier
+{
+  int get_ivar() const %code{% RETVAL = THIS->declaration->ivar; %};
 };
 
 %name{Perl::JIT::AST::Optree}

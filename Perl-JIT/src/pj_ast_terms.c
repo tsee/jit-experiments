@@ -102,17 +102,25 @@ Constant::Constant(OP *p_op, unsigned int c)
 {}
 
 
-Variable::Variable(OP *p_op, int ivariable)
-  : Term(p_op, pj_ttype_variable, new Scalar(pj_unspecified_type)),
+Identifier::Identifier(OP *p_op, pj_term_type t, Type *v_type)
+: Term(p_op, t, v_type)
+{}
+
+
+VariableDeclaration::VariableDeclaration(OP *p_op, int ivariable)
+  : Identifier(p_op, pj_ttype_variabledeclaration, new Scalar(pj_unspecified_type)),
     ivar(ivariable)
 {}
 
 
+Variable::Variable(OP *p_op, VariableDeclaration *decl)
+  : Identifier(p_op, pj_ttype_variable), declaration(decl)
+{}
+
+
 Optree::Optree(OP *p_op, OP *p_start_op)
-  : Term(p_op, pj_ttype_optree)
-{
-  start_op = p_start_op;
-}
+  : Term(p_op, pj_ttype_optree), start_op(p_start_op)
+{}
 
 
 NullOptree::NullOptree(OP *p_op)
@@ -171,10 +179,18 @@ Constant::dump(int indent_lvl)
 
 
 void
+VariableDeclaration::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("VD = %i\n", this->ivar);
+}
+
+
+void
 Variable::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  printf("V = %i\n", this->ivar);
+  printf("V = %i\n", this->declaration->ivar);
 }
 
 
