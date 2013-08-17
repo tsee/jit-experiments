@@ -16,6 +16,9 @@ namespace PerlJIT {
     public:
       virtual ~Type();
       virtual pj_type_id tag() const = 0;
+
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Type"; }
     };
 
     class Scalar : public Type {
@@ -23,6 +26,8 @@ namespace PerlJIT {
       Scalar(pj_type_id tag);
       virtual pj_type_id tag() const;
 
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Scalar"; }
     private:
       pj_type_id _tag;
     };

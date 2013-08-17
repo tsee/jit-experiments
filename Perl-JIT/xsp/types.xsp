@@ -1,0 +1,15 @@
+%module{Perl::JIT};
+
+#include "types.h"
+#include "xsp_typedefs.h"
+
+class Perl::JIT::AST::Type {
+  pj_type_id tag();
+
+  // void dump();
+};
+
+
+class Perl::JIT::AST::Scalar : public Perl::JIT::AST::Type {
+  // void dump();
+};

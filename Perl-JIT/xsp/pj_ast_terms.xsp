@@ -9,6 +9,7 @@
 class Perl::JIT::AST::Term {
   pj_term_type type %get %set;
   OP *perl_op %get %set;
+  Perl::JIT::AST::Type *value_type %get;
   std::vector<Perl::JIT::AST::Term *> get_kids() %code{% THIS; %};
 
   void dump();
@@ -62,6 +63,7 @@ class Perl::JIT::AST::VariableDeclaration : public Perl::JIT::AST::Identifier
 
 class Perl::JIT::AST::Variable : public Perl::JIT::AST::Identifier
 {
+  Perl::JIT::AST::VariableDeclaration *declaration %get;
   int get_ivar() const %code{% RETVAL = THIS->declaration->ivar; %};
 };
 
