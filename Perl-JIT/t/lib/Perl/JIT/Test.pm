@@ -23,6 +23,7 @@ our @EXPORT = qw(
   run_jit_tests
   count_jit_tests
   build_jit_test_sub
+  build_jit_types_test_sub
 );
 
 SCOPE: {
@@ -227,6 +228,26 @@ sub build_jit_test_sub {
   return $sub;
 }
 
+sub build_jit_types_test_sub {
+  my ($params, $types) = @_;
+  my $type = @$types ? ": @$types" : "";
+  my $args = join ', ', @$params;
+  my $exp  = join ' + ', @$params, 1;
+  my $subcode = <<EOT;
+  sub {
+    my ($args) $type = \@_;
+
+    return $exp;
+  }
+EOT
+  my $sub = eval $subcode;
+  if (!$sub) {
+    my $err = $@ || 'Zombie error';
+    die "Failed to compile test function code:\n$subcode";
+  }
+  return $sub;
+}
+
 package t::lib::Perl::JIT::Test;
 
 use strict;
@@ -234,11 +255,13 @@ use warnings;
 use parent 'Test::Builder::Module';
 
 use Test::More;
+use Test::Differences;
 
 Perl::JIT::Test->import;
 
 our @EXPORT = (
   @Test::More::EXPORT,
+  @Test::Differences::EXPORT,
   @Perl::JIT::Test::EXPORT,
 );
 
