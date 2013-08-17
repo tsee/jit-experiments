@@ -167,11 +167,11 @@ void
 Constant::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  if (this->value_type->tag() == pj_double_type)
+  if (this->_value_type->tag() == pj_double_type)
     printf("C = %f\n", (float)this->dbl_value);
-  else if (this->value_type->tag() == pj_int_type)
+  else if (this->_value_type->tag() == pj_int_type)
     printf("C = %i\n", (int)this->int_value);
-  else if (this->value_type->tag() == pj_uint_type)
+  else if (this->_value_type->tag() == pj_uint_type)
     printf("C = %lu\n", (unsigned long)this->uint_value);
   else
     abort();
@@ -235,7 +235,7 @@ void Listop::dump(int indent_lvl)
 
 Term::~Term()
 {
-  delete value_type;
+  delete _value_type;
 }
 
 Op::~Op()
@@ -246,13 +246,22 @@ Op::~Op()
     delete k[i];
 }
 
+Type *Term::get_value_type()
+{
+  return _value_type;
+}
+
+void Term::set_value_type(Type *t)
+{
+  delete _value_type;
+  _value_type = t;
+}
 
 const char *
 Op::name()
 {
   return pj_ast_op_names[this->optype];
 }
-
 
 unsigned int
 Op::flags()

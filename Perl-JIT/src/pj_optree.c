@@ -124,7 +124,7 @@ namespace PerlJIT {
 
       AST::VariableDeclaration *decl = get_declaration(0, variable);
 
-      decl->value_type = type;
+      decl->set_value_type(type);
 
       if (can_remove)
         return new AST::NullOptree((OP *) o);

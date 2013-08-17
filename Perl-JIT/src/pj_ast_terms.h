@@ -79,16 +79,21 @@ namespace PerlJIT {
     class Term {
     public:
       Term(OP *p_op, pj_term_type t, Type *v_type = 0) :
-        type(t), perl_op(p_op), value_type(v_type) {}
+        type(t), perl_op(p_op), _value_type(v_type) {}
 
       pj_term_type type;
       OP *perl_op;
-      Type *value_type;
+
+      virtual Type *get_value_type();
+      virtual void set_value_type(Type *t);
 
       virtual void dump(int indent_lvl = 0) = 0;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Term"; }
       virtual ~Term();
+
+    protected:
+      Type *_value_type;
     };
 
     class Constant : public Term {
@@ -130,6 +135,9 @@ namespace PerlJIT {
       Variable(OP *p_op, VariableDeclaration *decl);
 
       VariableDeclaration *declaration;
+
+      virtual Type *get_value_type() { return declaration->get_value_type(); }
+      virtual void set_value_type(Type *t) { declaration->set_value_type(t); }
 
       virtual void dump(int indent_lvl);
       virtual const char *perl_class() const
