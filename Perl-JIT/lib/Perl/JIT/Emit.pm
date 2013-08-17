@@ -244,6 +244,13 @@ sub _jit_emit_op {
                     # we need to only evaluate $b (which could be a big subtree)
                     # only if $a was false - Perl's short-circuiting doesn't happen
                     # automatically at this level.
+                    # FIXME should this do a better emulation of the Perl truth check?
+                    #       Something along the lines of "if it's an SV, compare ptr to
+                    #       &PL_sv_undef. If same, then false & return. If not, then try
+                    #       the numeric conversion."?
+                    # FIXME Right now assumes type jit_type_void_ptr (==SV*).
+                    #       That's obviously totally broken.
+
                     my $endlabel = jit_label_undefined;
                     $res = jit_value_create($fun, jit_type_void_ptr);
 
