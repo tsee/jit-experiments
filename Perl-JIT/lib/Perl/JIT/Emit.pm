@@ -36,10 +36,16 @@ sub jit_sub {
     local $self->{subtrees} = [];
 
     for my $ast (@asts) {
-        my $op = $self->jit_tree($ast);
+        if ($ast->get_type == pj_ttype_nulloptree) {
+            # The tree has been marked for deletion, so just detach it
+            B::Replace::detach_tree($self->current_cv->ROOT, $ast->get_perl_op);
+        }
+        else {
+            my $op = $self->jit_tree($ast);
 
-        # TODO add B::Generate API taking the CV
-        B::Replace::replace_tree($self->current_cv->ROOT, $ast->get_perl_op, $op);
+            # TODO add B::Generate API taking the CV
+            B::Replace::replace_tree($self->current_cv->ROOT, $ast->get_perl_op, $op);
+        }
     }
 }
 
