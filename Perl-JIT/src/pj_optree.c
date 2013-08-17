@@ -286,9 +286,9 @@ pj_build_ast(pTHX_ OP *o,
       break;
     }
   default:
-    PJ_DEBUG_1("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
+    warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
     if (otype == OP_NULL)
-      PJ_DEBUG_1("This is an OP_NULL that might have been a %s before\n", PL_op_name[o->op_targ]);
+      warn("This is an OP_NULL that might have been a %s before\n", PL_op_name[o->op_targ]);
     abort();
   }
 #undef EMIT_BINOP_CODE
