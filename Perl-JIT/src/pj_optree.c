@@ -19,13 +19,6 @@
 #define PMOP_pmreplstart(o)	o->op_pmstashstartu.op_pmreplstart
 #define PMOP_pmreplroot(o)	o->op_pmreplrootu.op_pmreplroot
 
-// FIXME This global should not exist!
-// Has a ptr to the currently-being-converted-to-AST CV. That's necessary
-// because some OPs can only be interpreted in the context of the PAD of
-// their CV. Eg. SVOPs on threaded Perls use op_targ (into the CV's PAD)
-// to refer to the SV that has their constant.
-static CV *PJ_cur_cv;
-
 namespace PerlJIT {
   class OPTreeJITCandidateFinder;
 }
@@ -38,8 +31,6 @@ static vector<PerlJIT::AST::Term *>
 pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 static PerlJIT::AST::Term *
 pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
-static bool
-pj_parse_attributes(pTHX_ LISTOP *o, bool &can_remove, AST::Type *&type, OP *&variable);
 
 #define IS_JITTABLE_ROOT_OP_TYPE(otype) \
         ( otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE \
@@ -163,20 +154,6 @@ pj_find_first_executed_op(pTHX_ OP *o)
 }
 
 
-/* Fetches the SV* for an SVOP.
- * Essentially an unrolled cSVOPx_sv(op) that deals with the fact
- * that the current PAD isn't the PAD we actually want to look at. */
-static SV *
-pj_get_sv_from_svop(pTHX_ SVOP *o)
-{
-  SV *retval = o->op_sv;
-  if (retval == NULL) {
-    PADLIST * padl = CvPADLIST(PJ_cur_cv);
-    retval = PAD_BASE_SV(padl, o->op_targ);
-  }
-  return retval;
-}
-
 /* Expects to be called on an OP_ENTERSUB */
 static bool
 pj_parse_attributes(pTHX_ LISTOP *o, bool &can_remove, AST::Type *&type, OP *&variable)
@@ -185,7 +162,7 @@ pj_parse_attributes(pTHX_ LISTOP *o, bool &can_remove, AST::Type *&type, OP *&va
   // attributes::->import(__PACKAGE__, \$x, 'Bent');
   if (o->op_type != OP_ENTERSUB || !(o->op_flags & OPf_SPECIAL)
       || cLISTOPo->op_last->op_type != OP_METHOD_NAMED
-      || strcmp(SvPVx(pj_get_sv_from_svop(aTHX_ cSVOPx(cLISTOPo->op_last)), PL_na), "import") != 0)
+      || strcmp(SvPVx(cSVOPx_sv(cLISTOPo->op_last), PL_na), "import") != 0)
     return false;
 
   OP *attrpackage = cLISTOPo->op_first->op_sibling;
@@ -210,7 +187,7 @@ pj_parse_attributes(pTHX_ LISTOP *o, bool &can_remove, AST::Type *&type, OP *&va
     return false;
 
   // check the invocant is actually "attributes"
-  if (strcmp(SvPVx(pj_get_sv_from_svop(aTHX_ cSVOPx(attrpackage)), PL_na),
+  if (strcmp(SvPVx(cSVOPx_sv(attrpackage), PL_na),
              "attributes") != 0)
     return false;
 
@@ -227,7 +204,7 @@ pj_parse_attributes(pTHX_ LISTOP *o, bool &can_remove, AST::Type *&type, OP *&va
     ++remaining;
     if (type)
       break;
-    SV *cval = pj_get_sv_from_svop(aTHX_ cSVOPx(attr));
+    SV *cval = cSVOPx_sv(attr);
 
     PJ_DEBUG_1("Checking potential type (%s)\n", SvPV_nolen(cval));
     type = AST::parse_type(SvPV_nolen(cval));
@@ -282,7 +259,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     // Handle ops without kids first
     if (otype == OP_CONST) {
       /* FIXME OP_CONST can also be an int or a string and who-knows-what-else */
-      SV *constsv = pj_get_sv_from_svop(aTHX_ (SVOP *)o);
+      SV *constsv = cSVOPx_sv(o);
 
       PJ_DEBUG_1("CONST being inlined (%f).\n", SvNV(constsv));
       retval = new AST::Constant(o, SvNV(constsv)); /* FIXME replace type by inferred type */
@@ -436,7 +413,13 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
   if (!SvROK(coderef) || SvTYPE(SvRV(coderef)) != SVt_PVCV)
     croak("Need a code reference");
   CV *cv = (CV *) SvRV(coderef);
-  PJ_cur_cv = cv;
+
+  // allows using macros that refer to current pad
+  AV *tmp_comppad = PL_comppad;
+  SV **tmp_curpad = PL_curpad;
+
+  PL_comppad = PadlistARRAY(CvPADLIST(cv))[1];
+  PL_curpad = AvARRAY(PL_comppad);
 
   OPTreeJITCandidateFinder f;
   vector<PerlJIT::AST::Term *> tmp = pj_find_jit_candidates_internal(aTHX_ CvROOT(cv), f);
@@ -448,5 +431,9 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
     }
     printf("===========================\n");
   }
+
+  PL_comppad = tmp_comppad;
+  PL_curpad = tmp_curpad;
+
   return tmp;
 }
