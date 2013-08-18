@@ -19,6 +19,17 @@
 #define PMOP_pmreplstart(o)	o->op_pmstashstartu.op_pmreplstart
 #define PMOP_pmreplroot(o)	o->op_pmreplrootu.op_pmreplroot
 
+/* From B::Generate */
+#ifndef PadARRAY
+# if PERL_VERSION < 8 || (PERL_VERSION == 8 && !PERL_SUBVERSION)
+typedef AV PADLIST;
+typedef AV PAD;
+# endif
+# define PadlistARRAY(pl)	((PAD **)AvARRAY(pl))
+# define PadlistNAMES(pl)	(*PadlistARRAY(pl))
+# define PadARRAY		AvARRAY
+#endif
+
 namespace PerlJIT {
   class OPTreeJITCandidateFinder;
 }
