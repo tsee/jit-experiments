@@ -4,6 +4,7 @@ use t::lib::Perl::JIT::Test;
 use Perl::JIT qw(:all);
 
 my @tests = (
+  # basic types
   { name => 'unspecified',
     vars => ['$x'],
     type => {'' => {class => 'Scalar', tag => pj_unspecified_type}},
@@ -27,6 +28,17 @@ my @tests = (
   { name => 'unsigned int',
     vars => ['$x', '$y'],
     type => {'UnsignedInt' => {class => 'Scalar', tag => pj_uint_type}},
+    },
+  # types mixed with other attributes
+  { name => 'other_attributes',
+    vars => ['$x'],
+    type => {''    => {class => 'Scalar', tag => pj_unspecified_type},
+             'Bar' => undef},
+    },
+  { name => 'mixed',
+    vars => ['$x'],
+    type => {'Int' => {class => 'Scalar', tag => pj_int_type},
+             'Bar' => undef},
     },
 );
 

@@ -241,6 +241,9 @@ pj_parse_attributes(pTHX_ LISTOP *o, bool &can_remove, AST::Type *&type, OP *&va
     }
   }
 
+  if (!type)
+    return false;
+
   can_remove = !remaining;
   variable = lexical;
 
