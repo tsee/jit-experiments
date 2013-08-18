@@ -16,9 +16,6 @@
 * Support everything the old JIT does
 * Fix Emit code
 * Check support for logical/ternary ops
-* Subtrees
-  - order of evaluation 
-  - check nested runloop
 * Refactor AST construction logic
   * richer type system
 * Support more type than just doubles (at least at the AST level)
