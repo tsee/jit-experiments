@@ -33,6 +33,7 @@ namespace PerlJIT {
     };
 
     Type *parse_type(const char *string);
+    bool is_type(const char *string);
   }
 }
 

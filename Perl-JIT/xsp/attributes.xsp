@@ -41,9 +41,7 @@ replace_attributes_import(const char *package, SV *scalar, ...)
       // remove attributes we understood
       SP = &ST(1);
       for (int i = 2; i < items; ++i) {
-        if (PerlJIT::AST::Type *t = PerlJIT::AST::parse_type(SvPV_nolen(ST(i))))
-          delete t;
-        else
+        if (!PerlJIT::AST::is_type(SvPV_nolen(ST(i))))
           PUSHs(ST(i));
       }
 
