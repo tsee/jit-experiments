@@ -29,3 +29,4 @@
 * Use a custom peephole to handle type annotations
   current "solution" in xsp/attributes.xsp requires to hook
   attributes::import
+* Look into replacing attributes with a parser plugin
