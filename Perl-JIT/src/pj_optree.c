@@ -425,9 +425,8 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
     croak("Need a code reference");
   CV *cv = (CV *) SvRV(coderef);
 
-  // allows using macros that refer to current pad
-  AV *tmp_comppad = PL_comppad;
-  SV **tmp_curpad = PL_curpad;
+  ENTER;
+  SAVECOMPPAD(); // restores both PL_comppad and PL_curpad
 
   PL_comppad = PadlistARRAY(CvPADLIST(cv))[1];
   PL_curpad = AvARRAY(PL_comppad);
@@ -443,8 +442,7 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
     printf("===========================\n");
   }
 
-  PL_comppad = tmp_comppad;
-  PL_curpad = tmp_curpad;
+  LEAVE;
 
   return tmp;
 }
