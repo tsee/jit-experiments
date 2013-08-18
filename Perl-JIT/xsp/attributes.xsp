@@ -50,4 +50,43 @@ replace_attributes_import(const char *package, SV *scalar, ...)
 
       call_sv(attributes_import, GIMME_V);
     }
+
+    // there is yet another brokenness for attributes in 5.14 (likely other
+    // versions, not tested):
+    // perl -E 'sub MODIFY_SCALAR_ATTRIBUTES{}; sub inc { my ($x, $y) : Foo = @_; return $x + $y }; say inc(1,2)'
+    // fails because Perl emits an extra OP_PUSHMARK before the attribute
+    // method calls
+    // TODO also check with direct calls to attributes->import
+  #if PERL_VERSION < 18 // TODO need to check when exactly this was fixed
+    // this pops the extra mark, if there is one
+    if ((entersub->op_flags & OPf_SPECIAL) && TOPMARK == MARK - PL_stack_base)
+       POPMARK;
+
+    // and this goes hunting for the extra OP_PUSHMARK and nulls it
+    // TODO might be broken for SASSIGN as well
+    if ((entersub->op_flags & OPf_SPECIAL) && !entersub->op_sibling
+        && entersub->op_next->op_type == OP_AASSIGN) {
+      BINOP *assign = cBINOPx(entersub->op_next);
+      LISTOP *list = cLISTOPx(assign->op_last);
+
+      // look for a nulled OP_LIST as the last kid
+      if (list->op_type == OP_NULL && list->op_targ == OP_LIST
+          && list->op_flags & OPf_KIDS
+          && list->op_first->op_type == OP_PUSHMARK) {
+        // now look for the second OP_PUSMARK, followed by an OP_ENTERSUB
+        // with OPf_SPECIAL
+        // TODO also check that the last sibling is the current op
+        for (OP *pred = list->op_first, *curr = pred->op_sibling;
+             curr->op_sibling;
+             pred = curr, curr = curr->op_sibling) {
+          if (curr->op_type == OP_PUSHMARK
+              && curr->op_sibling->op_type == OP_ENTERSUB
+              && curr->op_sibling->op_flags & OPf_SPECIAL) {
+            curr->op_ppaddr = PL_ppaddr[OP_NULL];
+          }
+        }
+      }
+    }
+  #endif
+
 %}
