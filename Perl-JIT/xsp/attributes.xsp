@@ -1,0 +1,55 @@
+%module{Perl::JIT};
+
+%package{Perl::JIT::Types};
+
+#include "types.h"
+#include "pj_optree.h"
+#include "pj_debug.h"
+
+// in case you wondered, the on-the-fly op modification is not performed
+// in a thread safe way; a more robust solution would be to implement
+// this in a lexically-scoped peephole optimizer; works for now
+
+%{
+void
+replace_attributes_import(const char *package, SV *scalar, ...)
+  PPCODE:
+    PJ_DEBUG("In replace_attributes_import\n");
+    bool can_remove = false;
+    PerlJIT::AST::Type *type = 0;
+    OP *variable = 0;
+    LISTOP *entersub = cLISTOPx(PL_op);
+
+    if (pj_parse_attributes(aTHX_ entersub, can_remove, type, variable)) {
+      // note that the mangling is done in such a way that pj_parse_attributes
+      // can still recognize the optree later
+      if (can_remove) {
+        PJ_DEBUG("Patching optree to remove attributes::import call\n");
+        cUNOPx(entersub)->op_first->op_next = entersub->op_next;
+        cUNOPx(entersub)->op_first->op_ppaddr = PL_ppaddr[OP_NULL];
+      }
+
+      // at some point we're going to use type information attached
+      // to globals, but for now just throw it away
+      delete type;
+    }
+
+    if (!can_remove) {
+      PJ_DEBUG("Calling original attributes::import\n");
+      SV *attributes_import = SvRV(get_sv("Perl::JIT::Types::OLD_IMPORT", 0));
+
+      // remove attributes we understood
+      SP = &ST(1);
+      for (int i = 2; i < items; ++i) {
+        if (PerlJIT::AST::Type *t = PerlJIT::AST::parse_type(SvPV_nolen(ST(i))))
+          delete t;
+        else
+          PUSHs(ST(i));
+      }
+
+      PUSHMARK(MARK);
+      PUTBACK;
+
+      call_sv(attributes_import, GIMME_V);
+    }
+%}

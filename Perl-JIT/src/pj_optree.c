@@ -155,7 +155,7 @@ pj_find_first_executed_op(pTHX_ OP *o)
 
 
 /* Expects to be called on an OP_ENTERSUB */
-static bool
+bool
 pj_parse_attributes(pTHX_ LISTOP *o, bool &can_remove, AST::Type *&type, OP *&variable)
 {
   // recognizes the ops for

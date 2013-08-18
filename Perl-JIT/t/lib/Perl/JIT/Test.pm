@@ -235,6 +235,7 @@ sub build_jit_types_test_sub {
   my $exp  = join ' + ', @$params, 1;
   my $subcode = <<EOT;
   sub {
+    package main;
     my ($args) $type = \@_;
 
     return $exp;

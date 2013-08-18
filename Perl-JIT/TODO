@@ -29,3 +29,6 @@
   - inline call for "simple" subs
     - but think about caller
 * Globals (for $_)
+* Use a custom peephole to handle type annotations
+  current "solution" in xsp/attributes.xsp requires to hook
+  attributes::import
