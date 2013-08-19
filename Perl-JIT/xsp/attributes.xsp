@@ -57,7 +57,7 @@ replace_attributes_import(const char *package, SV *scalar, ...)
     // fails because Perl emits an extra OP_PUSHMARK before the attribute
     // method calls
     // TODO also check with direct calls to attributes->import
-  #if PERL_VERSION < 18 // TODO need to check when exactly this was fixed
+  #if PERL_VERSION < 15 // broken in 5.8.0
     // this pops the extra mark, if there is one
     if ((entersub->op_flags & OPf_SPECIAL) && TOPMARK == MARK - PL_stack_base)
        POPMARK;
