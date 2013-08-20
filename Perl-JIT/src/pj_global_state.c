@@ -2,15 +2,23 @@
 #include "pj_inline.h"
 #include "pj_debug.h"
 #include "pj_ast_terms.h"
+#include "pj_keyword_plugin.h"
 
 //XOP PJ_xop_jitop;
 //Perl_ophook_t PJ_orig_opfreehook;
 //jit_context_t PJ_jit_context = NULL; /* jit_context_t is a ptr */
 
+/* For chaining keyword plugins */
+int (*PJ_next_keyword_plugin)(pTHX_ char *, STRLEN, OP **);
+
 /* TODO: Make jit_context_t interpreter-local */
 void
 pj_init_global_state(pTHX)
 {
+  // Setup the actual keyword plugin
+  PJ_next_keyword_plugin = PL_keyword_plugin;
+  PL_keyword_plugin = pj_jit_type_keyword_plugin;
+
   /* Setup our callback for cleaning up JIT OPs during global cleanup */
   //PJ_orig_opfreehook = PL_opfreehook;
   //PL_opfreehook = pj_jitop_free_hook;
@@ -25,6 +33,9 @@ pj_init_global_state(pTHX)
 #define INT_CONST(name) \
   pj_define_int(aTHX_ name, #name)
 
+#define STRING_CONST(name) \
+  pj_define_string(aTHX_ name, strlen(name), #name)
+
 static void pj_define_int(pTHX_ IV value, const char *name)
 {
   char buffer[64];
@@ -36,6 +47,23 @@ static void pj_define_int(pTHX_ IV value, const char *name)
   HV *hv = gv_stashpvs("Perl::JIT", GV_ADD);
 
   sv_setiv(sv, value);
+  newCONSTSUB(hv, name, sv);
+
+  AV *export_ok = get_av("Perl::JIT::EXPORT_OK", GV_ADD);
+  av_push(export_ok, newSVpv(name, 0));
+}
+
+static void pj_define_string(pTHX_ const char *value, const STRLEN value_len, const char *name)
+{
+  char buffer[64];
+
+  strcpy(buffer, "Perl::JIT::");
+  strcat(buffer, name);
+
+  SV *sv = get_sv(buffer, GV_ADD);
+  HV *hv = gv_stashpvs("Perl::JIT", GV_ADD);
+
+  sv_setpvn(sv, value, value_len);
   newCONSTSUB(hv, name, sv);
 
   AV *export_ok = get_av("Perl::JIT::EXPORT_OK", GV_ADD);
@@ -104,4 +132,6 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_double_type);
   INT_CONST(pj_int_type);
   INT_CONST(pj_uint_type);
+
+  STRING_CONST(PJ_KEYWORD_PLUGIN_HINT);
 }
