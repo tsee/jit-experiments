@@ -15,6 +15,7 @@ use B::Replace;
 use B qw(OPf_STACKED OPf_KIDS);
 
 use Perl::JIT qw(:all);
+use Perl::JIT::Types qw(:all);
 
 use LibJIT::API qw(:all);
 use LibJIT::PerlAPI qw(:all);
@@ -80,21 +81,21 @@ sub jit_tree {
 
 sub _jit_emit_root {
     my ($self, $fun, $ast) = @_;
-    my $val = $self->_jit_emit($fun, $ast);
+    my ($val, $type) = $self->_jit_emit($fun, $ast, UNSPECIFIED);
 
-    $self->_jit_emit_return($fun, $ast, $val) if $val;
+    $self->_jit_emit_return($fun, $ast, $val, $type) if $val;
 
     jit_insn_return($fun, pa_get_op_next($fun));
 }
 
 sub _jit_emit_return {
-    my ($self, $fun, $ast, $val) = @_;
+    my ($self, $fun, $ast, $val, $type) = @_;
 
     given ($ast->op_class) {
         when (pj_opc_binop) {
             # the assumption here is that the OPf_STACKED assignment
             # has been handled by _jit_emit below, and here we only need
-            # to handle casses like '$x = $y += 7'
+            # to handle cases like '$x = $y += 7'
             my $targ = pa_get_targ($fun);
 
             pa_sv_set_nv($fun, $targ, $val);
@@ -113,17 +114,17 @@ sub _jit_emit_return {
 }
 
 sub _jit_emit {
-    my ($self, $fun, $ast) = @_;
+    my ($self, $fun, $ast, $type) = @_;
 
     # TODO only doubles for now...
     given ($ast->get_type) {
         when (pj_ttype_constant) {
-            return $self->_jit_emit_const($fun, $ast);
+            return $self->_jit_emit_const($fun, $ast, $type);
         }
         when (pj_ttype_variable) {
             my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_perl_op->targ);
 
-            return pa_get_pad_sv($fun, $padix);
+            return (pa_get_pad_sv($fun, $padix), UNSPECIFIED);
         }
         when (pj_ttype_optree) {
             # unfortunately there is (currently) no way to clone an optree,
@@ -136,7 +137,7 @@ sub _jit_emit {
             pa_call_runloop($fun, $op);
 
             # TODO only works for scalar context
-            return pa_pop_sv($fun);
+            return (pa_pop_sv($fun), UNSPECIFIED);
         }
         when (pj_ttype_nulloptree) {
             # the optree has been marked for oblivion (for example the
@@ -146,10 +147,10 @@ sub _jit_emit {
 
             # since this call must return no value, it is OK to return
             # undef here
-            return undef;
+            return (undef, undef);
         }
         when (pj_ttype_op) {
-            return $self->_jit_emit_op($fun, $ast);
+            return $self->_jit_emit_op($fun, $ast, $type);
         }
         default {
             die "I'm sorry, I've not been implemented yet";
@@ -192,15 +193,27 @@ sub _value_is_NV {
     return $$type == ${jit_type_NV()};
 }
 
-sub _to_nv {
-    my ($self, $fun, $val) = @_;
-    my $type = jit_value_get_type($val);
+sub _type_is_integer {
+    my ($type) = @_;
+    my $tag = $type->tag;
+    return $tag == pj_int_type || $tag == pj_uint_type;
+}
 
-    if ($$type == ${jit_type_NV()}) {
+sub _type_is_numeric {
+    my ($type) = @_;
+    my $tag = $type->tag;
+    return $tag == pj_int_type || $tag == pj_uint_type || $tag == pj_double_type;
+}
+
+sub _to_nv {
+    my ($self, $fun, $val, $type) = @_;
+    my $tag = $type->tag;
+
+    if ($tag == pj_double_type) {
         return $val;
-    } elsif (jit_type_is_primitive($type) and $$type != ${jit_type_void()}) {
+    } elsif ($tag == pj_int_type || $tag == pj_uint_type) {
         return jit_insn_convert($fun, $val, jit_type_NV, 0);
-    } elsif ($$type == ${jit_type_void_ptr()}) {
+    } elsif ($tag == pj_unspecified_type) {
         return pa_sv_nv($fun, $val);
     } else {
         die "Handle more coercion cases";
@@ -208,43 +221,56 @@ sub _to_nv {
 }
 
 sub _to_numeric_type {
-    my ($self, $fun, $val) = @_;
-    my $type = jit_value_get_type($val);
+    my ($self, $fun, $val, $type) = @_;
+    my $tag = $type->tag;
 
-    if (jit_type_is_primitive($type) and $$type != ${jit_type_void()}) {
+    if ($tag == pj_double_type || $tag == pj_int_type || $tag == pj_uint_type) {
         return $val;
-    } elsif ($$type == ${jit_type_void_ptr()}) {
+    } elsif ($tag == pj_unspecified_type) {
         return pa_sv_nv($fun, $val); # somewhat dubious
     } else {
         die "Handle more coercion cases";
     }
 }
 
+sub _to_type {
+    my ($self, $fun, $val, $type, $to_type) = @_;
+    my $to_tag = $to_type->tag;
+
+    if ($to_tag == $type->tag) {
+        return $val;
+    } elsif ($to_tag == pj_double_type) {
+        return $self->_to_nv($fun, $val, $type);
+    } else {
+        die "Handle more coercion cases";
+    }
+}
 
 sub _jit_emit_op {
-    my ($self, $fun, $ast) = @_;
+    my ($self, $fun, $ast, $type) = @_;
 
     given ($ast->op_class) {
         when (pj_opc_binop) {
-            my $res;
-            my ($v1, $v2);
+            my ($res, $restype);
+            my ($v1, $v2, $t1, $t2);
             if (not $ast->evaluates_kids_conditionally) {
-                $v1 = $self->_jit_emit($fun, $ast->get_left_kid);
-                $v2 = $self->_jit_emit($fun, $ast->get_right_kid);
+                ($v1, $t1) = $self->_jit_emit($fun, $ast->get_left_kid, DOUBLE);
+                ($v2, $t2) = $self->_jit_emit($fun, $ast->get_right_kid, DOUBLE);
+                $restype = DOUBLE;
             }
 
             given ($ast->get_optype) {
                 when (pj_binop_add) {
-                    $res = jit_insn_add($fun, $self->_to_nv($fun, $v1), $self->_to_nv($fun, $v2));
+                    $res = jit_insn_add($fun, $self->_to_nv($fun, $v1, $t1), $self->_to_nv($fun, $v2, $t2));
                 }
                 when (pj_binop_subtract) {
-                    $res = jit_insn_sub($fun, $self->_to_nv($fun, $v1), $self->_to_nv($fun, $v2));
+                    $res = jit_insn_sub($fun, $self->_to_nv($fun, $v1, $t1), $self->_to_nv($fun, $v2, $t2));
                 }
                 when (pj_binop_multiply) {
-                    $res = jit_insn_mul($fun, $self->_to_nv($fun, $v1), $self->_to_nv($fun, $v2));
+                    $res = jit_insn_mul($fun, $self->_to_nv($fun, $v1, $t1), $self->_to_nv($fun, $v2, $t2));
                 }
                 when (pj_binop_divide) {
-                    $res = jit_insn_div($fun, $self->_to_nv($fun, $v1), $self->_to_nv($fun, $v2));
+                    $res = jit_insn_div($fun, $self->_to_nv($fun, $v1, $t1), $self->_to_nv($fun, $v2, $t2));
                 }
                 when (pj_binop_bool_and) {
                     # This is all a bit awkward because we need to check $a
@@ -260,18 +286,22 @@ sub _jit_emit_op {
                     # FIXME Right now assumes type jit_type_void_ptr (==SV*).
                     #       That's obviously totally broken.
 
+                    # note that we ask subtrees to return a value with desired
+                    # type, but we need coercion when that is not the case!
+
                     my $endlabel = jit_label_undefined;
-                    $res = jit_value_create($fun, jit_type_void_ptr);
+                    $res = $self->_jit_create_value($fun, $type);
+                    $restype = $type;
 
                     # If value is false, then go with v1 and never look at v2
-                    $v1 = $self->_jit_emit($fun, $ast->get_left_kid);
-                    jit_insn_store($fun, $res, $v1);
-                    my $tmp = $self->_to_numeric_type($fun, $v1);
+                    ($v1, $t1) = $self->_jit_emit($fun, $ast->get_left_kid, $type);
+                    jit_insn_store($fun, $res, $self->_to_type($fun, $v1, $t1, $type));
+                    my $tmp = $self->_to_numeric_type($fun, $v1, $t1, $type);
                     jit_insn_branch_if_not($fun, $tmp, $endlabel);
 
                     # Left is true, move to right operand
-                    $v2 = $self->_jit_emit($fun, $ast->get_right_kid);
-                    jit_insn_store($fun, $res, $v2);
+                    ($v2, $t2) = $self->_jit_emit($fun, $ast->get_right_kid, $type);
+                    jit_insn_store($fun, $res, $self->_to_type($fun, $v2, $t2, $type));
 
                     # endlabel; done.
                     jit_insn_label($fun, $endlabel);
@@ -286,43 +316,46 @@ sub _jit_emit_op {
                 pa_sv_set_nv($fun, $v1, $res);
             }
 
-            return $res;
+            return ($res, $restype);
         }
         when (pj_opc_unop) {
-            my $v1 = $self->_jit_emit($fun, $ast->get_kid);
-            my $res;
+            my ($v1, $t1) = $self->_jit_emit($fun, $ast->get_kid, DOUBLE);
+            my ($res, $restype);
+
+            $restype = DOUBLE;
 
             given ($ast->get_optype) {
                 when (pj_unop_negate) {
-                    $res = jit_insn_neg($fun, $self->_to_nv($fun, $v1));
+                    $res = jit_insn_neg($fun, $self->_to_nv($fun, $v1, $t1));
                 }
                 when (pj_unop_abs) {
-                    $res = jit_insn_abs($fun, $self->_to_nv($fun, $v1));
+                    $res = jit_insn_abs($fun, $self->_to_nv($fun, $v1, $t1));
                 }
                 when (pj_unop_sin) {
-                    $res = jit_insn_sin($fun, $self->_to_nv($fun, $v1));
+                    $res = jit_insn_sin($fun, $self->_to_nv($fun, $v1, $t1));
                 }
                 when (pj_unop_cos) {
-                    $res = jit_insn_cos($fun, $self->_to_nv($fun, $v1));
+                    $res = jit_insn_cos($fun, $self->_to_nv($fun, $v1, $t1));
                 }
                 when (pj_unop_sqrt) {
-                    $res = jit_insn_sqrt($fun, $self->_to_nv($fun, $v1));
+                    $res = jit_insn_sqrt($fun, $self->_to_nv($fun, $v1, $t1));
                 }
                 when (pj_unop_log) {
-                    $res = jit_insn_log($fun, $self->_to_nv($fun, $v1));
+                    $res = jit_insn_log($fun, $self->_to_nv($fun, $v1, $t1));
                 }
                 when (pj_unop_exp) {
-                    $res = jit_insn_exp($fun, $self->_to_nv($fun, $v1));
+                    $res = jit_insn_exp($fun, $self->_to_nv($fun, $v1, $t1));
                 }
                 when (pj_unop_bool_not) {
-                    $res = jit_insn_to_not_bool($fun, $self->_to_numeric_type($fun, $v1));
+                    $res = jit_insn_to_not_bool($fun, $self->_to_numeric_type($fun, $v1, $t1));
+                    $restype = INT;
                 }
                 when (pj_unop_perl_int) {
-                    if (_value_is_integer($v1)) {
+                    if (_type_is_integer($t1)) {
                         $res = $v1;
                     }
                     else {
-                        my $val = $self->_to_numeric_type($fun, $v1);
+                        my $val = $self->_to_numeric_type($fun, $v1, $t1);
                         my $endlabel = jit_label_undefined;
                         my $neglabel = jit_label_undefined;
 
@@ -343,13 +376,14 @@ sub _jit_emit_op {
                         # endlabel; done.
                         jit_insn_label($fun, $endlabel);
                     }
+                    $restype = INT;
                 }
                 default {
                     die "I'm sorry, I've not been implemented yet";
                 }
             }
 
-            return $res;
+            return ($res, $restype);
         }
         default {
             die "I'm sorry, I've not been implemented yet";
@@ -357,18 +391,40 @@ sub _jit_emit_op {
     }
 }
 
+sub _jit_create_value {
+    my ($self, $fun, $type) = @_;
+
+    given ($type->tag) {
+        when (pj_int_type) {
+            return jit_value_create($fun, jit_type_IV);
+        }
+        when (pj_uint_type) {
+            return jit_value_create($fun, jit_type_UV);
+        }
+        when (pj_double_type) {
+            return jit_value_create($fun, jit_type_NV);
+        }
+        default {
+            return jit_value_create($fun, jit_type_void_ptr);
+        }
+    }
+}
+
 sub _jit_emit_const {
-    my ($self, $fun, $ast) = @_;
+    my ($self, $fun, $ast, $type) = @_;
 
     given ($ast->const_type) {
         when (pj_double_type) {
-            return jit_value_create_NV_constant($fun, $ast->get_dbl_value);
+            return (jit_value_create_NV_constant($fun, $ast->get_dbl_value),
+                    DOUBLE)
         }
         when (pj_int_type) {
-            return jit_value_create_IV_constant($fun, $ast->get_int_value);
+            return (jit_value_create_IV_constant($fun, $ast->get_int_value),
+                    INT);
         }
         when (pj_uint_type) {
-            return jit_value_create_UV_constant($fun, $ast->get_uint_value);
+            return (jit_value_create_UV_constant($fun, $ast->get_uint_value),
+                    UNSIGNED_INT);
         }
     }
 }

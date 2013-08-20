@@ -30,3 +30,11 @@
   current "solution" in xsp/attributes.xsp requires to hook
   attributes::import
 * Look into replacing attributes with a parser plugin
+* Ownership for C++ objects (Type instances created from Perl need to be
+  cleaned up (unless assigned to an AST node))
+* Overloading to Type instances and LibJIT types; ${$t1} == ${$t2}
+  is disgusting
+* Make $fun an attribute; on the one hand is not really part of object state,
+  on the other hand passing it explicitly to every function is becoming silly
+* in Emit.pm, "unspecified" currently means "a plain scalar", which feels wrong
+  and there is no "I don't care" value that can be used for requested type

@@ -11,5 +11,6 @@ class Perl::JIT::AST::Type {
 
 
 class Perl::JIT::AST::Scalar : public Perl::JIT::AST::Type {
+  Scalar(pj_type_id tag);
   // void dump();
 };
