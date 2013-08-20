@@ -8,6 +8,40 @@ using namespace PerlJIT;
 using namespace std;
 
 STATIC string
+S_parse_identifier(pTHX)
+{
+  // TODO implement
+  return string("foo");
+}
+
+
+STATIC string
+S_parse_varname(pTHX)
+{
+  I32 c;
+
+  string varname;
+
+  c = lex_read_unichar(LEX_KEEP_PREVIOUS);
+  switch (c) {
+  case '$':
+  case '@':
+  case '%':
+    varname.append(1, (char)c);
+    break;
+  default:
+    return string("");
+  }
+
+  varname.append(S_parse_identifier(aTHX));
+
+  if (varname.length() == 1)
+    return string("");
+  return varname;
+}
+
+
+STATIC string
 S_lex_to_whitespace(pTHX)
 {
   char *start = PL_parser->bufptr;
@@ -57,11 +91,17 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
   // Skip space (which we know to exist from S_lex_to_whitespace
   lex_read_space(0);
 
-  OP *parsed_optree = parse_listexpr(0);
-  op_dump(parsed_optree);
-  lex_read_space(0);
+  // This isn't the right way - it does a general list expr parse :(
+  //OP *parsed_optree = parse_listexpr(0);
+  //op_dump(parsed_optree);
+  //lex_read_space(0);
 
-cout << "'" << type_str << "' " << parsed_optree << endl;
+  c = lex_peek_unichar(0);
+  if (c == '(')
+    croak("FIXME list declarations not implemented yet!");
+
+  string varname = S_parse_varname(aTHX);
+cout << "'" << type_str << "' '" << varname << "'"<< endl;
 char *s = PL_parser->bufptr;
 printf("'%s'\n", s);
 abort();
