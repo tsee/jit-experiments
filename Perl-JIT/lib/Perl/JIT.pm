@@ -6,18 +6,20 @@ our $VERSION = '0.01';
 require XSLoader;
 XSLoader::load("Perl::JIT", $VERSION);
 
-use Exporter 'import';
+use Exporter ();
+our @ISA = qw(Exporter); # Oh, the pain.
 
 our @EXPORT_OK; # filled-in by XS code
 our %EXPORT_TAGS = ( 'all' => \@EXPORT_OK );
 
-#sub import {
-#  $^H{jit} = 1;
-#}
+sub import {
+  $^H{PJ_KEYWORD_PLUGIN_HINT()} = 1;
+  __PACKAGE__->export_to_level(1, @_);
+}
 
-#sub unimport {
-#  $^H{jit} = 0;
-#}
+sub unimport {
+  $^H{PJ_KEYWORD_PLUGIN_HINT()} = 0;
+}
 
 1;
 __END__

@@ -27,4 +27,6 @@ void pj_init_global_state(pTHX);
 /* export constants to Perl */
 void pj_define_constants(pTHX);
 
+extern int (*PJ_next_keyword_plugin)(pTHX_ char *, STRLEN, OP **);
+
 #endif
