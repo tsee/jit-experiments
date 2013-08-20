@@ -10,8 +10,24 @@ using namespace std;
 STATIC string
 S_parse_identifier(pTHX)
 {
-  // TODO implement
-  return string("foo");
+  char *start = PL_parser->bufptr;
+  while (1) {
+    char * const end = PL_parser->bufend;
+    char *s = PL_parser->bufptr;
+    while (end-s >= 1) {
+      if (!isWORDCHAR(*s)) {
+        lex_read_to(s); /* skip Perl's lexer/parser ahead to end of type */
+        return string(start, (size_t)(s-start));
+      }
+      s++;
+    }
+    if ( !lex_next_chunk(LEX_KEEP_PREVIOUS) ) {
+      lex_read_to(s); /* skip Perl's lexer/parser ahead to end of type */
+      lex_read_space(0);
+      return string(""); /* end of code */
+    }
+  }
+  return string("");
 }
 
 
