@@ -1,0 +1,40 @@
+Scalars
+
+- variables without explicit type declaration are of unspecified type
+- variables with Scalar type have full scalar semantics
+  (tie, overload, int -> float upgrade, ...)
+- variables with String/Double/Int/UnsignedInt type have restricted
+  semantics (not necessarily C, but likely more similar to C than to Perl)
+
+- a variable with an explicit declaration is always treated with
+  the declared semantics
+- a variable without an explicit declaration "inherits" the most
+  relaxed semantics (i.e. if it is only assigned Doubles will have double
+  semantics, if it is assigned Doubles and Scalars will have Scalar semantics
+  from the point of Scalar assignment onwards)
+
+- an operation that uses a value with Scalar semantics returns a value
+  with Scalar semantics
+- an operation that only uses values with restricted semantics returns
+  a value with restricted semantics (typically)
+
+- a variable with restricted semantics can be stored either as a pad scalar
+  or as a JIT variable
+  - when stored as a scalar, magic is *never* invoked (and it's an error
+    if the user tries to tie() the variable? if the variable is passed
+    to a subroutine and comes back with magic?)
+  - the variable is stored as a scalar when it is used in trees that
+    are not JITted, otherwise it can be stored as a JIT variable
+  - when the variable is stored as a scalar but is used in multiple
+    consecutive JITted operation, the scalar get/set can be performed only
+    when entering/exiting the JIT code, and intermediate assignment
+    might only involve a temporary JIT value
+
+- when a variable with Scalar semantics is assigned to a variable with
+  restricted semantics, get magic is invoked on the Scalar, and the
+  result is coerced to the target value
+- the other way around, the assignment works "as if" the restricted value
+  were converted to a Perl scalar and assigned (but, for example, if the
+  Scalar does not have "set" magic, a plain SV*V_set() works as well)
+
+TBD for references, arrays, hashes, ...
