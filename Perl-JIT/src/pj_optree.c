@@ -13,6 +13,7 @@
 #include "pj_global_state.h"
 
 #include <vector>
+#include <string>
 #include <tr1/unordered_map>
 
 /* inspired by B.xs */
@@ -218,7 +219,9 @@ pj_parse_attributes(pTHX_ LISTOP *o, bool &can_remove, AST::Type *&type, OP *&va
     SV *cval = cSVOPx_sv(attr);
 
     PJ_DEBUG_1("Checking potential type (%s)\n", SvPV_nolen(cval));
-    type = AST::parse_type(SvPV_nolen(cval));
+    STRLEN len;
+    char *tstr = SvPV(cval, len);
+    type = AST::parse_type(std::string(tstr, len));
 
     // parse the type: erase the parameter from the method call
     if (type)

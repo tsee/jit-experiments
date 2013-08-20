@@ -1,7 +1,6 @@
 #include "types.h"
 
-#include <string.h>
-
+using namespace std;
 using namespace PerlJIT;
 using namespace PerlJIT::AST;
 
@@ -26,16 +25,16 @@ pj_type_id Scalar::tag() const
 #define UINT        "UnsignedInt"
 
 #define PARSE_SCALAR(name, type) \
-  if (strcmp(string, name) == 0) \
+  if (str == string(name))       \
     return new Scalar(type)
 
 #define CHECK_SCALAR(name) \
-  if (strcmp(string, name) == 0) \
+  if (str == string(name)) \
     return true
 
 namespace PerlJIT {
   namespace AST {
-    Type *parse_type(const char *string)
+    Type *parse_type(const string &str)
     {
       PARSE_SCALAR(SCALAR, pj_scalar_type);
       PARSE_SCALAR(STRING, pj_string_type);
@@ -46,7 +45,7 @@ namespace PerlJIT {
       return 0;
     }
 
-    bool is_type(const char *string)
+    bool is_type(const string &str)
     {
       CHECK_SCALAR(SCALAR);
       CHECK_SCALAR(STRING);

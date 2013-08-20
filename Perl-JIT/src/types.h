@@ -1,6 +1,8 @@
 #ifndef PJ_TYPES_H_
 #define PJ_TYPES_H_
 
+#include <string>
+
 enum pj_type_id {
   pj_unspecified_type,
   pj_scalar_type,
@@ -32,8 +34,8 @@ namespace PerlJIT {
       pj_type_id _tag;
     };
 
-    Type *parse_type(const char *string);
-    bool is_type(const char *string);
+    Type *parse_type(const std::string &str);
+    bool is_type(const std::string &str);
   }
 }
 
