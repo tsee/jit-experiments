@@ -49,6 +49,8 @@ replace_attributes_import(const char *package, SV *scalar, ...)
       PUTBACK;
 
       call_sv(attributes_import, GIMME_V);
+
+      XSRETURN(0);
     }
 
     // there is yet another brokenness for attributes in 5.14 (likely other
