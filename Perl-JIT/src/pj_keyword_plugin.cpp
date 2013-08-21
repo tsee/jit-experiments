@@ -1,6 +1,7 @@
 #include "pj_keyword_plugin.h"
 #include "pj_global_state.h"
 #include "types.h"
+#include "OPTreeVisitor.h"
 #include <iostream>
 #include <string>
 
@@ -107,20 +108,26 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
   // Skip space (which we know to exist from S_lex_to_whitespace
   lex_read_space(0);
 
+  // Oh man, this is so wrong. Secretly inject a bit of code into the
+  // parse so that we can use Perl's parser to grok the declaration.
+  lex_stuff_pvs(" my ", 0);
+
   // This isn't the right way - it does a general list expr parse :(
+  OP *parsed_optree = parse_barestmt(0);
   //OP *parsed_optree = parse_listexpr(0);
-  //op_dump(parsed_optree);
-  //lex_read_space(0);
+  *op_ptr = parsed_optree;
+  op_dump(parsed_optree);
 
-  c = lex_peek_unichar(0);
-  if (c == '(')
-    croak("FIXME list declarations not implemented yet!");
+//  lex_read_space(0);
+//  c = lex_peek_unichar(0);
+//  if (c == '(')
+//    croak("FIXME list declarations not implemented yet!");
 
-  string varname = S_parse_varname(aTHX);
-cout << "'" << type_str << "' '" << varname << "'"<< endl;
-char *s = PL_parser->bufptr;
-printf("'%s'\n", s);
-abort();
+//  string varname = S_parse_varname(aTHX);
+//  cout << "'" << type_str << "' '" << varname << "'"<< endl;
+//  char *s = PL_parser->bufptr;
+//  printf("'%s'\n", s);
+//  abort();
 
 }
 
