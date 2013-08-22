@@ -8,6 +8,8 @@
 #include <perl.h>
 
 namespace PerlJIT {
+  // A PADSV OP that introduces a variable together with its
+  // declared type.
   class TypedPadSvOp {
   public:
     TypedPadSvOp()

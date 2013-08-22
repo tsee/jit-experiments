@@ -16,6 +16,8 @@ using namespace std;
 using namespace std::tr1;
 
 namespace PerlJIT {
+  // Walks OP tree and builds list of PADSV OPs that have the OPpLVAL_INTRO
+  // flag set.
   class PadSvDeclarationOpExtractor: public OPTreeVisitor {
   public:
     OPTreeVisitor::visit_control_t visit_op(pTHX_ OP *o, OP *parentop);
@@ -28,6 +30,7 @@ namespace PerlJIT {
   };
 }
 
+
 OPTreeVisitor::visit_control_t
 PadSvDeclarationOpExtractor::visit_op(pTHX_ OP *o, OP *parentop)
 {
@@ -36,6 +39,8 @@ PadSvDeclarationOpExtractor::visit_op(pTHX_ OP *o, OP *parentop)
   return VISIT_CONT;
 }
 
+
+// MAGIC hook to free the declaration/type data associated with a CV.
 STATIC int
 pj_type_annotate_mg_free(pTHX_ SV *sv, MAGIC* mg)
 {
@@ -47,11 +52,13 @@ pj_type_annotate_mg_free(pTHX_ SV *sv, MAGIC* mg)
 }
 
 
+// vtable for our CV-annotation for typed declarations
 STATIC MGVTBL PJ_type_annotate_mg_vtbl = {
   0, 0, 0, 0, pj_type_annotate_mg_free, 0, 0, 0
 };
 
 
+// Returns NULL if the CV doesn't have any typed declarations.
 unordered_map<PADOFFSET, TypedPadSvOp> *
 pj_get_typed_variable_declarations(pTHX_ CV *cv)
 {
@@ -65,6 +72,8 @@ pj_get_typed_variable_declarations(pTHX_ CV *cv)
 }
 
 
+// Just advance the lexer until whitespace is found and return the
+// string up to that point as a C++ string.
 STATIC string
 S_lex_to_whitespace(pTHX)
 {
@@ -138,17 +147,19 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
     );
   }
 
+  // Add to the declaration map
   const unsigned int ndecl = declaration_ops.size();
   for (unsigned int i = 0; i < ndecl; ++i) {
     (*decl_map)[declaration_ops[i]->op_targ] = TypedPadSvOp(type, declaration_ops[i]);
   }
 
-  // Delete any unowned type
+  // Delete any unowned type or set ownership [FIXME this is terrible]
   if (decl_map->size() == 0)
     delete type;
   else
     (*decl_map)[declaration_ops.back()->op_targ].set_type_ownership(true);
 
+  // Actually output the OP tree that Perl constructed for us.
   *op_ptr = parsed_optree;
 }
 
