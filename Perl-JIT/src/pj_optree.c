@@ -44,11 +44,11 @@ pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 static PerlJIT::AST::Term *
 pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 
-#define IS_JITTABLE_ROOT_OP_TYPE(otype) \
+#define IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) \
         ( otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE \
           || otype == OP_SIN || otype == OP_COS || otype == OP_SQRT || otype == OP_EXP \
           || otype == OP_LOG || otype == OP_POW || otype == OP_INT || otype == OP_NOT \
-          || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT /* || otype == OP_COMPLEMENT */ \
+          || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT || otype == OP_COMPLEMENT \
           || otype == OP_EQ || otype == OP_COND_EXPR || otype == OP_NEGATE )
 
 /* AND and OR at top level can be used in "interesting" places such as looping constructs.
@@ -57,8 +57,8 @@ pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
  * PADSVs are recognized as subtrees now, so no use making them jittable root OP.
  * CONSTs would be further constant folded if they were a candidate root OP, so
  * no sense trying to JIT them if they're free-standing. */
-#define IS_JITTABLE_OP_TYPE(otype) \
-        (IS_JITTABLE_ROOT_OP_TYPE(otype) \
+#define IS_AST_COMPATIBLE_OP_TYPE(otype) \
+        (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) \
           || otype == OP_PADSV \
           || otype == OP_CONST \
           || otype == OP_AND \
@@ -94,7 +94,7 @@ namespace PerlJIT {
         return VISIT_SKIP;
       }
       /* Attempt JIT if the right OP type. Don't recurse if so. */
-      if (IS_JITTABLE_ROOT_OP_TYPE(otype)) {
+      if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype)) {
         PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
         if (ast)
             candidates.push_back(ast);
@@ -273,7 +273,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       return retval;
   }
 
-  if (!IS_JITTABLE_OP_TYPE(otype)) {
+  if (!IS_AST_COMPATIBLE_OP_TYPE(otype)) {
     // Can't represent OP with AST. So instead, recursively scan for
     // separate candidates and treat as subtree.
     PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
@@ -366,7 +366,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_UNOP_CODE(OP_INT, pj_unop_perl_int)
     EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not)
     EMIT_UNOP_CODE(OP_NEGATE, pj_unop_negate)
-    /* EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not) */ /* FIXME not same as perl */
+    EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not)
     EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
   case OP_NULL:
     if (kid_terms.size() == 1 && o->op_targ == 0) {

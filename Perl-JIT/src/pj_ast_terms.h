@@ -33,7 +33,7 @@ typedef enum {
   pj_unop_log,
   pj_unop_exp,
   pj_unop_perl_int, /* the equivalent to the perl int function */
-  pj_unop_bitwise_not, /* TODO check */
+  pj_unop_bitwise_not,
   pj_unop_bool_not,
 
   pj_binop_add,
@@ -43,22 +43,21 @@ typedef enum {
   pj_binop_modulo,
   pj_binop_atan2,
   pj_binop_pow,
-  pj_binop_left_shift, /* differs from perl for negative left operands */
-  pj_binop_right_shift, /* differs from perl for negative left operands */
-  pj_binop_bitwise_and, /* TODO check */
-  pj_binop_bitwise_or, /* TODO check */
-  pj_binop_bitwise_xor, /* TODO check */
-  pj_binop_eq, /* TODO check */
-  pj_binop_ne, /* TODO check */
-  pj_binop_lt, /* TODO check */
-  pj_binop_le, /* TODO check */
-  pj_binop_gt, /* TODO check */
-  pj_binop_ge, /* TODO check */
+  pj_binop_left_shift,
+  pj_binop_right_shift,
+  pj_binop_bitwise_and,
+  pj_binop_bitwise_or,
+  pj_binop_bitwise_xor,
+  pj_binop_eq,
+  pj_binop_ne,
+  pj_binop_lt,
+  pj_binop_le,
+  pj_binop_gt,
+  pj_binop_ge,
   pj_binop_bool_and,
   pj_binop_bool_or,
 
-  pj_listop_ternary, /* TODO check */
-  /* TODO: more boolean operators, ternary */
+  pj_listop_ternary,
 
   pj_unop_FIRST  = pj_unop_negate,
   pj_unop_LAST   = pj_unop_bool_not,
