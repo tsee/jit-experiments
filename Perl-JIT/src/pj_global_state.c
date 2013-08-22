@@ -93,6 +93,7 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_unop_perl_int);
   INT_CONST(pj_unop_bitwise_not);
   INT_CONST(pj_unop_bool_not);
+  INT_CONST(pj_unop_defined);
 
   INT_CONST(pj_binop_add);
   INT_CONST(pj_binop_subtract);
@@ -106,12 +107,12 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_binop_bitwise_and);
   INT_CONST(pj_binop_bitwise_or);
   INT_CONST(pj_binop_bitwise_xor);
-  INT_CONST(pj_binop_eq);
-  INT_CONST(pj_binop_ne);
-  INT_CONST(pj_binop_lt);
-  INT_CONST(pj_binop_le);
-  INT_CONST(pj_binop_gt);
-  INT_CONST(pj_binop_ge);
+  INT_CONST(pj_binop_num_eq);
+  INT_CONST(pj_binop_num_ne);
+  INT_CONST(pj_binop_num_lt);
+  INT_CONST(pj_binop_num_le);
+  INT_CONST(pj_binop_num_gt);
+  INT_CONST(pj_binop_num_ge);
   INT_CONST(pj_binop_bool_and);
   INT_CONST(pj_binop_bool_or);
 

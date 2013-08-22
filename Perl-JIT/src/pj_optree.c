@@ -44,12 +44,17 @@ pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 static PerlJIT::AST::Term *
 pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 
+// FIXME generate?
 #define IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) \
         ( otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE \
           || otype == OP_SIN || otype == OP_COS || otype == OP_SQRT || otype == OP_EXP \
           || otype == OP_LOG || otype == OP_POW || otype == OP_INT || otype == OP_NOT \
           || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT || otype == OP_COMPLEMENT \
-          || otype == OP_EQ || otype == OP_COND_EXPR || otype == OP_NEGATE )
+          || otype == OP_COND_EXPR || otype == OP_NEGATE \
+          || otype == OP_GVSV || otype == OP_DEFINED \
+          || otype == OP_EQ || otype == OP_NE || otype == OP_GT || otype == OP_LT \
+          || otype == OP_LE || otype == OP_GE \
+          )
 
 /* AND and OR at top level can be used in "interesting" places such as looping constructs.
  * Thus, we'll -- for now -- only support them as OPs within a tree.
@@ -59,6 +64,7 @@ pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
  * no sense trying to JIT them if they're free-standing. */
 #define IS_AST_COMPATIBLE_OP_TYPE(otype) \
         (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) \
+          || otype == OP_GVSV \
           || otype == OP_PADSV \
           || otype == OP_CONST \
           || otype == OP_AND \
@@ -295,6 +301,13 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       else
         retval = new AST::Variable(o, visitor.get_declaration(0, o));
     }
+    else if (otype == OP_GVSV) {
+      // FIXME OP_GVSV can have OPpLVAL_INTRO - Not sure what that means...
+      //if (o->op_flags & OPpLVAL_INTRO)
+      //  retval = visitor.get_declaration(o, o);
+      //else
+      retval = new AST::Variable(o, NULL); // FIXME want to supprt a declaration, too! (our)
+    }
     else {
       croak("Shouldn't happen! Unsupported nullary OP!? %s", OP_NAME(o));
     }
@@ -355,9 +368,14 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_BINOP_CODE(OP_POW, pj_binop_pow)
     EMIT_BINOP_CODE(OP_LEFT_SHIFT, pj_binop_left_shift)
     EMIT_BINOP_CODE(OP_RIGHT_SHIFT, pj_binop_right_shift)
-    EMIT_BINOP_CODE(OP_EQ, pj_binop_eq)
     EMIT_BINOP_CODE(OP_AND, pj_binop_bool_and)
     EMIT_BINOP_CODE(OP_OR, pj_binop_bool_or)
+    EMIT_BINOP_CODE(OP_EQ, pj_binop_num_eq)
+    EMIT_BINOP_CODE(OP_NE, pj_binop_num_ne)
+    EMIT_BINOP_CODE(OP_GT, pj_binop_num_gt)
+    EMIT_BINOP_CODE(OP_LT, pj_binop_num_lt)
+    EMIT_BINOP_CODE(OP_GE, pj_binop_num_ge)
+    EMIT_BINOP_CODE(OP_LE, pj_binop_num_le)
     EMIT_UNOP_CODE(OP_SIN, pj_unop_sin)
     EMIT_UNOP_CODE(OP_COS, pj_unop_cos)
     EMIT_UNOP_CODE(OP_SQRT, pj_unop_sqrt)
@@ -367,12 +385,26 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not)
     EMIT_UNOP_CODE(OP_NEGATE, pj_unop_negate)
     EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not)
+    EMIT_UNOP_CODE(OP_DEFINED, pj_unop_defined)
     EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
   case OP_NULL:
     if (kid_terms.size() == 1 && o->op_targ == 0) {
       // attempt a pass-through this null-op. FIXME likely WRONG
       retval = kid_terms[0];
       break;
+    }
+    else {
+      const unsigned int targ_otype = (unsigned int)o->op_targ;
+      switch (targ_otype) {
+      case OP_RV2SV: // Skip into ex-rv2sv for optimized global scalar access
+        retval = kid_terms[0];
+        break;
+      default:
+        PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
+        pj_find_jit_candidates_internal(aTHX_ o, visitor);
+        retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
+        break;
+      }
     }
   default:
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));

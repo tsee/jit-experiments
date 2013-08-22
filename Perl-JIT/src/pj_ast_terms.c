@@ -19,6 +19,7 @@ static const char *pj_ast_op_names[] = {
   "int",      /* pj_unop_int */
   "~",        /* pj_unop_bitwise_not */
   "!",        /* pj_unop_bool_not */
+  "defined",  /* pj_unop_defined */
 
   /* binops */
   "+",        /* pj_binop_add */

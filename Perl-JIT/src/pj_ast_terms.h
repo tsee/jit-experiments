@@ -35,6 +35,7 @@ typedef enum {
   pj_unop_perl_int, /* the equivalent to the perl int function */
   pj_unop_bitwise_not,
   pj_unop_bool_not,
+  pj_unop_defined,
 
   pj_binop_add,
   pj_binop_subtract,
@@ -48,19 +49,19 @@ typedef enum {
   pj_binop_bitwise_and,
   pj_binop_bitwise_or,
   pj_binop_bitwise_xor,
-  pj_binop_eq,
-  pj_binop_ne,
-  pj_binop_lt,
-  pj_binop_le,
-  pj_binop_gt,
-  pj_binop_ge,
+  pj_binop_num_eq,
+  pj_binop_num_ne,
+  pj_binop_num_lt,
+  pj_binop_num_le,
+  pj_binop_num_gt,
+  pj_binop_num_ge,
   pj_binop_bool_and,
   pj_binop_bool_or,
 
   pj_listop_ternary,
 
   pj_unop_FIRST  = pj_unop_negate,
-  pj_unop_LAST   = pj_unop_bool_not,
+  pj_unop_LAST   = pj_unop_defined,
 
   pj_binop_FIRST = pj_binop_add,
   pj_binop_LAST  = pj_binop_bool_or,
@@ -128,6 +129,9 @@ namespace PerlJIT {
         { return "Perl::JIT::AST::VariableDeclaration"; }
     };
 
+    // FIXME Right now, a Variable without declaration could reasonably be
+    // any of the following: a package var, a lexically scoped thing (my/our)
+    // from an outer sub (closures), ...
     class Variable : public Identifier {
     public:
       Variable(OP *p_op, VariableDeclaration *decl);
