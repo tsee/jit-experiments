@@ -86,6 +86,10 @@ static unsigned int pj_ast_op_flags[] = {
 };
 
 
+Term::Term(OP *p_op, pj_term_type t, Type *v_type)
+  : type(t), perl_op(p_op), _value_type(v_type)
+{}
+
 Constant::Constant(OP *p_op, double c)
   : Term(p_op, pj_ttype_constant, new Scalar(pj_double_type)),
     dbl_value(c)
@@ -125,9 +129,12 @@ Optree::Optree(OP *p_op, OP *p_start_op)
 
 NullOptree::NullOptree(OP *p_op)
   : Term(p_op, pj_ttype_nulloptree)
-{
-}
+{}
 
+
+Op::Op(OP *p_op, pj_op_type t)
+  : Term(p_op, pj_ttype_op), optype(t)
+{}
 
 Unop::Unop(OP *p_op, pj_op_type t, Term *kid)
   : Op(p_op, t)

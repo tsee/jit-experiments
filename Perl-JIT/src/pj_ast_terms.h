@@ -78,8 +78,7 @@ namespace PerlJIT {
   namespace AST {
     class Term {
     public:
-      Term(OP *p_op, pj_term_type t, Type *v_type = 0) :
-        type(t), perl_op(p_op), _value_type(v_type) {}
+      Term(OP *p_op, pj_term_type t, Type *v_type = 0);
 
       pj_term_type type;
       OP *perl_op;
@@ -146,7 +145,7 @@ namespace PerlJIT {
 
     class Op : public Term {
     public:
-      Op(OP *p_op, pj_op_type t) : Term(p_op, pj_ttype_op), optype(t) {}
+      Op(OP *p_op, pj_op_type t);
 
       const char *name();
       unsigned int flags();
