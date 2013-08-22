@@ -78,7 +78,7 @@ namespace PerlJIT {
 
     class VariableDeclaration : public Identifier {
     public:
-      VariableDeclaration(OP *p_op, int ivariable);
+      VariableDeclaration(OP *p_op, int ivariable, Type *v_type = 0);
 
       int ivar;
 

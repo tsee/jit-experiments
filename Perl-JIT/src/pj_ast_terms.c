@@ -36,8 +36,8 @@ Identifier::Identifier(OP *p_op, pj_term_type t, Type *v_type)
 {}
 
 
-VariableDeclaration::VariableDeclaration(OP *p_op, int ivariable)
-  : Identifier(p_op, pj_ttype_variabledeclaration, new Scalar(pj_unspecified_type)),
+VariableDeclaration::VariableDeclaration(OP *p_op, int ivariable, Type *v_type)
+  : Identifier(p_op, pj_ttype_variabledeclaration, v_type),
     ivar(ivariable)
 {}
 

@@ -93,11 +93,11 @@ namespace PerlJIT {
       return VISIT_CONT;
     } // end 'visit_op'
 
-    // declaration points to an op with OPpLVAL_INTRO, reference points
+    // Declaration points to an op with OPpLVAL_INTRO, reference points
     // the op that is being processed (which might or might not have the
-    // OPpLVAL_INTRO flag)
-    // this is required because we might process a variable reference
-    // before seeing the declaration
+    // OPpLVAL_INTRO flag).
+    // This is required because we might process a variable reference
+    // before seeing the declaration.
     AST::VariableDeclaration *
     get_declaration(OP *declaration, OP *reference)
     {
@@ -105,10 +105,14 @@ namespace PerlJIT {
       if (decl)
         return decl;
 
-      // FIXME Use type from CV's MAGIC annotation to tag VariableDeclaration here?
-      // ===> unordered_map<PADOFFSET, TypedPadSvOp> *typed_declarations;
-
-      decl = new AST::VariableDeclaration(declaration, variables.size());
+      // Use type from CV's MAGIC annotation to tag VariableDeclaration here
+      // or otherwise create default type
+      if (typed_declarations->count(reference->op_targ)) {
+        decl = new AST::VariableDeclaration(declaration, variables.size());
+      }
+      else {
+        decl = new AST::VariableDeclaration(declaration, variables.size());
+      }
       variables[reference->op_targ] = decl;
 
       return decl;
