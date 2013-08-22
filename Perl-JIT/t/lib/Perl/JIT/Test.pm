@@ -230,13 +230,14 @@ sub build_jit_test_sub {
 
 sub build_jit_types_test_sub {
   my ($params, $types) = @_;
-  my $type = @$types ? ": @$types" : "";
+  my $decl = @$types ? "typed @$types" : "my";
   my $args = join ', ', @$params;
   my $exp  = join ' + ', @$params, 1;
   my $subcode = <<EOT;
+  use Perl::JIT;
+
   sub {
-    package main;
-    my ($args) $type = \@_;
+    $decl ($args) = \@_;
 
     return $exp;
   }

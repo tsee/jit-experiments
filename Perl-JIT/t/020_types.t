@@ -29,17 +29,6 @@ my @tests = (
     vars => ['$x', '$y'],
     type => {'UnsignedInt' => {class => 'Scalar', tag => pj_uint_type}},
     },
-  # types mixed with other attributes
-  { name => 'other_attributes',
-    vars => ['$x'],
-    type => {''    => {class => 'Scalar', tag => pj_unspecified_type},
-             'Bar' => undef},
-    },
-  { name => 'mixed',
-    vars => ['$x'],
-    type => {'Int' => {class => 'Scalar', tag => pj_int_type},
-             'Bar' => undef},
-    },
 );
 
 plan tests => 2 * @tests;

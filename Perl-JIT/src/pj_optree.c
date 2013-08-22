@@ -59,6 +59,8 @@ pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 namespace PerlJIT {
   class OPTreeJITCandidateFinder : public OPTreeVisitor
   {
+    typedef unordered_map<PADOFFSET, TypedPadSvOp> TypedVarMap;
+
   public:
     OPTreeJITCandidateFinder(pTHX_ CV *cv)
       : containing_cv(cv)
@@ -107,12 +109,16 @@ namespace PerlJIT {
 
       // Use type from CV's MAGIC annotation to tag VariableDeclaration here
       // or otherwise create default type
-      if (typed_declarations->count(reference->op_targ)) {
-        decl = new AST::VariableDeclaration(declaration, variables.size());
+      decl = new AST::VariableDeclaration(declaration, variables.size());
+      if (typed_declarations) {
+        TypedVarMap::iterator it = typed_declarations->find(reference->op_targ);
+
+        if (it != typed_declarations->end())
+          decl->set_value_type(it->second.get_type());
       }
-      else {
-        decl = new AST::VariableDeclaration(declaration, variables.size());
-      }
+      if (!decl->get_value_type())
+        decl->set_value_type(new AST::Scalar(pj_unspecified_type));
+
       variables[reference->op_targ] = decl;
 
       return decl;

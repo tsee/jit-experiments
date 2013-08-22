@@ -14,17 +14,6 @@ my @tests = (
     vars => ['$x', '$y'],
     type => {'Int' => {class => 'Scalar', tag => pj_int_type}},
     },
-  # types mixed with other attributes
-  { name => 'other_attributes',
-    vars => ['$x', '$y'],
-    type => {''    => {class => 'Scalar', tag => pj_unspecified_type},
-             'Bar' => undef},
-    },
-  { name => 'mixed',
-    vars => ['$x', '$y'],
-    type => {'Int' => {class => 'Scalar', tag => pj_int_type},
-             'Bar' => undef},
-    },
 );
 
 plan tests => 6 * @tests;
