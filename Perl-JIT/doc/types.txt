@@ -15,6 +15,9 @@ Scalars
 
 - an operation that uses a value with Scalar semantics returns a value
   with Scalar semantics
+  - note that in Perl, tie/overload can propagate magic to their
+    parameters (which are passed by reference) but we're explicitly
+    ignoring this
 - an operation that only uses values with restricted semantics returns
   a value with restricted semantics (typically)
 

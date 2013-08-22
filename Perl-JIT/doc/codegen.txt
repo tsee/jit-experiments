@@ -1,0 +1,63 @@
+- for most numeric operations (either operators or named unaries like sin())
+  having a Scalar variable anywhere in the subtree makes the whole
+  subtree not JITtable
+- other operations (for example scalar/list ranges, chr, ord, ...)
+  do not propagate Scalar-ness to their result
+- a variable in a statement can be
+  - explicitly written to (assignment, cho(m)p, ...)
+  - maybe written to (passed as a sub parameter)
+  - read from
+
+The JIT receives as input a list of expression trees, in execution
+sequence (check that it's true) or, at some point, a single AST for the
+whole subroutine
+
+It needs to:
+
+- examine each expression in turn, determining which subtrees can be JITted
+  and which can't
+- for each JITtable subtree, it needs to keep track of which variables are
+  assigned to in the JITted subtree and read elsewhere in the subroutine,
+  these need to be written back on exit of the JITted subtree
+  - note that _elsewhere_ includes in a non-JITted subree or in any
+    JITted subtree contained in a non-JITted subtree
+  - just counting the number of uses of the variable (total and inside the
+    subtree) and checking whether they are equal should work; the total
+    number of uses can be gathered while building the AST
+
+- do the same for variables read in the JITted tree after having been
+  assigned in a non JITted *subtree* of the JITted tree
+  - reasonably easy to implement, just needs the extra information about
+    which variables are written by an AST node
+
+- first approximation
+  - each variable used in the JITted code is going to have a JIT
+    value (in the jit_value_t sense) holding it; the value can be
+    fresh, dirty and stale (find better names...)
+    - fresh means the JIT value matches the pad value, the two can
+      be used interchangeably
+    - dirty means the variable has been written in JIT code and needs to
+      be written back to the pad
+    - stale means the variable has been written in Perl code and needs
+      to be read back from the pad
+  - while emitting a JITted subtree, generate a single JIT value to hold
+    the temporary value of a variable (both read and written)
+  - when written, mark the value as "dirty"
+  - before emitting a non-JITted subtree, find all variables read in the
+    subtree, write them back to pad if dirty, and then mark them as
+    fresh
+  - after emitting a JITted subtree, find all variables written in the subtree
+    and mark them as "stale"
+
+- decide what to do for maybe written to variables (sub parameters)
+  (I'd say treat them as read, ignore the maybe-written-to)
+- for now (until we have an AST for the whole subroutine)
+  - for nodes of type Optree, assume every variable used in the tree is
+    both read from and written to
+  - when exiting an AST, write all values to the corresponding PAD variable,
+    (except for variables that are never mentioned outside non-JITted code)
+- we're not computing define-use chains, nor taking into account
+  the flow-control structure, hence we are doing some extra work
+  (for example in the case the variable is *first* used in a non-JITted
+   tree, then used in a JITted tree, and never used after that, we're still
+   generating code to write back the value to the pad)
