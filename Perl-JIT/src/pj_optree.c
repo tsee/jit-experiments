@@ -9,8 +9,8 @@
 #include "pj_debug.h"
 
 #include "pj_ast_terms.h"
-
 #include "pj_global_state.h"
+#include "pj_keyword_plugin.h"
 
 #include <vector>
 #include <string>
@@ -70,7 +70,13 @@ namespace PerlJIT {
   class OPTreeJITCandidateFinder : public OPTreeVisitor
   {
   public:
-    OPTreeJITCandidateFinder() {}
+    OPTreeJITCandidateFinder(pTHX_ CV *cv)
+      : containing_cv(cv)
+    {
+      // typed_declarations may end up being NULL!
+      if (cv != NULL)
+        typed_declarations = pj_get_typed_variable_declarations(aTHX_ cv);
+    }
 
     visit_control_t
     visit_op(pTHX_ OP *o, OP *parentop)
@@ -109,6 +115,9 @@ namespace PerlJIT {
       if (decl)
         return decl;
 
+      // FIXME Use type from CV's MAGIC annotation to tag VariableDeclaration here?
+      // ===> unordered_map<PADOFFSET, TypedPadSvOp> *typed_declarations;
+
       decl = new AST::VariableDeclaration(declaration, variables.size());
       variables[reference->op_targ] = decl;
 
@@ -137,6 +146,8 @@ namespace PerlJIT {
 
     vector<PerlJIT::AST::Term *> candidates;
     unordered_map<PADOFFSET, AST::VariableDeclaration *> variables;
+    CV *containing_cv;
+    unordered_map<PADOFFSET, TypedPadSvOp> *typed_declarations;
   }; // end class OPTreeJITCandidateFinder
 }
 
@@ -434,7 +445,7 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
   PL_comppad = PadlistARRAY(CvPADLIST(cv))[1];
   PL_curpad = AvARRAY(PL_comppad);
 
-  OPTreeJITCandidateFinder f;
+  OPTreeJITCandidateFinder f(aTHX_ cv);
   vector<PerlJIT::AST::Term *> tmp = pj_find_jit_candidates_internal(aTHX_ CvROOT(cv), f);
   if (PJ_DEBUGGING) {
     printf("%i JIT candidate ASTs:\n", (int)tmp.size());
