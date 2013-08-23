@@ -25,6 +25,11 @@ typedef enum {
   pj_unop_length,
   pj_unop_ord,
   pj_unop_chr,
+  pj_unop_lc,
+  pj_unop_uc,
+  pj_unop_lcfirst,
+  pj_unop_ucfirst,
+  pj_unop_quotemeta,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -62,7 +67,7 @@ typedef enum {
   // Op class ranges
 
   pj_unop_FIRST = pj_unop_negate,
-  pj_unop_LAST  = pj_unop_chr,
+  pj_unop_LAST  = pj_unop_quotemeta,
 
   pj_binop_FIRST = pj_binop_add,
   pj_binop_LAST  = pj_binop_bool_or,

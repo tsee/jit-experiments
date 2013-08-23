@@ -407,6 +407,11 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_UNOP_CODE_OPTIONAL(OP_LENGTH, pj_unop_length)
     EMIT_UNOP_CODE_OPTIONAL(OP_CHR, pj_unop_chr)
     EMIT_UNOP_CODE_OPTIONAL(OP_ORD, pj_unop_ord)
+    EMIT_UNOP_CODE_OPTIONAL(OP_LC, pj_unop_lc)
+    EMIT_UNOP_CODE_OPTIONAL(OP_UC, pj_unop_uc)
+    EMIT_UNOP_CODE_OPTIONAL(OP_LCFIRST, pj_unop_lcfirst)
+    EMIT_UNOP_CODE_OPTIONAL(OP_UCFIRST, pj_unop_ucfirst)
+    EMIT_UNOP_CODE_OPTIONAL(OP_QUOTEMETA, pj_unop_quotemeta)
     EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
   default:
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));

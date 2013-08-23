@@ -25,6 +25,11 @@
   || otype == OP_LENGTH \
   || otype == OP_ORD \
   || otype == OP_CHR \
+  || otype == OP_LC \
+  || otype == OP_UC \
+  || otype == OP_LCFIRST \
+  || otype == OP_UCFIRST \
+  || otype == OP_QUOTEMETA \
   || otype == OP_ADD \
   || otype == OP_SUBTRACT \
   || otype == OP_MULTIPLY \
@@ -77,6 +82,11 @@
   || otype == OP_LENGTH \
   || otype == OP_ORD \
   || otype == OP_CHR \
+  || otype == OP_LC \
+  || otype == OP_UC \
+  || otype == OP_LCFIRST \
+  || otype == OP_UCFIRST \
+  || otype == OP_QUOTEMETA \
   || otype == OP_ADD \
   || otype == OP_SUBTRACT \
   || otype == OP_MULTIPLY \
