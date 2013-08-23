@@ -4,10 +4,13 @@ use blib;
 use Perl::JIT;
 use Perl::JIT::Emit;
 use Getopt::Long qw(GetOptions);
+use B::Concise;
 
 my $code;
+my $concise;
 GetOptions(
   'e=s' => \$code,
+  'concise|c:s' => \$concise,
 );
 defined $code or die;
 
@@ -22,3 +25,8 @@ for (@asts) {
 }
 print "----------------------------------------------\n";
 
+if (defined $concise) {
+  open(STDERR, ">&STDOUT")     or die "Can't dup STDOUT: $!";
+  $concise = '' if $concise eq '1';
+  B::Concise::compile($concise,'',$sub)->();
+}
