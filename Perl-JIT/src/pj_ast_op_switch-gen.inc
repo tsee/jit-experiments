@@ -22,6 +22,9 @@
   || otype == OP_SRAND \
   || otype == OP_HEX \
   || otype == OP_OCT \
+  || otype == OP_LENGTH \
+  || otype == OP_ORD \
+  || otype == OP_CHR \
   || otype == OP_ADD \
   || otype == OP_SUBTRACT \
   || otype == OP_MULTIPLY \
@@ -71,6 +74,9 @@
   || otype == OP_SRAND \
   || otype == OP_HEX \
   || otype == OP_OCT \
+  || otype == OP_LENGTH \
+  || otype == OP_ORD \
+  || otype == OP_CHR \
   || otype == OP_ADD \
   || otype == OP_SUBTRACT \
   || otype == OP_MULTIPLY \

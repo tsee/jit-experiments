@@ -404,6 +404,9 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_UNOP_CODE_OPTIONAL(OP_SRAND, pj_unop_srand)
     EMIT_UNOP_CODE_OPTIONAL(OP_HEX, pj_unop_hex)
     EMIT_UNOP_CODE_OPTIONAL(OP_OCT, pj_unop_oct)
+    EMIT_UNOP_CODE_OPTIONAL(OP_LENGTH, pj_unop_length)
+    EMIT_UNOP_CODE_OPTIONAL(OP_CHR, pj_unop_chr)
+    EMIT_UNOP_CODE_OPTIONAL(OP_ORD, pj_unop_ord)
     EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
   default:
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
