@@ -25,6 +25,9 @@ class Perl::JIT::AST::Op : public Perl::JIT::AST::Term
   pj_op_class op_class() const;
   bool evaluates_kids_conditionally() const
     %code{% RETVAL = THIS->flags() & PJ_ASTf_KIDS_CONDITIONAL; %};
+
+  bool kids_are_optional() const
+    %code{% RETVAL = THIS->flags() & PJ_ASTf_KIDS_OPTIONAL; %};
 };
 
 class Perl::JIT::AST::Unop : public Perl::JIT::AST::Op

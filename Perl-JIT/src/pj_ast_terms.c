@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 using namespace PerlJIT;
 using namespace PerlJIT::AST;
@@ -63,6 +64,10 @@ Op::Op(OP *p_op, pj_op_type t)
 Unop::Unop(OP *p_op, pj_op_type t, Term *kid)
   : Op(p_op, t)
 {
+  if (kid == NULL) {
+    // assert that kids are optional, since NULL passed
+    assert(this->flags() & PJ_ASTf_KIDS_OPTIONAL);
+  }
   kids.resize(1);
   kids[0] = kid;
 }
@@ -71,6 +76,10 @@ Unop::Unop(OP *p_op, pj_op_type t, Term *kid)
 Binop::Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2)
   : Op(p_op, t)
 {
+  if (kid1 == NULL || kid2 == NULL) {
+    // assert that kids are optional, since at least one NULL passed
+    assert(this->flags() & PJ_ASTf_KIDS_OPTIONAL);
+  }
   kids.resize(2);
   kids[0] = kid1;
   kids[1] = kid2;
@@ -80,6 +89,8 @@ Binop::Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2)
 Listop::Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children)
   : Op(p_op, t)
 {
+  // TODO assert() that children aren't NULL _OR_
+  //      the PJ_ASTf_KIDS_OPTIONAL flag is set
   kids = children;
 }
 
