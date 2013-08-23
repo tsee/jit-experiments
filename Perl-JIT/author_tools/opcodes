@@ -10,8 +10,10 @@
 
 # Alas, the order is important. Keep unops/binops/listops together, please.
 
-# Special: Additional valid OPs for the filter macro
-#! jittable_root_ops=
+# Special: Additional valid OPs for the filter macro.
+# - OP_SCHOP is the single-parameter version of OP_CHOP. Treat it as the same
+#   thing in the AST.
+#! jittable_root_ops=OP_SCHOP
 #! jittable_ops=OP_CONST OP_PADSV OP_NULL OP_GVSV
 
 # Format:
@@ -83,3 +85,4 @@ pj_binop_definedor,	pj_opc_binop,	//,		OP_DOR,		KIDS_CONDITIONAL,	emit|nonroot
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit
 pj_listop_substr,	pj_opc_listop,	substr,		OP_SUBSTR,	0,	emit
+pj_listop_chop,		pj_opc_listop,	chop,		OP_CHOP,	0,	emit

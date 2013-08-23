@@ -30,7 +30,7 @@ while (<$fh>) {
       $valid_ops{$_} = 1 for split /\s+/, $value;
     }
     elsif ($name eq 'jittable_root_ops') {
-      $valid_root_ops{$_} = 1 for split /\s+/, $value;
+      $valid_ops{$_} = $valid_root_ops{$_} = 1 for split /\s+/, $value;
     }
     else {
       die "Invalid smart comment: '$_'";
