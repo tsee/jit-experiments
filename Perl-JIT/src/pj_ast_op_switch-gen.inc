@@ -17,6 +17,7 @@
   || otype == OP_CHOP \
   || otype == OP_CHR \
   || otype == OP_COMPLEMENT \
+  || otype == OP_CONCAT \
   || otype == OP_COND_EXPR \
   || otype == OP_COS \
   || otype == OP_DEFINED \
@@ -83,6 +84,7 @@
   || otype == OP_CHOP \
   || otype == OP_CHR \
   || otype == OP_COMPLEMENT \
+  || otype == OP_CONCAT \
   || otype == OP_COND_EXPR \
   || otype == OP_CONST \
   || otype == OP_COS \

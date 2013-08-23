@@ -81,6 +81,7 @@ pj_binop_str_cmp,	pj_opc_binop,	cmp,		OP_SCMP,	0,	emit
 pj_binop_bool_and,	pj_opc_binop,	&&,		OP_AND,		KIDS_CONDITIONAL,	emit|nonroot
 pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		KIDS_CONDITIONAL,	emit|nonroot
 pj_binop_definedor,	pj_opc_binop,	//,		OP_DOR,		KIDS_CONDITIONAL,	emit|nonroot
+pj_binop_concat,	pj_opc_binop,	concat,		OP_CONCAT,	0,	emit
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit
