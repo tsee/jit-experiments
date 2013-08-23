@@ -320,14 +320,10 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     assert(ikid == 2);                                                    \
     retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]);   \
     break;
-#define EMIT_LISTOP_CODE(perl_op_type, pj_op_type)  \
-  case perl_op_type: {                              \
-    vector<PerlJIT::AST::Term *> kids;              \
-    for (unsigned int i = 0; i < ikid-1; ++i)       \
-      kids.push_back(kid_terms[i]);                 \
-    retval = new AST::Listop(o, pj_op_type, kids);  \
-    break;                                          \
-  }
+#define EMIT_LISTOP_CODE(perl_op_type, pj_op_type)      \
+  case perl_op_type:                                    \
+    retval = new AST::Listop(o, pj_op_type, kid_terms); \
+    break;
 
   switch (otype) {
   case OP_CONST: {
