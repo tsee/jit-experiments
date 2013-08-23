@@ -49,6 +49,7 @@ pj_type_annotate_mg_free(pTHX_ SV *sv, MAGIC* mg)
     = (unordered_map<PADOFFSET, TypedPadSvOp>*)mg->mg_ptr;
   delete decl_map;
   mg->mg_ptr = NULL;
+  return 0;
 }
 
 
