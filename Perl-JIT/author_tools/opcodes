@@ -10,6 +10,11 @@
 
 # Alas, the order is important. Keep unops/binops/listops together, please.
 
+# Special: Additional valid OPs for the filter macro
+#! jittable_root_ops=
+#! jittable_ops=OP_CONST OP_PADSV OP_NULL OP_GVSV
+
+# Format:
 # AST op, AST op class, op name, Perl OP, C flags, options
 
 # unops

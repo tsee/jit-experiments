@@ -13,11 +13,30 @@ use constant {
 };
 my @cols = (AST_CONST, AST_CLASS, AST_NAME, PERL_CONST, AST_FLAGS, OPTIONS);
 
+# Valid ops for generating filtering macro
+my %valid_root_ops;
+my %valid_ops;
+
 # Read op defs from text format
 open my $fh, "<", "author_tools/opcodes" or die $!;
 my @op_defs;
 while (<$fh>) {
   chomp;
+
+  # special smart comment line...
+  if (/^\s*#!\s*(\w+)\s*=(.*)$/) {
+    my ($name, $value) = ($1, $2);
+    if ($name eq 'jittable_ops') {
+      $valid_ops{$_} = 1 for split /\s+/, $value;
+    }
+    elsif ($name eq 'jittable_root_ops') {
+      $valid_root_ops{$_} = 1 for split /\s+/, $value;
+    }
+    else {
+      die "Invalid smart comment: '$_'";
+    }
+  }
+
   s/#.*$//;
   next if !/\S/;
 
@@ -91,19 +110,17 @@ close $enum_fh;
 # Now generate macro to select the root / non-root OP types to ASTify
 my $op_switch_fh = prep_ast_gen_op_switch_file();
 print $op_switch_fh "// Macros to determine which Perl OPs to ASTify\n";
-my @valid_root_ops;
-my @valid_ops = qw(OP_CONST OP_PADSV OP_NULL OP_GVSV);
 foreach my $op (@op_defs) {
   if (not(grep $_ eq 'nonroot', split /\|/, $op->[OPTIONS])) {
-    push @valid_root_ops, $op->[PERL_CONST];
+    $valid_root_ops{ $op->[PERL_CONST] } = 1;
   }
-  push @valid_ops, $op->[PERL_CONST];
+  $valid_ops{ $op->[PERL_CONST] } = 1;
 }
 print $op_switch_fh "\n#define IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) ( \\\n     ";
-print $op_switch_fh join " \\\n  || ", map "otype == $_", @valid_root_ops;
+print $op_switch_fh join " \\\n  || ", map "otype == $_", sort keys %valid_root_ops;
 print $op_switch_fh ")\n\n";
 print $op_switch_fh "\n#define IS_AST_COMPATIBLE_OP_TYPE(otype) ( \\\n     ";
-print $op_switch_fh join " \\\n  || ", map "otype == $_", @valid_ops;
+print $op_switch_fh join " \\\n  || ", map "otype == $_", sort keys %valid_ops;
 print $op_switch_fh ")\n\n";
 
 print $op_switch_fh "\n\n#endif\n";
