@@ -44,36 +44,17 @@ pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 static PerlJIT::AST::Term *
 pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 
-// FIXME generate?
-#define IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) \
-        ( otype == OP_ADD || otype == OP_SUBTRACT || otype == OP_MULTIPLY || otype == OP_DIVIDE \
-          || otype == OP_SIN || otype == OP_COS || otype == OP_SQRT || otype == OP_EXP \
-          || otype == OP_LOG || otype == OP_POW || otype == OP_INT || otype == OP_NOT \
-          || otype == OP_LEFT_SHIFT || otype == OP_RIGHT_SHIFT || otype == OP_COMPLEMENT \
-          || otype == OP_COND_EXPR || otype == OP_NEGATE \
-          || otype == OP_GVSV || otype == OP_DEFINED \
-          || otype == OP_EQ || otype == OP_NE || otype == OP_GT || otype == OP_LT \
-          || otype == OP_LE || otype == OP_GE || otype == OP_NCMP \
-          || otype == OP_SEQ || otype == OP_SNE || otype == OP_SGT || otype == OP_SLT \
-          || otype == OP_SLE || otype == OP_SGE || otype == OP_SCMP \
-          || otype == OP_RAND || otype == OP_SRAND || otype == OP_HEX || otype == OP_OCT \
-          )
-
+// This will import two macros IS_AST_COMPATIBLE_ROOT_OP_TYPE
+// and IS_AST_COMPATIBLE_OP_TYPE. The macros determine whether to attempt
+// to ASTify a given Perl OP. Difference between the two macros described
+// below.
+#include "src/pj_ast_op_switch-gen.inc"
 /* AND and OR at top level can be used in "interesting" places such as looping constructs.
  * Thus, we'll -- for now -- only support them as OPs within a tree.
  * NULLs may need to be skipped occasionally, so we do something similar.
  * PADSVs are recognized as subtrees now, so no use making them jittable root OP.
  * CONSTs would be further constant folded if they were a candidate root OP, so
  * no sense trying to JIT them if they're free-standing. */
-#define IS_AST_COMPATIBLE_OP_TYPE(otype) \
-        (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) \
-          || otype == OP_GVSV \
-          || otype == OP_PADSV \
-          || otype == OP_CONST \
-          || otype == OP_AND \
-          || otype == OP_OR \
-          || otype == OP_NULL )
-
 
 namespace PerlJIT {
   class OPTreeJITCandidateFinder : public OPTreeVisitor

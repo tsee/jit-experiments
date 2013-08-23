@@ -6,6 +6,7 @@
 
 # Options:
 # - emit => actually emit as code to include for main OP switch in src/pj_optree.c FIXME this does nothing yet
+# - nonroot => don't build AST for this OP if it's at the root of a potential AST
 
 # Alas, the order is important. Keep unops/binops/listops together, please.
 
@@ -55,8 +56,8 @@ pj_binop_str_le,	pj_opc_binop,	le,		OP_SLE,		0,	emit
 pj_binop_str_gt,	pj_opc_binop,	gt,		OP_SGT,		0,	emit
 pj_binop_str_ge,	pj_opc_binop,	ge,		OP_SGE,		0,	emit
 pj_binop_str_cmp,	pj_opc_binop,	cmp,		OP_SCMP,	0,	emit
-pj_binop_bool_and,	pj_opc_binop,	&&,		OP_AND,		KIDS_CONDITIONAL,	emit
-pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		KIDS_CONDITIONAL,	emit
+pj_binop_bool_and,	pj_opc_binop,	&&,		OP_AND,		KIDS_CONDITIONAL,	emit|nonroot
+pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		KIDS_CONDITIONAL,	emit|nonroot
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit

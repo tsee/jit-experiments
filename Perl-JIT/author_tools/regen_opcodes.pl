@@ -88,6 +88,28 @@ print $enum_fh "} pj_op_type;\n\n#endif\n";
 close $enum_fh;
 
 
+# Now generate macro to select the root / non-root OP types to ASTify
+my $op_switch_fh = prep_ast_gen_op_switch_file();
+print $op_switch_fh "// Macros to determine which Perl OPs to ASTify\n";
+my @valid_root_ops;
+my @valid_ops = qw(OP_CONST OP_PADSV OP_NULL OP_GVSV);
+foreach my $op (@op_defs) {
+  if (not(grep $_ eq 'nonroot', split /\|/, $op->[OPTIONS])) {
+    push @valid_root_ops, $op->[PERL_CONST];
+  }
+  push @valid_ops, $op->[PERL_CONST];
+}
+print $op_switch_fh "\n#define IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) ( \\\n     ";
+print $op_switch_fh join " \\\n  || ", map "otype == $_", @valid_root_ops;
+print $op_switch_fh ")\n\n";
+print $op_switch_fh "\n#define IS_AST_COMPATIBLE_OP_TYPE(otype) ( \\\n     ";
+print $op_switch_fh join " \\\n  || ", map "otype == $_", @valid_ops;
+print $op_switch_fh ")\n\n";
+
+print $op_switch_fh "\n\n#endif\n";
+close $op_switch_fh;
+
+
 sub generic_header {
   my $fh = shift;
   my $name = shift;
@@ -112,6 +134,13 @@ sub prep_ops_enum_file {
   my $file = "src/pj_ast_ops_enum-gen.inc";
   open my $data_fh, ">", $file or die $!;
   generic_header($data_fh, "PJ_AST_OPS_ENUM_GEN_INC_");
+  return $data_fh;
+}
+
+sub prep_ast_gen_op_switch_file {
+  my $file = "src/pj_ast_op_switch-gen.inc";
+  open my $data_fh, ">", $file or die $!;
+  generic_header($data_fh, "PJ_AST_OP_SWITCH_GEN_INC_");
   return $data_fh;
 }
 
