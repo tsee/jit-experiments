@@ -34,12 +34,12 @@ static const char *pj_ast_op_names[] = {
   "&",        /* pj_binop_bitwise_and */
   "|",        /* pj_binop_bitwise_or */
   "^",        /* pj_binop_bitwise_xor */
-  "==",       /* pj_binop_eq */
-  "!=",       /* pj_binop_ne */
-  "<",        /* pj_binop_lt */
-  "<=",       /* pj_binop_le */
-  ">",        /* pj_binop_gt */
-  ">=",       /* pj_binop_ge */
+  "==",       /* pj_binop_num_eq */
+  "!=",       /* pj_binop_num_ne */
+  "<",        /* pj_binop_num_lt */
+  "<=",       /* pj_binop_num_le */
+  ">",        /* pj_binop_num_gt */
+  ">=",       /* pj_binop_num_ge */
   "&&",       /* pj_binop_bool_and */
   "||",       /* pj_binop_bool_or */
 
@@ -59,6 +59,7 @@ static unsigned int pj_ast_op_flags[] = {
   0,                              /* pj_unop_int */
   0,                              /* pj_unop_bitwise_not */
   0,                              /* pj_unop_bool_not */
+  0,                              /* pj_unop_defined */
 
   /* binops */
   0,                              /* pj_binop_add */
@@ -73,17 +74,17 @@ static unsigned int pj_ast_op_flags[] = {
   0,                              /* pj_binop_bitwise_and */
   0,                              /* pj_binop_bitwise_or */
   0,                              /* pj_binop_bitwise_xor */
-  0,                              /* pj_binop_eq */
-  0,                              /* pj_binop_ne */
-  0,                              /* pj_binop_lt */
-  0,                              /* pj_binop_le */
-  0,                              /* pj_binop_gt */
-  0,                              /* pj_binop_ge */
-  PJ_ASTf_KIDS_CONDITIONAL,            /* pj_binop_bool_and */
-  PJ_ASTf_KIDS_CONDITIONAL,            /* pj_binop_bool_or */
+  0,                              /* pj_binop_num_eq */
+  0,                              /* pj_binop_num_ne */
+  0,                              /* pj_binop_num_lt */
+  0,                              /* pj_binop_num_le */
+  0,                              /* pj_binop_num_gt */
+  0,                              /* pj_binop_num_ge */
+  PJ_ASTf_KIDS_CONDITIONAL,       /* pj_binop_bool_and */
+  PJ_ASTf_KIDS_CONDITIONAL,       /* pj_binop_bool_or */
 
   /* listops */
-  PJ_ASTf_KIDS_CONDITIONAL,            /* pj_listop_ternary */
+  PJ_ASTf_KIDS_CONDITIONAL,       /* pj_listop_ternary */
 };
 
 
