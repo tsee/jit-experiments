@@ -77,3 +77,4 @@ pj_binop_definedor,	pj_opc_binop,	//,		OP_DOR,		KIDS_CONDITIONAL,	emit|nonroot
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit
+pj_listop_substr,	pj_opc_listop,	substr,		OP_SUBSTR,	0,	emit

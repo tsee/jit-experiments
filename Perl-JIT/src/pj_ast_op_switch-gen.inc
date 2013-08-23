@@ -63,7 +63,8 @@
   || otype == OP_SGT \
   || otype == OP_SGE \
   || otype == OP_SCMP \
-  || otype == OP_COND_EXPR)
+  || otype == OP_COND_EXPR \
+  || otype == OP_SUBSTR)
 
 
 #define IS_AST_COMPATIBLE_OP_TYPE(otype) ( \
@@ -130,7 +131,8 @@
   || otype == OP_AND \
   || otype == OP_OR \
   || otype == OP_DOR \
-  || otype == OP_COND_EXPR)
+  || otype == OP_COND_EXPR \
+  || otype == OP_SUBSTR)
 
 
 

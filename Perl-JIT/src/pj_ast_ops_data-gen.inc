@@ -65,6 +65,7 @@ static const char *pj_ast_op_names[] = {
   "||",        // pj_binop_bool_or     (pj_opc_binop)
   "//",        // pj_binop_definedor   (pj_opc_binop)
   "?:",        // pj_listop_ternary    (pj_opc_listop)
+  "substr",    // pj_listop_substr     (pj_opc_listop)
 };
 
 static unsigned int pj_ast_op_flags[] = {
@@ -128,6 +129,7 @@ static unsigned int pj_ast_op_flags[] = {
   PJ_ASTf_KIDS_CONDITIONAL, // pj_binop_bool_or     (pj_opc_binop)
   PJ_ASTf_KIDS_CONDITIONAL, // pj_binop_definedor   (pj_opc_binop)
   PJ_ASTf_KIDS_CONDITIONAL, // pj_listop_ternary    (pj_opc_listop)
+  0,                        // pj_listop_substr     (pj_opc_listop)
 };
 
 #endif
