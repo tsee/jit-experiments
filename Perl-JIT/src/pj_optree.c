@@ -335,7 +335,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   }
 
   switch (otype) {
-    case OP_CONST: {
+  case OP_CONST: {
       /* FIXME OP_CONST can also be an int or a string and who-knows-what-else */
       SV *constsv = cSVOPx_sv(o);
 
@@ -343,19 +343,19 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       retval = new AST::Constant(o, SvNV(constsv)); /* FIXME replace type by inferred type */
       break;
     }
-    case OP_PADSV:
-      if (o->op_flags & OPpLVAL_INTRO)
-        retval = visitor.get_declaration(o, o);
-      else
-        retval = new AST::Variable(o, visitor.get_declaration(0, o));
-      break;
-    case OP_GVSV:
-      // FIXME OP_GVSV can have OPpLVAL_INTRO - Not sure what that means...
-      //if (o->op_flags & OPpLVAL_INTRO)
-      //  retval = visitor.get_declaration(o, o);
-      //else
-      retval = new AST::Variable(o, NULL); // FIXME want to supprt a declaration, too! (our)
-      break;
+  case OP_PADSV:
+    if (o->op_flags & OPpLVAL_INTRO)
+      retval = visitor.get_declaration(o, o);
+    else
+      retval = new AST::Variable(o, visitor.get_declaration(0, o));
+    break;
+  case OP_GVSV:
+    // FIXME OP_GVSV can have OPpLVAL_INTRO - Not sure what that means...
+    //if (o->op_flags & OPpLVAL_INTRO)
+    //  retval = visitor.get_declaration(o, o);
+    //else
+    retval = new AST::Variable(o, NULL); // FIXME want to supprt a declaration, too! (our)
+    break;
   case OP_NULL:
     if (kid_terms.size() == 1 && o->op_targ == 0) {
       // attempt a pass-through this null-op. FIXME likely WRONG
