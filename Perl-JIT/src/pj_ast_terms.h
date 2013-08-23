@@ -23,52 +23,8 @@ typedef enum {
   pj_opc_listop
 } pj_op_class;
 
-/* keep in sync with pj_ast_op_names in .c file */
-typedef enum {
-  pj_unop_negate,
-  pj_unop_sin,
-  pj_unop_cos,
-  pj_unop_abs,
-  pj_unop_sqrt,
-  pj_unop_log,
-  pj_unop_exp,
-  pj_unop_perl_int, /* the equivalent to the perl int function */
-  pj_unop_bitwise_not,
-  pj_unop_bool_not,
-  pj_unop_defined,
-
-  pj_binop_add,
-  pj_binop_subtract,
-  pj_binop_multiply,
-  pj_binop_divide,
-  pj_binop_modulo,
-  pj_binop_atan2,
-  pj_binop_pow,
-  pj_binop_left_shift,
-  pj_binop_right_shift,
-  pj_binop_bitwise_and,
-  pj_binop_bitwise_or,
-  pj_binop_bitwise_xor,
-  pj_binop_num_eq,
-  pj_binop_num_ne,
-  pj_binop_num_lt,
-  pj_binop_num_le,
-  pj_binop_num_gt,
-  pj_binop_num_ge,
-  pj_binop_bool_and,
-  pj_binop_bool_or,
-
-  pj_listop_ternary,
-
-  pj_unop_FIRST  = pj_unop_negate,
-  pj_unop_LAST   = pj_unop_defined,
-
-  pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_bool_or,
-
-  pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_ternary,
-} pj_op_type;
+// This file has the actual AST op enum declaration.
+#include "pj_ast_ops_enum-gen.inc"
 
 /* Indicates that the given op will only evaluate its arguments
  * conditionally (eg. short-circuiting boolean and/or). */

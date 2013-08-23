@@ -6,87 +6,9 @@
 using namespace PerlJIT;
 using namespace PerlJIT::AST;
 
-/* keep in sync with pj_op_type in .h file */
-static const char *pj_ast_op_names[] = {
-  /* unops */
-  "unary -",  /* pj_unop_negate */
-  "sin",      /* pj_unop_sin */
-  "cos",      /* pj_unop_cos */
-  "abs",      /* pj_unop_abs */
-  "sqrt",     /* pj_unop_sqrt */
-  "log",      /* pj_unop_log */
-  "exp",      /* pj_unop_exp */
-  "int",      /* pj_unop_int */
-  "~",        /* pj_unop_bitwise_not */
-  "!",        /* pj_unop_bool_not */
-  "defined",  /* pj_unop_defined */
-
-  /* binops */
-  "+",        /* pj_binop_add */
-  "-",        /* pj_binop_subtract */
-  "*",        /* pj_binop_multiply */
-  "/",        /* pj_binop_divide */
-  "%",        /* pj_binop_modulo */
-  "atan2",    /* pj_binop_atan2 */
-  "pow",      /* pj_binop_pow */
-  "<<",       /* pj_binop_left_shift */
-  ">>",       /* pj_binop_right_shift */
-  "&",        /* pj_binop_bitwise_and */
-  "|",        /* pj_binop_bitwise_or */
-  "^",        /* pj_binop_bitwise_xor */
-  "==",       /* pj_binop_num_eq */
-  "!=",       /* pj_binop_num_ne */
-  "<",        /* pj_binop_num_lt */
-  "<=",       /* pj_binop_num_le */
-  ">",        /* pj_binop_num_gt */
-  ">=",       /* pj_binop_num_ge */
-  "&&",       /* pj_binop_bool_and */
-  "||",       /* pj_binop_bool_or */
-
-  /* listops */
-  "?:",       /* pj_listop_ternary */
-};
-
-static unsigned int pj_ast_op_flags[] = {
-  /* unops */
-  0,                              /* pj_unop_negate */
-  0,                              /* pj_unop_sin */
-  0,                              /* pj_unop_cos */
-  0,                              /* pj_unop_abs */
-  0,                              /* pj_unop_sqrt */
-  0,                              /* pj_unop_log */
-  0,                              /* pj_unop_exp */
-  0,                              /* pj_unop_int */
-  0,                              /* pj_unop_bitwise_not */
-  0,                              /* pj_unop_bool_not */
-  0,                              /* pj_unop_defined */
-
-  /* binops */
-  0,                              /* pj_binop_add */
-  0,                              /* pj_binop_subtract */
-  0,                              /* pj_binop_multiply */
-  0,                              /* pj_binop_divide */
-  0,                              /* pj_binop_modulo */
-  0,                              /* pj_binop_atan2 */
-  0,                              /* pj_binop_pow */
-  0,                              /* pj_binop_left_shift */
-  0,                              /* pj_binop_right_shift */
-  0,                              /* pj_binop_bitwise_and */
-  0,                              /* pj_binop_bitwise_or */
-  0,                              /* pj_binop_bitwise_xor */
-  0,                              /* pj_binop_num_eq */
-  0,                              /* pj_binop_num_ne */
-  0,                              /* pj_binop_num_lt */
-  0,                              /* pj_binop_num_le */
-  0,                              /* pj_binop_num_gt */
-  0,                              /* pj_binop_num_ge */
-  PJ_ASTf_KIDS_CONDITIONAL,       /* pj_binop_bool_and */
-  PJ_ASTf_KIDS_CONDITIONAL,       /* pj_binop_bool_or */
-
-  /* listops */
-  PJ_ASTf_KIDS_CONDITIONAL,       /* pj_listop_ternary */
-};
-
+// That file has the static data about AST ops such as their
+// human-readable names and their flags.
+#include "pj_ast_ops_data-gen.inc"
 
 Term::Term(OP *p_op, pj_term_type t, Type *v_type)
   : type(t), perl_op(p_op), _value_type(v_type)
