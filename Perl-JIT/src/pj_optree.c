@@ -416,6 +416,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_UNOP_CODE_OPTIONAL(OP_LCFIRST, pj_unop_lcfirst)
     EMIT_UNOP_CODE_OPTIONAL(OP_UCFIRST, pj_unop_ucfirst)
     EMIT_UNOP_CODE_OPTIONAL(OP_QUOTEMETA, pj_unop_quotemeta)
+    EMIT_UNOP_CODE_OPTIONAL(OP_UNDEF, pj_unop_undef)
     EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
   default:
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
