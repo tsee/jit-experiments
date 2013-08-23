@@ -267,9 +267,9 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   if (!IS_AST_COMPATIBLE_OP_TYPE(otype)) {
     // Can't represent OP with AST. So instead, recursively scan for
     // separate candidates and treat as subtree.
-    PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
-    pj_find_jit_candidates_internal(aTHX_ o, visitor);
+    PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST (Perl OP=%s).\n", OP_NAME(o));
     retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
+    pj_find_jit_candidates_internal(aTHX_ o, visitor);
   }
 
   // Done with all bizarre special cases. Return if those were a match.
@@ -434,6 +434,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_UNOP_CODE_OPTIONAL(OP_UNDEF, pj_unop_undef)
     EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
     EMIT_LISTOP_CODE(OP_SUBSTR, pj_listop_substr)
+    EMIT_LISTOP_CODE(OP_CHOP, pj_listop_chop)
+    EMIT_LISTOP_CODE(OP_SCHOP, pj_listop_chop)
   default:
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
     abort();
