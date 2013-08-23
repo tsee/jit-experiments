@@ -38,3 +38,6 @@
   on the other hand passing it explicitly to every function is becoming silly
 * in Emit.pm, "unspecified" currently means "a plain scalar", which feels wrong
   and there is no "I don't care" value that can be used for requested type
+* What shall we do about "integer" variants of operations like "i_multiply"?
+  => I think: Emit regular multiplication AST OP with an annotation indicating
+     that it forces integer input.
