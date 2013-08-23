@@ -41,6 +41,8 @@ pj_unop_postinc,	pj_opc_unop,	()++,		OP_POSTINC,	0,	emit
 pj_unop_predec,		pj_opc_unop,	--(),		OP_PREDEC,	0,	emit
 pj_unop_postdec,	pj_opc_unop,	()--,		OP_POSTDEC,	0,	emit
 pj_unop_undef,		pj_opc_unop,	undef(),	OP_UNDEF,	KIDS_OPTIONAL,	emit
+pj_unop_sv_deref,	pj_opc_unop,	sv_deref,	OP_RV2SV,	0,	emit
+pj_unop_sv_ref,		pj_opc_unop,	sv_ref,		OP_SREFGEN,	0,	emit
 
 # binops
 pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		0,	emit

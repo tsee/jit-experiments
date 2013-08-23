@@ -35,6 +35,8 @@ typedef enum {
   pj_unop_predec,
   pj_unop_postdec,
   pj_unop_undef,
+  pj_unop_sv_deref,
+  pj_unop_sv_ref,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -73,7 +75,7 @@ typedef enum {
   // Op class ranges
 
   pj_unop_FIRST = pj_unop_negate,
-  pj_unop_LAST  = pj_unop_undef,
+  pj_unop_LAST  = pj_unop_sv_ref,
 
   pj_binop_FIRST = pj_binop_add,
   pj_binop_LAST  = pj_binop_definedor,

@@ -35,6 +35,8 @@
   || otype == OP_PREDEC \
   || otype == OP_POSTDEC \
   || otype == OP_UNDEF \
+  || otype == OP_RV2SV \
+  || otype == OP_SREFGEN \
   || otype == OP_ADD \
   || otype == OP_SUBTRACT \
   || otype == OP_MULTIPLY \
@@ -97,6 +99,8 @@
   || otype == OP_PREDEC \
   || otype == OP_POSTDEC \
   || otype == OP_UNDEF \
+  || otype == OP_RV2SV \
+  || otype == OP_SREFGEN \
   || otype == OP_ADD \
   || otype == OP_SUBTRACT \
   || otype == OP_MULTIPLY \
