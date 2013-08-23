@@ -13,6 +13,7 @@
   || otype == OP_BIT_AND \
   || otype == OP_BIT_OR \
   || otype == OP_BIT_XOR \
+  || otype == OP_CHOMP \
   || otype == OP_CHOP \
   || otype == OP_CHR \
   || otype == OP_COMPLEMENT \
@@ -50,6 +51,7 @@
   || otype == OP_RAND \
   || otype == OP_RIGHT_SHIFT \
   || otype == OP_RV2SV \
+  || otype == OP_SCHOMP \
   || otype == OP_SCHOP \
   || otype == OP_SCMP \
   || otype == OP_SEQ \
@@ -77,6 +79,7 @@
   || otype == OP_BIT_AND \
   || otype == OP_BIT_OR \
   || otype == OP_BIT_XOR \
+  || otype == OP_CHOMP \
   || otype == OP_CHOP \
   || otype == OP_CHR \
   || otype == OP_COMPLEMENT \
@@ -120,6 +123,7 @@
   || otype == OP_RAND \
   || otype == OP_RIGHT_SHIFT \
   || otype == OP_RV2SV \
+  || otype == OP_SCHOMP \
   || otype == OP_SCHOP \
   || otype == OP_SCMP \
   || otype == OP_SEQ \

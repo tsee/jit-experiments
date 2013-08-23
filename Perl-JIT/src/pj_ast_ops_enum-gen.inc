@@ -73,6 +73,7 @@ typedef enum {
   pj_listop_ternary,
   pj_listop_substr,
   pj_listop_chop,
+  pj_listop_chomp,
 
   // Op class ranges
 
@@ -83,11 +84,11 @@ typedef enum {
   pj_binop_LAST  = pj_binop_definedor,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_chop,
+  pj_listop_LAST  = pj_listop_chomp,
 
   // Global op range:
   pj_op_FIRST = pj_unop_negate,
-  pj_op_LAST = pj_listop_chop
+  pj_op_LAST = pj_listop_chomp
 } pj_op_type;
 
 #endif

@@ -436,6 +436,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_LISTOP_CODE(OP_SUBSTR, pj_listop_substr)
     EMIT_LISTOP_CODE(OP_CHOP, pj_listop_chop)
     EMIT_LISTOP_CODE(OP_SCHOP, pj_listop_chop)
+    EMIT_LISTOP_CODE(OP_CHOMP, pj_listop_chomp)
+    EMIT_LISTOP_CODE(OP_SCHOMP, pj_listop_chomp)
   default:
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
     abort();
