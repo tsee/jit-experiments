@@ -22,6 +22,7 @@ while (<$fh>) {
   next if !/\S/;
 
   my @cols = split /,\s*/, $_;
+  $cols[AST_FLAGS] = join '|', map {$_ ? "PJ_ASTf_$_" : $_} split /\|/, $cols[AST_FLAGS];
   push @op_defs, \@cols;
 }
 close $fh;

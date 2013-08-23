@@ -1,6 +1,8 @@
 # AST op definitions, one per line. "C flags" is the actual C flags written to
 # the output file for runtime properties. "options" contols generation behaviour.
 # Use | chars to separate flags and options.
+# The "PJ_ASTf_" prefix of flags is added automatically, so use "KIDS_OPTIONAL"
+# instead of the longer "PJ_ASTf_KIDS_OPTIONAL".
 
 # Options:
 # - emit => actually emit as code to include for main OP switch in src/pj_optree.c
@@ -11,18 +13,18 @@
 
 # unops
 pj_unop_negate,		pj_opc_unop,	unary -,	OP_NEGATE, 	0,	emit
-pj_unop_sin,		pj_opc_unop,	sin,		OP_SIN,		0,	emit
-pj_unop_cos,		pj_opc_unop,	cos,		OP_COS,		0,	emit
-pj_unop_abs,		pj_opc_unop,	abs,		OP_ABS,		0,	emit
-pj_unop_sqrt,		pj_opc_unop,	sqrt,		OP_SQRT,	0,	emit
-pj_unop_log,		pj_opc_unop,	log,		OP_LOG,		0,	emit
-pj_unop_exp,		pj_opc_unop,	exp,		OP_EXP,		0,	emit
-pj_unop_perl_int,	pj_opc_unop,	int,		OP_INT,		0,	emit
+pj_unop_sin,		pj_opc_unop,	sin,		OP_SIN,		KIDS_OPTIONAL,	emit
+pj_unop_cos,		pj_opc_unop,	cos,		OP_COS,		KIDS_OPTIONAL,	emit
+pj_unop_abs,		pj_opc_unop,	abs,		OP_ABS,		KIDS_OPTIONAL,	emit
+pj_unop_sqrt,		pj_opc_unop,	sqrt,		OP_SQRT,	KIDS_OPTIONAL,	emit
+pj_unop_log,		pj_opc_unop,	log,		OP_LOG,		KIDS_OPTIONAL,	emit
+pj_unop_exp,		pj_opc_unop,	exp,		OP_EXP,		KIDS_OPTIONAL,	emit
+pj_unop_perl_int,	pj_opc_unop,	int,		OP_INT,		KIDS_OPTIONAL,	emi
 pj_unop_bitwise_not,	pj_opc_unop,	~,		OP_COMPLEMENT,	0,	emit
 pj_unop_bool_not,	pj_opc_unop,	!,		OP_NOT,		0,	emit
-pj_unop_defined,	pj_opc_unop,	defined,	OP_DEFINED,	0,	emit
-pj_unop_rand,		pj_opc_unop,	rand,		OP_RAND,	PJ_ASTf_KIDS_OPTIONAL,	emit
-pj_unop_srand,		pj_opc_unop,	srand,		OP_SRAND,	PJ_ASTf_KIDS_OPTIONAL,	emit
+pj_unop_defined,	pj_opc_unop,	defined,	OP_DEFINED,	KIDS_OPTIONAL,	emit
+pj_unop_rand,		pj_opc_unop,	rand,		OP_RAND,	KIDS_OPTIONAL,	emit
+pj_unop_srand,		pj_opc_unop,	srand,		OP_SRAND,	KIDS_OPTIONAL,	emit
 
 # binops
 pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		0,	emit
@@ -51,8 +53,8 @@ pj_binop_str_le,	pj_opc_binop,	le,		OP_SLE,		0,	emit
 pj_binop_str_gt,	pj_opc_binop,	gt,		OP_SGT,		0,	emit
 pj_binop_str_ge,	pj_opc_binop,	ge,		OP_SGE,		0,	emit
 pj_binop_str_cmp,	pj_opc_binop,	cmp,		OP_SCMP,	0,	emit
-pj_binop_bool_and,	pj_opc_binop,	&&,		OP_AND,		PJ_ASTf_KIDS_CONDITIONAL,	emit
-pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		PJ_ASTf_KIDS_CONDITIONAL,	emit
+pj_binop_bool_and,	pj_opc_binop,	&&,		OP_AND,		KIDS_CONDITIONAL,	emit
+pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		KIDS_CONDITIONAL,	emit
 
 # listops
-pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	PJ_ASTf_KIDS_CONDITIONAL,	emit
+pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit

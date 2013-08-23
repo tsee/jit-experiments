@@ -53,7 +53,9 @@ pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
           || otype == OP_COND_EXPR || otype == OP_NEGATE \
           || otype == OP_GVSV || otype == OP_DEFINED \
           || otype == OP_EQ || otype == OP_NE || otype == OP_GT || otype == OP_LT \
-          || otype == OP_LE || otype == OP_GE \
+          || otype == OP_LE || otype == OP_GE || otype == OP_NCMP \
+          || otype == OP_SEQ || otype == OP_SNE || otype == OP_SGT || otype == OP_SLT \
+          || otype == OP_SLE || otype == OP_SGE || otype == OP_SCMP \
           )
 
 /* AND and OR at top level can be used in "interesting" places such as looping constructs.
@@ -317,8 +319,16 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   /* TODO modulo may have (very?) different behaviour in Perl than in C (or libjit or the platform...) */
 #define EMIT_UNOP_CODE(perl_op_type, pj_op_type)          \
   case perl_op_type:                                      \
-    assert(ikid == 1);                                    \
+    assert(kid_terms.size() == 1);                        \
     retval = new AST::Unop(o, pj_op_type, kid_terms[0]);  \
+    break;
+#define EMIT_UNOP_CODE_OPTIONAL(perl_op_type, pj_op_type)   \
+  case perl_op_type:                                        \
+    assert(kid_terms.size() == 1 || kid_terms.size() == 0); \
+    if (kid_terms.size() == 1)                              \
+      retval = new AST::Unop(o, pj_op_type, kid_terms[0]);  \
+    else /* no kids */                                      \
+      retval = new AST::Unop(o, pj_op_type, NULL);          \
     break;
 #define EMIT_BINOP_CODE(perl_op_type, pj_op_type)                         \
   case perl_op_type:                                                      \
@@ -354,7 +364,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     //if (o->op_flags & OPpLVAL_INTRO)
     //  retval = visitor.get_declaration(o, o);
     //else
-    retval = new AST::Variable(o, NULL); // FIXME want to supprt a declaration, too! (our)
+    retval = new AST::Variable(o, NULL); // FIXME want to support a declaration, too! (our)
     break;
   case OP_NULL:
     if (kid_terms.size() == 1 && o->op_targ == 0) {
@@ -374,17 +384,6 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
         break;
       }
-    }
-  case OP_RAND:
-  case OP_SRAND: {
-      const pj_op_type ast_type = (otype == OP_RAND ? pj_unop_rand : pj_unop_srand);
-      if (kid_terms.size() == 0) {
-        retval = new AST::Unop(o, ast_type, NULL);
-      } else {
-        assert(kid_terms.size() == 1);
-        retval = new AST::Unop(o, ast_type, kid_terms[0]);
-      }
-      break;
     }
     EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
     EMIT_BINOP_CODE(OP_SUBTRACT, pj_binop_subtract)
@@ -409,16 +408,18 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_BINOP_CODE(OP_SGE, pj_binop_str_ge)
     EMIT_BINOP_CODE(OP_SLE, pj_binop_str_le)
     EMIT_BINOP_CODE(OP_SCMP, pj_binop_str_cmp)
-    EMIT_UNOP_CODE(OP_SIN, pj_unop_sin)
-    EMIT_UNOP_CODE(OP_COS, pj_unop_cos)
-    EMIT_UNOP_CODE(OP_SQRT, pj_unop_sqrt)
-    EMIT_UNOP_CODE(OP_LOG, pj_unop_log)
-    EMIT_UNOP_CODE(OP_EXP, pj_unop_exp)
-    EMIT_UNOP_CODE(OP_INT, pj_unop_perl_int)
     EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not)
     EMIT_UNOP_CODE(OP_NEGATE, pj_unop_negate)
     EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not)
-    EMIT_UNOP_CODE(OP_DEFINED, pj_unop_defined)
+    EMIT_UNOP_CODE_OPTIONAL(OP_SIN, pj_unop_sin)
+    EMIT_UNOP_CODE_OPTIONAL(OP_COS, pj_unop_cos)
+    EMIT_UNOP_CODE_OPTIONAL(OP_SQRT, pj_unop_sqrt)
+    EMIT_UNOP_CODE_OPTIONAL(OP_LOG, pj_unop_log)
+    EMIT_UNOP_CODE_OPTIONAL(OP_EXP, pj_unop_exp)
+    EMIT_UNOP_CODE_OPTIONAL(OP_INT, pj_unop_perl_int)
+    EMIT_UNOP_CODE_OPTIONAL(OP_DEFINED, pj_unop_defined)
+    EMIT_UNOP_CODE_OPTIONAL(OP_RAND, pj_unop_rand)
+    EMIT_UNOP_CODE_OPTIONAL(OP_SRAND, pj_unop_srand)
     EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
   default:
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
