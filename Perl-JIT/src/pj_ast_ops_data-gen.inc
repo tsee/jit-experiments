@@ -61,6 +61,7 @@ static const char *pj_ast_op_names[] = {
   "cmp",       // pj_binop_str_cmp     (pj_opc_binop)
   "&&",        // pj_binop_bool_and    (pj_opc_binop)
   "||",        // pj_binop_bool_or     (pj_opc_binop)
+  "//",        // pj_binop_definedor   (pj_opc_binop)
   "?:",        // pj_listop_ternary    (pj_opc_listop)
 };
 
@@ -121,6 +122,7 @@ static unsigned int pj_ast_op_flags[] = {
   0,                        // pj_binop_str_cmp     (pj_opc_binop)
   PJ_ASTf_KIDS_CONDITIONAL, // pj_binop_bool_and    (pj_opc_binop)
   PJ_ASTf_KIDS_CONDITIONAL, // pj_binop_bool_or     (pj_opc_binop)
+  PJ_ASTf_KIDS_CONDITIONAL, // pj_binop_definedor   (pj_opc_binop)
   PJ_ASTf_KIDS_CONDITIONAL, // pj_listop_ternary    (pj_opc_listop)
 };
 

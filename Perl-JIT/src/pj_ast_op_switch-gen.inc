@@ -125,6 +125,7 @@
   || otype == OP_SCMP \
   || otype == OP_AND \
   || otype == OP_OR \
+  || otype == OP_DOR \
   || otype == OP_COND_EXPR)
 
 
