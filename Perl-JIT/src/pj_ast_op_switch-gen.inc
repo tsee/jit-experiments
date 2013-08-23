@@ -30,6 +30,10 @@
   || otype == OP_LCFIRST \
   || otype == OP_UCFIRST \
   || otype == OP_QUOTEMETA \
+  || otype == OP_PREINC \
+  || otype == OP_POSTINC \
+  || otype == OP_PREDEC \
+  || otype == OP_POSTDEC \
   || otype == OP_ADD \
   || otype == OP_SUBTRACT \
   || otype == OP_MULTIPLY \
@@ -87,6 +91,10 @@
   || otype == OP_LCFIRST \
   || otype == OP_UCFIRST \
   || otype == OP_QUOTEMETA \
+  || otype == OP_PREINC \
+  || otype == OP_POSTINC \
+  || otype == OP_PREDEC \
+  || otype == OP_POSTDEC \
   || otype == OP_ADD \
   || otype == OP_SUBTRACT \
   || otype == OP_MULTIPLY \

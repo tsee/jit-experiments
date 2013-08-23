@@ -36,6 +36,10 @@ pj_unop_uc,		pj_opc_unop,	uc,		OP_UC,		KIDS_OPTIONAL,	emit
 pj_unop_lcfirst,	pj_opc_unop,	lcfirst,	OP_LCFIRST,	KIDS_OPTIONAL,	emit
 pj_unop_ucfirst,	pj_opc_unop,	ucfirst,	OP_UCFIRST,	KIDS_OPTIONAL,	emit
 pj_unop_quotemeta,	pj_opc_unop,	quotemeta,	OP_QUOTEMETA,	KIDS_OPTIONAL,	emit
+pj_unop_preinc,		pj_opc_unop,	++(),		OP_PREINC,	0,	emit
+pj_unop_postinc,	pj_opc_unop,	()++,		OP_POSTINC,	0,	emit
+pj_unop_predec,		pj_opc_unop,	--(),		OP_PREDEC,	0,	emit
+pj_unop_postdec,	pj_opc_unop,	()--,		OP_POSTDEC,	0,	emit
 
 # binops
 pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		0,	emit
