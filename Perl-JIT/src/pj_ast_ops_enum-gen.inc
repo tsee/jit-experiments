@@ -38,6 +38,12 @@ typedef enum {
   pj_binop_num_le,
   pj_binop_num_gt,
   pj_binop_num_ge,
+  pj_binop_str_eq,
+  pj_binop_str_ne,
+  pj_binop_str_lt,
+  pj_binop_str_le,
+  pj_binop_str_gt,
+  pj_binop_str_ge,
   pj_binop_bool_and,
   pj_binop_bool_or,
 
