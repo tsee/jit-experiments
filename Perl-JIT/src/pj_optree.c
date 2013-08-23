@@ -56,6 +56,7 @@ pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
           || otype == OP_LE || otype == OP_GE || otype == OP_NCMP \
           || otype == OP_SEQ || otype == OP_SNE || otype == OP_SGT || otype == OP_SLT \
           || otype == OP_SLE || otype == OP_SGE || otype == OP_SCMP \
+          || otype == OP_RAND || otype == OP_SRAND || otype == OP_HEX || otype == OP_OCT \
           )
 
 /* AND and OR at top level can be used in "interesting" places such as looping constructs.
@@ -420,6 +421,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_UNOP_CODE_OPTIONAL(OP_DEFINED, pj_unop_defined)
     EMIT_UNOP_CODE_OPTIONAL(OP_RAND, pj_unop_rand)
     EMIT_UNOP_CODE_OPTIONAL(OP_SRAND, pj_unop_srand)
+    EMIT_UNOP_CODE_OPTIONAL(OP_HEX, pj_unop_hex)
+    EMIT_UNOP_CODE_OPTIONAL(OP_OCT, pj_unop_oct)
     EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
   default:
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
