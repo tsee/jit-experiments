@@ -26,9 +26,11 @@ typedef enum {
 // This file has the actual AST op enum declaration.
 #include "pj_ast_ops_enum-gen.inc"
 
-/* Indicates that the given op will only evaluate its arguments
- * conditionally (eg. short-circuiting boolean and/or). */
+// Indicates that the given op will only evaluate its arguments
+// conditionally (eg. short-circuiting boolean and/or, ternary).
 #define PJ_ASTf_KIDS_CONDITIONAL (1<<0)
+// Indicates that kids may or may not exist
+#define PJ_ASTf_KIDS_OPTIONAL (1<<1)
 
 namespace PerlJIT {
   namespace AST {

@@ -21,7 +21,8 @@ pj_unop_perl_int,	pj_opc_unop,	int,		OP_INT,		0,	emit
 pj_unop_bitwise_not,	pj_opc_unop,	~,		OP_COMPLEMENT,	0,	emit
 pj_unop_bool_not,	pj_opc_unop,	!,		OP_NOT,		0,	emit
 pj_unop_defined,	pj_opc_unop,	defined,	OP_DEFINED,	0,	emit
-pj_unop_rand,		pj_opc_unop,	rand,		OP_RAND,	0,	emit
+pj_unop_rand,		pj_opc_unop,	rand,		OP_RAND,	PJ_ASTf_KIDS_OPTIONAL,	emit
+pj_unop_srand,		pj_opc_unop,	srand,		OP_SRAND,	PJ_ASTf_KIDS_OPTIONAL,	emit
 
 # binops
 pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		0,	emit

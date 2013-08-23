@@ -376,13 +376,16 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       }
     }
   case OP_RAND:
-    if (kid_terms.size() == 0) {
-      retval = new AST::Unop(o, pj_unop_rand, kid_terms[0]);
-    } else {
-      assert(kid_terms.size() == 1);
-      retval = new AST::Unop(o, pj_unop_rand, NULL);
+  case OP_SRAND: {
+      const pj_op_type ast_type = (otype == OP_RAND ? pj_unop_rand : pj_unop_srand);
+      if (kid_terms.size() == 0) {
+        retval = new AST::Unop(o, ast_type, NULL);
+      } else {
+        assert(kid_terms.size() == 1);
+        retval = new AST::Unop(o, ast_type, kid_terms[0]);
+      }
+      break;
     }
-    break;
     EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
     EMIT_BINOP_CODE(OP_SUBTRACT, pj_binop_subtract)
     EMIT_BINOP_CODE(OP_MULTIPLY, pj_binop_multiply)
