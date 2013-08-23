@@ -286,59 +286,33 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     pj_find_jit_candidates_internal(aTHX_ o, visitor);
     retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
   }
-  else if (!(o->op_flags & OPf_KIDS)) {
-    // Handle ops without kids first
-    if (otype == OP_CONST) {
-      /* FIXME OP_CONST can also be an int or a string and who-knows-what-else */
-      SV *constsv = cSVOPx_sv(o);
 
-      PJ_DEBUG_1("CONST being inlined (%f).\n", SvNV(constsv));
-      retval = new AST::Constant(o, SvNV(constsv)); /* FIXME replace type by inferred type */
-    }
-    else if (otype == OP_PADSV) {
-      if (o->op_flags & OPpLVAL_INTRO)
-        retval = visitor.get_declaration(o, o);
-      else
-        retval = new AST::Variable(o, visitor.get_declaration(0, o));
-    }
-    else if (otype == OP_GVSV) {
-      // FIXME OP_GVSV can have OPpLVAL_INTRO - Not sure what that means...
-      //if (o->op_flags & OPpLVAL_INTRO)
-      //  retval = visitor.get_declaration(o, o);
-      //else
-      retval = new AST::Variable(o, NULL); // FIXME want to supprt a declaration, too! (our)
-    }
-    else {
-      croak("Shouldn't happen! Unsupported nullary OP!? %s", OP_NAME(o));
-    }
-  }
-
+  // Done with all bizarre special cases. Return if those were a match.
   if (retval != NULL) {
     if (PJ_DEBUGGING)
       retval->dump();
     return retval;
   }
 
-  // If we reach this, then the OP has kids and we build the child optrees
-  // before building this node.
-
-  // Build child list
+  // Build child list if applicable
   vector<PerlJIT::AST::Term *> kid_terms;
   unsigned int ikid = 0;
-  for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
-    PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
+  if (o->op_flags & OPf_KIDS) {
+    for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
+      PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
 
-    kid_terms.push_back( pj_build_ast(aTHX_ kid, visitor) );
-    if (kid_terms.back() == NULL) {
-      // Failed to build sub-AST, free ASTs build thus far before bailing
-      kid_terms.pop_back();
-      vector<PerlJIT::AST::Term *>::iterator it = kid_terms.begin();
-      for (; it != kid_terms.end(); ++it)
-        delete *it;
-      return NULL;
-    }
-    ++ikid;
-  } /* end for kids */
+      kid_terms.push_back( pj_build_ast(aTHX_ kid, visitor) );
+      if (kid_terms.back() == NULL) {
+        // Failed to build sub-AST, free ASTs build thus far before bailing
+        kid_terms.pop_back();
+        vector<PerlJIT::AST::Term *>::iterator it = kid_terms.begin();
+        for (; it != kid_terms.end(); ++it)
+          delete *it;
+        return NULL;
+      }
+      ++ikid;
+    } // end for kids
+  } // end if have kids
 
   /* TODO modulo may have (very?) different behaviour in Perl than in C (or libjit or the platform...) */
 #define EMIT_UNOP_CODE(perl_op_type, pj_op_type)          \
@@ -361,6 +335,54 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   }
 
   switch (otype) {
+    case OP_CONST: {
+      /* FIXME OP_CONST can also be an int or a string and who-knows-what-else */
+      SV *constsv = cSVOPx_sv(o);
+
+      PJ_DEBUG_1("CONST being inlined (%f).\n", SvNV(constsv));
+      retval = new AST::Constant(o, SvNV(constsv)); /* FIXME replace type by inferred type */
+      break;
+    }
+    case OP_PADSV:
+      if (o->op_flags & OPpLVAL_INTRO)
+        retval = visitor.get_declaration(o, o);
+      else
+        retval = new AST::Variable(o, visitor.get_declaration(0, o));
+      break;
+    case OP_GVSV:
+      // FIXME OP_GVSV can have OPpLVAL_INTRO - Not sure what that means...
+      //if (o->op_flags & OPpLVAL_INTRO)
+      //  retval = visitor.get_declaration(o, o);
+      //else
+      retval = new AST::Variable(o, NULL); // FIXME want to supprt a declaration, too! (our)
+      break;
+  case OP_NULL:
+    if (kid_terms.size() == 1 && o->op_targ == 0) {
+      // attempt a pass-through this null-op. FIXME likely WRONG
+      retval = kid_terms[0];
+      break;
+    }
+    else {
+      const unsigned int targ_otype = (unsigned int)o->op_targ;
+      switch (targ_otype) {
+      case OP_RV2SV: // Skip into ex-rv2sv for optimized global scalar access
+        retval = kid_terms[0];
+        break;
+      default:
+        PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
+        pj_find_jit_candidates_internal(aTHX_ o, visitor);
+        retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
+        break;
+      }
+    }
+  case OP_RAND:
+    if (kid_terms.size() == 0) {
+      retval = new AST::Unop(o, pj_unop_rand, kid_terms[0]);
+    } else {
+      assert(kid_terms.size() == 1);
+      retval = new AST::Unop(o, pj_unop_rand, NULL);
+    }
+    break;
     EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
     EMIT_BINOP_CODE(OP_SUBTRACT, pj_binop_subtract)
     EMIT_BINOP_CODE(OP_MULTIPLY, pj_binop_multiply)
@@ -395,29 +417,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not)
     EMIT_UNOP_CODE(OP_DEFINED, pj_unop_defined)
     EMIT_LISTOP_CODE(OP_COND_EXPR, pj_listop_ternary)
-  case OP_NULL:
-    if (kid_terms.size() == 1 && o->op_targ == 0) {
-      // attempt a pass-through this null-op. FIXME likely WRONG
-      retval = kid_terms[0];
-      break;
-    }
-    else {
-      const unsigned int targ_otype = (unsigned int)o->op_targ;
-      switch (targ_otype) {
-      case OP_RV2SV: // Skip into ex-rv2sv for optimized global scalar access
-        retval = kid_terms[0];
-        break;
-      default:
-        PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
-        pj_find_jit_candidates_internal(aTHX_ o, visitor);
-        retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
-        break;
-      }
-    }
   default:
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
-    if (otype == OP_NULL)
-      warn("This is an OP_NULL that might have been a %s before\n", PL_op_name[o->op_targ]);
     abort();
   }
 #undef EMIT_BINOP_CODE
