@@ -251,6 +251,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   assert(o);
 
   const unsigned int otype = o->op_type;
+  PJ_DEBUG_1("pj_build_ast ASTing OP of type %s\n", OP_NAME(o));
   // found a SPECIAL entersub, which is a call to an "import" method:
   // check whether it might be handling the attribute for a lexical;
   // if so the call looks like
@@ -284,16 +285,18 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   if (o->op_flags & OPf_KIDS) {
     for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
       PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
-
-      kid_terms.push_back( pj_build_ast(aTHX_ kid, visitor) );
-      if (kid_terms.back() == NULL) {
+      AST::Term *kid_term = pj_build_ast(aTHX_ kid, visitor);
+      if (kid_term == NULL) {
         // Failed to build sub-AST, free ASTs build thus far before bailing
-        kid_terms.pop_back();
+        PJ_DEBUG("Failed to build sub-AST - unwinding.\n");
         vector<PerlJIT::AST::Term *>::iterator it = kid_terms.begin();
         for (; it != kid_terms.end(); ++it)
           delete *it;
         return NULL;
       }
+      kid_terms.push_back(kid_term);
+      if (PJ_DEBUGGING)
+        printf("pj_build_ast got kid (%u, %p) of type %s in return\n", ikid, kid_term, kid_term->perl_class());
       ++ikid;
     } // end for kids
   } // end if have kids
@@ -330,8 +333,6 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   case OP_CONST: {
       /* FIXME OP_CONST can also be an int or a string and who-knows-what-else */
       SV *constsv = cSVOPx_sv(o);
-
-      PJ_DEBUG_1("CONST being inlined (%f).\n", SvNV(constsv));
       retval = new AST::Constant(o, SvNV(constsv)); /* FIXME replace type by inferred type */
       break;
     }
@@ -349,24 +350,33 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     retval = new AST::Variable(o, NULL); // FIXME want to support a declaration, too! (our)
     break;
   case OP_NULL:
-    if (kid_terms.size() == 1 && o->op_targ == 0) {
-      // attempt a pass-through this null-op. FIXME likely WRONG
-      retval = kid_terms[0];
-      break;
-    }
-    else {
-      const unsigned int targ_otype = (unsigned int)o->op_targ;
-      switch (targ_otype) {
-      case OP_RV2SV: // Skip into ex-rv2sv for optimized global scalar access
+    if (kid_terms.size() == 1) {
+      if (o->op_targ == 0) {
+        // attempt to pass through this untyped null-op. FIXME likely WRONG
+        PJ_DEBUG("Passing through kid of OP_NULL\n");
         retval = kid_terms[0];
-        break;
-      default:
-        PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
-        pj_find_jit_candidates_internal(aTHX_ o, visitor);
-        retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
-        break;
+      }
+      else {
+        const unsigned int targ_otype = (unsigned int)o->op_targ;
+        switch (targ_otype) {
+        case OP_RV2SV: // Skip into ex-rv2sv for optimized global scalar access
+          PJ_DEBUG("Passing through kid of ex-rv2sv\n");
+          retval = kid_terms[0];
+          break;
+        default:
+          PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
+          pj_find_jit_candidates_internal(aTHX_ o, visitor);
+          retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
+          break;
+        }
       }
     }
+    else {
+      PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
+      pj_find_jit_candidates_internal(aTHX_ o, visitor);
+      retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
+    }
+    break;
     EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
     EMIT_BINOP_CODE(OP_SUBTRACT, pj_binop_subtract)
     EMIT_BINOP_CODE(OP_MULTIPLY, pj_binop_multiply)
@@ -424,6 +434,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   }
 #undef EMIT_BINOP_CODE
 #undef EMIT_UNOP_CODE
+#undef EMIT_UNOP_CODE_OPTIONAL
 #undef EMIT_LISTOP_CODE
 
   /* PMOP doesn't matter for JIT right now */

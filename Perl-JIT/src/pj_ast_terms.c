@@ -132,7 +132,10 @@ void
 Variable::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  printf("V = %i\n", this->declaration->ivar);
+  if (this->declaration)
+    printf("V = %i\n", this->declaration->ivar);
+  else
+    printf("V = ?????? FIXME THIS IS A BUG. Cannot handle pkg vars yet...\n");
 }
 
 
@@ -158,7 +161,12 @@ S_dump_op(PerlJIT::AST::Op *o, const char *op_str, int indent_lvl)
   printf("%s '%s' (\n", op_str, o->name());
   const unsigned int n = o->kids.size();
   for (unsigned int i = 0; i < n; ++i) {
-    o->kids[i]->dump(indent_lvl+1);
+    if (o->kids[i] == NULL) {
+      S_dump_tree_indent(indent_lvl+1);
+      printf("NULL\n");
+    } else {
+      o->kids[i]->dump(indent_lvl+1);
+    }
   }
   S_dump_tree_indent(indent_lvl);
   printf(")\n");
