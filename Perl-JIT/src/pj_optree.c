@@ -78,13 +78,6 @@ namespace PerlJIT {
 
       PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
 
-      /* Grab attribute information */
-      if (otype == OP_ENTERSUB) {
-        PerlJIT::AST::Term *ast = build_attributes_ast(aTHX_ cLISTOPo);
-        if (ast)
-            candidates.push_back(ast);
-        return VISIT_SKIP;
-      }
       /* Attempt JIT if the right OP type. Don't recurse if so. */
       if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype)) {
         PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
@@ -124,26 +117,6 @@ namespace PerlJIT {
       return decl;
     }
 
-    PerlJIT::AST::Term *
-    build_attributes_ast(pTHX_ LISTOP *o)
-    {
-      bool can_remove = false;
-      AST::Type *type = 0;
-      OP *variable = 0;
-
-      if (!pj_parse_attributes(aTHX_ o, can_remove, type, variable))
-        return 0;
-
-      AST::VariableDeclaration *decl = get_declaration(0, variable);
-
-      decl->set_value_type(type);
-
-      if (can_remove)
-        return new AST::NullOptree((OP *) o);
-      else
-        return 0;
-    }
-
     vector<PerlJIT::AST::Term *> candidates;
     unordered_map<PADOFFSET, AST::VariableDeclaration *> variables;
     CV *containing_cv;
@@ -177,81 +150,6 @@ pj_find_first_executed_op(pTHX_ OP *o)
 }
 
 
-/* Expects to be called on an OP_ENTERSUB */
-bool
-pj_parse_attributes(pTHX_ LISTOP *o, bool &can_remove, AST::Type *&type, OP *&variable)
-{
-  // recognizes the ops for
-  // attributes::->import(__PACKAGE__, \$x, 'Bent');
-  if (o->op_type != OP_ENTERSUB || !(o->op_flags & OPf_SPECIAL)
-      || cLISTOPo->op_last->op_type != OP_METHOD_NAMED
-      || strcmp(SvPVx(cSVOPx_sv(cLISTOPo->op_last), PL_na), "import") != 0)
-    return false;
-
-  OP *attrpackage = cLISTOPo->op_first->op_sibling;
-  OP *currpackage = attrpackage ? attrpackage->op_sibling : 0;
-  OP *makeref = currpackage ? currpackage->op_sibling : 0;
-  OP *attr = makeref ? makeref->op_sibling : 0;
-
-  if (!attrpackage || !currpackage || !makeref || !attr)
-    return false;
-  // check that the first 3 arguments and the invocant are what we expect
-  if (attrpackage->op_type != OP_CONST
-      || currpackage->op_type != OP_CONST
-      || makeref->op_type != OP_SREFGEN)
-    return false;
-
-  // and an additional check that the 2nd argument is a scalar reference
-  OP *lexical = cLISTOPx(cLISTOPx(makeref)->op_first)->op_first;
-
-  if (lexical->op_type != OP_PADSV
-      && lexical->op_type != OP_PADAV
-      && lexical->op_type != OP_PADHV)
-    return false;
-
-  // check the invocant is actually "attributes"
-  if (strcmp(SvPVx(cSVOPx_sv(attrpackage), PL_na),
-             "attributes") != 0)
-    return false;
-
-  // check all arguments are constants
-  for (OP *arg = attr; arg && arg != cLOOPo->op_last; arg = arg->op_sibling)
-    if (arg->op_type != OP_CONST)
-      return false;
-
-  // we have a winner! now try parsing the attributes as a type
-  type = 0;
-  int remaining = 0;
-
-  for (OP *pred = makeref; attr && attr != cLOOPo->op_last; pred = attr, attr = attr->op_sibling) {
-    ++remaining;
-    if (type)
-      break;
-    SV *cval = cSVOPx_sv(attr);
-
-    PJ_DEBUG_1("Checking potential type (%s)\n", SvPV_nolen(cval));
-    STRLEN len;
-    char *tstr = SvPV(cval, len);
-    type = AST::parse_type(std::string(tstr, len));
-
-    // parse the type: erase the parameter from the method call
-    if (type)
-    {
-      PJ_DEBUG_1("  Parsed type declaration (%s)\n", SvPV_nolen(cval));
-      --remaining;
-      pred->op_next = attr->op_next;
-    }
-  }
-
-  if (!type)
-    return false;
-
-  can_remove = !remaining;
-  variable = lexical;
-
-  return true;
-}
-
 /* Walk OP tree recursively, build ASTs, build subtrees */
 static PerlJIT::AST::Term *
 pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
@@ -262,18 +160,6 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 
   const unsigned int otype = o->op_type;
   PJ_DEBUG_1("pj_build_ast ASTing OP of type %s\n", OP_NAME(o));
-  // found a SPECIAL entersub, which is a call to an "import" method:
-  // check whether it might be handling the attribute for a lexical;
-  // if so the call looks like
-  if (otype == OP_ENTERSUB) {
-    retval = visitor.build_attributes_ast(aTHX_ cLISTOPo);
-
-    // if all attributes have been recognized, return a tree node that
-    // is then jitted to nothing
-    if (retval)
-      return retval;
-  }
-
   if (!IS_AST_COMPATIBLE_OP_TYPE(otype)) {
     // Can't represent OP with AST. So instead, recursively scan for
     // separate candidates and treat as subtree.

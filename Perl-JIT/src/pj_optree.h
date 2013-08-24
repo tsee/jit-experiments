@@ -17,6 +17,4 @@
  * JIT. */
 std::vector<PerlJIT::AST::Term *> pj_find_jit_candidates(pTHX_ SV *coderef);
 
-bool pj_parse_attributes(pTHX_ LISTOP *o, bool &can_remove, PerlJIT::AST::Type *&type, OP *&variable);
-
 #endif
