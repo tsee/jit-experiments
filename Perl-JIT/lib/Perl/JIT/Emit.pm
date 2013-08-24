@@ -127,17 +127,7 @@ sub _jit_emit {
             return (pa_get_pad_sv($fun, $padix), UNSPECIFIED);
         }
         when (pj_ttype_optree) {
-            # unfortunately there is (currently) no way to clone an optree,
-            # so just detach the ops from the root tree
-            B::Replace::detach_tree($self->current_cv->ROOT, $ast->get_perl_op, 1);
-            $ast->get_perl_op->next(0);
-            push @{$self->subtrees}, $ast->get_perl_op;
-
-            my $op = jit_value_create_long_constant($fun, jit_type_ulong, ${$ast->get_start_op});
-            pa_call_runloop($fun, $op);
-
-            # TODO only works for scalar context
-            return (pa_pop_sv($fun), UNSPECIFIED);
+            return $self->_jit_emit_optree($fun, $ast, $type);
         }
         when (pj_ttype_nulloptree) {
             # the optree has been marked for oblivion (for example the
@@ -244,6 +234,22 @@ sub _to_type {
     } else {
         die "Handle more coercion cases";
     }
+}
+
+sub _jit_emit_optree {
+    my ($self, $fun, $ast) = @_;
+
+    # unfortunately there is (currently) no way to clone an optree,
+    # so just detach the ops from the root tree
+    B::Replace::detach_tree($self->current_cv->ROOT, $ast->get_perl_op, 1);
+    $ast->get_perl_op->next(0);
+    push @{$self->subtrees}, $ast->get_perl_op;
+
+    my $op = jit_value_create_long_constant($fun, jit_type_ulong, ${$ast->get_start_op});
+    pa_call_runloop($fun, $op);
+
+    # TODO only works for scalar context
+    return (pa_pop_sv($fun), UNSPECIFIED);
 }
 
 sub _jit_emit_op {
