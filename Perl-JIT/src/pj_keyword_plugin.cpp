@@ -130,7 +130,9 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
   lex_stuff_pvs(" my ", 0);
 
   // Let Perl parse the rest of the statement.
-  OP *parsed_optree = parse_barestmt(0);
+  OP *parsed_optree = parse_fullexpr(0);
+  if (parsed_optree == NULL)
+    croak("syntax error while parsing typed declaration");
 
   // Get the actual declaration OPs
   PadSvDeclarationOpExtractor extractor;
