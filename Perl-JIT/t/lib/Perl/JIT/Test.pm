@@ -24,6 +24,7 @@ our @EXPORT = qw(
   count_jit_tests
   build_jit_test_sub
   build_jit_types_test_sub
+  concise_dump
 );
 
 SCOPE: {
@@ -134,11 +135,17 @@ my $emit = Perl::JIT::Emit->new; # keep it around for now
 sub _maybe_concise_dump {
   my ($sub, $name) = @_;
   if ($ENV{CONCISE_DUMP}) {
-    require B::Concise;
     print "\n\nConcise dump for '$name'\n";
-    my $walker = B::Concise::compile('','',$sub);
-    $walker->();
+    concise_dump($sub);
   }
+}
+
+sub concise_dump {
+  my ($sub) = @_;
+  require B::Concise;
+  B::Concise::reset_sequence();
+  my $walker = B::Concise::compile('','',$sub);
+  $walker->();
 }
 
 sub is_jitting {
