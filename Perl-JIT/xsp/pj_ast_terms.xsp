@@ -9,6 +9,7 @@
 class Perl::JIT::AST::Term {
   pj_term_type type %get %set;
   OP *perl_op %get %set;
+  OP *start_op();
   Perl::JIT::AST::Type *get_value_type();
   std::vector<Perl::JIT::AST::Term *> get_kids()
     %code{% PERL_UNUSED_VAR(THIS); %};
@@ -73,7 +74,6 @@ class Perl::JIT::AST::Variable : public Perl::JIT::AST::Identifier
 
 class Perl::JIT::AST::Optree : public Perl::JIT::AST::Term
 {
-  OP *start_op %get %set;
 };
 
 class Perl::JIT::AST::NullOptree : public Perl::JIT::AST::Term

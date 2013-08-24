@@ -41,6 +41,8 @@ namespace PerlJIT {
       pj_term_type type;
       OP *perl_op;
 
+      OP *start_op();
+
       virtual Type *get_value_type();
       virtual void set_value_type(Type *t);
 
@@ -157,9 +159,8 @@ namespace PerlJIT {
 
     class Optree : public Term {
     public:
-      Optree(OP *p_op, OP *p_start_op);
+      Optree(OP *p_op);
 
-      OP *start_op;
       virtual void dump(int indent_lvl = 0);
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Optree"; }

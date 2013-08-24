@@ -245,7 +245,7 @@ sub _jit_emit_optree {
     $ast->get_perl_op->next(0);
     push @{$self->subtrees}, $ast->get_perl_op;
 
-    my $op = jit_value_create_long_constant($fun, jit_type_ulong, ${$ast->get_start_op});
+    my $op = jit_value_create_long_constant($fun, jit_type_ulong, ${$ast->start_op});
     pa_call_runloop($fun, $op);
 
     # TODO only works for scalar context

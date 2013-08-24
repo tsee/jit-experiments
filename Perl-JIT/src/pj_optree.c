@@ -125,31 +125,6 @@ namespace PerlJIT {
 }
 
 
-/* Scan a section of the OP tree and find whichever OP is
- * going to be executed first. This is done by doing pure
- * left-hugging depth-first traversal. Ignores op_next. */
-PJ_STATIC_INLINE OP *
-pj_find_first_executed_op(pTHX_ OP *o)
-{
-  PERL_UNUSED_CONTEXT;
-  while (1) {
-    if (o->op_flags & OPf_KIDS) {
-      o = cUNOPo->op_first;
-    }
-    else {
-      return o;
-    }
-  }
-  /* TODO: handle PMOP? */
-  /*
-    if (o && OP_CLASS(o) == OA_PMOP && o->op_type != OP_PUSHRE
-          && (kid = PMOP_pmreplroot(cPMOPo)))
-    {}
-  */
-  abort(); /* not reached */
-}
-
-
 /* Walk OP tree recursively, build ASTs, build subtrees */
 static PerlJIT::AST::Term *
 pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
@@ -164,7 +139,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     // Can't represent OP with AST. So instead, recursively scan for
     // separate candidates and treat as subtree.
     PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST (Perl OP=%s).\n", OP_NAME(o));
-    retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
+    retval = new AST::Optree(o);
     pj_find_jit_candidates_internal(aTHX_ o, visitor);
   }
 
@@ -258,7 +233,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         default:
           PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
           pj_find_jit_candidates_internal(aTHX_ o, visitor);
-          retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
+          retval = new AST::Optree(o);
           break;
         }
       }
@@ -266,7 +241,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     else {
       PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
       pj_find_jit_candidates_internal(aTHX_ o, visitor);
-      retval = new AST::Optree(o, pj_find_first_executed_op(aTHX_ o));
+      retval = new AST::Optree(o);
     }
     break;
     EMIT_BINOP_CODE(OP_ADD, pj_binop_add)

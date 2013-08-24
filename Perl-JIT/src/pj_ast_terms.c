@@ -1,5 +1,8 @@
 #include "pj_ast_terms.h"
 
+#include "EXTERN.h"
+#include "perl.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -47,8 +50,8 @@ Variable::Variable(OP *p_op, VariableDeclaration *decl)
 {}
 
 
-Optree::Optree(OP *p_op, OP *p_start_op)
-  : Term(p_op, pj_ttype_optree), start_op(p_start_op)
+Optree::Optree(OP *p_op)
+  : Term(p_op, pj_ttype_optree)
 {}
 
 
@@ -199,6 +202,17 @@ Op::~Op()
 Type *Term::get_value_type()
 {
   return _value_type;
+}
+
+OP *Term::start_op()
+{
+  OP *o = perl_op;
+  while (1) {
+    if (o->op_flags & OPf_KIDS)
+      o = cUNOPo->op_first;
+    else
+      return o;
+  }
 }
 
 void Term::set_value_type(Type *t)
