@@ -9,6 +9,7 @@
 #define IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) ( \
      otype == OP_ABS \
   || otype == OP_ADD \
+  || otype == OP_ANDASSIGN \
   || otype == OP_ATAN2 \
   || otype == OP_BIT_AND \
   || otype == OP_BIT_OR \
@@ -22,6 +23,7 @@
   || otype == OP_COS \
   || otype == OP_DEFINED \
   || otype == OP_DIVIDE \
+  || otype == OP_DORASSIGN \
   || otype == OP_EQ \
   || otype == OP_EXP \
   || otype == OP_GE \
@@ -43,6 +45,7 @@
   || otype == OP_NEGATE \
   || otype == OP_NOT \
   || otype == OP_OCT \
+  || otype == OP_ORASSIGN \
   || otype == OP_ORD \
   || otype == OP_POSTDEC \
   || otype == OP_POSTINC \
@@ -81,6 +84,7 @@
      otype == OP_ABS \
   || otype == OP_ADD \
   || otype == OP_AND \
+  || otype == OP_ANDASSIGN \
   || otype == OP_ATAN2 \
   || otype == OP_BIT_AND \
   || otype == OP_BIT_OR \
@@ -96,6 +100,7 @@
   || otype == OP_DEFINED \
   || otype == OP_DIVIDE \
   || otype == OP_DOR \
+  || otype == OP_DORASSIGN \
   || otype == OP_EQ \
   || otype == OP_EXP \
   || otype == OP_GE \
@@ -120,6 +125,7 @@
   || otype == OP_NULL \
   || otype == OP_OCT \
   || otype == OP_OR \
+  || otype == OP_ORASSIGN \
   || otype == OP_ORD \
   || otype == OP_PADSV \
   || otype == OP_POSTDEC \

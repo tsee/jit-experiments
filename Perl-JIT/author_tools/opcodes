@@ -13,7 +13,7 @@
 # Special: Additional valid OPs for the filter macro.
 # - OP_SCHOP is the single-parameter version of OP_CHOP. Treat it as the same
 #   thing in the AST. Ditto for OP_SCHOMP.
-#! jittable_root_ops=OP_SCHOP OP_SCHOMP
+#! jittable_root_ops=OP_SCHOP OP_SCHOMP OP_ANDASSIGN OP_ORASSIGN OP_DORASSIGN
 #! jittable_ops=OP_CONST OP_PADSV OP_NULL OP_GVSV
 
 # Format:

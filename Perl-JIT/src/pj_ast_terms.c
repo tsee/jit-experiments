@@ -98,10 +98,9 @@ Unop::Unop(OP *p_op, pj_op_type t, Term *kid)
 Binop::Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2)
   : Op(p_op, t)
 {
-  if (kid1 == NULL || kid2 == NULL) {
-    // assert that kids are optional, since at least one NULL passed
-    assert(this->flags() & PJ_ASTf_KIDS_OPTIONAL);
-  }
+  // assert that kids are optional if at least one NULL passed
+  assert( (kid1 != NULL && kid2 != NULL)
+          || (this->flags() & PJ_ASTf_KIDS_OPTIONAL) );
   kids.resize(2);
   kids[0] = kid1;
   kids[1] = kid2;
@@ -266,6 +265,15 @@ Op::flags()
 bool
 Binop::is_assignment_form()
 {
-  return (flags() & PJ_ASTf_HAS_ASSIGNMENT_FORM) &&
-         (perl_op->op_flags & OPf_STACKED);
+  return (
+    is_assign_form
+    || ( (flags() & PJ_ASTf_HAS_ASSIGNMENT_FORM) &&
+         (perl_op->op_flags & OPf_STACKED) )
+  );
+}
+
+void
+Binop::set_assignment_form(bool is_assignment)
+{
+  is_assign_form = is_assignment;
 }

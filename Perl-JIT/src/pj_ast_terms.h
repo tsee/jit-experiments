@@ -168,12 +168,16 @@ namespace PerlJIT {
       Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2);
 
       bool is_assignment_form();
+      void set_assignment_form(bool is_assignment);
 
       virtual void dump(int indent_lvl = 0);
       pj_op_class op_class()
         { return pj_opc_binop; }
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Binop"; }
+
+    private:
+      bool is_assign_form;
     };
 
     class Listop : public Op {

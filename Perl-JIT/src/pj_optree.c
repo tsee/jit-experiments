@@ -156,14 +156,14 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
 
       if (kid->op_type == OP_NULL && !(kid->op_flags & OPf_KIDS)) {
-        PJ_DEBUG_2("Skipping kid (%u) since it's an OP_NULL without kids.\n", ikid);
+        PJ_DEBUG_1("Skipping kid (%u) since it's an OP_NULL without kids.\n", ikid);
         continue;
       }
 
       // FIXME likely wrong. PUSHMARK assumed to be an implementation detail that is not
       //       strictly necessary in an AST listop. Totally speculative.
       if (kid->op_type == OP_PUSHMARK && !(kid->op_flags & OPf_KIDS)) {
-        PJ_DEBUG_2("Skipping kid (%u) since it's an OP_PUSHMARK without kids.\n", ikid);
+        PJ_DEBUG_1("Skipping kid (%u) since it's an OP_PUSHMARK without kids.\n", ikid);
         continue;
       }
 
@@ -201,6 +201,13 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   case perl_op_type:                                                      \
     assert(ikid == 2);                                                    \
     retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]);   \
+    break;
+#define EMIT_BINOP_CODE_OPTIONAL(perl_op_type, pj_op_type)              \
+  case perl_op_type:                                                    \
+    assert(kid_terms.size() <= 2);                                      \
+    if (kid_terms.size() < 2)                                           \
+      kid_terms.push_back(NULL);                                        \
+    retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]); \
     break;
 #define EMIT_LISTOP_CODE(perl_op_type, pj_op_type)      \
   case perl_op_type:                                    \
@@ -274,6 +281,37 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       retval = new AST::Optree(o);
     }
     break;
+  case OP_ANDASSIGN:
+  case OP_ORASSIGN:
+  case OP_DORASSIGN: {
+      //  6        <|> orassign(other->7) vK/1 ->9
+      //  5           <0> padsv[$x:1,2] sRM ->6
+      //  8           <1> sassign sK/BKWARD,1 ->9
+      //  7              <$> const[IV 123] s ->8
+      // Patch out the sassign!
+      assert(kid_terms.size() == 2);
+      if (kid_terms[1]->type == pj_ttype_op
+          && ((AST::Op *)kid_terms[1])->optype == pj_binop_sassign
+          && ((AST::Op *)kid_terms[1])->kids[1] == NULL)
+      {
+        // one of them funny sassigns...
+        PJ_DEBUG("Patching out uninteresting sassign without and/or/dor-assign.\n");
+        AST::Binop *tmp = (AST::Binop *)kid_terms[1];
+        kid_terms[1] = tmp->kids[0];
+        tmp->kids[0] = NULL; // ownership fix
+        delete tmp;
+      }
+      else {
+        kid_terms[1]->dump();
+        abort();
+      }
+      pj_op_type t =   otype == OP_ANDASSIGN ? pj_binop_bool_and
+                     : otype == OP_ORASSIGN  ? pj_binop_bool_or
+                     :                         pj_binop_definedor;
+      retval = new AST::Binop(o, t, kid_terms[0], kid_terms[1]);
+      ((AST::Binop *)retval)->set_assignment_form(true);
+      break;
+    }
     EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
     EMIT_BINOP_CODE(OP_SUBTRACT, pj_binop_subtract)
     EMIT_BINOP_CODE(OP_MULTIPLY, pj_binop_multiply)
@@ -304,7 +342,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_BINOP_CODE(OP_SLE, pj_binop_str_le)
     EMIT_BINOP_CODE(OP_SCMP, pj_binop_str_cmp)
     EMIT_BINOP_CODE(OP_CONCAT, pj_binop_concat)
-    EMIT_BINOP_CODE(OP_SASSIGN, pj_binop_sassign)
+    EMIT_BINOP_CODE_OPTIONAL(OP_SASSIGN, pj_binop_sassign)
     EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not)
     EMIT_UNOP_CODE(OP_NEGATE, pj_unop_negate)
     EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not)
@@ -350,6 +388,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     abort();
   }
 #undef EMIT_BINOP_CODE
+#undef EMIT_BINOP_CODE_OPTIONAL
 #undef EMIT_UNOP_CODE
 #undef EMIT_UNOP_CODE_OPTIONAL
 #undef EMIT_LISTOP_CODE
