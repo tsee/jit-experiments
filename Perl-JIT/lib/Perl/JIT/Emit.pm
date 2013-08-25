@@ -27,7 +27,16 @@ has subtrees    => ( is => 'ro' );
 sub BUILD {
     my ($self) = @_;
 
-    $self->{jit_context} = jit_context_create();
+    $self->{jit_context} ||= jit_context_create();
+}
+
+sub clone {
+    my ($self) = @_;
+
+    return Perl::JIT::Emit->new({
+        jit_context => $self->jit_context,
+        current_cv  => $self->current_cv,
+    });
 }
 
 sub jit_sub {
@@ -38,21 +47,33 @@ sub jit_sub {
 
     local $self->{current_cv} = B::svref_2object($sub);
 
-    for my $ast (@asts) {
+    $self->process_jit_candidates([@asts]);
+
+    jit_context_build_end($self->jit_context);
+}
+
+sub process_jit_candidates {
+    my ($self, $asts) = @_;
+
+    while (my $ast = shift @$asts) {
+        next if $ast->get_type == pj_ttype_variable ||
+                $ast->get_type == pj_ttype_constant;
+
         if ($ast->get_type == pj_ttype_nulloptree) {
             # The tree has been marked for deletion, so just detach it
             B::Replace::detach_tree($self->current_cv->ROOT, $ast->get_perl_op);
         }
-        else {
+        elsif ($self->is_jittable($ast)) {
             local $self->{subtrees} = [];
             my $op = $self->jit_tree($ast);
 
-            # TODO add B::Generate API taking the CV
+            # TODO add B::Replace API taking the CV
             B::Replace::replace_tree($self->current_cv->ROOT, $ast->get_perl_op, $op);
         }
+        else {
+            unshift @$asts, $ast->get_kids;
+        }
     }
-
-    jit_context_build_end($self->jit_context);
 }
 
 sub jit_tree {
@@ -83,6 +104,68 @@ sub jit_tree {
     $op->targ($ast->get_perl_op->targ);
 
     return $op;
+}
+
+my %Jittable_Ops = map { $_ => 1 } (
+    pj_binop_add, pj_binop_subtract, pj_binop_multiply, pj_binop_divide,
+    pj_binop_bool_and,
+
+    pj_unop_negate, pj_unop_abs, pj_unop_sin, pj_unop_cos, pj_unop_sqrt,
+    pj_unop_log, pj_unop_exp, pj_unop_bool_not, pj_unop_perl_int,
+);
+
+my %Ops_Propagating_Magic = (
+    (map { $_ => 1 } (
+        pj_binop_add, pj_binop_subtract, pj_binop_multiply, pj_binop_divide,
+        pj_binop_bool_and,
+
+        pj_unop_negate, pj_unop_abs, pj_unop_sin, pj_unop_cos, pj_unop_sqrt,
+        pj_unop_log, pj_unop_exp, pj_unop_bool_not, pj_unop_perl_int,
+    )),
+    (map { $_ => 0 } (
+        pj_unop_ord, pj_unop_chr,
+    )),
+);
+
+sub is_jittable {
+    my ($self, $ast) = @_;
+
+    given ($ast->get_type) {
+        when (pj_ttype_constant) { return 1 }
+        when (pj_ttype_variable) { return 1 }
+        when (pj_ttype_optree) { return 0 }
+        when (pj_ttype_nulloptree) { return 1 }
+        when (pj_ttype_op) {
+            my $known = $Jittable_Ops{$ast->get_optype};
+            my $propagates = $Ops_Propagating_Magic{$ast->get_optype};
+
+            return 0 unless $known;
+            return 1 unless $propagates;
+            return !$self->needs_excessive_magic($ast);
+        }
+        default { return 0 }
+    }
+}
+
+sub needs_excessive_magic {
+    my ($self, $ast) = @_;
+    my @nodes = $ast;
+
+    while (@nodes) {
+        my $node = shift @nodes;
+
+        return 1 if $node->get_type == pj_ttype_variable &&
+                    $node->get_value_type->tag == pj_scalar_type;
+        next unless $node->get_type == pj_ttype_op;
+
+        my $known = $Jittable_Ops{$node->get_optype};
+        my $propagates = $Ops_Propagating_Magic{$node->get_optype};
+
+        next if !$known || !$propagates;
+        push @nodes, $node->get_kids;
+    }
+
+    return 0;
 }
 
 sub _jit_emit_root {
@@ -146,10 +229,14 @@ sub _jit_emit {
             return (undef, undef);
         }
         when (pj_ttype_op) {
-            return $self->_jit_emit_op($fun, $ast, $type);
+            if ($self->is_jittable($ast)) {
+                return $self->_jit_emit_op($fun, $ast, $type);
+            } else {
+                return $self->_jit_emit_optree_jit_kids($fun, $ast, $type);
+            }
         }
         default {
-            die "I'm sorry, I've not been implemented yet";
+            return $self->_jit_emit_optree_jit_kids($fun, $ast, $type);
         }
     }
 }
@@ -242,6 +329,14 @@ sub _to_type {
     }
 }
 
+sub _jit_emit_optree_jit_kids {
+    my ($self, $fun, $ast, $type) = @_;
+
+    $self->clone->process_jit_candidates([$ast->get_kids]);
+
+    return $self->_jit_emit_optree($fun, $ast, $type);
+}
+
 sub _jit_emit_optree {
     my ($self, $fun, $ast) = @_;
 
@@ -319,7 +414,7 @@ sub _jit_emit_op {
                     jit_insn_label($fun, $endlabel);
                 }
                 default {
-                    die "I'm sorry, I've not been implemented yet";
+                    return $self->_jit_emit_optree_jit_kids($fun, $ast, $type);
                 }
             }
 
@@ -391,14 +486,14 @@ sub _jit_emit_op {
                     $restype = INT;
                 }
                 default {
-                    die "I'm sorry, I've not been implemented yet";
+                    return $self->_jit_emit_optree_jit_kids($fun, $ast, $type);
                 }
             }
 
             return ($res, $restype);
         }
         default {
-            die "I'm sorry, I've not been implemented yet";
+            return $self->_jit_emit_optree_jit_kids($fun, $ast, $type);
         }
     }
 }

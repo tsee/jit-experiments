@@ -20,6 +20,8 @@ our @EXPORT = qw(
   is_approx
   run_ctest
   is_jitting
+  is_not_jitting
+  is_not_jitted
   run_jit_tests
   count_jit_tests
   build_jit_test_sub
@@ -148,23 +150,35 @@ sub concise_dump {
   $walker->();
 }
 
-sub is_jitting {
-  my ($sub, $opgrep_patterns, $diag) = @_;
-  local $Test::Builder::Level = $Test::Builder::Level + 1;
-  my $prefix = $diag ? "$diag: " : '';
+sub _count_matches {
+  my ($sub, $opgrep_patterns) = @_;
+  my @res;
 
   for my $pat (@$opgrep_patterns) {
-    my $matched;
+    my $matches = 0;
 
     walkoptree_filtered(
       B::svref_2object($sub)->ROOT,
       sub { opgrep($pat, @_) },
-      sub { $matched = 1 }
+      sub { ++$matches }
     );
 
-    unless ($matched) {
+    push @res, $matches;
+  }
+
+  return @res;
+}
+
+sub is_jitting {
+  my ($sub, $opgrep_patterns, $diag) = @_;
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+  my $prefix = $diag ? "$diag: " : '';
+  my @before = _count_matches($sub, $opgrep_patterns);
+
+  for my $i (0..$#$opgrep_patterns) {
+    unless ($before[$i]) {
       ok(0, "${prefix}could not find op matching");
-      diag(Dumper($pat));
+      diag(Dumper($opgrep_patterns->[$i]));
       _maybe_concise_dump($sub, "${prefix}expected OP could not be found");
       return 0;
     }
@@ -172,18 +186,59 @@ sub is_jitting {
 
   $emit->jit_sub($sub);
 
-  for my $pat (@$opgrep_patterns) {
-    my $matched;
-
-    walkoptree_filtered(
-      B::svref_2object($sub)->ROOT,
-      sub { opgrep($pat, @_) },
-      sub { $matched = 1 }
-    );
-
-    if ($matched) {
+  my @after = _count_matches($sub, $opgrep_patterns);
+  for my $i (0..$#$opgrep_patterns) {
+    if ($after[$i]) {
       ok(0, "${prefix}some op has not been JITted");
-      diag(Dumper($pat));
+      diag(Dumper($opgrep_patterns->[$i]));
+      _maybe_concise_dump($sub, "${prefix}OP-to-be-JITted still found ");
+      return 0;
+    }
+  }
+
+  return ok(1, $diag);
+}
+
+sub is_not_jitting {
+  my ($sub, $opgrep_patterns, $diag) = @_;
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+  my $prefix = $diag ? "$diag: " : '';
+  my @before = _count_matches($sub, $opgrep_patterns);
+
+  for my $i (0..$#$opgrep_patterns) {
+    unless ($before[$i]) {
+      ok(0, "${prefix}could not find op matching");
+      diag(Dumper($opgrep_patterns->[$i]));
+      _maybe_concise_dump($sub, "${prefix}expected OP could not be found");
+      return 0;
+    }
+  }
+
+  $emit->jit_sub($sub);
+
+  my @after = _count_matches($sub, $opgrep_patterns);
+  for my $i (0..$#$opgrep_patterns) {
+    if ($after[$i] != $before[$i]) {
+      ok(0, "${prefix}some op has been JITted");
+      diag(Dumper($opgrep_patterns->[$i]));
+      _maybe_concise_dump($sub, "${prefix}non-JITted op not found ");
+      return 0;
+    }
+  }
+
+  return ok(1, $diag);
+}
+
+sub is_not_jitted {
+  my ($sub, $opgrep_patterns, $diag) = @_;
+  local $Test::Builder::Level = $Test::Builder::Level + 1;
+  my $prefix = $diag ? "$diag: " : '';
+  my @count = _count_matches($sub, $opgrep_patterns);
+
+  for my $i (0..$#$opgrep_patterns) {
+    unless ($count[$i]) {
+      ok(0, "${prefix}could not match pattern");
+      diag(Dumper($opgrep_patterns->[$i]));
       _maybe_concise_dump($sub, "${prefix}non-JITted op not found ");
       return 0;
     }
