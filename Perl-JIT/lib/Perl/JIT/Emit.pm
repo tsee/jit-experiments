@@ -23,6 +23,7 @@ use LibJIT::PerlAPI qw(:all);
 has jit_context => ( is => 'ro' );
 has current_cv  => ( is => 'ro' );
 has subtrees    => ( is => 'ro' );
+has _fun        => ( is => 'ro' );
 
 sub BUILD {
     my ($self) = @_;
@@ -78,15 +79,16 @@ sub process_jit_candidates {
 
 sub jit_tree {
     my ($self, $ast) = @_;
-    my $op;
 
-    my $fun = pa_create_pp($self->jit_context);
-    $self->_jit_emit_root($fun, $ast);
+    local $self->{_fun} = my $fun = pa_create_pp($self->jit_context);
+    $self->_jit_emit_root($ast);
 
     # here it'd be nice to use custom ops, but they are registered by
     # PP function address; we could use a trampoline address (with
     # just an extra jump, but then we'd need to store the pointer to the
     # JITted function as an extra op member
+    my $op;
+
     if (@{$self->subtrees}) {
         my $tree = $self->subtrees;
 
@@ -169,16 +171,17 @@ sub needs_excessive_magic {
 }
 
 sub _jit_emit_root {
-    my ($self, $fun, $ast) = @_;
-    my ($val, $type) = $self->_jit_emit($fun, $ast, UNSPECIFIED);
+    my ($self, $ast) = @_;
+    my ($val, $type) = $self->_jit_emit($ast, UNSPECIFIED);
 
-    $self->_jit_emit_return($fun, $ast, $val, $type) if $val;
+    $self->_jit_emit_return($ast, $val, $type) if $val;
 
-    jit_insn_return($fun, pa_get_op_next($fun));
+    jit_insn_return($self->_fun, pa_get_op_next($self->_fun));
 }
 
 sub _jit_emit_return {
-    my ($self, $fun, $ast, $val, $type) = @_;
+    my ($self, $ast, $val, $type) = @_;
+    my $fun = $self->_fun;
 
     given ($ast->op_class) {
         when (pj_opc_binop) {
@@ -203,20 +206,21 @@ sub _jit_emit_return {
 }
 
 sub _jit_emit {
-    my ($self, $fun, $ast, $type) = @_;
+    my ($self, $ast, $type) = @_;
 
     # TODO only doubles for now...
     given ($ast->get_type) {
         when (pj_ttype_constant) {
-            return $self->_jit_emit_const($fun, $ast, $type);
+            return $self->_jit_emit_const($ast, $type);
         }
         when (pj_ttype_variable) {
+            my $fun = $self->_fun;
             my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_perl_op->targ);
 
             return (pa_get_pad_sv($fun, $padix), UNSPECIFIED);
         }
         when (pj_ttype_optree) {
-            return $self->_jit_emit_optree($fun, $ast, $type);
+            return $self->_jit_emit_optree($ast, $type);
         }
         when (pj_ttype_nulloptree) {
             # the optree has been marked for oblivion (for example the
@@ -230,13 +234,13 @@ sub _jit_emit {
         }
         when (pj_ttype_op) {
             if ($self->is_jittable($ast)) {
-                return $self->_jit_emit_op($fun, $ast, $type);
+                return $self->_jit_emit_op($ast, $type);
             } else {
-                return $self->_jit_emit_optree_jit_kids($fun, $ast, $type);
+                return $self->_jit_emit_optree_jit_kids($ast, $type);
             }
         }
         default {
-            return $self->_jit_emit_optree_jit_kids($fun, $ast, $type);
+            return $self->_jit_emit_optree_jit_kids($ast, $type);
         }
     }
 }
@@ -289,56 +293,56 @@ sub _type_is_numeric {
 }
 
 sub _to_nv {
-    my ($self, $fun, $val, $type) = @_;
+    my ($self, $val, $type) = @_;
     my $tag = $type->tag;
 
     if ($tag == pj_double_type) {
         return $val;
     } elsif ($tag == pj_int_type || $tag == pj_uint_type) {
-        return jit_insn_convert($fun, $val, jit_type_NV, 0);
+        return jit_insn_convert($self->_fun, $val, jit_type_NV, 0);
     } elsif ($tag == pj_unspecified_type) {
-        return pa_sv_nv($fun, $val);
+        return pa_sv_nv($self->_fun, $val);
     } else {
         die "Handle more coercion cases";
     }
 }
 
 sub _to_numeric_type {
-    my ($self, $fun, $val, $type) = @_;
+    my ($self, $val, $type) = @_;
     my $tag = $type->tag;
 
     if ($tag == pj_double_type || $tag == pj_int_type || $tag == pj_uint_type) {
         return $val;
     } elsif ($tag == pj_unspecified_type) {
-        return pa_sv_nv($fun, $val); # somewhat dubious
+        return pa_sv_nv($self->_fun, $val); # somewhat dubious
     } else {
         die "Handle more coercion cases";
     }
 }
 
 sub _to_type {
-    my ($self, $fun, $val, $type, $to_type) = @_;
+    my ($self, $val, $type, $to_type) = @_;
     my $to_tag = $to_type->tag;
 
     if ($to_tag == $type->tag) {
         return $val;
     } elsif ($to_tag == pj_double_type) {
-        return $self->_to_nv($fun, $val, $type);
+        return $self->_to_nv($val, $type);
     } else {
         die "Handle more coercion cases";
     }
 }
 
 sub _jit_emit_optree_jit_kids {
-    my ($self, $fun, $ast, $type) = @_;
+    my ($self, $ast, $type) = @_;
 
     $self->clone->process_jit_candidates([$ast->get_kids]);
 
-    return $self->_jit_emit_optree($fun, $ast, $type);
+    return $self->_jit_emit_optree($ast, $type);
 }
 
 sub _jit_emit_optree {
-    my ($self, $fun, $ast) = @_;
+    my ($self, $ast) = @_;
 
     # unfortunately there is (currently) no way to clone an optree,
     # so just detach the ops from the root tree
@@ -346,38 +350,39 @@ sub _jit_emit_optree {
     $ast->get_perl_op->next(0);
     push @{$self->subtrees}, $ast->get_perl_op;
 
-    my $op = jit_value_create_long_constant($fun, jit_type_ulong, ${$ast->start_op});
-    pa_call_runloop($fun, $op);
+    my $op = jit_value_create_long_constant($self->_fun, jit_type_ulong, ${$ast->start_op});
+    pa_call_runloop($self->_fun, $op);
 
     # TODO only works for scalar context
-    return (pa_pop_sv($fun), UNSPECIFIED);
+    return (pa_pop_sv($self->_fun), UNSPECIFIED);
 }
 
 sub _jit_emit_op {
-    my ($self, $fun, $ast, $type) = @_;
+    my ($self, $ast, $type) = @_;
+    my $fun = $self->_fun;
 
     given ($ast->op_class) {
         when (pj_opc_binop) {
             my ($res, $restype);
             my ($v1, $v2, $t1, $t2);
             if (not $ast->evaluates_kids_conditionally) {
-                ($v1, $t1) = $self->_jit_emit($fun, $ast->get_left_kid, DOUBLE);
-                ($v2, $t2) = $self->_jit_emit($fun, $ast->get_right_kid, DOUBLE);
+                ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, DOUBLE);
+                ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, DOUBLE);
                 $restype = DOUBLE;
             }
 
             given ($ast->get_optype) {
                 when (pj_binop_add) {
-                    $res = jit_insn_add($fun, $self->_to_nv($fun, $v1, $t1), $self->_to_nv($fun, $v2, $t2));
+                    $res = jit_insn_add($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
                 }
                 when (pj_binop_subtract) {
-                    $res = jit_insn_sub($fun, $self->_to_nv($fun, $v1, $t1), $self->_to_nv($fun, $v2, $t2));
+                    $res = jit_insn_sub($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
                 }
                 when (pj_binop_multiply) {
-                    $res = jit_insn_mul($fun, $self->_to_nv($fun, $v1, $t1), $self->_to_nv($fun, $v2, $t2));
+                    $res = jit_insn_mul($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
                 }
                 when (pj_binop_divide) {
-                    $res = jit_insn_div($fun, $self->_to_nv($fun, $v1, $t1), $self->_to_nv($fun, $v2, $t2));
+                    $res = jit_insn_div($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
                 }
                 when (pj_binop_bool_and) {
                     # This is all a bit awkward because we need to check $a
@@ -397,24 +402,24 @@ sub _jit_emit_op {
                     # type, but we need coercion when that is not the case!
 
                     my $endlabel = jit_label_undefined;
-                    $res = $self->_jit_create_value($fun, $type);
+                    $res = $self->_jit_create_value($type);
                     $restype = $type;
 
                     # If value is false, then go with v1 and never look at v2
-                    ($v1, $t1) = $self->_jit_emit($fun, $ast->get_left_kid, $type);
-                    jit_insn_store($fun, $res, $self->_to_type($fun, $v1, $t1, $type));
-                    my $tmp = $self->_to_numeric_type($fun, $v1, $t1, $type);
+                    ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, $type);
+                    jit_insn_store($fun, $res, $self->_to_type($v1, $t1, $type));
+                    my $tmp = $self->_to_numeric_type($v1, $t1, $type);
                     jit_insn_branch_if_not($fun, $tmp, $endlabel);
 
                     # Left is true, move to right operand
-                    ($v2, $t2) = $self->_jit_emit($fun, $ast->get_right_kid, $type);
-                    jit_insn_store($fun, $res, $self->_to_type($fun, $v2, $t2, $type));
+                    ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, $type);
+                    jit_insn_store($fun, $res, $self->_to_type($v2, $t2, $type));
 
                     # endlabel; done.
                     jit_insn_label($fun, $endlabel);
                 }
                 default {
-                    return $self->_jit_emit_optree_jit_kids($fun, $ast, $type);
+                    return $self->_jit_emit_optree_jit_kids($ast, $type);
                 }
             }
 
@@ -426,35 +431,35 @@ sub _jit_emit_op {
             return ($res, $restype);
         }
         when (pj_opc_unop) {
-            my ($v1, $t1) = $self->_jit_emit($fun, $ast->get_kid, DOUBLE);
+            my ($v1, $t1) = $self->_jit_emit($ast->get_kid, DOUBLE);
             my ($res, $restype);
 
             $restype = DOUBLE;
 
             given ($ast->get_optype) {
                 when (pj_unop_negate) {
-                    $res = jit_insn_neg($fun, $self->_to_nv($fun, $v1, $t1));
+                    $res = jit_insn_neg($fun, $self->_to_nv($v1, $t1));
                 }
                 when (pj_unop_abs) {
-                    $res = jit_insn_abs($fun, $self->_to_nv($fun, $v1, $t1));
+                    $res = jit_insn_abs($fun, $self->_to_nv($v1, $t1));
                 }
                 when (pj_unop_sin) {
-                    $res = jit_insn_sin($fun, $self->_to_nv($fun, $v1, $t1));
+                    $res = jit_insn_sin($fun, $self->_to_nv($v1, $t1));
                 }
                 when (pj_unop_cos) {
-                    $res = jit_insn_cos($fun, $self->_to_nv($fun, $v1, $t1));
+                    $res = jit_insn_cos($fun, $self->_to_nv($v1, $t1));
                 }
                 when (pj_unop_sqrt) {
-                    $res = jit_insn_sqrt($fun, $self->_to_nv($fun, $v1, $t1));
+                    $res = jit_insn_sqrt($fun, $self->_to_nv($v1, $t1));
                 }
                 when (pj_unop_log) {
-                    $res = jit_insn_log($fun, $self->_to_nv($fun, $v1, $t1));
+                    $res = jit_insn_log($fun, $self->_to_nv($v1, $t1));
                 }
                 when (pj_unop_exp) {
-                    $res = jit_insn_exp($fun, $self->_to_nv($fun, $v1, $t1));
+                    $res = jit_insn_exp($fun, $self->_to_nv($v1, $t1));
                 }
                 when (pj_unop_bool_not) {
-                    $res = jit_insn_to_not_bool($fun, $self->_to_numeric_type($fun, $v1, $t1));
+                    $res = jit_insn_to_not_bool($fun, $self->_to_numeric_type($v1, $t1));
                     $restype = INT;
                 }
                 when (pj_unop_perl_int) {
@@ -462,7 +467,7 @@ sub _jit_emit_op {
                         $res = $v1;
                     }
                     else {
-                        my $val = $self->_to_numeric_type($fun, $v1, $t1);
+                        my $val = $self->_to_numeric_type($v1, $t1);
                         my $endlabel = jit_label_undefined;
                         my $neglabel = jit_label_undefined;
 
@@ -486,20 +491,21 @@ sub _jit_emit_op {
                     $restype = INT;
                 }
                 default {
-                    return $self->_jit_emit_optree_jit_kids($fun, $ast, $type);
+                    return $self->_jit_emit_optree_jit_kids($ast, $type);
                 }
             }
 
             return ($res, $restype);
         }
         default {
-            return $self->_jit_emit_optree_jit_kids($fun, $ast, $type);
+            return $self->_jit_emit_optree_jit_kids($ast, $type);
         }
     }
 }
 
 sub _jit_create_value {
-    my ($self, $fun, $type) = @_;
+    my ($self, $type) = @_;
+    my $fun = $self->_fun;
 
     given ($type->tag) {
         when (pj_int_type) {
@@ -518,7 +524,8 @@ sub _jit_create_value {
 }
 
 sub _jit_emit_const {
-    my ($self, $fun, $ast, $type) = @_;
+    my ($self, $ast, $type) = @_;
+    my $fun = $self->_fun;
 
     given ($ast->const_type) {
         when (pj_double_type) {
