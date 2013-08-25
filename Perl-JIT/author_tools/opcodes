@@ -90,3 +90,5 @@ pj_listop_substr,	pj_opc_listop,	substr,		OP_SUBSTR,	0,	emit
 pj_listop_chop,		pj_opc_listop,	chop,		OP_CHOP,	0,	emit
 pj_listop_chomp,	pj_opc_listop,	chomp,		OP_CHOMP,	0,	emit
 pj_listop_vec,		pj_opc_listop,	vec,		OP_VEC,		0,	emit
+pj_listop_sprintf,	pj_opc_listop,	sprintf,	OP_SPRINTF,	0,	emit
+pj_listop_printf,	pj_opc_listop,	printf,		OP_PRTF,	0,	emit

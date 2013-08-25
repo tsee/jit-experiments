@@ -154,8 +154,16 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   if (o->op_flags & OPf_KIDS) {
     for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
       PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
+
       if (kid->op_type == OP_NULL && !(kid->op_flags & OPf_KIDS)) {
         PJ_DEBUG_2("Skipping kid (%u) since it's an OP_NULL without kids.\n", ikid);
+        continue;
+      }
+
+      // FIXME likely wrong. PUSHMARK assumed to be an implementation detail that is not
+      //       strictly necessary in an AST listop. Totally speculative.
+      if (kid->op_type == OP_PUSHMARK && !(kid->op_flags & OPf_KIDS)) {
+        PJ_DEBUG_2("Skipping kid (%u) since it's an OP_PUSHMARK without kids.\n", ikid);
         continue;
       }
 
@@ -334,6 +342,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_LISTOP_CODE(OP_CHOMP, pj_listop_chomp)
     EMIT_LISTOP_CODE(OP_SCHOMP, pj_listop_chomp)
     EMIT_LISTOP_CODE(OP_VEC, pj_listop_vec)
+    EMIT_LISTOP_CODE(OP_SPRINTF, pj_listop_sprintf)
+    EMIT_LISTOP_CODE(OP_PRTF, pj_listop_printf)
   default:
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
     abort();

@@ -71,6 +71,8 @@ static const char *pj_ast_op_names[] = {
   "chop",      // pj_listop_chop       (pj_opc_listop)
   "chomp",     // pj_listop_chomp      (pj_opc_listop)
   "vec",       // pj_listop_vec        (pj_opc_listop)
+  "sprintf",   // pj_listop_sprintf    (pj_opc_listop)
+  "printf",    // pj_listop_printf     (pj_opc_listop)
 };
 
 static unsigned int pj_ast_op_flags[] = {
@@ -140,6 +142,8 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_listop_chop       (pj_opc_listop)
   0,                                                    // pj_listop_chomp      (pj_opc_listop)
   0,                                                    // pj_listop_vec        (pj_opc_listop)
+  0,                                                    // pj_listop_sprintf    (pj_opc_listop)
+  0,                                                    // pj_listop_printf     (pj_opc_listop)
 };
 
 #endif

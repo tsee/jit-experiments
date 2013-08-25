@@ -48,6 +48,7 @@
   || otype == OP_POW \
   || otype == OP_PREDEC \
   || otype == OP_PREINC \
+  || otype == OP_PRTF \
   || otype == OP_QUOTEMETA \
   || otype == OP_RAND \
   || otype == OP_RIGHT_SHIFT \
@@ -63,6 +64,7 @@
   || otype == OP_SLE \
   || otype == OP_SLT \
   || otype == OP_SNE \
+  || otype == OP_SPRINTF \
   || otype == OP_SQRT \
   || otype == OP_SRAND \
   || otype == OP_SREFGEN \
@@ -123,6 +125,7 @@
   || otype == OP_POW \
   || otype == OP_PREDEC \
   || otype == OP_PREINC \
+  || otype == OP_PRTF \
   || otype == OP_QUOTEMETA \
   || otype == OP_RAND \
   || otype == OP_RIGHT_SHIFT \
@@ -138,6 +141,7 @@
   || otype == OP_SLE \
   || otype == OP_SLT \
   || otype == OP_SNE \
+  || otype == OP_SPRINTF \
   || otype == OP_SQRT \
   || otype == OP_SRAND \
   || otype == OP_SREFGEN \
