@@ -13,6 +13,7 @@ class Perl::JIT::AST::Term {
   Perl::JIT::AST::Type *get_value_type();
   std::vector<Perl::JIT::AST::Term *> get_kids()
     %code{% PERL_UNUSED_VAR(THIS); %};
+  pj_op_context context();
 
   void dump();
 };

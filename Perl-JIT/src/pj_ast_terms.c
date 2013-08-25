@@ -263,6 +263,11 @@ void Term::set_value_type(Type *t)
   _value_type = t;
 }
 
+pj_op_context Term::context()
+{
+  return pj_op_context(OP_GIMME(perl_op, pj_context_caller));
+}
+
 const char *
 Op::name()
 {

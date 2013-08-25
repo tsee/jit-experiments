@@ -27,6 +27,13 @@ typedef enum {
   pj_opc_listop
 } pj_op_class;
 
+typedef enum {
+  pj_context_caller,
+  pj_context_void,
+  pj_context_scalar,
+  pj_context_list,
+} pj_op_context;
+
 // This file has the actual AST op enum declaration.
 #include "pj_ast_ops_enum-gen.inc"
 
@@ -50,6 +57,8 @@ namespace PerlJIT {
       OP *perl_op;
 
       OP *start_op();
+
+      pj_op_context context();
 
       virtual Type *get_value_type();
       virtual void set_value_type(Type *t);

@@ -83,6 +83,11 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_opc_binop);
   INT_CONST(pj_opc_listop);
 
+  INT_CONST(pj_context_caller);
+  INT_CONST(pj_context_void);
+  INT_CONST(pj_context_scalar);
+  INT_CONST(pj_context_list);
+
   INT_CONST(pj_unop_negate);
   INT_CONST(pj_unop_sin);
   INT_CONST(pj_unop_cos);

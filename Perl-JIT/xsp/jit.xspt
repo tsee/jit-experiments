@@ -19,6 +19,10 @@
     %xs_type{T_ENUM};
 };
 
+%typemap{pj_op_context}{simple}{
+    %xs_type{T_ENUM};
+};
+
 %typemap{Perl::JIT::AST::Term *}{object}{
     %xs_type{O_AST};
     %xs_output_code{% sv_setref_pv( $arg, xsp_constructor_class($var->perl_class()), (void*)$var ); %};
