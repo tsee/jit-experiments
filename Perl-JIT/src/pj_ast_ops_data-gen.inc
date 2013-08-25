@@ -35,6 +35,7 @@ static const char *pj_ast_op_names[] = {
   "undef()",   // pj_unop_undef        (pj_opc_unop)
   "sv_deref",  // pj_unop_sv_deref     (pj_opc_unop)
   "sv_ref",    // pj_unop_sv_ref       (pj_opc_unop)
+  "getc",      // pj_unop_getc         (pj_opc_unop)
   "+",         // pj_binop_add         (pj_opc_binop)
   "-",         // pj_binop_subtract    (pj_opc_binop)
   "*",         // pj_binop_multiply    (pj_opc_binop)
@@ -73,7 +74,10 @@ static const char *pj_ast_op_names[] = {
   "vec",       // pj_listop_vec        (pj_opc_listop)
   "sprintf",   // pj_listop_sprintf    (pj_opc_listop)
   "printf",    // pj_listop_printf     (pj_opc_listop)
+  "print",     // pj_listop_print      (pj_opc_listop)
+  "say",       // pj_listop_say        (pj_opc_listop)
   "join",      // pj_listop_join       (pj_opc_listop)
+  "read",      // pj_listop_read       (pj_opc_listop)
 };
 
 static unsigned int pj_ast_op_flags[] = {
@@ -107,6 +111,7 @@ static unsigned int pj_ast_op_flags[] = {
   PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_undef        (pj_opc_unop)
   0,                                                    // pj_unop_sv_deref     (pj_opc_unop)
   0,                                                    // pj_unop_sv_ref       (pj_opc_unop)
+  PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_getc         (pj_opc_unop)
   PJ_ASTf_HAS_ASSIGNMENT_FORM,                          // pj_binop_add         (pj_opc_binop)
   PJ_ASTf_HAS_ASSIGNMENT_FORM,                          // pj_binop_subtract    (pj_opc_binop)
   PJ_ASTf_HAS_ASSIGNMENT_FORM,                          // pj_binop_multiply    (pj_opc_binop)
@@ -145,7 +150,10 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_listop_vec        (pj_opc_listop)
   0,                                                    // pj_listop_sprintf    (pj_opc_listop)
   0,                                                    // pj_listop_printf     (pj_opc_listop)
+  0,                                                    // pj_listop_print      (pj_opc_listop)
+  0,                                                    // pj_listop_say        (pj_opc_listop)
   0,                                                    // pj_listop_join       (pj_opc_listop)
+  0,                                                    // pj_listop_read       (pj_opc_listop)
 };
 
 #endif

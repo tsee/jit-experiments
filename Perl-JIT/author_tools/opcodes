@@ -50,6 +50,7 @@ pj_unop_postdec,	pj_opc_unop,	()--,		OP_POSTDEC,	0,	emit
 pj_unop_undef,		pj_opc_unop,	undef(),	OP_UNDEF,	KIDS_OPTIONAL,	emit
 pj_unop_sv_deref,	pj_opc_unop,	sv_deref,	OP_RV2SV,	0,	emit
 pj_unop_sv_ref,		pj_opc_unop,	sv_ref,		OP_SREFGEN,	0,	emit
+pj_unop_getc,		pj_opc_unop,	getc,		OP_GETC,	KIDS_OPTIONAL,	emit
 
 # binops
 pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		HAS_ASSIGNMENT_FORM,	emit
@@ -92,4 +93,7 @@ pj_listop_chomp,	pj_opc_listop,	chomp,		OP_CHOMP,	0,	emit
 pj_listop_vec,		pj_opc_listop,	vec,		OP_VEC,		0,	emit
 pj_listop_sprintf,	pj_opc_listop,	sprintf,	OP_SPRINTF,	0,	emit
 pj_listop_printf,	pj_opc_listop,	printf,		OP_PRTF,	0,	emit
+pj_listop_print,	pj_opc_listop,	print,		OP_PRINT,	0,	emit
+pj_listop_say,		pj_opc_listop,	say,		OP_SAY,		0,	emit
 pj_listop_join,		pj_opc_listop,	join,		OP_JOIN,	0,	emit
+pj_listop_read,		pj_opc_listop,	read,		OP_READ,	0,	emit

@@ -27,6 +27,7 @@
   || otype == OP_EQ \
   || otype == OP_EXP \
   || otype == OP_GE \
+  || otype == OP_GETC \
   || otype == OP_GT \
   || otype == OP_HEX \
   || otype == OP_INT \
@@ -52,12 +53,15 @@
   || otype == OP_POW \
   || otype == OP_PREDEC \
   || otype == OP_PREINC \
+  || otype == OP_PRINT \
   || otype == OP_PRTF \
   || otype == OP_QUOTEMETA \
   || otype == OP_RAND \
+  || otype == OP_READ \
   || otype == OP_RIGHT_SHIFT \
   || otype == OP_RV2SV \
   || otype == OP_SASSIGN \
+  || otype == OP_SAY \
   || otype == OP_SCHOMP \
   || otype == OP_SCHOP \
   || otype == OP_SCMP \
@@ -104,6 +108,7 @@
   || otype == OP_EQ \
   || otype == OP_EXP \
   || otype == OP_GE \
+  || otype == OP_GETC \
   || otype == OP_GT \
   || otype == OP_GVSV \
   || otype == OP_HEX \
@@ -133,12 +138,15 @@
   || otype == OP_POW \
   || otype == OP_PREDEC \
   || otype == OP_PREINC \
+  || otype == OP_PRINT \
   || otype == OP_PRTF \
   || otype == OP_QUOTEMETA \
   || otype == OP_RAND \
+  || otype == OP_READ \
   || otype == OP_RIGHT_SHIFT \
   || otype == OP_RV2SV \
   || otype == OP_SASSIGN \
+  || otype == OP_SAY \
   || otype == OP_SCHOMP \
   || otype == OP_SCHOP \
   || otype == OP_SCMP \
