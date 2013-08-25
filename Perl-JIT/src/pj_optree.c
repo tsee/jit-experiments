@@ -204,13 +204,23 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       // FIXME OP_CONST can also be  string and who-knows-what-else
       SV *constsv = cSVOPx_sv(o);
       if (SvIOK(constsv)) {
-        retval = new AST::Constant(o, (IV)SvIV(constsv));
+        retval = new AST::NumericConstant(o, (IV)SvIV(constsv));
       }
       else if (SvUOK(constsv)) {
-        retval = new AST::Constant(o, (UV)SvUV(constsv));
+        retval = new AST::NumericConstant(o, (UV)SvUV(constsv));
       }
-      else { // cast to NV
-        retval = new AST::Constant(o, (NV)SvNV(constsv));
+      else if (SvNOK(constsv)) {
+        retval = new AST::NumericConstant(o, (NV)SvNV(constsv));
+      }
+      else if (SvPOK(constsv)) {
+        retval = new AST::StringConstant(aTHX_ o, constsv);
+      }
+      else { // FAIL. Cast to NV
+        if (PJ_DEBUGGING) {
+          PJ_DEBUG("Casting OP_CONST's SV to an NV since type is unclear. SV dump follows:");
+          sv_dump(constsv);
+        }
+        retval = new AST::NumericConstant(o, (NV)SvNV(constsv));
       }
 
       break;

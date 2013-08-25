@@ -50,6 +50,9 @@ Module::Build::PerlJIT->new(
     include_dirs => [ '.', $Module::Build::PerlJIT::LIBJIT_INCLUDE ],
     extra_linker_flags => [$Module::Build::PerlJIT::LIBJIT_RESULT, '-lpthread'],
     extra_compiler_flags => \@extra_compiler_flags,
+    extra_typemap_modules => {
+      'ExtUtils::Typemaps::STL::String' => '0',
+    },
 )->create_build_script;
 
 exit(0);

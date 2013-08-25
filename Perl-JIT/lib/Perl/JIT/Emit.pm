@@ -539,6 +539,9 @@ sub _jit_emit_const {
             return (jit_value_create_UV_constant($fun, $ast->get_uint_value),
                     UNSIGNED_INT);
         }
+        default {
+            die("Cannot generate code for string constants yet");
+        }
     }
 }
 

@@ -18,20 +18,39 @@ Term::Term(OP *p_op, pj_term_type t, Type *v_type)
   : type(t), perl_op(p_op), _value_type(v_type)
 {}
 
-Constant::Constant(OP *p_op, NV c)
-  : Term(p_op, pj_ttype_constant, new Scalar(pj_double_type)),
+Constant::Constant(OP *p_op, Type *v_type)
+  : Term(p_op, pj_ttype_constant, v_type)
+{}
+
+NumericConstant::NumericConstant(OP *p_op, NV c)
+  : Constant(p_op, new Scalar(pj_double_type)),
     dbl_value(c)
 {}
 
-Constant::Constant(OP *p_op, IV c)
-  : Term(p_op, pj_ttype_constant, new Scalar(pj_int_type)),
+NumericConstant::NumericConstant(OP *p_op, IV c)
+  : Constant(p_op, new Scalar(pj_int_type)),
     int_value(c)
 {}
 
-Constant::Constant(OP *p_op, UV c)
-  : Term(p_op, pj_ttype_constant, new Scalar(pj_uint_type)),
+NumericConstant::NumericConstant(OP *p_op, UV c)
+  : Constant(p_op, new Scalar(pj_uint_type)),
     uint_value(c)
 {}
+
+StringConstant::StringConstant(OP *p_op, const std::string& s, bool isUTF8)
+  : Constant(p_op, new Scalar(pj_string_type)),
+    string_value(s), is_utf8(isUTF8)
+{}
+
+StringConstant::StringConstant(pTHX_ OP *p_op, SV *string_literal_sv)
+  : Constant(p_op, new Scalar(pj_string_type))
+{
+  STRLEN l;
+  char *s;
+  s = SvPV(string_literal_sv, l);
+  string_value = std::string(s, (size_t)l);
+  is_utf8 = (bool)SvUTF8(string_literal_sv);
+}
 
 
 Identifier::Identifier(OP *p_op, pj_term_type t, Type *v_type)
@@ -109,17 +128,28 @@ S_dump_tree_indent(int lvl)
 
 
 void
-Constant::dump(int indent_lvl)
+NumericConstant::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
   if (this->_value_type->tag() == pj_double_type)
-    printf("(NV)C = %f\n", (float)this->dbl_value);
+    printf("C = (NV)%f\n", (float)this->dbl_value);
   else if (this->_value_type->tag() == pj_int_type)
-    printf("(IV)C = %i\n", (int)this->int_value);
+    printf("C = (IV)%i\n", (int)this->int_value);
   else if (this->_value_type->tag() == pj_uint_type)
-    printf("(UV)C = %lu\n", (unsigned long)this->uint_value);
+    printf("C = (UV)%lu\n", (unsigned long)this->uint_value);
   else
     abort();
+}
+
+
+void
+StringConstant::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("C = (string, %s)\"%*s\"\n",
+         (is_utf8 ? "UTF8" : "binary"),
+         (int)string_value.length(),
+         string_value.c_str());
 }
 
 

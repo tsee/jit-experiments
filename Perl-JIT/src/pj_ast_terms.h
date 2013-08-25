@@ -4,6 +4,7 @@
 #include "types.h"
 
 #include <vector>
+#include <string>
 
 #include <EXTERN.h>
 #include <perl.h>
@@ -62,9 +63,18 @@ namespace PerlJIT {
 
     class Constant : public Term {
     public:
-      Constant(OP *p_op, NV c);
-      Constant(OP *p_op, IV c);
-      Constant(OP *p_op, UV c);
+      Constant(OP *p_op, Type *v_type);
+
+      virtual void dump(int indent_lvl = 0) = 0;
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Constant"; }
+    };
+
+    class NumericConstant : public Constant {
+    public:
+      NumericConstant(OP *p_op, NV c);
+      NumericConstant(OP *p_op, IV c);
+      NumericConstant(OP *p_op, UV c);
 
       union {
         double dbl_value;
@@ -74,7 +84,20 @@ namespace PerlJIT {
 
       virtual void dump(int indent_lvl = 0);
       virtual const char *perl_class() const
-        { return "Perl::JIT::AST::Constant"; }
+        { return "Perl::JIT::AST::NumericConstant"; }
+    };
+
+    class StringConstant : public Constant {
+    public:
+      StringConstant(OP *p_op, const std::string &s, bool isUTF8);
+      StringConstant(pTHX_ OP *p_op, SV *string_literal_sv);
+
+      std::string string_value;
+      bool is_utf8;
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::StringConstant"; }
     };
 
     // abstract

@@ -54,9 +54,20 @@ class Perl::JIT::AST::Listop : public Perl::JIT::AST::Op
 class Perl::JIT::AST::Constant : public Perl::JIT::AST::Term
 {
   pj_type_id const_type() %code{% RETVAL = THIS->get_value_type()->tag(); %};
+};
+
+class Perl::JIT::AST::NumericConstant : public Perl::JIT::AST::Constant
+{
   double dbl_value %get %set;
   int int_value %get %set;
   unsigned int uint_value %get %set;
+};
+
+
+class Perl::JIT::AST::StringConstant : public Perl::JIT::AST::Constant
+{
+  std::string string_value %get %set;
+  bool is_utf8 %get %set;
 };
 
 class Perl::JIT::AST::Identifier : public Perl::JIT::AST::Term

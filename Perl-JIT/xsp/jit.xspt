@@ -1,6 +1,7 @@
 %loadplugin{feature::default_xs_typemap};
 
 %typemap{SV *}{simple};
+%typemap{std::string}{simple};
 
 %typemap{pj_op_type}{simple}{
     %xs_type{T_ENUM};
