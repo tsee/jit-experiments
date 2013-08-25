@@ -272,6 +272,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_BINOP_CODE(OP_SLE, pj_binop_str_le)
     EMIT_BINOP_CODE(OP_SCMP, pj_binop_str_cmp)
     EMIT_BINOP_CODE(OP_CONCAT, pj_binop_concat)
+    EMIT_BINOP_CODE(OP_SASSIGN, pj_binop_sassign)
     EMIT_UNOP_CODE(OP_NOT, pj_unop_bool_not)
     EMIT_UNOP_CODE(OP_NEGATE, pj_unop_negate)
     EMIT_UNOP_CODE(OP_COMPLEMENT, pj_unop_bitwise_not)
@@ -308,6 +309,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_LISTOP_CODE(OP_SCHOP, pj_listop_chop)
     EMIT_LISTOP_CODE(OP_CHOMP, pj_listop_chomp)
     EMIT_LISTOP_CODE(OP_SCHOMP, pj_listop_chomp)
+    EMIT_LISTOP_CODE(OP_VEC, pj_listop_vec)
   default:
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
     abort();

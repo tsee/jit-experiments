@@ -52,6 +52,7 @@
   || otype == OP_RAND \
   || otype == OP_RIGHT_SHIFT \
   || otype == OP_RV2SV \
+  || otype == OP_SASSIGN \
   || otype == OP_SCHOMP \
   || otype == OP_SCHOP \
   || otype == OP_SCMP \
@@ -69,7 +70,8 @@
   || otype == OP_SUBTRACT \
   || otype == OP_UC \
   || otype == OP_UCFIRST \
-  || otype == OP_UNDEF)
+  || otype == OP_UNDEF \
+  || otype == OP_VEC)
 
 
 #define IS_AST_COMPATIBLE_OP_TYPE(otype) ( \
@@ -125,6 +127,7 @@
   || otype == OP_RAND \
   || otype == OP_RIGHT_SHIFT \
   || otype == OP_RV2SV \
+  || otype == OP_SASSIGN \
   || otype == OP_SCHOMP \
   || otype == OP_SCHOP \
   || otype == OP_SCMP \
@@ -142,7 +145,8 @@
   || otype == OP_SUBTRACT \
   || otype == OP_UC \
   || otype == OP_UCFIRST \
-  || otype == OP_UNDEF)
+  || otype == OP_UNDEF \
+  || otype == OP_VEC)
 
 
 

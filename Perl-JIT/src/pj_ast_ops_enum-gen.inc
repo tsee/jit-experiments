@@ -69,12 +69,14 @@ typedef enum {
   pj_binop_bool_or,
   pj_binop_definedor,
   pj_binop_concat,
+  pj_binop_sassign,
 
   // Op class: pj_opc_listop
   pj_listop_ternary,
   pj_listop_substr,
   pj_listop_chop,
   pj_listop_chomp,
+  pj_listop_vec,
 
   // Op class ranges
 
@@ -82,14 +84,14 @@ typedef enum {
   pj_unop_LAST  = pj_unop_sv_ref,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_concat,
+  pj_binop_LAST  = pj_binop_sassign,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_chomp,
+  pj_listop_LAST  = pj_listop_vec,
 
   // Global op range:
   pj_op_FIRST = pj_unop_negate,
-  pj_op_LAST = pj_listop_chomp
+  pj_op_LAST = pj_listop_vec
 } pj_op_type;
 
 #endif

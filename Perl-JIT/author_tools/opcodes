@@ -82,9 +82,11 @@ pj_binop_bool_and,	pj_opc_binop,	&&,		OP_AND,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_F
 pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot
 pj_binop_definedor,	pj_opc_binop,	//,		OP_DOR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot
 pj_binop_concat,	pj_opc_binop,	concat,		OP_CONCAT,	HAS_ASSIGNMENT_FORM,	emit
+pj_binop_sassign,	pj_opc_binop,	sassign,	OP_SASSIGN,	0,	emit
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit
 pj_listop_substr,	pj_opc_listop,	substr,		OP_SUBSTR,	0,	emit
 pj_listop_chop,		pj_opc_listop,	chop,		OP_CHOP,	0,	emit
 pj_listop_chomp,	pj_opc_listop,	chomp,		OP_CHOMP,	0,	emit
+pj_listop_vec,		pj_opc_listop,	vec,		OP_VEC,		0,	emit
