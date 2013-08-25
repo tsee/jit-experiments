@@ -9,6 +9,7 @@
 #define IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) ( \
      otype == OP_ABS \
   || otype == OP_ADD \
+  || otype == OP_ALARM \
   || otype == OP_ANDASSIGN \
   || otype == OP_ATAN2 \
   || otype == OP_BIT_AND \
@@ -28,6 +29,7 @@
   || otype == OP_EXP \
   || otype == OP_GE \
   || otype == OP_GETC \
+  || otype == OP_GMTIME \
   || otype == OP_GT \
   || otype == OP_HEX \
   || otype == OP_INT \
@@ -37,6 +39,7 @@
   || otype == OP_LE \
   || otype == OP_LEFT_SHIFT \
   || otype == OP_LENGTH \
+  || otype == OP_LOCALTIME \
   || otype == OP_LOG \
   || otype == OP_LT \
   || otype == OP_MODULO \
@@ -70,6 +73,7 @@
   || otype == OP_SGT \
   || otype == OP_SIN \
   || otype == OP_SLE \
+  || otype == OP_SLEEP \
   || otype == OP_SLT \
   || otype == OP_SNE \
   || otype == OP_SPRINTF \
@@ -78,6 +82,8 @@
   || otype == OP_SREFGEN \
   || otype == OP_SUBSTR \
   || otype == OP_SUBTRACT \
+  || otype == OP_TIME \
+  || otype == OP_TMS \
   || otype == OP_UC \
   || otype == OP_UCFIRST \
   || otype == OP_UNDEF \
@@ -87,6 +93,7 @@
 #define IS_AST_COMPATIBLE_OP_TYPE(otype) ( \
      otype == OP_ABS \
   || otype == OP_ADD \
+  || otype == OP_ALARM \
   || otype == OP_AND \
   || otype == OP_ANDASSIGN \
   || otype == OP_ATAN2 \
@@ -109,6 +116,7 @@
   || otype == OP_EXP \
   || otype == OP_GE \
   || otype == OP_GETC \
+  || otype == OP_GMTIME \
   || otype == OP_GT \
   || otype == OP_GVSV \
   || otype == OP_HEX \
@@ -119,6 +127,7 @@
   || otype == OP_LE \
   || otype == OP_LEFT_SHIFT \
   || otype == OP_LENGTH \
+  || otype == OP_LOCALTIME \
   || otype == OP_LOG \
   || otype == OP_LT \
   || otype == OP_MODULO \
@@ -155,6 +164,7 @@
   || otype == OP_SGT \
   || otype == OP_SIN \
   || otype == OP_SLE \
+  || otype == OP_SLEEP \
   || otype == OP_SLT \
   || otype == OP_SNE \
   || otype == OP_SPRINTF \
@@ -163,6 +173,8 @@
   || otype == OP_SREFGEN \
   || otype == OP_SUBSTR \
   || otype == OP_SUBTRACT \
+  || otype == OP_TIME \
+  || otype == OP_TMS \
   || otype == OP_UC \
   || otype == OP_UCFIRST \
   || otype == OP_UNDEF \

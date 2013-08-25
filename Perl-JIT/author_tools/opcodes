@@ -19,7 +19,13 @@
 # Format:
 # AST op, AST op class, op name, Perl OP, C flags, options
 
-# unops
+# unops (but eg. time() is really null-ary...)
+pj_unop_time,		pj_opc_unop,	time(),		OP_TIME, 	KIDS_OPTIONAL,	emit
+pj_unop_times,		pj_opc_unop,	times(),	OP_TMS, 	KIDS_OPTIONAL,	emit
+pj_unop_localtime,	pj_opc_unop,	localtime(),	OP_LOCALTIME, 	KIDS_OPTIONAL,	emit
+pj_unop_gmtime,		pj_opc_unop,    gmtime(),	OP_GMTIME, 	KIDS_OPTIONAL,	emit
+pj_unop_alarm,		pj_opc_unop,    alarm(),	OP_ALARM, 	KIDS_OPTIONAL,	emit
+pj_unop_sleep,		pj_opc_unop,    sleep(),	OP_SLEEP, 	KIDS_OPTIONAL,	emit
 pj_unop_negate,		pj_opc_unop,	unary -,	OP_NEGATE, 	0,	emit
 pj_unop_sin,		pj_opc_unop,	sin,		OP_SIN,		KIDS_OPTIONAL,	emit
 pj_unop_cos,		pj_opc_unop,	cos,		OP_COS,		KIDS_OPTIONAL,	emit
