@@ -12,7 +12,7 @@
 
 # Special: Additional valid OPs for the filter macro.
 # - OP_SCHOP is the single-parameter version of OP_CHOP. Treat it as the same
-#   thing in the AST. Dito for OP_SCHOMP.
+#   thing in the AST. Ditto for OP_SCHOMP.
 #! jittable_root_ops=OP_SCHOP OP_SCHOMP
 #! jittable_ops=OP_CONST OP_PADSV OP_NULL OP_GVSV
 
@@ -52,18 +52,18 @@ pj_unop_sv_deref,	pj_opc_unop,	sv_deref,	OP_RV2SV,	0,	emit
 pj_unop_sv_ref,		pj_opc_unop,	sv_ref,		OP_SREFGEN,	0,	emit
 
 # binops
-pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		0,	emit
-pj_binop_subtract,	pj_opc_binop,	-,		OP_SUBTRACT,	0,	emit
-pj_binop_multiply,	pj_opc_binop,	*,		OP_MULTIPLY,	0,	emit
-pj_binop_divide,	pj_opc_binop,	/,		OP_DIVIDE,	0,	emit
-pj_binop_modulo,	pj_opc_binop,	%,		OP_MODULO,	0,	emit
+pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		HAS_ASSIGNMENT_FORM,	emit
+pj_binop_subtract,	pj_opc_binop,	-,		OP_SUBTRACT,	HAS_ASSIGNMENT_FORM,	emit
+pj_binop_multiply,	pj_opc_binop,	*,		OP_MULTIPLY,	HAS_ASSIGNMENT_FORM,	emit
+pj_binop_divide,	pj_opc_binop,	/,		OP_DIVIDE,	HAS_ASSIGNMENT_FORM,	emit
+pj_binop_modulo,	pj_opc_binop,	%,		OP_MODULO,	HAS_ASSIGNMENT_FORM,	emit
 pj_binop_atan2,		pj_opc_binop,	atan2,		OP_ATAN2,	0,	emit
 pj_binop_pow,		pj_opc_binop,	pow,		OP_POW,		0,	emit
-pj_binop_left_shift,	pj_opc_binop,	<<,		OP_LEFT_SHIFT,	0,	emit
-pj_binop_right_shift,	pj_opc_binop,	>>,		OP_RIGHT_SHIFT,	0,	emit
-pj_binop_bitwise_and,	pj_opc_binop,	&,		OP_BIT_AND,	0,	emit
-pj_binop_bitwise_or,	pj_opc_binop,	|,		OP_BIT_OR,	0,	emit
-pj_binop_bitwise_xor,	pj_opc_binop,	^,		OP_BIT_XOR,	0,	emit
+pj_binop_left_shift,	pj_opc_binop,	<<,		OP_LEFT_SHIFT,	HAS_ASSIGNMENT_FORM,	emit
+pj_binop_right_shift,	pj_opc_binop,	>>,		OP_RIGHT_SHIFT,	HAS_ASSIGNMENT_FORM,	emit
+pj_binop_bitwise_and,	pj_opc_binop,	&,		OP_BIT_AND,	HAS_ASSIGNMENT_FORM,	emit
+pj_binop_bitwise_or,	pj_opc_binop,	|,		OP_BIT_OR,	HAS_ASSIGNMENT_FORM,	emit
+pj_binop_bitwise_xor,	pj_opc_binop,	^,		OP_BIT_XOR,	HAS_ASSIGNMENT_FORM,	emit
 pj_binop_num_eq,	pj_opc_binop,	==,		OP_EQ,		0,	emit
 pj_binop_num_ne,	pj_opc_binop,	!=,		OP_NE,		0,	emit
 pj_binop_num_lt,	pj_opc_binop,	<,		OP_LT,		0,	emit
@@ -78,10 +78,10 @@ pj_binop_str_le,	pj_opc_binop,	le,		OP_SLE,		0,	emit
 pj_binop_str_gt,	pj_opc_binop,	gt,		OP_SGT,		0,	emit
 pj_binop_str_ge,	pj_opc_binop,	ge,		OP_SGE,		0,	emit
 pj_binop_str_cmp,	pj_opc_binop,	cmp,		OP_SCMP,	0,	emit
-pj_binop_bool_and,	pj_opc_binop,	&&,		OP_AND,		KIDS_CONDITIONAL,	emit|nonroot
-pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		KIDS_CONDITIONAL,	emit|nonroot
-pj_binop_definedor,	pj_opc_binop,	//,		OP_DOR,		KIDS_CONDITIONAL,	emit|nonroot
-pj_binop_concat,	pj_opc_binop,	concat,		OP_CONCAT,	0,	emit
+pj_binop_bool_and,	pj_opc_binop,	&&,		OP_AND,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot
+pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot
+pj_binop_definedor,	pj_opc_binop,	//,		OP_DOR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot
+pj_binop_concat,	pj_opc_binop,	concat,		OP_CONCAT,	HAS_ASSIGNMENT_FORM,	emit
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit

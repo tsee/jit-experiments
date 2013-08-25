@@ -31,6 +31,8 @@ typedef enum {
 #define PJ_ASTf_KIDS_CONDITIONAL (1<<0)
 // Indicates that kids may or may not exist
 #define PJ_ASTf_KIDS_OPTIONAL (1<<1)
+// Indicates that the op has an assignment form (e.g. +=, &&=, ...)
+#define PJ_ASTf_HAS_ASSIGNMENT_FORM (1<<2)
 
 namespace PerlJIT {
   namespace AST {
@@ -110,7 +112,7 @@ namespace PerlJIT {
     public:
       Op(OP *p_op, pj_op_type t);
 
-      const char *name();
+      virtual const char *name();
       unsigned int flags();
       virtual pj_op_class op_class() = 0;
 
@@ -138,6 +140,8 @@ namespace PerlJIT {
     class Binop : public Op {
     public:
       Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2);
+
+      bool is_assignment_form();
 
       virtual void dump(int indent_lvl = 0);
       pj_op_class op_class()

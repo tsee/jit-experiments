@@ -12,7 +12,7 @@ use warnings 'redefine';
 
 use B::Generate;
 use B::Replace;
-use B qw(OPf_STACKED OPf_KIDS);
+use B qw(OPf_KIDS);
 
 use Perl::JIT qw(:all);
 use Perl::JIT::Types qw(:all);
@@ -423,8 +423,7 @@ sub _jit_emit_op {
                 }
             }
 
-            # this should be a pj_binop_<xxx>_assign; or maybe better a flag
-            if ($ast->get_perl_op->flags & OPf_STACKED) {
+            if ($ast->is_assignment_form) {
                 pa_sv_set_nv($fun, $v1, $res);
             }
 

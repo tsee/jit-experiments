@@ -39,6 +39,8 @@ class Perl::JIT::AST::Unop : public Perl::JIT::AST::Op
 
 class Perl::JIT::AST::Binop : public Perl::JIT::AST::Op
 {
+  bool is_assignment_form();
+
   Perl::JIT::AST::Term *get_left_kid() %code{% RETVAL = THIS->kids[0]; %};
   void set_left_kid(Perl::JIT::AST::Term *k) %code{% THIS->kids[0] = k; %};
 

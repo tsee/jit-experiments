@@ -158,10 +158,10 @@ NullOptree::dump(int indent_lvl)
 
 
 static void
-S_dump_op(PerlJIT::AST::Op *o, const char *op_str, int indent_lvl)
+S_dump_op(PerlJIT::AST::Op *o, const char *op_str, bool is_assignment_form, int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  printf("%s '%s' (\n", op_str, o->name());
+  printf("%s '%s%s' (\n", op_str, o->name(), is_assignment_form ? "=" : "");
   const unsigned int n = o->kids.size();
   for (unsigned int i = 0; i < n; ++i) {
     if (o->kids[i] == NULL) {
@@ -177,13 +177,13 @@ S_dump_op(PerlJIT::AST::Op *o, const char *op_str, int indent_lvl)
 
 
 void Unop::dump(int indent_lvl)
-{ S_dump_op(this, "Unop", indent_lvl); }
+{ S_dump_op(this, "Unop", false, indent_lvl); }
 
 void Binop::dump(int indent_lvl)
-{ S_dump_op(this, "Binop", indent_lvl); }
+{ S_dump_op(this, "Binop", is_assignment_form(), indent_lvl); }
 
 void Listop::dump(int indent_lvl)
-{ S_dump_op(this, "Listop", indent_lvl); }
+{ S_dump_op(this, "Listop", false, indent_lvl); }
 
 
 Term::~Term()
@@ -233,4 +233,9 @@ Op::flags()
   return pj_ast_op_flags[this->optype];
 }
 
-
+bool
+Binop::is_assignment_form()
+{
+  return (flags() & PJ_ASTf_HAS_ASSIGNMENT_FORM) &&
+         (perl_op->op_flags & OPf_STACKED);
+}
