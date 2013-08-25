@@ -151,6 +151,7 @@ sub concise_dump {
 sub is_jitting {
   my ($sub, $opgrep_patterns, $diag) = @_;
   local $Test::Builder::Level = $Test::Builder::Level + 1;
+  my $prefix = $diag ? "$diag: " : '';
 
   for my $pat (@$opgrep_patterns) {
     my $matched;
@@ -162,9 +163,9 @@ sub is_jitting {
     );
 
     unless ($matched) {
-      ok(0, "$diag: could not find op matching");
+      ok(0, "${prefix}could not find op matching");
       diag(Dumper($pat));
-      _maybe_concise_dump("$diag: expected OP could not be found", $sub);
+      _maybe_concise_dump("${prefix}expected OP could not be found", $sub);
       return 0;
     }
   }
@@ -181,9 +182,9 @@ sub is_jitting {
     );
 
     if ($matched) {
-      ok(0, "$diag: some op has not been JITted");
+      ok(0, "${prefix}some op has not been JITted");
       diag(Dumper($pat));
-      _maybe_concise_dump("$diag: OP-to-be-JITted still found ", $sub);
+      _maybe_concise_dump("${prefix}OP-to-be-JITted still found ", $sub);
       return 0;
     }
   }
