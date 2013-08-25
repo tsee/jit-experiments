@@ -28,6 +28,7 @@
   || otype == OP_GT \
   || otype == OP_HEX \
   || otype == OP_INT \
+  || otype == OP_JOIN \
   || otype == OP_LC \
   || otype == OP_LCFIRST \
   || otype == OP_LE \
@@ -102,6 +103,7 @@
   || otype == OP_GVSV \
   || otype == OP_HEX \
   || otype == OP_INT \
+  || otype == OP_JOIN \
   || otype == OP_LC \
   || otype == OP_LCFIRST \
   || otype == OP_LE \

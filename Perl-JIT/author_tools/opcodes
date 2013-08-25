@@ -92,3 +92,4 @@ pj_listop_chomp,	pj_opc_listop,	chomp,		OP_CHOMP,	0,	emit
 pj_listop_vec,		pj_opc_listop,	vec,		OP_VEC,		0,	emit
 pj_listop_sprintf,	pj_opc_listop,	sprintf,	OP_SPRINTF,	0,	emit
 pj_listop_printf,	pj_opc_listop,	printf,		OP_PRTF,	0,	emit
+pj_listop_join,		pj_opc_listop,	join,		OP_JOIN,	0,	emit
