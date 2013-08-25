@@ -154,6 +154,11 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   if (o->op_flags & OPf_KIDS) {
     for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
       PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
+      if (kid->op_type == OP_NULL && !(kid->op_flags & OPf_KIDS)) {
+        PJ_DEBUG_2("Skipping kid (%u) since it's an OP_NULL without kids.\n", ikid);
+        continue;
+      }
+
       AST::Term *kid_term = pj_build_ast(aTHX_ kid, visitor);
       if (kid_term == NULL) {
         // Failed to build sub-AST, free ASTs build thus far before bailing
