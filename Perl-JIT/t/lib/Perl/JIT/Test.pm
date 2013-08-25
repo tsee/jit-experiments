@@ -165,7 +165,7 @@ sub is_jitting {
     unless ($matched) {
       ok(0, "${prefix}could not find op matching");
       diag(Dumper($pat));
-      _maybe_concise_dump("${prefix}expected OP could not be found", $sub);
+      _maybe_concise_dump($sub, "${prefix}expected OP could not be found");
       return 0;
     }
   }
@@ -184,7 +184,7 @@ sub is_jitting {
     if ($matched) {
       ok(0, "${prefix}some op has not been JITted");
       diag(Dumper($pat));
-      _maybe_concise_dump("${prefix}OP-to-be-JITted still found ", $sub);
+      _maybe_concise_dump($sub, "${prefix}non-JITted op not found ");
       return 0;
     }
   }
