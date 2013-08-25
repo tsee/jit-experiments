@@ -33,8 +33,10 @@ sub BUILD {
 sub jit_sub {
     my ($self, $sub) = @_;
     my @asts = Perl::JIT::find_jit_candidates($sub);
+
+    jit_context_build_start($self->jit_context);
+
     local $self->{current_cv} = B::svref_2object($sub);
-    local $self->{subtrees} = [];
 
     for my $ast (@asts) {
         if ($ast->get_type == pj_ttype_nulloptree) {
@@ -42,36 +44,40 @@ sub jit_sub {
             B::Replace::detach_tree($self->current_cv->ROOT, $ast->get_perl_op);
         }
         else {
+            local $self->{subtrees} = [];
             my $op = $self->jit_tree($ast);
 
             # TODO add B::Generate API taking the CV
             B::Replace::replace_tree($self->current_cv->ROOT, $ast->get_perl_op, $op);
         }
     }
+
+    jit_context_build_end($self->jit_context);
 }
 
 sub jit_tree {
     my ($self, $ast) = @_;
-    my $cxt = $self->jit_context;
     my $op;
 
+    my $fun = pa_create_pp($self->jit_context);
+    $self->_jit_emit_root($fun, $ast);
+
+    # here it'd be nice to use custom ops, but they are registered by
+    # PP function address; we could use a trampoline address (with
+    # just an extra jump, but then we'd need to store the pointer to the
+    # JITted function as an extra op member
     if (@{$self->subtrees}) {
         my $tree = $self->subtrees;
 
         $tree->[$_]->sibling($tree->[$_ + 1]) for 0 .. $#$tree;
-        $op = B::LISTOP->new('stub', OPf_KIDS, $tree->[0], $tree->[-1]);
+        $tree->[-1]->sibling(0);
+        $op = B::LISTOP->new('list', OPf_KIDS, $tree->[0], @$tree > 1 ? $tree->[-1] : 0);
     } else {
         $op = B::OP->new('stub', 0);
     }
 
-    jit_context_build_start($self->jit_context);
-
-    my $fun = pa_create_pp($cxt);
-    $self->_jit_emit_root($fun, $ast);
-
     #jit_dump_function(\*STDOUT, $fun, "foo");
     jit_function_compile($fun);
-    jit_context_build_end($self->jit_context);
 
     $op->ppaddr(jit_function_to_closure($fun));
     $op->targ($ast->get_perl_op->targ);
