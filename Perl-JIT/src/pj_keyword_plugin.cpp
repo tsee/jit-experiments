@@ -45,8 +45,7 @@ STATIC int
 pj_type_annotate_mg_free(pTHX_ SV *sv, MAGIC* mg)
 {
   PERL_UNUSED_ARG(sv);
-  unordered_map<PADOFFSET, TypedPadSvOp> *decl_map
-    = (unordered_map<PADOFFSET, TypedPadSvOp>*)mg->mg_ptr;
+  pj_declaration_map_t *decl_map = (pj_declaration_map_t*)mg->mg_ptr;
   delete decl_map;
   mg->mg_ptr = NULL;
   return 0;
@@ -60,12 +59,12 @@ STATIC MGVTBL PJ_type_annotate_mg_vtbl = {
 
 
 // Returns NULL if the CV doesn't have any typed declarations.
-unordered_map<PADOFFSET, TypedPadSvOp> *
+pj_declaration_map_t *
 pj_get_typed_variable_declarations(pTHX_ CV *cv)
 {
   MAGIC *mg = mg_findext((SV *)cv, PERL_MAGIC_ext, &PJ_type_annotate_mg_vtbl);
   if (mg != NULL) {
-    return (unordered_map<PADOFFSET, TypedPadSvOp> *)mg->mg_ptr;
+    return (pj_declaration_map_t *)mg->mg_ptr;
   }
   else {
     return NULL;
@@ -140,10 +139,10 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
   const vector<OP *> &declaration_ops = extractor.get_padsv_ops();
 
   // Get existing declarations or create new container
-  unordered_map<PADOFFSET, TypedPadSvOp> *decl_map;
+  pj_declaration_map_t *decl_map;
   decl_map = pj_get_typed_variable_declarations(aTHX_ PL_compcv);
   if (decl_map == NULL) {
-    decl_map = new unordered_map<PADOFFSET, TypedPadSvOp>;
+    decl_map = new pj_declaration_map_t;
     (void)sv_magicext(
       (SV *)PL_compcv, NULL, PERL_MAGIC_ext, &PJ_type_annotate_mg_vtbl,
       (char *)decl_map, 0

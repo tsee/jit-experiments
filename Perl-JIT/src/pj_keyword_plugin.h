@@ -36,8 +36,9 @@ namespace PerlJIT {
 // Main keyword plugin hook for JIT type annotations. Will put MAGIC on compiling CV.
 int pj_jit_type_keyword_plugin(pTHX_ char *keyword_ptr, STRLEN keyword_len, OP **op_ptr);
 
+typedef std::tr1::unordered_map<PADOFFSET, PerlJIT::TypedPadSvOp> pj_declaration_map_t;
 // Fetch set of typed variable declarations from CV
-std::tr1::unordered_map<PADOFFSET, PerlJIT::TypedPadSvOp> *pj_get_typed_variable_declarations(pTHX_ CV *cv);
+pj_declaration_map_t *pj_get_typed_variable_declarations(pTHX_ CV *cv);
 
 #define PJ_KEYWORD_PLUGIN_HINT "PJIT:kw"
 
