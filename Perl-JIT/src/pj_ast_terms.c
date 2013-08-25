@@ -18,17 +18,17 @@ Term::Term(OP *p_op, pj_term_type t, Type *v_type)
   : type(t), perl_op(p_op), _value_type(v_type)
 {}
 
-Constant::Constant(OP *p_op, double c)
+Constant::Constant(OP *p_op, NV c)
   : Term(p_op, pj_ttype_constant, new Scalar(pj_double_type)),
     dbl_value(c)
 {}
 
-Constant::Constant(OP *p_op, int c)
+Constant::Constant(OP *p_op, IV c)
   : Term(p_op, pj_ttype_constant, new Scalar(pj_int_type)),
     int_value(c)
 {}
 
-Constant::Constant(OP *p_op, unsigned int c)
+Constant::Constant(OP *p_op, UV c)
   : Term(p_op, pj_ttype_constant, new Scalar(pj_uint_type)),
     uint_value(c)
 {}
@@ -113,11 +113,11 @@ Constant::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
   if (this->_value_type->tag() == pj_double_type)
-    printf("C = %f\n", (float)this->dbl_value);
+    printf("(NV)C = %f\n", (float)this->dbl_value);
   else if (this->_value_type->tag() == pj_int_type)
-    printf("C = %i\n", (int)this->int_value);
+    printf("(IV)C = %i\n", (int)this->int_value);
   else if (this->_value_type->tag() == pj_uint_type)
-    printf("C = %lu\n", (unsigned long)this->uint_value);
+    printf("(UV)C = %lu\n", (unsigned long)this->uint_value);
   else
     abort();
 }

@@ -201,9 +201,18 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 
   switch (otype) {
   case OP_CONST: {
-      /* FIXME OP_CONST can also be an int or a string and who-knows-what-else */
+      // FIXME OP_CONST can also be  string and who-knows-what-else
       SV *constsv = cSVOPx_sv(o);
-      retval = new AST::Constant(o, SvNV(constsv)); /* FIXME replace type by inferred type */
+      if (SvIOK(constsv)) {
+        retval = new AST::Constant(o, (IV)SvIV(constsv));
+      }
+      else if (SvUOK(constsv)) {
+        retval = new AST::Constant(o, (UV)SvUV(constsv));
+      }
+      else { // cast to NV
+        retval = new AST::Constant(o, (NV)SvNV(constsv));
+      }
+
       break;
     }
   case OP_PADSV:

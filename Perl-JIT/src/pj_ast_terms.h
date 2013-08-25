@@ -5,6 +5,9 @@
 
 #include <vector>
 
+#include <EXTERN.h>
+#include <perl.h>
+
 // Definition of types and functions for the Perl JIT AST.
 typedef struct op OP; // that's the Perl OP
 
@@ -59,9 +62,9 @@ namespace PerlJIT {
 
     class Constant : public Term {
     public:
-      Constant(OP *p_op, double c);
-      Constant(OP *p_op, int c);
-      Constant(OP *p_op, unsigned int c);
+      Constant(OP *p_op, NV c);
+      Constant(OP *p_op, IV c);
+      Constant(OP *p_op, UV c);
 
       union {
         double dbl_value;
