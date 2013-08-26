@@ -101,7 +101,7 @@ Unop::Unop(OP *p_op, pj_op_type t, Term *kid)
 
 
 Binop::Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2)
-  : Op(p_op, t)
+  : Op(p_op, t), is_assign_form(false)
 {
   // assert that kids are optional if at least one NULL passed
   assert( (kid1 != NULL && kid2 != NULL)
