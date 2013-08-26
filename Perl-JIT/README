@@ -1,18 +1,11 @@
-Perl::JIT - Experimental JIT for numerics in Perl
+Perl::JIT - Experimental JIT compilation for Perl
 =================================================
 
 At this point, this is to be considered at best a proof of principle.
-The code is supposed to be able to match candidate subtrees of the
-Perl OP tree (the closest it has to an AST), generate a more useful
-AST out of that, JIT compile that AST to a function, create a custom
+The code builds an AST from Perl's OP tree (the closest it has to an
+AST), and then JIT compile that AST to a function, create a custom
 Perl OP, replace the candidate subtree with this new custom OP and
 the parts of the subtree that couldn't be replaced entirely.
-
-Right now, the goal is to handle numeric calculations, so there are
-lots of corresponding assumptions in the code (lots of "this clearly
-must be a double"). This limitation is there for many reasons,
-including the comparative amount of work it takes to properly JIT
-compile things involving strings and structs.
 
 Getting started
 ===============
@@ -47,8 +40,7 @@ and then use dev_Build.PL as the ordinary (non-templated) Build.PL.
 Build.PL takes some options:
 
   --debug causes the code to include LOTS of debugging output and asserts.
-  --ctests causes the tests in ctest/ to be built and run during ./Build test
 
-Both can also be set using the environment variables DEBUG and CTESTS.
+This can also be set using the environment variable "DEBUG".
 Specifying --debug twice or setting DEBUG to a number higher than 1 will
 cause the -pedantic option to be added to the compiler arguments (gcc).
