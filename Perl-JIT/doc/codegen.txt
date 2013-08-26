@@ -4,7 +4,7 @@
 - other operations (for example scalar/list ranges, chr, ord, ...)
   do not propagate Scalar-ness to their result
 - a variable in a statement can be
-  - explicitly written to (assignment, cho(m)p, ...)
+  - explicitly written to (assignment, cho(m)p, pre/post inc, ...)
   - maybe written to (passed as a sub parameter)
   - read from
 
@@ -24,6 +24,8 @@ It needs to:
   - just counting the number of uses of the variable (total and inside the
     subtree) and checking whether they are equal should work; the total
     number of uses can be gathered while building the AST
+    => What about globals, "no strict" and symbolic refs?
+    => eval kills it all, of course.
 
 - do the same for variables read in the JITted tree after having been
   assigned in a non JITted *subtree* of the JITted tree
@@ -40,6 +42,11 @@ It needs to:
       be written back to the pad
     - stale means the variable has been written in Perl code and needs
       to be read back from the pad
+      => Which may be hard/impossible to detect in the presence of subtrees.
+         So therefore, executing a wholly opaque subtree will necessarily
+         have to mark all variables as stale, see below. Fundamentally, that
+         also means anything that is dirty will have to be written back
+         before we risk it being read from.
   - while emitting a JITted subtree, generate a single JIT value to hold
     the temporary value of a variable (both read and written)
   - when written, mark the value as "dirty"
@@ -51,6 +58,7 @@ It needs to:
 
 - decide what to do for maybe written to variables (sub parameters)
   (I'd say treat them as read, ignore the maybe-written-to)
+    => Wow, bold. --Steffen :)
 - for now (until we have an AST for the whole subroutine)
   - for nodes of type Optree, assume every variable used in the tree is
     both read from and written to
