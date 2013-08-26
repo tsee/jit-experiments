@@ -22,10 +22,10 @@ OPTreeVisitor::visit(pTHX_ OP *o, OP *parentop)
 
   // Iterative tree traversal using stack
   while ( !backlog.empty() ) {
-    o = backlog.back();
-    backlog.pop_back();
-    parentop = backlog.back();
-    backlog.pop_back();
+    parentop = backlog.front();
+    backlog.pop_front();
+    o = backlog.front();
+    backlog.pop_front();
 
     status = this->visit_op(aTHX_ o, parentop);
     assert(status == VISIT_CONT || status == VISIT_ABORT || status == VISIT_SKIP);
