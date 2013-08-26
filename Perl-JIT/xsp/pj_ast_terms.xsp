@@ -66,11 +66,14 @@ class Perl::JIT::AST::NumericConstant : public Perl::JIT::AST::Constant
   unsigned int uint_value %get %set;
 };
 
-
 class Perl::JIT::AST::StringConstant : public Perl::JIT::AST::Constant
 {
   std::string string_value %get %set;
   bool is_utf8 %get %set;
+};
+
+class Perl::JIT::AST::UndefConstant : public Perl::JIT::AST::Constant
+{
 };
 
 class Perl::JIT::AST::Identifier : public Perl::JIT::AST::Term

@@ -3,6 +3,7 @@
 
 #include <string>
 
+// TODO should this have a pj_undef_type? If so, change the AST::UndefConstant class.
 enum pj_type_id {
   pj_unspecified_type,
   pj_scalar_type,

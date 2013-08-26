@@ -52,6 +52,11 @@ StringConstant::StringConstant(pTHX_ OP *p_op, SV *string_literal_sv)
   is_utf8 = (bool)SvUTF8(string_literal_sv);
 }
 
+UndefConstant::UndefConstant()
+  : Constant(NULL, new Scalar(pj_scalar_type))
+{
+}
+
 
 Identifier::Identifier(OP *p_op, pj_term_type t, Type *v_type)
 : Term(p_op, t, v_type)
@@ -149,6 +154,14 @@ StringConstant::dump(int indent_lvl)
          (is_utf8 ? "UTF8" : "binary"),
          (int)string_value.length(),
          string_value.c_str());
+}
+
+
+void
+UndefConstant::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("<undef>\n");
 }
 
 

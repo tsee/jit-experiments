@@ -102,6 +102,15 @@ namespace PerlJIT {
         { return "Perl::JIT::AST::StringConstant"; }
     };
 
+    class UndefConstant : public Constant {
+    public:
+      UndefConstant();
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::UndefConstant"; }
+    };
+
     // abstract
     class Identifier : public Term {
     public:
