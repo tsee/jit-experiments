@@ -160,7 +160,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         continue;
       }
 
-      // FIXME likely wrong. PUSHMARK assumed to be an implementation detail that is not
+      // FIXME possibly wrong. PUSHMARK assumed to be an implementation detail that is not
       //       strictly necessary in an AST listop. Totally speculative.
       if (kid->op_type == OP_PUSHMARK && !(kid->op_flags & OPf_KIDS)) {
         PJ_DEBUG_1("Skipping kid (%u) since it's an OP_PUSHMARK without kids.\n", ikid);
@@ -168,6 +168,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       }
 
       AST::Term *kid_term = pj_build_ast(aTHX_ kid, visitor);
+
+      // Handle a few special kid cases
       if (kid_term == NULL) {
         // Failed to build sub-AST, free ASTs build thus far before bailing
         PJ_DEBUG("Failed to build sub-AST - unwinding.\n");
@@ -176,7 +178,13 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
           delete *it;
         return NULL;
       }
-      kid_terms.push_back(kid_term);
+      else if (kid_term->type == pj_ttype_op && ((AST::Op *)kid_term)->optype == pj_unop_empty) {
+        // empty list is not really a kid, don't include in child list
+      }
+      else {
+        kid_terms.push_back(kid_term);
+      }
+
       if (PJ_DEBUGGING)
         printf("pj_build_ast got kid (%u, %p) of type %s in return\n", ikid, kid_term, kid_term->perl_class());
       ++ikid;
@@ -312,6 +320,28 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       ((AST::Binop *)retval)->set_assignment_form(true);
       break;
     }
+  case OP_STUB: {
+      const int gimme = OP_GIMME(o, 0);
+      if (gimme) {
+        if (gimme == OPf_WANT_SCALAR) {
+          retval = new AST::UndefConstant();
+        }
+        else { // list or void context
+          // FIXME really, empty list
+          retval = new AST::Unop(o, pj_unop_empty, NULL);
+        }
+      }
+      else { // undecidable yet
+        retval = new AST::Unop(o, pj_unop_empty, NULL);
+      }
+      break;
+    }
+  case OP_LIST:
+    if (kid_terms.size() == 1)
+      retval = kid_terms[0];
+    else
+      retval = new AST::Listop(o, pj_listop_list2scalar, kid_terms);
+    break;
     EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
     EMIT_BINOP_CODE(OP_SUBTRACT, pj_binop_subtract)
     EMIT_BINOP_CODE(OP_MULTIPLY, pj_binop_multiply)

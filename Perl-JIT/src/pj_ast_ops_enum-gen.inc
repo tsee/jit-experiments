@@ -7,6 +7,7 @@
 typedef enum {
 
   // Op class: pj_opc_unop
+  pj_unop_empty,
   pj_unop_time,
   pj_unop_times,
   pj_unop_localtime,
@@ -91,21 +92,22 @@ typedef enum {
   pj_listop_say,
   pj_listop_join,
   pj_listop_read,
+  pj_listop_list2scalar,
 
   // Op class ranges
 
-  pj_unop_FIRST = pj_unop_time,
+  pj_unop_FIRST = pj_unop_empty,
   pj_unop_LAST  = pj_unop_array_len,
 
   pj_binop_FIRST = pj_binop_add,
   pj_binop_LAST  = pj_binop_sassign,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_read,
+  pj_listop_LAST  = pj_listop_list2scalar,
 
   // Global op range:
-  pj_op_FIRST = pj_unop_time,
-  pj_op_LAST = pj_listop_read
+  pj_op_FIRST = pj_unop_empty,
+  pj_op_LAST = pj_listop_list2scalar
 } pj_op_type;
 
 #endif

@@ -40,6 +40,7 @@
   || otype == OP_LE \
   || otype == OP_LEFT_SHIFT \
   || otype == OP_LENGTH \
+  || otype == OP_LIST \
   || otype == OP_LOCALTIME \
   || otype == OP_LOG \
   || otype == OP_LT \
@@ -81,6 +82,7 @@
   || otype == OP_SQRT \
   || otype == OP_SRAND \
   || otype == OP_SREFGEN \
+  || otype == OP_STUB \
   || otype == OP_SUBSTR \
   || otype == OP_SUBTRACT \
   || otype == OP_TIME \
@@ -129,6 +131,7 @@
   || otype == OP_LE \
   || otype == OP_LEFT_SHIFT \
   || otype == OP_LENGTH \
+  || otype == OP_LIST \
   || otype == OP_LOCALTIME \
   || otype == OP_LOG \
   || otype == OP_LT \
@@ -173,6 +176,7 @@
   || otype == OP_SQRT \
   || otype == OP_SRAND \
   || otype == OP_SREFGEN \
+  || otype == OP_STUB \
   || otype == OP_SUBSTR \
   || otype == OP_SUBTRACT \
   || otype == OP_TIME \

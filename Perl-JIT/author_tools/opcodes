@@ -26,7 +26,8 @@
 # Format:
 # AST op, AST op class, op name, Perl OP, C flags, options, return type
 
-# unops (but eg. time() is really null-ary...)
+# unops (but eg. time(), OP_STUB are really null-ary...)
+pj_unop_empty,		pj_opc_unop,	(),		OP_STUB, 	KIDS_OPTIONAL,	emit,	Any # really: empty list in list/void or undef in scalar context
 pj_unop_time,		pj_opc_unop,	time(),		OP_TIME, 	KIDS_OPTIONAL,	emit,	Integer
 pj_unop_times,		pj_opc_unop,	times(),	OP_TMS, 	KIDS_OPTIONAL,	emit,	Scalar=Double List=Double Double Double Double
 pj_unop_localtime,	pj_opc_unop,	localtime(),	OP_LOCALTIME, 	KIDS_OPTIONAL,	emit,	Scalar=String List=Integer Integer Integer Integer Integer Double Integer Integer Integer
@@ -111,4 +112,5 @@ pj_listop_print,	pj_opc_listop,	print,		OP_PRINT,	0,	emit,	Any
 pj_listop_say,		pj_opc_listop,	say,		OP_SAY,		0,	emit,	Any
 pj_listop_join,		pj_opc_listop,	join,		OP_JOIN,	0,	emit,	String
 pj_listop_read,		pj_opc_listop,	read,		OP_READ,	0,	emit,	Any
+pj_listop_list2scalar,	pj_opc_listop,	list_to_scalar,	OP_LIST,	0,	emit,	Any
 
