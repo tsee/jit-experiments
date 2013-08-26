@@ -10,8 +10,9 @@ use constant {
   PERL_CONST  => 3,
   AST_FLAGS   => 4,
   OPTIONS     => 5,
+  RET_TYPE    => 6,
 };
-my @cols = (AST_CONST, AST_CLASS, AST_NAME, PERL_CONST, AST_FLAGS, OPTIONS);
+my @cols = (AST_CONST, AST_CLASS, AST_NAME, PERL_CONST, AST_FLAGS, OPTIONS, RET_TYPE);
 
 # Valid ops for generating filtering macro
 my %valid_root_ops;

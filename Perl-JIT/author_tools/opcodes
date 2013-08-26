@@ -16,90 +16,97 @@
 #! jittable_root_ops=OP_SCHOP OP_SCHOMP OP_ANDASSIGN OP_ORASSIGN OP_DORASSIGN
 #! jittable_ops=OP_CONST OP_PADSV OP_NULL OP_GVSV
 
+# Return types below are separated between Scalar and List context (Context=Type)
+# and in the absence of an =, the type goes for both contexts. The List[] type is
+# a pseudo-type to indicate returning a list of things. The Numeric type indicates
+# any of Integer, UnsignedInteger, Double.
+# In the presence of the OVERLOAD flag, the return type is only valid if the input
+# is not overloaded.
+
 # Format:
-# AST op, AST op class, op name, Perl OP, C flags, options
+# AST op, AST op class, op name, Perl OP, C flags, options, return type
 
 # unops (but eg. time() is really null-ary...)
-pj_unop_time,		pj_opc_unop,	time(),		OP_TIME, 	KIDS_OPTIONAL,	emit
-pj_unop_times,		pj_opc_unop,	times(),	OP_TMS, 	KIDS_OPTIONAL,	emit
-pj_unop_localtime,	pj_opc_unop,	localtime(),	OP_LOCALTIME, 	KIDS_OPTIONAL,	emit
-pj_unop_gmtime,		pj_opc_unop,    gmtime(),	OP_GMTIME, 	KIDS_OPTIONAL,	emit
-pj_unop_alarm,		pj_opc_unop,    alarm(),	OP_ALARM, 	KIDS_OPTIONAL,	emit
-pj_unop_sleep,		pj_opc_unop,    sleep(),	OP_SLEEP, 	KIDS_OPTIONAL,	emit
-pj_unop_negate,		pj_opc_unop,	unary -,	OP_NEGATE, 	0,	emit
-pj_unop_sin,		pj_opc_unop,	sin,		OP_SIN,		KIDS_OPTIONAL,	emit
-pj_unop_cos,		pj_opc_unop,	cos,		OP_COS,		KIDS_OPTIONAL,	emit
-pj_unop_abs,		pj_opc_unop,	abs,		OP_ABS,		KIDS_OPTIONAL,	emit
-pj_unop_sqrt,		pj_opc_unop,	sqrt,		OP_SQRT,	KIDS_OPTIONAL,	emit
-pj_unop_log,		pj_opc_unop,	log,		OP_LOG,		KIDS_OPTIONAL,	emit
-pj_unop_exp,		pj_opc_unop,	exp,		OP_EXP,		KIDS_OPTIONAL,	emit
-pj_unop_perl_int,	pj_opc_unop,	int,		OP_INT,		KIDS_OPTIONAL,	emit
-pj_unop_bitwise_not,	pj_opc_unop,	~,		OP_COMPLEMENT,	0,	emit
-pj_unop_bool_not,	pj_opc_unop,	!,		OP_NOT,		0,	emit
-pj_unop_defined,	pj_opc_unop,	defined,	OP_DEFINED,	KIDS_OPTIONAL,	emit
-pj_unop_rand,		pj_opc_unop,	rand,		OP_RAND,	KIDS_OPTIONAL,	emit
-pj_unop_srand,		pj_opc_unop,	srand,		OP_SRAND,	KIDS_OPTIONAL,	emit
-pj_unop_hex,		pj_opc_unop,	hex,		OP_HEX,		KIDS_OPTIONAL,	emit
-pj_unop_oct,		pj_opc_unop,	oct,		OP_OCT,		KIDS_OPTIONAL,	emit
-pj_unop_length,		pj_opc_unop,	length,		OP_LENGTH,	KIDS_OPTIONAL,	emit
-pj_unop_ord,		pj_opc_unop,	ord,		OP_ORD,		KIDS_OPTIONAL,	emit
-pj_unop_chr,		pj_opc_unop,	chr,		OP_CHR,		KIDS_OPTIONAL,	emit
-pj_unop_lc,		pj_opc_unop,	lc,		OP_LC,		KIDS_OPTIONAL,	emit
-pj_unop_uc,		pj_opc_unop,	uc,		OP_UC,		KIDS_OPTIONAL,	emit
-pj_unop_lcfirst,	pj_opc_unop,	lcfirst,	OP_LCFIRST,	KIDS_OPTIONAL,	emit
-pj_unop_ucfirst,	pj_opc_unop,	ucfirst,	OP_UCFIRST,	KIDS_OPTIONAL,	emit
-pj_unop_quotemeta,	pj_opc_unop,	quotemeta,	OP_QUOTEMETA,	KIDS_OPTIONAL,	emit
-pj_unop_preinc,		pj_opc_unop,	++(),		OP_PREINC,	0,	emit
-pj_unop_postinc,	pj_opc_unop,	()++,		OP_POSTINC,	0,	emit
-pj_unop_predec,		pj_opc_unop,	--(),		OP_PREDEC,	0,	emit
-pj_unop_postdec,	pj_opc_unop,	()--,		OP_POSTDEC,	0,	emit
-pj_unop_undef,		pj_opc_unop,	undef(),	OP_UNDEF,	KIDS_OPTIONAL,	emit
-pj_unop_sv_deref,	pj_opc_unop,	sv_deref,	OP_RV2SV,	0,	emit
-pj_unop_sv_ref,		pj_opc_unop,	sv_ref,		OP_SREFGEN,	0,	emit
-pj_unop_getc,		pj_opc_unop,	getc,		OP_GETC,	KIDS_OPTIONAL,	emit
+pj_unop_time,		pj_opc_unop,	time(),		OP_TIME, 	KIDS_OPTIONAL,	emit,	Integer
+pj_unop_times,		pj_opc_unop,	times(),	OP_TMS, 	KIDS_OPTIONAL,	emit,	Scalar=Double List=List[Double Double Double Double]
+pj_unop_localtime,	pj_opc_unop,	localtime(),	OP_LOCALTIME, 	KIDS_OPTIONAL,	emit,	Scalar=String List=List[Integer Integer Integer Integer Integer Double Integer Integer Integer]
+pj_unop_gmtime,		pj_opc_unop,    gmtime(),	OP_GMTIME, 	KIDS_OPTIONAL,	emit,	Scalar=String List=List[Integer Integer Integer Integer Integer Double Integer Integer Integer]
+pj_unop_alarm,		pj_opc_unop,    alarm(),	OP_ALARM, 	KIDS_OPTIONAL,	emit,   Any
+pj_unop_sleep,		pj_opc_unop,    sleep(),	OP_SLEEP, 	KIDS_OPTIONAL,	emit,	Integer
+pj_unop_negate,		pj_opc_unop,	unary -,	OP_NEGATE, 	OVERLOAD,	emit,	Numeric
+pj_unop_sin,		pj_opc_unop,	sin,		OP_SIN,		KIDS_OPTIONAL|OVERLOAD,	emit,	Double
+pj_unop_cos,		pj_opc_unop,	cos,		OP_COS,		KIDS_OPTIONAL|OVERLOAD,	emit,	Double
+pj_unop_abs,		pj_opc_unop,	abs,		OP_ABS,		KIDS_OPTIONAL|OVERLOAD,	emit,	Numeric
+pj_unop_sqrt,		pj_opc_unop,	sqrt,		OP_SQRT,	KIDS_OPTIONAL|OVERLOAD,	emit,	Double
+pj_unop_log,		pj_opc_unop,	log,		OP_LOG,		KIDS_OPTIONAL|OVERLOAD,	emit,	Double
+pj_unop_exp,		pj_opc_unop,	exp,		OP_EXP,		KIDS_OPTIONAL|OVERLOAD,	emit,	Double
+pj_unop_perl_int,	pj_opc_unop,	int,		OP_INT,		KIDS_OPTIONAL|OVERLOAD,	emit,	Numeric # type could be Integer or UnsignedInteger if we ignore IV/UV => NV size spill.
+pj_unop_bitwise_not,	pj_opc_unop,	~,		OP_COMPLEMENT,	OVERLOAD,	emit,	Any
+pj_unop_bool_not,	pj_opc_unop,	!,		OP_NOT,		OVERLOAD,	emit,	Integer
+pj_unop_defined,	pj_opc_unop,	defined,	OP_DEFINED,	KIDS_OPTIONAL,	emit,	Integer
+pj_unop_rand,		pj_opc_unop,	rand,		OP_RAND,	KIDS_OPTIONAL,	emit,	Double
+pj_unop_srand,		pj_opc_unop,	srand,		OP_SRAND,	KIDS_OPTIONAL,	emit,	UnsignedInteger
+pj_unop_hex,		pj_opc_unop,	hex,		OP_HEX,		KIDS_OPTIONAL,	emit,	Numeric
+pj_unop_oct,		pj_opc_unop,	oct,		OP_OCT,		KIDS_OPTIONAL,	emit,	Numeric
+pj_unop_length,		pj_opc_unop,	length,		OP_LENGTH,	KIDS_OPTIONAL,	emit,	Any # may be undef :(
+pj_unop_ord,		pj_opc_unop,	ord,		OP_ORD,		KIDS_OPTIONAL,	emit,	UnsignedInteger
+pj_unop_chr,		pj_opc_unop,	chr,		OP_CHR,		KIDS_OPTIONAL,	emit,	String
+pj_unop_lc,		pj_opc_unop,	lc,		OP_LC,		KIDS_OPTIONAL,	emit,	String
+pj_unop_uc,		pj_opc_unop,	uc,		OP_UC,		KIDS_OPTIONAL,	emit,	String
+pj_unop_lcfirst,	pj_opc_unop,	lcfirst,	OP_LCFIRST,	KIDS_OPTIONAL,	emit,	String
+pj_unop_ucfirst,	pj_opc_unop,	ucfirst,	OP_UCFIRST,	KIDS_OPTIONAL,	emit,	String
+pj_unop_quotemeta,	pj_opc_unop,	quotemeta,	OP_QUOTEMETA,	KIDS_OPTIONAL,	emit,	String
+pj_unop_preinc,		pj_opc_unop,	++(),		OP_PREINC,	OVERLOAD,	emit,	Any
+pj_unop_postinc,	pj_opc_unop,	()++,		OP_POSTINC,	OVERLOAD,	emit,	Any
+pj_unop_predec,		pj_opc_unop,	--(),		OP_PREDEC,	OVERLOAD,	emit,	Any
+pj_unop_postdec,	pj_opc_unop,	()--,		OP_POSTDEC,	OVERLOAD,	emit,	Any
+pj_unop_undef,		pj_opc_unop,	undef(),	OP_UNDEF,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_sv_deref,	pj_opc_unop,	sv_deref,	OP_RV2SV,	OVERLAOD,	emit,	Any
+pj_unop_sv_ref,		pj_opc_unop,	sv_ref,		OP_SREFGEN,	0,	emit,	Scalar
+pj_unop_getc,		pj_opc_unop,	getc,		OP_GETC,	KIDS_OPTIONAL,	emit,	Any
 
 # binops
-pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		HAS_ASSIGNMENT_FORM,	emit
-pj_binop_subtract,	pj_opc_binop,	-,		OP_SUBTRACT,	HAS_ASSIGNMENT_FORM,	emit
-pj_binop_multiply,	pj_opc_binop,	*,		OP_MULTIPLY,	HAS_ASSIGNMENT_FORM,	emit
-pj_binop_divide,	pj_opc_binop,	/,		OP_DIVIDE,	HAS_ASSIGNMENT_FORM,	emit
-pj_binop_modulo,	pj_opc_binop,	%,		OP_MODULO,	HAS_ASSIGNMENT_FORM,	emit
-pj_binop_atan2,		pj_opc_binop,	atan2,		OP_ATAN2,	0,	emit
-pj_binop_pow,		pj_opc_binop,	pow,		OP_POW,		0,	emit
-pj_binop_left_shift,	pj_opc_binop,	<<,		OP_LEFT_SHIFT,	HAS_ASSIGNMENT_FORM,	emit
-pj_binop_right_shift,	pj_opc_binop,	>>,		OP_RIGHT_SHIFT,	HAS_ASSIGNMENT_FORM,	emit
-pj_binop_bitwise_and,	pj_opc_binop,	&,		OP_BIT_AND,	HAS_ASSIGNMENT_FORM,	emit
-pj_binop_bitwise_or,	pj_opc_binop,	|,		OP_BIT_OR,	HAS_ASSIGNMENT_FORM,	emit
-pj_binop_bitwise_xor,	pj_opc_binop,	^,		OP_BIT_XOR,	HAS_ASSIGNMENT_FORM,	emit
-pj_binop_num_eq,	pj_opc_binop,	==,		OP_EQ,		0,	emit
-pj_binop_num_ne,	pj_opc_binop,	!=,		OP_NE,		0,	emit
-pj_binop_num_lt,	pj_opc_binop,	<,		OP_LT,		0,	emit
-pj_binop_num_le,	pj_opc_binop,	<=,		OP_LE,		0,	emit
-pj_binop_num_gt,	pj_opc_binop,	>,		OP_GT,		0,	emit
-pj_binop_num_ge,	pj_opc_binop,	>=,		OP_GE,		0,	emit
-pj_binop_num_cmp,	pj_opc_binop,	<=>,		OP_NCMP,	0,	emit
-pj_binop_str_eq,	pj_opc_binop,	eq,		OP_SEQ,		0,	emit
-pj_binop_str_ne,	pj_opc_binop,	ne,		OP_SNE,		0,	emit
-pj_binop_str_lt,	pj_opc_binop,	lt,		OP_SLT,		0,	emit
-pj_binop_str_le,	pj_opc_binop,	le,		OP_SLE,		0,	emit
-pj_binop_str_gt,	pj_opc_binop,	gt,		OP_SGT,		0,	emit
-pj_binop_str_ge,	pj_opc_binop,	ge,		OP_SGE,		0,	emit
-pj_binop_str_cmp,	pj_opc_binop,	cmp,		OP_SCMP,	0,	emit
-pj_binop_bool_and,	pj_opc_binop,	&&,		OP_AND,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot
-pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot
-pj_binop_definedor,	pj_opc_binop,	//,		OP_DOR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot
-pj_binop_concat,	pj_opc_binop,	concat,		OP_CONCAT,	HAS_ASSIGNMENT_FORM,	emit
-pj_binop_sassign,	pj_opc_binop,	sassign,	OP_SASSIGN,	0,	emit
+pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric
+pj_binop_subtract,	pj_opc_binop,	-,		OP_SUBTRACT,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric
+pj_binop_multiply,	pj_opc_binop,	*,		OP_MULTIPLY,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric
+pj_binop_divide,	pj_opc_binop,	/,		OP_DIVIDE,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric
+pj_binop_modulo,	pj_opc_binop,	%,		OP_MODULO,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric
+pj_binop_atan2,		pj_opc_binop,	atan2,		OP_ATAN2,	OVERLOAD,	emit,	Numeric
+pj_binop_pow,		pj_opc_binop,	pow,		OP_POW,		OVERLOAD,	emit,	Numeric
+pj_binop_left_shift,	pj_opc_binop,	<<,		OP_LEFT_SHIFT,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric # Integer|UnsignedInteger. Indicated by private hint flag
+pj_binop_right_shift,	pj_opc_binop,	>>,		OP_RIGHT_SHIFT,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric # Integer|UnsignedInteger. Indicated by private hint flag
+pj_binop_bitwise_and,	pj_opc_binop,	&,		OP_BIT_AND,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Any # Uses private hint flag for output
+pj_binop_bitwise_or,	pj_opc_binop,	|,		OP_BIT_OR,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Any # Uses private hint flag for output
+pj_binop_bitwise_xor,	pj_opc_binop,	^,		OP_BIT_XOR,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Any # Uses private hint flag for output
+pj_binop_num_eq,	pj_opc_binop,	==,		OP_EQ,		OVERLOAD,	emit,	Integer
+pj_binop_num_ne,	pj_opc_binop,	!=,		OP_NE,		OVERLOAD,	emit,	Integer
+pj_binop_num_lt,	pj_opc_binop,	<,		OP_LT,		OVERLOAD,	emit,	Integer
+pj_binop_num_le,	pj_opc_binop,	<=,		OP_LE,		OVERLOAD,	emit,	Integer
+pj_binop_num_gt,	pj_opc_binop,	>,		OP_GT,		OVERLOAD,	emit,	Integer
+pj_binop_num_ge,	pj_opc_binop,	>=,		OP_GE,		OVERLOAD,	emit,	Integer
+pj_binop_num_cmp,	pj_opc_binop,	<=>,		OP_NCMP,	OVERLOAD,	emit,	Integer
+pj_binop_str_eq,	pj_opc_binop,	eq,		OP_SEQ,		OVERLOAD,	emit,	Integer
+pj_binop_str_ne,	pj_opc_binop,	ne,		OP_SNE,		OVERLOAD,	emit,	Integer
+pj_binop_str_lt,	pj_opc_binop,	lt,		OP_SLT,		OVERLOAD,	emit,	Integer
+pj_binop_str_le,	pj_opc_binop,	le,		OP_SLE,		OVERLOAD,	emit,	Integer
+pj_binop_str_gt,	pj_opc_binop,	gt,		OP_SGT,		OVERLOAD,	emit,	Integer
+pj_binop_str_ge,	pj_opc_binop,	ge,		OP_SGE,		OVERLOAD,	emit,	Integer
+pj_binop_str_cmp,	pj_opc_binop,	cmp,		OP_SCMP,	OVERLOAD,	emit,	Integer
+pj_binop_bool_and,	pj_opc_binop,	&&,		OP_AND,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot,	Any
+pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot,	Any
+pj_binop_definedor,	pj_opc_binop,	//,		OP_DOR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot,	Any
+pj_binop_concat,	pj_opc_binop,	concat,		OP_CONCAT,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	String
+pj_binop_sassign,	pj_opc_binop,	sassign,	OP_SASSIGN,	OVERLOAD,	emit,	Any
 
 # listops
-pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit
-pj_listop_substr,	pj_opc_listop,	substr,		OP_SUBSTR,	0,	emit
-pj_listop_chop,		pj_opc_listop,	chop,		OP_CHOP,	0,	emit
-pj_listop_chomp,	pj_opc_listop,	chomp,		OP_CHOMP,	0,	emit
-pj_listop_vec,		pj_opc_listop,	vec,		OP_VEC,		0,	emit
-pj_listop_sprintf,	pj_opc_listop,	sprintf,	OP_SPRINTF,	0,	emit
-pj_listop_printf,	pj_opc_listop,	printf,		OP_PRTF,	0,	emit
-pj_listop_print,	pj_opc_listop,	print,		OP_PRINT,	0,	emit
-pj_listop_say,		pj_opc_listop,	say,		OP_SAY,		0,	emit
-pj_listop_join,		pj_opc_listop,	join,		OP_JOIN,	0,	emit
-pj_listop_read,		pj_opc_listop,	read,		OP_READ,	0,	emit
+pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any
+pj_listop_substr,	pj_opc_listop,	substr,		OP_SUBSTR,	0,	emit,	Any # can return undef
+pj_listop_chop,		pj_opc_listop,	chop,		OP_CHOP,	0,	emit,	String
+pj_listop_chomp,	pj_opc_listop,	chomp,		OP_CHOMP,	0,	emit,	String
+pj_listop_vec,		pj_opc_listop,	vec,		OP_VEC,		0,	emit,	UnsignedInteger
+pj_listop_sprintf,	pj_opc_listop,	sprintf,	OP_SPRINTF,	0,	emit,	String
+pj_listop_printf,	pj_opc_listop,	printf,		OP_PRTF,	0,	emit,	Any
+pj_listop_print,	pj_opc_listop,	print,		OP_PRINT,	0,	emit,	Any
+pj_listop_say,		pj_opc_listop,	say,		OP_SAY,		0,	emit,	Any
+pj_listop_join,		pj_opc_listop,	join,		OP_JOIN,	0,	emit,	String
+pj_listop_read,		pj_opc_listop,	read,		OP_READ,	0,	emit,	Any
