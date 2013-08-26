@@ -17,9 +17,9 @@
 #! jittable_ops=OP_CONST OP_PADSV OP_NULL OP_GVSV
 
 # Return types below are separated between Scalar and List context (Context=Type)
-# and in the absence of an =, the type goes for both contexts. The List[] type is
-# a pseudo-type to indicate returning a list of things. The Numeric type indicates
-# any of Integer, UnsignedInteger, Double.
+# and in the absence of an =, the type goes for both contexts. The Numeric type
+# indicates any of Integer, UnsignedInteger, Double. A space separated list of types
+# indicates a list of return values.
 # In the presence of the OVERLOAD flag, the return type is only valid if the input
 # is not overloaded.
 
@@ -28,9 +28,9 @@
 
 # unops (but eg. time() is really null-ary...)
 pj_unop_time,		pj_opc_unop,	time(),		OP_TIME, 	KIDS_OPTIONAL,	emit,	Integer
-pj_unop_times,		pj_opc_unop,	times(),	OP_TMS, 	KIDS_OPTIONAL,	emit,	Scalar=Double List=List[Double Double Double Double]
-pj_unop_localtime,	pj_opc_unop,	localtime(),	OP_LOCALTIME, 	KIDS_OPTIONAL,	emit,	Scalar=String List=List[Integer Integer Integer Integer Integer Double Integer Integer Integer]
-pj_unop_gmtime,		pj_opc_unop,    gmtime(),	OP_GMTIME, 	KIDS_OPTIONAL,	emit,	Scalar=String List=List[Integer Integer Integer Integer Integer Double Integer Integer Integer]
+pj_unop_times,		pj_opc_unop,	times(),	OP_TMS, 	KIDS_OPTIONAL,	emit,	Scalar=Double List=Double Double Double Double
+pj_unop_localtime,	pj_opc_unop,	localtime(),	OP_LOCALTIME, 	KIDS_OPTIONAL,	emit,	Scalar=String List=Integer Integer Integer Integer Integer Double Integer Integer Integer
+pj_unop_gmtime,		pj_opc_unop,    gmtime(),	OP_GMTIME, 	KIDS_OPTIONAL,	emit,	Scalar=String List=Integer Integer Integer Integer Integer Double Integer Integer Integer
 pj_unop_alarm,		pj_opc_unop,    alarm(),	OP_ALARM, 	KIDS_OPTIONAL,	emit,   Any
 pj_unop_sleep,		pj_opc_unop,    sleep(),	OP_SLEEP, 	KIDS_OPTIONAL,	emit,	Integer
 pj_unop_negate,		pj_opc_unop,	unary -,	OP_NEGATE, 	OVERLOAD,	emit,	Numeric
