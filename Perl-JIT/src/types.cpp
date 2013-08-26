@@ -18,6 +18,7 @@ pj_type_id Scalar::tag() const
   return _tag;
 }
 
+#define ANY         "Any"
 #define SCALAR      "Scalar"
 #define STRING      "String"
 #define DOUBLE      "Double"
@@ -36,6 +37,7 @@ namespace PerlJIT {
   namespace AST {
     Type *parse_type(const string &str)
     {
+      PARSE_SCALAR(ANY, pj_unspecified_type);
       PARSE_SCALAR(SCALAR, pj_scalar_type);
       PARSE_SCALAR(STRING, pj_string_type);
       PARSE_SCALAR(DOUBLE, pj_double_type);
@@ -47,6 +49,7 @@ namespace PerlJIT {
 
     bool is_type(const string &str)
     {
+      CHECK_SCALAR(ANY);
       CHECK_SCALAR(SCALAR);
       CHECK_SCALAR(STRING);
       CHECK_SCALAR(DOUBLE);
