@@ -87,6 +87,7 @@ static const char *pj_ast_op_names[] = {
   "join",           // pj_listop_join        (pj_opc_listop)
   "read",           // pj_listop_read        (pj_opc_listop)
   "list_to_scalar", // pj_listop_list2scalar (pj_opc_listop)
+  "return",         // pj_listop_return      (pj_opc_listop)
 };
 
 static unsigned int pj_ast_op_flags[] = {
@@ -172,6 +173,7 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_listop_join        (pj_opc_listop)
   0,                                                    // pj_listop_read        (pj_opc_listop)
   0,                                                    // pj_listop_list2scalar (pj_opc_listop)
+  0,                                                    // pj_listop_return      (pj_opc_listop)
 };
 
 #endif

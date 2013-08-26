@@ -113,4 +113,5 @@ pj_listop_say,		pj_opc_listop,	say,		OP_SAY,		0,	emit,	Any
 pj_listop_join,		pj_opc_listop,	join,		OP_JOIN,	0,	emit,	String
 pj_listop_read,		pj_opc_listop,	read,		OP_READ,	0,	emit,	Any
 pj_listop_list2scalar,	pj_opc_listop,	list_to_scalar,	OP_LIST,	0,	emit,	Any
+pj_listop_return,	pj_opc_listop,	return,		OP_RETURN,	0,	emit,	Any
 
