@@ -29,6 +29,9 @@ class Perl::JIT::AST::Op : public Perl::JIT::AST::Term
 
   bool kids_are_optional() const
     %code{% RETVAL = THIS->flags() & PJ_ASTf_KIDS_OPTIONAL; %};
+
+  bool may_have_explicit_overload() const
+    %code{% RETVAL = THIS->flags() & PJ_ASTf_OVERLOAD; %};
 };
 
 class Perl::JIT::AST::Unop : public Perl::JIT::AST::Op
