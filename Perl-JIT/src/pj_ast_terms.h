@@ -37,6 +37,8 @@ typedef enum {
 #define PJ_ASTf_KIDS_OPTIONAL (1<<1)
 // Indicates that the op has an assignment form (e.g. +=, &&=, ...)
 #define PJ_ASTf_HAS_ASSIGNMENT_FORM (1<<2)
+// Indicates that the op may have overloading
+#define PJ_ASTf_OVERLOAD (1<<3)
 
 namespace PerlJIT {
   namespace AST {
