@@ -87,6 +87,7 @@ EMIT_LISTOP_CODE(OP_SAY, pj_listop_say)
 EMIT_LISTOP_CODE(OP_JOIN, pj_listop_join)
 EMIT_LISTOP_CODE(OP_READ, pj_listop_read)
 EMIT_LISTOP_CODE(OP_RETURN, pj_listop_return)
+EMIT_LISTOP_CODE(OP_REVERSE, pj_listop_reverse)
 
 
 #endif

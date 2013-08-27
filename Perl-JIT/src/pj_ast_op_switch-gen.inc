@@ -64,6 +64,7 @@
   || otype == OP_RAND \
   || otype == OP_READ \
   || otype == OP_RETURN \
+  || otype == OP_REVERSE \
   || otype == OP_RIGHT_SHIFT \
   || otype == OP_RV2SV \
   || otype == OP_SASSIGN \
@@ -159,6 +160,7 @@
   || otype == OP_RAND \
   || otype == OP_READ \
   || otype == OP_RETURN \
+  || otype == OP_REVERSE \
   || otype == OP_RIGHT_SHIFT \
   || otype == OP_RV2SV \
   || otype == OP_SASSIGN \
