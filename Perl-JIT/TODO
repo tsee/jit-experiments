@@ -10,15 +10,17 @@
   - test!
 * Context
 * LVALUE context for assignments
-* JIT assignments, =, +=
-  - list assignments ($x, $y) = ($y, $x)
+* JIT assignments
+  - scalar
+  - "simple" list assignment
+  - list assignments with OPf_COMMON: ($x, $y) = ($y, $x)
+  - analyze control flow and avoid always assigning to the Perl scalar
+    (see also doc/codegen.txt)
 * Port to LLVM instead of libjit?
 * Support everything the old JIT does
 * Fix Emit code
 * Check support for logical/ternary ops
-* Refactor AST construction logic
-  * richer type system
-* Support more type than just doubles (at least at the AST level)
+* Support more type than just doubles in code generator
 * Fix all TODOs in Emit.pm
 * Think about integrating guards at runtime
 * Extract information from subs
@@ -26,16 +28,10 @@
   - inline call for "simple" subs
     - but think about caller
 * Globals (for $_)
-* Use a custom peephole to handle type annotations
-  current "solution" in xsp/attributes.xsp requires to hook
-  attributes::import
-* Look into replacing attributes with a parser plugin
 * Ownership for C++ objects (Type instances created from Perl need to be
   cleaned up (unless assigned to an AST node))
 * Overloading to Type instances and LibJIT types; ${$t1} == ${$t2}
   is disgusting
-* Make $fun an attribute; on the one hand is not really part of object state,
-  on the other hand passing it explicitly to every function is becoming silly
 * in Emit.pm, "unspecified" currently means "a plain scalar", which feels wrong
   and there is no "I don't care" value that can be used for requested type
 
