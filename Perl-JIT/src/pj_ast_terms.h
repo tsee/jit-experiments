@@ -27,6 +27,9 @@ typedef enum {
   pj_opc_listop
 } pj_op_class;
 
+// These fly in close formation with the OPf_WANT* flags in core
+// in that pj_context_void/scalar/list map to the corresponding flags in
+// their numeric values 1/2/3 or else using OP_GIMME wouldn't work.
 typedef enum {
   pj_context_caller,
   pj_context_void,
