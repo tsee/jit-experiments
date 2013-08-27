@@ -123,6 +123,16 @@ namespace PerlJIT {
 }
 
 
+static void
+pj_free_term_vector(pTHX_ vector<PerlJIT::AST::Term *> &kids)
+{
+  vector<PerlJIT::AST::Term *>::iterator it = kids.begin();
+  for (; it != kids.end(); ++it) {
+    if (*it != NULL)
+      delete *it;
+  }
+}
+
 /* Walk OP tree recursively, build ASTs, build subtrees */
 static PerlJIT::AST::Term *
 pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
@@ -173,13 +183,12 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       if (kid_term == NULL) {
         // Failed to build sub-AST, free ASTs build thus far before bailing
         PJ_DEBUG("Failed to build sub-AST - unwinding.\n");
-        vector<PerlJIT::AST::Term *>::iterator it = kid_terms.begin();
-        for (; it != kid_terms.end(); ++it)
-          delete *it;
+        pj_free_term_vector(aTHX_ kid_terms);
         return NULL;
       }
       else if (kid_term->type == pj_ttype_op && ((AST::Op *)kid_term)->optype == pj_unop_empty) {
         // empty list is not really a kid, don't include in child list
+        delete kid_term;
       }
       else {
         kid_terms.push_back(kid_term);
@@ -260,6 +269,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     //  retval = visitor.get_declaration(o, o);
     //else
     retval = new AST::Variable(o, NULL); // FIXME want to support a declaration, too! (our)
+    pj_free_term_vector(aTHX_ kid_terms);
     break;
   case OP_NULL:
     if (kid_terms.size() == 1) {
@@ -279,6 +289,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
           PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
           pj_find_jit_candidates_internal(aTHX_ o, visitor);
           retval = new AST::Optree(o);
+          pj_free_term_vector(aTHX_ kid_terms);
           break;
         }
       }
@@ -287,6 +298,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
       pj_find_jit_candidates_internal(aTHX_ o, visitor);
       retval = new AST::Optree(o);
+      pj_free_term_vector(aTHX_ kid_terms);
     }
     break;
   case OP_ANDASSIGN:
@@ -334,6 +346,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       else { // undecidable yet
         retval = new AST::Unop(o, pj_unop_empty, NULL);
       }
+      pj_free_term_vector(aTHX_ kid_terms); // if any...
       break;
     }
   case OP_LIST:
