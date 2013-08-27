@@ -160,7 +160,7 @@ static unsigned int pj_ast_op_flags[] = {
   PJ_ASTf_KIDS_CONDITIONAL|PJ_ASTf_HAS_ASSIGNMENT_FORM, // pj_binop_bool_or      (pj_opc_binop)
   PJ_ASTf_KIDS_CONDITIONAL|PJ_ASTf_HAS_ASSIGNMENT_FORM, // pj_binop_definedor    (pj_opc_binop)
   PJ_ASTf_HAS_ASSIGNMENT_FORM|PJ_ASTf_OVERLOAD,         // pj_binop_concat       (pj_opc_binop)
-  PJ_ASTf_OVERLOAD,                                     // pj_binop_sassign      (pj_opc_binop)
+  PJ_ASTf_KIDS_OPTIONAL|PJ_ASTf_OVERLOAD,               // pj_binop_sassign      (pj_opc_binop)
   PJ_ASTf_KIDS_CONDITIONAL,                             // pj_listop_ternary     (pj_opc_listop)
   0,                                                    // pj_listop_substr      (pj_opc_listop)
   0,                                                    // pj_listop_chop        (pj_opc_listop)

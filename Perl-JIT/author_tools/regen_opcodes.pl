@@ -112,7 +112,7 @@ close $enum_fh;
 my $op_switch_fh = prep_ast_gen_op_switch_file();
 print $op_switch_fh "// Macros to determine which Perl OPs to ASTify\n";
 foreach my $op (@op_defs) {
-  if (not(grep $_ eq 'nonroot', split /\|/, $op->[OPTIONS])) {
+  if (not has_option($op, "nonroot")) {
     $valid_root_ops{ $op->[PERL_CONST] } = 1;
   }
   $valid_ops{ $op->[PERL_CONST] } = 1;
@@ -126,6 +126,25 @@ print $op_switch_fh ")\n\n";
 
 print $op_switch_fh "\n\n#endif\n";
 close $op_switch_fh;
+
+my $optree_emit_fh = prep_optree_emit_file();
+print $optree_emit_fh "// case X: for the things that are simple to emit based on their Op class\n\n";
+foreach my $op (@op_defs) {
+  if (has_option($op, "emit")) {
+    my $optional = has_flag($op, "KIDS_OPTIONAL") ? "_OPTIONAL" : "";
+
+    my $optype = $op->[AST_CLASS] eq 'pj_opc_unop'   ? 'UNOP'
+               : $op->[AST_CLASS] eq 'pj_opc_binop'  ? 'BINOP'
+               : $op->[AST_CLASS] eq 'pj_opc_listop' ? 'LISTOP'
+               : die "Unrecognized AST class: '$op->[AST_CONST]'!";
+
+    print $optree_emit_fh "EMIT_${optype}_CODE$optional("
+                          . $op->[PERL_CONST]
+                          . ", " . $op->[AST_CONST].")\n";
+  }
+}
+print $optree_emit_fh "\n\n#endif\n";
+close $optree_emit_fh;
 
 
 sub generic_header {
@@ -162,6 +181,13 @@ sub prep_ast_gen_op_switch_file {
   return $data_fh;
 }
 
+sub prep_optree_emit_file {
+  my $file = "src/pj_ast_optree_emit-gen.inc";
+  open my $data_fh, ">", $file or die $!;
+  generic_header($data_fh, "PJ_AST_OPTREE_EMIT_GEN_INC_");
+  return $data_fh;
+}
+
 sub max_col_length {
   my $ary = shift;
   my $index = shift;
@@ -193,3 +219,23 @@ sub find_first_last_of_class {
   push @first_and_last, [$cur_class, $first_of_class, $prev->[AST_CONST]];
   return \@first_and_last;
 }
+
+sub has_option {
+  my $op = shift;
+  my $option = shift;
+  # HOBO CACHE!
+  if (!defined($op->[20+OPTIONS])) {
+    $op->[20+OPTIONS] = { map {$_ => 1} split /\|/, $op->[OPTIONS] };
+  }
+  return exists $op->[20+OPTIONS]->{$option};
+};
+
+sub has_flag {
+  my $op = shift;
+  my $flag = shift;
+  # HOBO CACHE!
+  if (!defined($op->[20+AST_FLAGS])) {
+    $op->[20+AST_FLAGS] = { map {$_ => 1} split /\|/, $op->[AST_FLAGS] };
+  }
+  return exists $op->[20+AST_FLAGS]->{"PJ_ASTf_$flag"};
+};

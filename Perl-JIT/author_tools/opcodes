@@ -27,7 +27,7 @@
 # AST op, AST op class, op name, Perl OP, C flags, options, return type
 
 # unops (but eg. time(), OP_STUB are really null-ary...)
-pj_unop_empty,		pj_opc_unop,	(),		OP_STUB, 	KIDS_OPTIONAL,	emit,	Any # really: empty list in list/void or undef in scalar context
+pj_unop_empty,		pj_opc_unop,	(),		OP_STUB, 	KIDS_OPTIONAL,	,	Any # really: empty list in list/void or undef in scalar context
 pj_unop_time,		pj_opc_unop,	time(),		OP_TIME, 	KIDS_OPTIONAL,	emit,	Integer
 pj_unop_times,		pj_opc_unop,	times(),	OP_TMS, 	KIDS_OPTIONAL,	emit,	Scalar=Double List=Double Double Double Double
 pj_unop_localtime,	pj_opc_unop,	localtime(),	OP_LOCALTIME, 	KIDS_OPTIONAL,	emit,	Scalar=String List=Integer Integer Integer Integer Integer Double Integer Integer Integer
@@ -98,7 +98,7 @@ pj_binop_bool_and,	pj_opc_binop,	&&,		OP_AND,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_F
 pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot,	Any
 pj_binop_definedor,	pj_opc_binop,	//,		OP_DOR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot,	Any
 pj_binop_concat,	pj_opc_binop,	concat,		OP_CONCAT,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	String
-pj_binop_sassign,	pj_opc_binop,	sassign,	OP_SASSIGN,	OVERLOAD,	emit,	Any
+pj_binop_sassign,	pj_opc_binop,	sassign,	OP_SASSIGN,	KIDS_OPTIONAL|OVERLOAD,	emit,	Any
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any
@@ -112,6 +112,6 @@ pj_listop_print,	pj_opc_listop,	print,		OP_PRINT,	0,	emit,	Any
 pj_listop_say,		pj_opc_listop,	say,		OP_SAY,		0,	emit,	Any
 pj_listop_join,		pj_opc_listop,	join,		OP_JOIN,	0,	emit,	String
 pj_listop_read,		pj_opc_listop,	read,		OP_READ,	0,	emit,	Any
-pj_listop_list2scalar,	pj_opc_listop,	list_to_scalar,	OP_LIST,	0,	emit,	Any
+pj_listop_list2scalar,	pj_opc_listop,	list_to_scalar,	OP_LIST,	0,	,	Any
 pj_listop_return,	pj_opc_listop,	return,		OP_RETURN,	0,	emit,	Any
 
