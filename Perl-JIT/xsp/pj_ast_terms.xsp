@@ -104,3 +104,8 @@ class Perl::JIT::AST::Statement : public Perl::JIT::AST::Term
 {
   std::vector<Perl::JIT::AST::Term *> kids %get;
 };
+
+class Perl::JIT::AST::StatementSequence : public Perl::JIT::AST::Term
+{
+  std::vector<Perl::JIT::AST::Term *> kids %get;
+};

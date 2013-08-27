@@ -61,7 +61,7 @@ namespace PerlJIT {
   {
   public:
     OPTreeJITCandidateFinder(pTHX_ CV *cv)
-      : containing_cv(cv), last_nextstate(NULL)
+      : containing_cv(cv), last_nextstate(NULL), current_sequence(NULL)
     {
       // typed_declarations may end up being NULL!
       if (cv != NULL)
@@ -85,16 +85,31 @@ namespace PerlJIT {
       if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype)) {
         PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
         if (ast) {
-          if (last_nextstate && last_nextstate->op_sibling == o) {
-            ast = new AST::Statement(last_nextstate, ast);
-          }
+          if (last_nextstate && last_nextstate->op_sibling == o)
+            create_statement(ast);
+          else
+            candidates.push_back(ast);
           last_nextstate = NULL;
-          candidates.push_back(ast);
         }
         return VISIT_SKIP;
       }
       return VISIT_CONT;
     } // end 'visit_op'
+
+    void
+    create_statement(AST::Term *expression)
+    {
+      AST::Statement *stmt = new AST::Statement(last_nextstate, expression);
+
+      if (!current_sequence ||
+          !current_sequence->kids.back()->perl_op->op_sibling ||
+          current_sequence->kids.back()->perl_op->op_sibling->op_sibling != last_nextstate) {
+        current_sequence = new AST::StatementSequence();
+        candidates.push_back(current_sequence);
+      }
+
+      current_sequence->kids.push_back(stmt);
+    }
 
     // Declaration points to an op with OPpLVAL_INTRO, reference points
     // the op that is being processed (which might or might not have the
@@ -130,6 +145,7 @@ namespace PerlJIT {
     CV *containing_cv;
     pj_declaration_map_t *typed_declarations;
     OP *last_nextstate;
+    AST::StatementSequence *current_sequence;
   }; // end class OPTreeJITCandidateFinder
 }
 

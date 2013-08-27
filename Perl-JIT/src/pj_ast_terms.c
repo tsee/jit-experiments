@@ -127,6 +127,10 @@ Statement::Statement(OP *p_nextstate, Term *term)
   kids[0] = term;
 }
 
+StatementSequence::StatementSequence()
+  : Term(NULL, pj_ttype_statementsequence)
+{}
+
 /* pinnacle of software engineering, but it's just for debugging anyway...  */
 static void
 S_dump_tree_indent(int lvl)
@@ -211,6 +215,15 @@ Statement::dump(int indent_lvl)
   S_dump_tree_indent(indent_lvl);
   printf("Statement %s:%d\n", CopFILE(cCOPx(perl_op)), CopLINE(cCOPx(perl_op)));
   kids[0]->dump(indent_lvl+1);
+}
+
+void
+StatementSequence::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("StatementSequence\n");
+  for (size_t i = 0; i < kids.size(); ++i)
+    kids[i]->dump(indent_lvl+1);
 }
 
 static void

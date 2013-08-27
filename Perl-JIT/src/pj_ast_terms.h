@@ -19,6 +19,7 @@ typedef enum {
   pj_ttype_optree,
   pj_ttype_nulloptree,
   pj_ttype_op,
+  pj_ttype_statementsequence,
   pj_ttype_statement
 } pj_term_type;
 
@@ -242,6 +243,22 @@ namespace PerlJIT {
       virtual void dump(int indent_lvl = 0);
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Statement"; }
+    };
+
+    // This class is anomalous in multiple ways: it does not rellay map to
+    // a complete syntactic construct, its perl_op member is NULL and
+    // it's created outside normal op traversal
+    // It's an unfortunate necessity until we can recognize (and have AST
+    // classes for) all block statements
+    class StatementSequence : public Term {
+    public:
+      StatementSequence();
+
+      std::vector<PerlJIT::AST::Term *> kids;
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::StatementSequence"; }
     };
   } // end namespace PerlJIT::AST
 } // end namespace PerlJIT
