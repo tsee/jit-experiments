@@ -61,7 +61,7 @@ namespace PerlJIT {
   {
   public:
     OPTreeJITCandidateFinder(pTHX_ CV *cv)
-      : containing_cv(cv)
+      : containing_cv(cv), last_nextstate(NULL)
     {
       // typed_declarations may end up being NULL!
       if (cv != NULL)
@@ -74,13 +74,23 @@ namespace PerlJIT {
       unsigned int otype;
       otype = o->op_type;
 
+      if (otype == OP_NEXTSTATE) {
+        last_nextstate = o;
+        return VISIT_SKIP;
+      }
+
       PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
 
       /* Attempt JIT if the right OP type. Don't recurse if so. */
       if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype)) {
         PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
-        if (ast)
-            candidates.push_back(ast);
+        if (ast) {
+          if (last_nextstate && last_nextstate->op_sibling == o) {
+            ast = new AST::Statement(last_nextstate, ast);
+          }
+          last_nextstate = NULL;
+          candidates.push_back(ast);
+        }
         return VISIT_SKIP;
       }
       return VISIT_CONT;
@@ -119,6 +129,7 @@ namespace PerlJIT {
     unordered_map<PADOFFSET, AST::VariableDeclaration *> variables;
     CV *containing_cv;
     pj_declaration_map_t *typed_declarations;
+    OP *last_nextstate;
   }; // end class OPTreeJITCandidateFinder
 }
 

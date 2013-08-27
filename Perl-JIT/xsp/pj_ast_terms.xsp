@@ -99,3 +99,8 @@ class Perl::JIT::AST::Optree : public Perl::JIT::AST::Term
 class Perl::JIT::AST::NullOptree : public Perl::JIT::AST::Term
 {
 };
+
+class Perl::JIT::AST::Statement : public Perl::JIT::AST::Term
+{
+  std::vector<Perl::JIT::AST::Term *> kids %get;
+};

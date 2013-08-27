@@ -120,6 +120,13 @@ Listop::Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children)
   kids = children;
 }
 
+Statement::Statement(OP *p_nextstate, Term *term)
+  : Term(p_nextstate, pj_ttype_statement)
+{
+  kids.resize(1);
+  kids[0] = term;
+}
+
 /* pinnacle of software engineering, but it's just for debugging anyway...  */
 static void
 S_dump_tree_indent(int lvl)
@@ -198,6 +205,13 @@ NullOptree::dump(int indent_lvl)
   printf("'UnJITable nulled subtree'\n");
 }
 
+void
+Statement::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("Statement %s:%d\n", CopFILE(cCOPx(perl_op)), CopLINE(cCOPx(perl_op)));
+  kids[0]->dump(indent_lvl+1);
+}
 
 static void
 S_dump_op(PerlJIT::AST::Op *o, const char *op_str, bool is_assignment_form, int indent_lvl)

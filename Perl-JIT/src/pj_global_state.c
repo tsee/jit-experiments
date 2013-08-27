@@ -78,6 +78,7 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_ttype_optree);
   INT_CONST(pj_ttype_nulloptree);
   INT_CONST(pj_ttype_op);
+  INT_CONST(pj_ttype_statement);
 
   INT_CONST(pj_opc_unop);
   INT_CONST(pj_opc_binop);

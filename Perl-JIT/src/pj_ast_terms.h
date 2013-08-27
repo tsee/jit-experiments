@@ -18,7 +18,8 @@ typedef enum {
   pj_ttype_variabledeclaration,
   pj_ttype_optree,
   pj_ttype_nulloptree,
-  pj_ttype_op
+  pj_ttype_op,
+  pj_ttype_statement
 } pj_term_type;
 
 typedef enum {
@@ -232,6 +233,16 @@ namespace PerlJIT {
         { return "Perl::JIT::AST::NullOptree"; }
     };
 
+    class Statement : public Term {
+    public:
+      Statement(OP *p_nextstate, Term *term);
+
+      std::vector<PerlJIT::AST::Term *> kids;
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Statement"; }
+    };
   } // end namespace PerlJIT::AST
 } // end namespace PerlJIT
 
