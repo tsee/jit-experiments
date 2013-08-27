@@ -10,8 +10,6 @@
 
 #include <assert.h>
 
-#include <jit/jit.h>
-
 #include "pj_debug.h"
 
 /* AST and AST -> C fun stuff */

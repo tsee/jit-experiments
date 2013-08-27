@@ -8,7 +8,6 @@
 
 #include <EXTERN.h>
 #include <perl.h>
-#include <jit/jit.h>
 
 /* The custom op definition structure */
 /* extern XOP PJ_xop_jitop; */
