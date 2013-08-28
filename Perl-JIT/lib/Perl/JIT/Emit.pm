@@ -245,41 +245,6 @@ sub _jit_emit {
     }
 }
 
-SCOPE: {
-    # FIXME There has to be a better, faster, and more elegant way
-    #       than this, but I can't see that right now.
-    my %integer_types = map {${$_} => undef} (
-        jit_type_sbyte, jit_type_ubyte,
-        jit_type_short, jit_type_ushort,
-        jit_type_int, jit_type_uint,
-        jit_type_nint, jit_type_nuint,
-        jit_type_long, jit_type_ulong,
-        jit_type_sys_char, jit_type_sys_schar, jit_type_sys_uchar,
-        jit_type_sys_short, jit_type_sys_ushort,
-        jit_type_sys_int, jit_type_sys_uint,
-        jit_type_sys_long, jit_type_sys_ulong,
-        jit_type_sys_longlong, jit_type_sys_ulonglong,
-        jit_type_IV, jit_type_UV,
-    );
-    sub _value_is_integer {
-        my ($val) = @_;
-        my $type = jit_value_get_type($val);
-        return exists($integer_types{${$type}});
-    }
-}
-
-sub _value_is_IV {
-    my ($val) = @_;
-    my $type = jit_value_get_type($val);
-    return $$type == ${jit_type_IV()};
-}
-
-sub _value_is_NV {
-    my ($val) = @_;
-    my $type = jit_value_get_type($val);
-    return $$type == ${jit_type_NV()};
-}
-
 sub _type_is_integer {
     my ($type) = @_;
     my $tag = $type->tag;
