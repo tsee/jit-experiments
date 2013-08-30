@@ -34,7 +34,7 @@ namespace PerlJIT {
 OPTreeVisitor::visit_control_t
 PadSvDeclarationOpExtractor::visit_op(pTHX_ OP *o, OP *parentop)
 {
-  if (o->op_type == OP_PADSV && o->op_flags & OPpLVAL_INTRO)
+  if (o->op_type == OP_PADSV && o->op_private & OPpLVAL_INTRO)
     fPadSVOPs.push_back(o);
   return VISIT_CONT;
 }

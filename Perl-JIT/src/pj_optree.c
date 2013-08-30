@@ -313,7 +313,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     }
 
   case OP_PADSV:
-    if (o->op_flags & OPpLVAL_INTRO)
+    if (o->op_private & OPpLVAL_INTRO)
       retval = visitor.get_declaration(o, o);
     else
       retval = new AST::Variable(o, visitor.get_declaration(0, o));
