@@ -16,6 +16,7 @@ typedef enum {
   pj_ttype_constant,
   pj_ttype_variable,
   pj_ttype_variabledeclaration,
+  pj_ttype_list,
   pj_ttype_optree,
   pj_ttype_nulloptree,
   pj_ttype_op,
@@ -75,6 +76,21 @@ namespace PerlJIT {
 
     protected:
       Type *_value_type;
+    };
+
+    // A relatively low-on-semantics group of things, such as for
+    // having separate lists of things for aassign or list slice (list
+    // and indices in the latter)
+    class List : public Term {
+    public:
+      List();
+      List(const std::vector<Term *> &kid_terms);
+
+      std::vector<PerlJIT::AST::Term *> kids;
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::List"; }
     };
 
     class Constant : public Term {

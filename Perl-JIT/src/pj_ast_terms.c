@@ -18,6 +18,14 @@ Term::Term(OP *p_op, pj_term_type t, Type *v_type)
   : type(t), perl_op(p_op), _value_type(v_type)
 {}
 
+List::List()
+  : Term(NULL, pj_ttype_list)
+{}
+
+List::List(const std::vector<Term *> &kid_terms)
+  : Term(NULL, pj_ttype_list), kids(kid_terms)
+{}
+
 Constant::Constant(OP *p_op, Type *v_type)
   : Term(p_op, pj_ttype_constant, v_type)
 {}
@@ -254,6 +262,22 @@ void Binop::dump(int indent_lvl)
 void Listop::dump(int indent_lvl)
 { S_dump_op(this, "Listop", false, indent_lvl); }
 
+void List::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("List(\n");
+  const unsigned int n = this->kids.size();
+  for (unsigned int i = 0; i < n; ++i) {
+    if (this->kids[i] == NULL) {
+      S_dump_tree_indent(indent_lvl+1);
+      printf("NULL\n");
+    } else {
+      this->kids[i]->dump(indent_lvl+1);
+    }
+  }
+  S_dump_tree_indent(indent_lvl);
+  printf(")\n");
+}
 
 Term::~Term()
 {

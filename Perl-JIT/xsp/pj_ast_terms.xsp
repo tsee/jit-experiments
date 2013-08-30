@@ -18,6 +18,11 @@ class Perl::JIT::AST::Term {
   void dump();
 };
 
+class Perl::JIT::AST::List : public Perl::JIT::AST::Term
+{
+  std::vector<Perl::JIT::AST::Term *> kids %get;
+};
+
 class Perl::JIT::AST::Op : public Perl::JIT::AST::Term
 {
   pj_op_type optype %get %set;
