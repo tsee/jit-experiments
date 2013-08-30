@@ -204,10 +204,8 @@ VariableDeclaration::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
   printf("VD (%c) = %i", S_sigil_character(sigil), this->ivar);
-  if (Type *value_type = get_value_type()) {
-    printf(" : ");
-    value_type->dump();
-  }
+  if (Type *value_type = get_value_type())
+    printf(" : %s", value_type->to_string().c_str());
   printf("\n");
 }
 
@@ -220,10 +218,8 @@ Variable::dump(int indent_lvl)
     printf("V (%c) = %i", S_sigil_character(declaration->sigil), declaration->ivar);
   else
     printf("V = ?????? FIXME THIS IS A BUG. Cannot handle pkg vars yet...");
-  if (Type *value_type = get_value_type()) {
-    printf(" : ");
-    value_type->dump();
-  }
+  if (Type *value_type = get_value_type())
+    printf(" : %s", value_type->to_string().c_str());
   printf("\n");
 }
 

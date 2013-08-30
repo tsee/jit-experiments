@@ -36,10 +36,9 @@ bool Scalar::equals(Type *other) const
 
 #define PRINT_TYPE(value, string) \
   case value: \
-    printf(string); \
-    break;
+    return string;
 
-void Scalar::dump() const
+string Scalar::to_string() const
 {
   switch (_tag) {
     PRINT_TYPE(pj_unspecified_type, "Any");
