@@ -20,6 +20,8 @@ namespace PerlJIT {
       virtual ~Type();
       virtual pj_type_id tag() const = 0;
 
+      virtual bool equals(Type *other) const = 0;
+
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Type"; }
     };
@@ -28,6 +30,8 @@ namespace PerlJIT {
     public:
       Scalar(pj_type_id tag);
       virtual pj_type_id tag() const;
+
+      virtual bool equals(Type *other) const;
 
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Scalar"; }

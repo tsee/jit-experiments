@@ -25,6 +25,13 @@ pj_type_id Scalar::tag() const
 #define INT         "Int"
 #define UINT        "UnsignedInt"
 
+bool Scalar::equals(Type *other) const
+{
+  Scalar *o = dynamic_cast<Scalar *>(other);
+
+  return o && o->_tag == _tag;
+}
+
 #define PARSE_SCALAR(name, type) \
   if (str == string(name))       \
     return new Scalar(type)

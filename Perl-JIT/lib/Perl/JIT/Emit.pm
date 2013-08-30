@@ -157,7 +157,7 @@ sub needs_excessive_magic {
         my $node = shift @nodes;
 
         return 1 if $node->get_type == pj_ttype_variable &&
-                    $node->get_value_type->tag == pj_scalar_type;
+                    $node->get_value_type->equals(SCALAR);
         next unless $node->get_type == pj_ttype_op;
 
         my $known = $Jittable_Ops{$node->get_optype};
@@ -247,25 +247,24 @@ sub _jit_emit {
 
 sub _type_is_integer {
     my ($type) = @_;
-    my $tag = $type->tag;
-    return $tag == pj_int_type || $tag == pj_uint_type;
+
+    return $type->equals(INT) || $type->equals(UNSIGNED_INT);
 }
 
 sub _type_is_numeric {
     my ($type) = @_;
-    my $tag = $type->tag;
-    return $tag == pj_int_type || $tag == pj_uint_type || $tag == pj_double_type;
+
+    return $type->equals(INT) || $type->equals(UNSIGNED_INT) || $type->equals(DOUBLE);
 }
 
 sub _to_nv {
     my ($self, $val, $type) = @_;
-    my $tag = $type->tag;
 
-    if ($tag == pj_double_type) {
+    if ($type->equals(DOUBLE)) {
         return $val;
-    } elsif ($tag == pj_int_type || $tag == pj_uint_type) {
+    } elsif (_type_is_integer($type)) {
         return jit_insn_convert($self->_fun, $val, jit_type_NV, 0);
-    } elsif ($tag == pj_unspecified_type) {
+    } elsif ($type->equals(UNSPECIFIED)) {
         return pa_sv_nv($self->_fun, $val);
     } else {
         die "Handle more coercion cases";
@@ -274,11 +273,10 @@ sub _to_nv {
 
 sub _to_numeric_type {
     my ($self, $val, $type) = @_;
-    my $tag = $type->tag;
 
-    if ($tag == pj_double_type || $tag == pj_int_type || $tag == pj_uint_type) {
+    if (_type_is_numeric($type)) {
         return $val;
-    } elsif ($tag == pj_unspecified_type) {
+    } elsif ($type->equals(UNSPECIFIED)) {
         return pa_sv_nv($self->_fun, $val); # somewhat dubious
     } else {
         die "Handle more coercion cases";
@@ -287,11 +285,10 @@ sub _to_numeric_type {
 
 sub _to_type {
     my ($self, $val, $type, $to_type) = @_;
-    my $to_tag = $to_type->tag;
 
-    if ($to_tag == $type->tag) {
+    if ($to_type->equals($type)) {
         return $val;
-    } elsif ($to_tag == pj_double_type) {
+    } elsif ($to_type->equals(DOUBLE)) {
         return $self->_to_nv($val, $type);
     } else {
         die "Handle more coercion cases";

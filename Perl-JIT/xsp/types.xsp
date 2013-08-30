@@ -6,6 +6,8 @@
 class Perl::JIT::AST::Type {
   pj_type_id tag();
 
+  bool equals(Perl::JIT::AST::Type *type) const;
+
   // void dump();
 };
 
