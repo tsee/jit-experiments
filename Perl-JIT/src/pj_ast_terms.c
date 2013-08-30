@@ -188,7 +188,12 @@ void
 VariableDeclaration::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  printf("VD = %i\n", this->ivar);
+  printf("VD = %i", this->ivar);
+  if (Type *value_type = get_value_type()) {
+    printf(" : ");
+    value_type->dump();
+  }
+  printf("\n");
 }
 
 
@@ -197,9 +202,14 @@ Variable::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
   if (this->declaration)
-    printf("V = %i\n", this->declaration->ivar);
+    printf("V = %i", this->declaration->ivar);
   else
-    printf("V = ?????? FIXME THIS IS A BUG. Cannot handle pkg vars yet...\n");
+    printf("V = ?????? FIXME THIS IS A BUG. Cannot handle pkg vars yet...");
+  if (Type *value_type = get_value_type()) {
+    printf(" : ");
+    value_type->dump();
+  }
+  printf("\n");
 }
 
 

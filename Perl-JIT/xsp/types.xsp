@@ -8,11 +8,10 @@ class Perl::JIT::AST::Type {
 
   bool equals(Perl::JIT::AST::Type *type) const;
 
-  // void dump();
+  void dump();
 };
 
 
 class Perl::JIT::AST::Scalar : public Perl::JIT::AST::Type {
   Scalar(pj_type_id tag);
-  // void dump();
 };

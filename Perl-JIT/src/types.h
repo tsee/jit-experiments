@@ -22,6 +22,7 @@ namespace PerlJIT {
 
       virtual bool equals(Type *other) const = 0;
 
+      virtual void dump() const = 0;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Type"; }
     };
@@ -33,6 +34,7 @@ namespace PerlJIT {
 
       virtual bool equals(Type *other) const;
 
+      virtual void dump() const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Scalar"; }
     private:

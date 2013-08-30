@@ -1,8 +1,17 @@
 #include "types.h"
 
+#include <stdio.h>
+
 using namespace std;
 using namespace PerlJIT;
 using namespace PerlJIT::AST;
+
+#define ANY         "Any"
+#define SCALAR      "Scalar"
+#define STRING      "String"
+#define DOUBLE      "Double"
+#define INT         "Int"
+#define UINT        "UnsignedInt"
 
 Type::~Type()
 {
@@ -18,18 +27,28 @@ pj_type_id Scalar::tag() const
   return _tag;
 }
 
-#define ANY         "Any"
-#define SCALAR      "Scalar"
-#define STRING      "String"
-#define DOUBLE      "Double"
-#define INT         "Int"
-#define UINT        "UnsignedInt"
-
 bool Scalar::equals(Type *other) const
 {
   Scalar *o = dynamic_cast<Scalar *>(other);
 
   return o && o->_tag == _tag;
+}
+
+#define PRINT_TYPE(value, string) \
+  case value: \
+    printf(string); \
+    break;
+
+void Scalar::dump() const
+{
+  switch (_tag) {
+    PRINT_TYPE(pj_unspecified_type, "Any");
+    PRINT_TYPE(pj_scalar_type, SCALAR);
+    PRINT_TYPE(pj_string_type, STRING);
+    PRINT_TYPE(pj_double_type, DOUBLE);
+    PRINT_TYPE(pj_int_type, INT);
+    PRINT_TYPE(pj_uint_type, UINT);
+  }
 }
 
 #define PARSE_SCALAR(name, type) \
