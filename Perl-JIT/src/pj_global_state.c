@@ -82,6 +82,11 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_ttype_statementsequence);
   INT_CONST(pj_ttype_statement);
 
+  INT_CONST(pj_sigil_scalar);
+  INT_CONST(pj_sigil_array);
+  INT_CONST(pj_sigil_hash);
+  INT_CONST(pj_sigil_glob);
+
   INT_CONST(pj_opc_unop);
   INT_CONST(pj_opc_binop);
   INT_CONST(pj_opc_listop);

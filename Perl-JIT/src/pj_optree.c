@@ -128,7 +128,15 @@ namespace PerlJIT {
 
       // Use type from CV's MAGIC annotation to tag VariableDeclaration here
       // or otherwise create default type
-      decl = new AST::VariableDeclaration(declaration, variables.size());
+      pj_variable_sigil sigil =
+        reference->op_type == OP_PADSV ? pj_sigil_scalar :
+        reference->op_type == OP_PADAV ? pj_sigil_array :
+        reference->op_type == OP_PADHV ? pj_sigil_hash :
+                                         (pj_variable_sigil) -1;
+      if (sigil == (pj_variable_sigil) -1)
+        croak("Unrecognized sigil");
+
+      decl = new AST::VariableDeclaration(declaration, variables.size(), sigil);
       if (typed_declarations) {
         pj_declaration_map_t::iterator it = typed_declarations->find(reference->op_targ);
 
@@ -313,6 +321,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     }
 
   case OP_PADSV:
+  case OP_PADAV:
+  case OP_PADHV:
     if (o->op_private & OPpLVAL_INTRO)
       retval = visitor.get_declaration(o, o);
     else

@@ -37,8 +37,15 @@ typedef enum {
   pj_context_caller,
   pj_context_void,
   pj_context_scalar,
-  pj_context_list,
+  pj_context_list
 } pj_op_context;
+
+typedef enum {
+  pj_sigil_scalar,
+  pj_sigil_array,
+  pj_sigil_hash,
+  pj_sigil_glob
+} pj_variable_sigil;
 
 // This file has the actual AST op enum declaration.
 #include "pj_ast_ops_enum-gen.inc"
@@ -145,12 +152,14 @@ namespace PerlJIT {
     // abstract
     class Identifier : public Term {
     public:
-      Identifier(OP *p_op, pj_term_type t, Type *v_type = 0);
+      Identifier(OP *p_op, pj_term_type t, pj_variable_sigil s, Type *v_type = 0);
+
+      pj_variable_sigil sigil;
     };
 
     class VariableDeclaration : public Identifier {
     public:
-      VariableDeclaration(OP *p_op, int ivariable, Type *v_type = 0);
+      VariableDeclaration(OP *p_op, int ivariable, pj_variable_sigil s, Type *v_type = 0);
 
       int ivar;
 

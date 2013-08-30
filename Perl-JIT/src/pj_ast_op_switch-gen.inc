@@ -150,6 +150,8 @@
   || otype == OP_OR \
   || otype == OP_ORASSIGN \
   || otype == OP_ORD \
+  || otype == OP_PADAV \
+  || otype == OP_PADHV \
   || otype == OP_PADSV \
   || otype == OP_POSTDEC \
   || otype == OP_POSTINC \

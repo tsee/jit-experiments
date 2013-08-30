@@ -66,19 +66,19 @@ UndefConstant::UndefConstant()
 }
 
 
-Identifier::Identifier(OP *p_op, pj_term_type t, Type *v_type)
-: Term(p_op, t, v_type)
+Identifier::Identifier(OP *p_op, pj_term_type t, pj_variable_sigil s, Type *v_type)
+  : Term(p_op, t, v_type), sigil(s)
 {}
 
 
-VariableDeclaration::VariableDeclaration(OP *p_op, int ivariable, Type *v_type)
-  : Identifier(p_op, pj_ttype_variabledeclaration, v_type),
+VariableDeclaration::VariableDeclaration(OP *p_op, int ivariable, pj_variable_sigil sigil, Type *v_type)
+  : Identifier(p_op, pj_ttype_variabledeclaration, sigil, v_type),
     ivar(ivariable)
 {}
 
 
 Variable::Variable(OP *p_op, VariableDeclaration *decl)
-  : Identifier(p_op, pj_ttype_variable), declaration(decl)
+  : Identifier(p_op, pj_ttype_variable, decl->sigil), declaration(decl)
 {}
 
 
@@ -184,11 +184,26 @@ UndefConstant::dump(int indent_lvl)
 }
 
 
+static inline char
+S_sigil_character(pj_variable_sigil sigil)
+{
+  switch (sigil) {
+  case pj_sigil_scalar:
+    return '$';
+  case pj_sigil_array:
+    return '@';
+  case pj_sigil_hash:
+    return '%';
+  case pj_sigil_glob:
+    return '*';
+  }
+}
+
 void
 VariableDeclaration::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  printf("VD = %i", this->ivar);
+  printf("VD (%c) = %i", S_sigil_character(sigil), this->ivar);
   if (Type *value_type = get_value_type()) {
     printf(" : ");
     value_type->dump();
@@ -202,7 +217,7 @@ Variable::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
   if (this->declaration)
-    printf("V = %i", this->declaration->ivar);
+    printf("V (%c) = %i", S_sigil_character(declaration->sigil), declaration->ivar);
   else
     printf("V = ?????? FIXME THIS IS A BUG. Cannot handle pkg vars yet...");
   if (Type *value_type = get_value_type()) {
