@@ -243,7 +243,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     break;
 #define EMIT_BINOP_CODE(perl_op_type, pj_op_type)                         \
   case perl_op_type:                                                      \
-    assert(ikid == 2);                                                    \
+    assert(kid_terms.size() == 2);                                                    \
     retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]);   \
     break;
 #define EMIT_BINOP_CODE_OPTIONAL(perl_op_type, pj_op_type)              \
@@ -284,12 +284,14 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 
       break;
     }
+
   case OP_PADSV:
     if (o->op_flags & OPpLVAL_INTRO)
       retval = visitor.get_declaration(o, o);
     else
       retval = new AST::Variable(o, visitor.get_declaration(0, o));
     break;
+
   case OP_GVSV:
     // FIXME OP_GVSV can have OPpLVAL_INTRO - Not sure what that means...
     //if (o->op_flags & OPpLVAL_INTRO)
@@ -298,6 +300,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     retval = new AST::Variable(o, NULL); // FIXME want to support a declaration, too! (our)
     pj_free_term_vector(aTHX_ kid_terms);
     break;
+
   case OP_NULL:
     if (kid_terms.size() == 1) {
       if (o->op_targ == 0) {
@@ -328,6 +331,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       pj_free_term_vector(aTHX_ kid_terms);
     }
     break;
+
   case OP_ANDASSIGN:
   case OP_ORASSIGN:
   case OP_DORASSIGN: {
@@ -359,6 +363,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       ((AST::Binop *)retval)->set_assignment_form(true);
       break;
     }
+
   case OP_STUB: {
       const int gimme = OP_GIMME(o, 0);
       if (gimme) {
@@ -376,6 +381,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       pj_free_term_vector(aTHX_ kid_terms); // if any...
       break;
     }
+
   case OP_LIST:
     if (kid_terms.size() == 1)
       retval = kid_terms[0];
@@ -411,6 +417,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     retval->dump();
   return retval;
 }
+
+
 
 /* Starting from a candidate for JITing, walk the OP tree to accumulate
  * a subtree that can be replaced with a single JIT OP. */
