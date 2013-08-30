@@ -232,44 +232,62 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 
   // Build child list if applicable
   vector<AST::Term *> kid_terms;
-  const int kids_fail = pj_build_kid_terms(aTHX_ o, visitor, kid_terms);
-  if (kids_fail)
-    return NULL;
 
 
-#define EMIT_UNOP_CODE(perl_op_type, pj_op_type)          \
-  case perl_op_type:                                      \
-    assert(kid_terms.size() == 1);                        \
-    retval = new AST::Unop(o, pj_op_type, kid_terms[0]);  \
-    break;
-#define EMIT_UNOP_CODE_OPTIONAL(perl_op_type, pj_op_type)   \
-  case perl_op_type:                                        \
-    assert(kid_terms.size() == 1 || kid_terms.size() == 0); \
-    if (kid_terms.size() == 1)                              \
-      retval = new AST::Unop(o, pj_op_type, kid_terms[0]);  \
-    else /* no kids */                                      \
-      retval = new AST::Unop(o, pj_op_type, NULL);          \
-    break;
+#define MAKE_DEFAULT_KID_VECTOR                           \
+  vector<AST::Term *> kid_terms;                          \
+  if (pj_build_kid_terms(aTHX_ o, visitor, kid_terms)) {  \
+    pj_free_term_vector(aTHX_ kid_terms);                 \
+    return NULL;                                          \
+  }                                                       \
+
+#define EMIT_UNOP_CODE(perl_op_type, pj_op_type)              \
+  case perl_op_type: {                                        \
+      MAKE_DEFAULT_KID_VECTOR                                 \
+      assert(kid_terms.size() == 1);                          \
+      retval = new AST::Unop(o, pj_op_type, kid_terms[0]);    \
+      break;                                                  \
+    }
+
+#define EMIT_UNOP_CODE_OPTIONAL(perl_op_type, pj_op_type)     \
+  case perl_op_type: {                                        \
+      MAKE_DEFAULT_KID_VECTOR                                 \
+      assert(kid_terms.size() == 1 || kid_terms.size() == 0); \
+      if (kid_terms.size() == 1)                              \
+        retval = new AST::Unop(o, pj_op_type, kid_terms[0]);  \
+      else /* no kids */                                      \
+        retval = new AST::Unop(o, pj_op_type, NULL);          \
+      break;                                                  \
+    }
+
 #define EMIT_BINOP_CODE(perl_op_type, pj_op_type)                         \
-  case perl_op_type:                                                      \
-    assert(kid_terms.size() == 2);                                                    \
-    retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]);   \
-    break;
-#define EMIT_BINOP_CODE_OPTIONAL(perl_op_type, pj_op_type)              \
-  case perl_op_type:                                                    \
-    assert(kid_terms.size() <= 2);                                      \
-    if (kid_terms.size() < 2)                                           \
-      kid_terms.push_back(NULL);                                        \
-    retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]); \
-    break;
-#define EMIT_LISTOP_CODE(perl_op_type, pj_op_type)      \
-  case perl_op_type:                                    \
-    retval = new AST::Listop(o, pj_op_type, kid_terms); \
-    break;
+  case perl_op_type: {                                                    \
+      MAKE_DEFAULT_KID_VECTOR                                             \
+      assert(kid_terms.size() == 2);                                      \
+      retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]); \
+      break;                                                              \
+    }
+
+#define EMIT_BINOP_CODE_OPTIONAL(perl_op_type, pj_op_type)                \
+  case perl_op_type: {                                                    \
+      MAKE_DEFAULT_KID_VECTOR                                             \
+      assert(kid_terms.size() <= 2);                                      \
+      if (kid_terms.size() < 2)                                           \
+        kid_terms.push_back(NULL);                                        \
+      retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]); \
+      break;                                                              \
+    }
+
+#define EMIT_LISTOP_CODE(perl_op_type, pj_op_type)        \
+  case perl_op_type: {                                    \
+      MAKE_DEFAULT_KID_VECTOR                             \
+      retval = new AST::Listop(o, pj_op_type, kid_terms); \
+      break;                                              \
+    }
 
   switch (otype) {
   case OP_CONST: {
-      // FIXME OP_CONST can also be  string and who-knows-what-else
+      // FIXME OP_CONST can also be who-knows-what-else
       SV *constsv = cSVOPx_sv(o);
       if (SvIOK(constsv)) {
         retval = new AST::NumericConstant(o, (IV)SvIV(constsv));
@@ -310,36 +328,38 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     pj_free_term_vector(aTHX_ kid_terms);
     break;
 
-  case OP_NULL:
-    if (kid_terms.size() == 1) {
-      if (o->op_targ == 0) {
-        // attempt to pass through this untyped null-op. FIXME likely WRONG
-        PJ_DEBUG("Passing through kid of OP_NULL\n");
-        retval = kid_terms[0];
-      }
-      else {
-        const unsigned int targ_otype = (unsigned int)o->op_targ;
-        switch (targ_otype) {
-        case OP_RV2SV: // Skip into ex-rv2sv for optimized global scalar access
-          PJ_DEBUG("Passing through kid of ex-rv2sv\n");
+  case OP_NULL: {
+      MAKE_DEFAULT_KID_VECTOR
+      if (kid_terms.size() == 1) {
+        if (o->op_targ == 0) {
+          // attempt to pass through this untyped null-op. FIXME likely WRONG
+          PJ_DEBUG("Passing through kid of OP_NULL\n");
           retval = kid_terms[0];
-          break;
-        default:
-          PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
-          pj_find_jit_candidates_internal(aTHX_ o, visitor);
-          retval = new AST::Optree(o);
-          pj_free_term_vector(aTHX_ kid_terms);
-          break;
+        }
+        else {
+          const unsigned int targ_otype = (unsigned int)o->op_targ;
+          switch (targ_otype) {
+          case OP_RV2SV: // Skip into ex-rv2sv for optimized global scalar access
+            PJ_DEBUG("Passing through kid of ex-rv2sv\n");
+            retval = kid_terms[0];
+            break;
+          default:
+            PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
+            pj_find_jit_candidates_internal(aTHX_ o, visitor);
+            retval = new AST::Optree(o);
+            pj_free_term_vector(aTHX_ kid_terms);
+            break;
+          }
         }
       }
+      else {
+        PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
+        pj_find_jit_candidates_internal(aTHX_ o, visitor);
+        retval = new AST::Optree(o);
+        pj_free_term_vector(aTHX_ kid_terms);
+      }
+      break;
     }
-    else {
-      PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
-      pj_find_jit_candidates_internal(aTHX_ o, visitor);
-      retval = new AST::Optree(o);
-      pj_free_term_vector(aTHX_ kid_terms);
-    }
-    break;
 
   case OP_ANDASSIGN:
   case OP_ORASSIGN:
@@ -349,6 +369,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       //  8           <1> sassign sK/BKWARD,1 ->9
       //  7              <$> const[IV 123] s ->8
       // Patch out the sassign!
+      MAKE_DEFAULT_KID_VECTOR
       assert(kid_terms.size() == 2);
       if (kid_terms[1]->type == pj_ttype_op
           && ((AST::Op *)kid_terms[1])->optype == pj_binop_sassign
@@ -387,16 +408,17 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       else { // undecidable yet
         retval = new AST::Unop(o, pj_unop_empty, NULL);
       }
-      pj_free_term_vector(aTHX_ kid_terms); // if any...
       break;
     }
 
-  case OP_LIST:
-    if (kid_terms.size() == 1)
-      retval = kid_terms[0];
-    else
-      retval = new AST::Listop(o, pj_listop_list2scalar, kid_terms);
-    break;
+  case OP_LIST: {
+      MAKE_DEFAULT_KID_VECTOR
+      if (kid_terms.size() == 1)
+        retval = kid_terms[0];
+      else
+        retval = new AST::Listop(o, pj_listop_list2scalar, kid_terms);
+      break;
+    }
 
   // Special cases, not auto-generated
     EMIT_LISTOP_CODE(OP_SCHOP, pj_listop_chop)
@@ -409,6 +431,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     warn("Shouldn't happen! Unsupported OP!? %s\n", OP_NAME(o));
     abort();
   }
+
+#undef MAKE_DEFAULT_KID_VECTOR
 #undef EMIT_BINOP_CODE
 #undef EMIT_BINOP_CODE_OPTIONAL
 #undef EMIT_UNOP_CODE
