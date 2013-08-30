@@ -141,14 +141,39 @@ namespace PerlJIT {
         pj_declaration_map_t::iterator it = typed_declarations->find(reference->op_targ);
 
         if (it != typed_declarations->end())
-          decl->set_value_type(it->second.get_type());
+          set_declaration_type(decl, it->second.get_type());
       }
       if (!decl->get_value_type())
-        decl->set_value_type(new AST::Scalar(pj_unspecified_type));
+        set_declaration_type(decl, new AST::Scalar(pj_unspecified_type));
 
       variables[reference->op_targ] = decl;
 
       return decl;
+    }
+
+    AST::Type*
+    set_declaration_type(AST::VariableDeclaration *decl, AST::Type *type)
+    {
+      if (type->is_scalar()) {
+        if (decl->sigil == pj_sigil_array)
+          decl->set_value_type(new AST::Array(type));
+        else if (decl->sigil == pj_sigil_hash)
+          decl->set_value_type(new AST::Hash(type));
+        else
+          decl->set_value_type(type);
+      }
+      else if ((type->is_array() && decl->sigil == pj_sigil_array) ||
+               (type->is_hash() && decl->sigil == pj_sigil_hash)) {
+          decl->set_value_type(type);
+      }
+      else {
+        const char *variable_type =
+          decl->sigil == pj_sigil_scalar ? "scalar" :
+          decl->sigil == pj_sigil_array  ? "array" :
+                                           "hash";
+        croak("Declared type %s does not match variable type %s",
+              type->to_string().c_str(), variable_type);
+      }
     }
 
     vector<PerlJIT::AST::Term *> candidates;

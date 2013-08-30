@@ -34,7 +34,11 @@ namespace PerlJIT {
 OPTreeVisitor::visit_control_t
 PadSvDeclarationOpExtractor::visit_op(pTHX_ OP *o, OP *parentop)
 {
-  if (o->op_type == OP_PADSV && o->op_private & OPpLVAL_INTRO)
+  // this allows all kind of things, like applying an Array/Hash type
+  // to a plain scalar; correctness is checked in pj_optree.c
+  if ((o->op_type == OP_PADSV ||
+       o->op_type == OP_PADAV ||
+       o->op_type == OP_PADHV) && o->op_private & OPpLVAL_INTRO)
     fPadSVOPs.push_back(o);
   return VISIT_CONT;
 }
