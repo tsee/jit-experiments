@@ -43,6 +43,9 @@ static vector<PerlJIT::AST::Term *>
 pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 static PerlJIT::AST::Term *
 pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
+static PerlJIT::AST::Term *
+pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
+
 
 // This will import two macros IS_AST_COMPATIBLE_ROOT_OP_TYPE
 // and IS_AST_COMPATIBLE_OP_TYPE. The macros determine whether to attempt
@@ -160,33 +163,10 @@ pj_free_term_vector(pTHX_ vector<PerlJIT::AST::Term *> &kids)
   }
 }
 
-/* Walk OP tree recursively, build ASTs, build subtrees */
-static PerlJIT::AST::Term *
-pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
+
+static int
+pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::Term *> &kid_terms)
 {
-  PerlJIT::AST::Term *retval = NULL;
-
-  assert(o);
-
-  const unsigned int otype = o->op_type;
-  PJ_DEBUG_1("pj_build_ast ASTing OP of type %s\n", OP_NAME(o));
-  if (!IS_AST_COMPATIBLE_OP_TYPE(otype)) {
-    // Can't represent OP with AST. So instead, recursively scan for
-    // separate candidates and treat as subtree.
-    PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST (Perl OP=%s).\n", OP_NAME(o));
-    retval = new AST::Optree(o);
-    pj_find_jit_candidates_internal(aTHX_ o, visitor);
-  }
-
-  // Done with all bizarre special cases. Return if those were a match.
-  if (retval != NULL) {
-    if (PJ_DEBUGGING)
-      retval->dump();
-    return retval;
-  }
-
-  // Build child list if applicable
-  vector<PerlJIT::AST::Term *> kid_terms;
   unsigned int ikid = 0;
   if (o->op_flags & OPf_KIDS) {
     for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
@@ -211,7 +191,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         // Failed to build sub-AST, free ASTs build thus far before bailing
         PJ_DEBUG("Failed to build sub-AST - unwinding.\n");
         pj_free_term_vector(aTHX_ kid_terms);
-        return NULL;
+        return 1;
       }
       else if (kid_term->type == pj_ttype_op && ((AST::Op *)kid_term)->optype == pj_unop_empty) {
         // empty list is not really a kid, don't include in child list
@@ -226,8 +206,37 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       ++ikid;
     } // end for kids
   } // end if have kids
+  return 0;
+}
 
-  /* TODO modulo may have (very?) different behaviour in Perl than in C (or libjit or the platform...) */
+/* Walk OP tree recursively, build ASTs, build subtrees */
+static PerlJIT::AST::Term *
+pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
+{
+  PerlJIT::AST::Term *retval = NULL;
+
+  assert(o);
+
+  const unsigned int otype = o->op_type;
+  PJ_DEBUG_1("pj_build_ast ASTing OP of type %s\n", OP_NAME(o));
+  if (!IS_AST_COMPATIBLE_OP_TYPE(otype)) {
+    // Can't represent OP with AST. So instead, recursively scan for
+    // separate candidates and treat as subtree.
+    PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST (Perl OP=%s).\n", OP_NAME(o));
+    retval = new AST::Optree(o);
+    pj_find_jit_candidates_internal(aTHX_ o, visitor);
+    if (PJ_DEBUGGING)
+      retval->dump();
+    return retval;
+  }
+
+  // Build child list if applicable
+  vector<AST::Term *> kid_terms;
+  const int kids_fail = pj_build_kid_terms(aTHX_ o, visitor, kid_terms);
+  if (kids_fail)
+    return NULL;
+
+
 #define EMIT_UNOP_CODE(perl_op_type, pj_op_type)          \
   case perl_op_type:                                      \
     assert(kid_terms.size() == 1);                        \
