@@ -275,9 +275,9 @@ sub _to_numeric_type {
     my ($self, $val, $type) = @_;
 
     if (_type_is_numeric($type)) {
-        return $val;
+        return ($val, $type);
     } elsif ($type->equals(UNSPECIFIED)) {
-        return pa_sv_nv($self->_fun, $val); # somewhat dubious
+        return (pa_sv_nv($self->_fun, $val), DOUBLE); # somewhat dubious
     } else {
         die "Handle more coercion cases";
     }
@@ -290,6 +290,18 @@ sub _to_type {
         return $val;
     } elsif ($to_type->equals(DOUBLE)) {
         return $self->_to_nv($val, $type);
+    } else {
+        die "Handle more coercion cases";
+    }
+}
+
+sub _to_bool {
+    my ($self, $val, $type) = @_;
+
+    if (_type_is_numeric($type)) {
+        return $val;
+    } elsif ($type->equals(UNSPECIFIED) || $type->equals(OPAQUE)) {
+        return pa_sv_true($self->_fun, $val);
     } else {
         die "Handle more coercion cases";
     }
@@ -347,21 +359,11 @@ sub _jit_emit_op {
                     $res = jit_insn_div($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
                 }
                 when (pj_binop_bool_and) {
-                    # This is all a bit awkward because we need to check $a
-                    # of $a && $b first, then return $a (but not the converted
-                    # value of $a!) then return unconverted $b. On top of that,
-                    # we need to only evaluate $b (which could be a big subtree)
-                    # only if $a was false - Perl's short-circuiting doesn't happen
-                    # automatically at this level.
-                    # FIXME should this do a better emulation of the Perl truth check?
-                    #       Something along the lines of "if it's an SV, compare ptr to
-                    #       &PL_sv_undef. If same, then false & return. If not, then try
-                    #       the numeric conversion."?
-                    # FIXME Right now assumes type jit_type_void_ptr (==SV*).
-                    #       That's obviously totally broken.
-
-                    # note that we ask subtrees to return a value with desired
-                    # type, but we need coercion when that is not the case!
+                    # TODO We ask subtrees to return a value with desired
+                    #      type, but we need coercion when that is not the case.
+                    #      More correct would be to pick the output type based
+                    #      on the input types and ignore what the caller would have
+                    #      liked to get.
 
                     my $endlabel = jit_label_undefined;
                     $res = $self->_jit_create_value($type);
@@ -370,7 +372,7 @@ sub _jit_emit_op {
                     # If value is false, then go with v1 and never look at v2
                     ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, $type);
                     jit_insn_store($fun, $res, $self->_to_type($v1, $t1, $type));
-                    my $tmp = $self->_to_numeric_type($v1, $t1, $type);
+                    my $tmp = $self->_to_bool($v1, $t1);
                     jit_insn_branch_if_not($fun, $tmp, $endlabel);
 
                     # Left is true, move to right operand
@@ -420,7 +422,8 @@ sub _jit_emit_op {
                     $res = jit_insn_exp($fun, $self->_to_nv($v1, $t1));
                 }
                 when (pj_unop_bool_not) {
-                    $res = jit_insn_to_not_bool($fun, $self->_to_numeric_type($v1, $t1));
+                    my ($tmp, $tmptype) = $self->_to_numeric_type($v1, $t1);
+                    $res = jit_insn_to_not_bool($fun, $tmp);
                     $restype = INT;
                 }
                 when (pj_unop_perl_int) {
@@ -428,7 +431,7 @@ sub _jit_emit_op {
                         $res = $v1;
                     }
                     else {
-                        my $val = $self->_to_numeric_type($v1, $t1);
+                        my ($val, $valtype) = $self->_to_numeric_type($v1, $t1);
                         my $endlabel = jit_label_undefined;
                         my $neglabel = jit_label_undefined;
 
