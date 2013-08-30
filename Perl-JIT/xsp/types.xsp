@@ -15,3 +15,15 @@ class Perl::JIT::AST::Type {
 class Perl::JIT::AST::Scalar : public Perl::JIT::AST::Type {
   Scalar(pj_type_id tag);
 };
+
+
+class Perl::JIT::AST::Array : public Perl::JIT::AST::Type {
+  Array(Perl::JIT::AST::Type *element);
+  Perl::JIT::AST::Type *element();
+};
+
+
+class Perl::JIT::AST::Hash : public Perl::JIT::AST::Type {
+  Hash(Perl::JIT::AST::Type *element);
+  Perl::JIT::AST::Type *element();
+};

@@ -1,6 +1,7 @@
 #include "types.h"
 
 #include <stdio.h>
+#include <string.h>
 
 using namespace std;
 using namespace PerlJIT;
@@ -50,17 +51,98 @@ string Scalar::to_string() const
   }
 }
 
-#define PARSE_SCALAR(name, type) \
-  if (str == string(name))       \
-    return new Scalar(type)
+Array::Array(Type *element) :
+  _element(element)
+{
+}
 
-#define CHECK_SCALAR(name) \
-  if (str == string(name)) \
-    return true
+pj_type_id Array::tag() const
+{
+  return pj_array_type;
+}
+
+Type *Array::element() const
+{
+  return _element;
+}
+
+bool Array::equals(Type *other) const
+{
+  Array *o = dynamic_cast<Array *>(other);
+
+  return o && o->_element->equals(_element);
+}
+
+string Array::to_string() const
+{
+  return "Array[" + _element->to_string() + "]";
+}
+
+Hash::Hash(Type *element) :
+  _element(element)
+{
+}
+
+pj_type_id Hash::tag() const
+{
+  return pj_hash_type;
+}
+
+Type *Hash::element() const
+{
+  return _element;
+}
+
+bool Hash::equals(Type *other) const
+{
+  Hash *o = dynamic_cast<Hash *>(other);
+
+  return o && o->_element->equals(_element);
+}
+
+string Hash::to_string() const
+{
+  return "Hash[" + _element->to_string() + "]";
+}
+
+#define PARSE_SCALAR(name, type) \
+  if (starts_with(str, name)) { \
+    rest = str.substr(strlen(name)); \
+    return new Scalar(type); \
+  }
+
+#define PARSE_NESTED(name, type) \
+  if (Type *t = parse_nested<type>(name "[", str, rest)) \
+    return t
+
+static inline bool
+starts_with(const string &str, const string &substr)
+{
+  return str.rfind(substr, 0) == 0;
+}
 
 namespace PerlJIT {
   namespace AST {
-    Type *parse_type(const string &str)
+    Type *parse_type_part(const string &str, string &rest);
+
+    template<class T>
+    Type *parse_nested(const string &start, const string &str, string &rest)
+    {
+      if (starts_with(str, start)) {
+        string tail;
+        Type *element = parse_type_part(str.substr(start.size()), tail);
+
+        if (element && tail.length() && tail[0] == ']') {
+          rest = tail.substr(1);
+          return new T(element);
+        }
+
+        delete element;
+        return 0;
+      }
+    }
+
+    Type *parse_type_part(const string &str, string &rest)
     {
       PARSE_SCALAR(ANY, pj_unspecified_type);
       PARSE_SCALAR(OPAQUE, pj_opaque_type);
@@ -68,20 +150,23 @@ namespace PerlJIT {
       PARSE_SCALAR(DOUBLE, pj_double_type);
       PARSE_SCALAR(INT, pj_int_type);
       PARSE_SCALAR(UINT, pj_uint_type);
+      PARSE_NESTED("Array", Array);
+      PARSE_NESTED("Hash", Hash);
 
       return 0;
     }
 
-    bool is_type(const string &str)
+    Type *parse_type(const string &str)
     {
-      CHECK_SCALAR(ANY);
-      CHECK_SCALAR(OPAQUE);
-      CHECK_SCALAR(STRING);
-      CHECK_SCALAR(DOUBLE);
-      CHECK_SCALAR(INT);
-      CHECK_SCALAR(UINT);
+      string rest;
+      Type *type = parse_type_part(str, rest);
 
-      return false;
+      if (rest.size()) {
+        delete type;
+        return 0;
+      }
+      else
+        return type;
     }
   }
 }
