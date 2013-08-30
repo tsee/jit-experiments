@@ -157,7 +157,7 @@ sub needs_excessive_magic {
         my $node = shift @nodes;
 
         return 1 if $node->get_type == pj_ttype_variable &&
-                    $node->get_value_type->equals(SCALAR);
+                    $node->get_value_type->equals(OPAQUE);
         next unless $node->get_type == pj_ttype_op;
 
         my $known = $Jittable_Ops{$node->get_optype};

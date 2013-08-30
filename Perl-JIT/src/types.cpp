@@ -7,7 +7,7 @@ using namespace PerlJIT;
 using namespace PerlJIT::AST;
 
 #define ANY         "Any"
-#define SCALAR      "Scalar"
+#define OPAQUE      "Opaque"
 #define STRING      "String"
 #define DOUBLE      "Double"
 #define INT         "Int"
@@ -43,7 +43,7 @@ void Scalar::dump() const
 {
   switch (_tag) {
     PRINT_TYPE(pj_unspecified_type, "Any");
-    PRINT_TYPE(pj_scalar_type, SCALAR);
+    PRINT_TYPE(pj_opaque_type, OPAQUE);
     PRINT_TYPE(pj_string_type, STRING);
     PRINT_TYPE(pj_double_type, DOUBLE);
     PRINT_TYPE(pj_int_type, INT);
@@ -64,7 +64,7 @@ namespace PerlJIT {
     Type *parse_type(const string &str)
     {
       PARSE_SCALAR(ANY, pj_unspecified_type);
-      PARSE_SCALAR(SCALAR, pj_scalar_type);
+      PARSE_SCALAR(OPAQUE, pj_opaque_type);
       PARSE_SCALAR(STRING, pj_string_type);
       PARSE_SCALAR(DOUBLE, pj_double_type);
       PARSE_SCALAR(INT, pj_int_type);
@@ -76,7 +76,7 @@ namespace PerlJIT {
     bool is_type(const string &str)
     {
       CHECK_SCALAR(ANY);
-      CHECK_SCALAR(SCALAR);
+      CHECK_SCALAR(OPAQUE);
       CHECK_SCALAR(STRING);
       CHECK_SCALAR(DOUBLE);
       CHECK_SCALAR(INT);

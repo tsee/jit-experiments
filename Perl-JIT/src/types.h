@@ -6,7 +6,7 @@
 // TODO should this have a pj_undef_type? If so, change the AST::UndefConstant class.
 enum pj_type_id {
   pj_unspecified_type,
-  pj_scalar_type,
+  pj_opaque_type,
   pj_string_type,
   pj_double_type,
   pj_int_type,

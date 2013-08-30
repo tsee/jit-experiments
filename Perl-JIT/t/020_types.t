@@ -11,7 +11,7 @@ my @tests = (
     },
   { name => 'scalar',
     vars => ['$x', '$y'],
-    type => {'Scalar' => {class => 'Scalar', tag => pj_scalar_type}},
+    type => {'Opaque' => {class => 'Scalar', tag => pj_opaque_type}},
     },
   { name => 'string',
     vars => ['$x'],

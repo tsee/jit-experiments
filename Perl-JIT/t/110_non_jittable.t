@@ -24,7 +24,7 @@ sub test_not_jitted_chain {
 }
 
 sub test_typed_scalar {
-    typed Scalar ($a) = @_;
+    typed Opaque ($a) = @_;
 
     my $x = 4 + $a + 8;
 
@@ -32,7 +32,7 @@ sub test_typed_scalar {
 }
 
 sub test_typed_scalar_nomagic {
-    typed Scalar ($a) = @_;
+    typed Opaque ($a) = @_;
 
     # ord/chr used to stop magic from propagating outwards
     my $x = 4 + ord(chr($a - 1)) + 8;
