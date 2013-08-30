@@ -99,6 +99,7 @@ pj_binop_bool_or,	pj_opc_binop,	||,		OP_OR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FOR
 pj_binop_definedor,	pj_opc_binop,	//,		OP_DOR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_FORM,	emit|nonroot,	Any
 pj_binop_concat,	pj_opc_binop,	concat,		OP_CONCAT,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	String
 pj_binop_sassign,	pj_opc_binop,	sassign,	OP_SASSIGN,	KIDS_OPTIONAL|OVERLOAD,	emit,	Any
+pj_binop_list_slice,	pj_opc_binop,	list slice,	OP_LSLICE,	0,	,	Scalar=Any List=List[Any]
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any

@@ -292,6 +292,14 @@ Op::~Op()
     delete k[i];
 }
 
+List::~List()
+{
+  std::vector<PerlJIT::AST::Term *> &k = kids;
+  const unsigned int n = k.size();
+  for (unsigned int i = 0; i < n; ++i)
+    delete k[i];
+}
+
 Type *Term::get_value_type()
 {
   return _value_type;

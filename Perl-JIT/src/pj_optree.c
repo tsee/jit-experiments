@@ -420,6 +420,34 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       break;
     }
 
+  case OP_LSLICE: {
+      if (!NDEBUG) {
+        assert(o->op_flags & OPf_KIDS);
+        // Paranoid: Assert two children
+        unsigned int nkids = 0;
+        for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
+          ++nkids;
+          assert(kid->op_type == OP_LIST || (kid->op_type == OP_NULL && kid->op_targ == OP_LIST));
+        }
+        assert(nkids == 2);
+      }
+      vector<AST::Term *> tmp;
+      if (pj_build_kid_terms(aTHX_ ((BINOP *)o)->op_first, visitor, tmp)) {
+        pj_free_term_vector(aTHX_ tmp);
+        return NULL;
+      }
+      AST::Term *kid1 = new AST::List(tmp);
+
+      tmp.clear();
+      if (pj_build_kid_terms(aTHX_ ((BINOP *)o)->op_last, visitor, tmp)) {
+        pj_free_term_vector(aTHX_ tmp);
+        delete kid1;
+        return NULL;
+      }
+      retval = new AST::Binop(o, pj_binop_list_slice, kid1, new AST::List(tmp));
+      break;
+    }
+
   // Special cases, not auto-generated
     EMIT_LISTOP_CODE(OP_SCHOP, pj_listop_chop)
     EMIT_LISTOP_CODE(OP_SCHOMP, pj_listop_chomp)

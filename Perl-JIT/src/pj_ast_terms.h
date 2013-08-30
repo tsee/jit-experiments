@@ -91,6 +91,7 @@ namespace PerlJIT {
       virtual void dump(int indent_lvl = 0);
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::List"; }
+      virtual ~List();
     };
 
     class Constant : public Term {

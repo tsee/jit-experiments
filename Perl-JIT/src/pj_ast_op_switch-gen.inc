@@ -43,6 +43,7 @@
   || otype == OP_LIST \
   || otype == OP_LOCALTIME \
   || otype == OP_LOG \
+  || otype == OP_LSLICE \
   || otype == OP_LT \
   || otype == OP_MODULO \
   || otype == OP_MULTIPLY \
@@ -136,6 +137,7 @@
   || otype == OP_LIST \
   || otype == OP_LOCALTIME \
   || otype == OP_LOG \
+  || otype == OP_LSLICE \
   || otype == OP_LT \
   || otype == OP_MODULO \
   || otype == OP_MULTIPLY \
