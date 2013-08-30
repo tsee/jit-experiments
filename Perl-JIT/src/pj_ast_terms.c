@@ -61,7 +61,7 @@ StringConstant::StringConstant(pTHX_ OP *p_op, SV *string_literal_sv)
 }
 
 UndefConstant::UndefConstant()
-  : Constant(NULL, new Scalar(pj_scalar_type))
+  : Constant(NULL, new Scalar(pj_unspecified_type))
 {
 }
 
