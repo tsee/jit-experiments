@@ -1,4 +1,0 @@
-add_bool_config(
-  'without-tests',
-  false,
-  'does not run tests')
