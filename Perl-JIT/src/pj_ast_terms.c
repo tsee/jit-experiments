@@ -197,6 +197,8 @@ S_sigil_character(pj_variable_sigil sigil)
   case pj_sigil_glob:
     return '*';
   }
+  abort();
+  return '\0';
 }
 
 void

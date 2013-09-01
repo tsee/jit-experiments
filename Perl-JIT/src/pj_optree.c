@@ -151,7 +151,7 @@ namespace PerlJIT {
       return decl;
     }
 
-    AST::Type*
+    void
     set_declaration_type(AST::VariableDeclaration *decl, AST::Type *type)
     {
       if (type->is_scalar()) {

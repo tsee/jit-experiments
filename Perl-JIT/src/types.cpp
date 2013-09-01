@@ -1,6 +1,7 @@
 #include "types.h"
 
 #include <stdio.h>
+#include <cstdlib>
 #include <string.h>
 
 using namespace std;
@@ -60,7 +61,10 @@ string Scalar::to_string() const
     PRINT_TYPE(pj_double_type, DOUBLE);
     PRINT_TYPE(pj_int_type, INT);
     PRINT_TYPE(pj_uint_type, UINT);
+  default:
+    abort(); /* shut up compiler warnings */
   }
+  return "InvalidScalarType";
 }
 
 Array::Array(Type *element) :
@@ -152,6 +156,7 @@ namespace PerlJIT {
         delete element;
         return 0;
       }
+      return 0;
     }
 
     Type *parse_type_part(const string &str, string &rest)
