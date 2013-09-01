@@ -8,10 +8,8 @@ use File::Spec;
 use lib File::Spec->catdir($Bin, 'inc');
 use Getopt::Long qw(GetOptions);
 my $DEBUG = $ENV{DEBUG};
-my $CTESTS = $ENV{CTESTS};
 GetOptions(
   'debug|DEBUG+' => \$DEBUG,
-  'ctest|ctests' => \$CTESTS,
 );
 
 use Module::Build::PerlJIT;
@@ -32,10 +30,6 @@ if ($DEBUG) {
 else {
   push @extra_compiler_flags, qw(-DNDEBUG);
 }
-if ($CTESTS) {
-  open my $fh, ">", "CTESTS" or die $!;
-  close $fh or die $!;
-}
 
 Module::Build::PerlJIT->new(
     ##{ $plugin->get_default('dist_name') ##}
@@ -46,13 +40,7 @@ Module::Build::PerlJIT->new(
     ##{ $plugin->get_default('dist_author') ##}
     ##{ $plugin->get_prereqs ##}
     ##{ $plugin->get_default('create_readme') ##}
-    dynamic_config => 0,
-    include_dirs => [ '.', $Module::Build::PerlJIT::LIBJIT_INCLUDE ],
-    extra_linker_flags => [$Module::Build::PerlJIT::LIBJIT_RESULT, '-lpthread'],
     extra_compiler_flags => \@extra_compiler_flags,
-    extra_typemap_modules => {
-      'ExtUtils::Typemaps::STL::String' => '0',
-    },
 )->create_build_script;
 
 exit(0);

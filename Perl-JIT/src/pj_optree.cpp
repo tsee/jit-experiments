@@ -51,7 +51,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
 // and IS_AST_COMPATIBLE_OP_TYPE. The macros determine whether to attempt
 // to ASTify a given Perl OP. Difference between the two macros described
 // below.
-#include "src/pj_ast_op_switch-gen.inc"
+#include "pj_ast_op_switch-gen.inc"
 /* AND and OR at top level can be used in "interesting" places such as looping constructs.
  * Thus, we'll -- for now -- only support them as OPs within a tree.
  * NULLs may need to be skipped occasionally, so we do something similar.
