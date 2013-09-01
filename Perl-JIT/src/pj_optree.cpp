@@ -204,6 +204,9 @@ pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::T
   if (o->op_flags & OPf_KIDS) {
     for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
       PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
+      if (PJ_DEBUGGING && kid->op_type == OP_NULL) {
+        printf("             kid is OP_NULL and used to be %s\n", PL_op_name[kid->op_targ]);
+      }
 
       if (kid->op_type == OP_NULL && !(kid->op_flags & OPf_KIDS)) {
         PJ_DEBUG_1("Skipping kid (%u) since it's an OP_NULL without kids.\n", ikid);
