@@ -354,15 +354,12 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     if (o->op_private & OPpLVAL_INTRO)
       retval = visitor.get_declaration(o, o);
     else
-      retval = new AST::Variable(o, visitor.get_declaration(0, o));
+      retval = new AST::Lexical(o, visitor.get_declaration(0, o));
     break;
 
   case OP_GVSV:
-    // FIXME OP_GVSV can have OPpLVAL_INTRO - Not sure what that means...
-    //if (o->op_flags & OPpLVAL_INTRO)
-    //  retval = visitor.get_declaration(o, o);
-    //else
-    retval = new AST::Variable(o, NULL); // FIXME want to support a declaration, too! (our)
+    // FIXME OP_GVSV with OPpLVAL_INTRO is "local $x"
+    retval = new AST::Global(o, pj_sigil_scalar);
     pj_free_term_vector(aTHX_ kid_terms);
     break;
 

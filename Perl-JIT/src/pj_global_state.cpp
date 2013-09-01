@@ -73,7 +73,8 @@ static void pj_define_string(pTHX_ const char *value, const STRLEN value_len, co
 void pj_define_constants(pTHX)
 {
   INT_CONST(pj_ttype_constant);
-  INT_CONST(pj_ttype_variable);
+  INT_CONST(pj_ttype_lexical);
+  INT_CONST(pj_ttype_global);
   INT_CONST(pj_ttype_variabledeclaration);
   INT_CONST(pj_ttype_list);
   INT_CONST(pj_ttype_optree);

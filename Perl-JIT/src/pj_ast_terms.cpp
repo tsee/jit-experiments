@@ -77,8 +77,13 @@ VariableDeclaration::VariableDeclaration(OP *p_op, int ivariable, pj_variable_si
 {}
 
 
-Variable::Variable(OP *p_op, VariableDeclaration *decl)
-  : Identifier(p_op, pj_ttype_variable, decl->sigil), declaration(decl)
+Lexical::Lexical(OP *p_op, VariableDeclaration *decl)
+  : Identifier(p_op, pj_ttype_lexical, decl->sigil), declaration(decl)
+{}
+
+
+Global::Global(OP *p_op, pj_variable_sigil s)
+  : Identifier(p_op, pj_ttype_global, s)
 {}
 
 
@@ -213,16 +218,21 @@ VariableDeclaration::dump(int indent_lvl)
 
 
 void
-Variable::dump(int indent_lvl)
+Lexical::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  if (this->declaration)
-    printf("V (%c) = %i", S_sigil_character(declaration->sigil), declaration->ivar);
-  else
-    printf("V = ?????? FIXME THIS IS A BUG. Cannot handle pkg vars yet...");
+  printf("V (%c) = %i", S_sigil_character(declaration->sigil), declaration->ivar);
   if (Type *value_type = get_value_type())
     printf(" : %s", value_type->to_string().c_str());
   printf("\n");
+}
+
+
+void
+Global::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("G = (%c)\n", S_sigil_character(sigil));
 }
 
 

@@ -14,7 +14,8 @@ typedef struct op OP; // that's the Perl OP
 
 typedef enum {
   pj_ttype_constant,
-  pj_ttype_variable,
+  pj_ttype_lexical,
+  pj_ttype_global,
   pj_ttype_variabledeclaration,
   pj_ttype_list,
   pj_ttype_optree,
@@ -171,9 +172,9 @@ namespace PerlJIT {
     // FIXME Right now, a Variable without declaration could reasonably be
     // any of the following: a package var, a lexically scoped thing (my/our)
     // from an outer sub (closures), ...
-    class Variable : public Identifier {
+    class Lexical : public Identifier {
     public:
-      Variable(OP *p_op, VariableDeclaration *decl);
+      Lexical(OP *p_op, VariableDeclaration *decl);
 
       VariableDeclaration *declaration;
 
@@ -182,7 +183,16 @@ namespace PerlJIT {
 
       virtual void dump(int indent_lvl);
       virtual const char *perl_class() const
-        { return "Perl::JIT::AST::Variable"; }
+        { return "Perl::JIT::AST::Lexical"; }
+    };
+
+    class Global : public Identifier {
+    public:
+      Global(OP *p_op, pj_variable_sigil sigil);
+
+      virtual void dump(int indent_lvl);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Global"; }
     };
 
     class Op : public Term {

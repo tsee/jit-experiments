@@ -92,11 +92,15 @@ class Perl::JIT::AST::VariableDeclaration : public Perl::JIT::AST::Identifier
   pj_variable_sigil sigil %get;
 };
 
-class Perl::JIT::AST::Variable : public Perl::JIT::AST::Identifier
+class Perl::JIT::AST::Lexical : public Perl::JIT::AST::Identifier
 {
   Perl::JIT::AST::VariableDeclaration *declaration %get;
   int get_ivar() const %code{% RETVAL = THIS->declaration->ivar; %};
   pj_variable_sigil get_sigil() const %code{% RETVAL = THIS->declaration->sigil; %};
+};
+
+class Perl::JIT::AST::Global : public Perl::JIT::AST::Identifier
+{
 };
 
 class Perl::JIT::AST::Optree : public Perl::JIT::AST::Term

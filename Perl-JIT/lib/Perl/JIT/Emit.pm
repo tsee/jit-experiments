@@ -57,7 +57,7 @@ sub process_jit_candidates {
     my ($self, $asts) = @_;
 
     while (my $ast = shift @$asts) {
-        next if $ast->get_type == pj_ttype_variable ||
+        next if $ast->get_type == pj_ttype_lexical ||
                 $ast->get_type == pj_ttype_constant;
 
         if ($ast->get_type == pj_ttype_nulloptree) {
@@ -134,7 +134,7 @@ sub is_jittable {
 
     given ($ast->get_type) {
         when (pj_ttype_constant) { return 1 }
-        when (pj_ttype_variable) { return 1 }
+        when (pj_ttype_lexical) { return 1 }
         when (pj_ttype_optree) { return 0 }
         when (pj_ttype_nulloptree) { return 1 }
         when (pj_ttype_op) {
@@ -156,7 +156,7 @@ sub needs_excessive_magic {
     while (@nodes) {
         my $node = shift @nodes;
 
-        return 1 if $node->get_type == pj_ttype_variable &&
+        return 1 if $node->get_type == pj_ttype_lexical &&
                     $node->get_value_type->equals(OPAQUE);
         next unless $node->get_type == pj_ttype_op;
 
@@ -213,7 +213,7 @@ sub _jit_emit {
         when (pj_ttype_constant) {
             return $self->_jit_emit_const($ast, $type);
         }
-        when (pj_ttype_variable) {
+        when (pj_ttype_lexical) {
             my $fun = $self->_fun;
             my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_perl_op->targ);
 

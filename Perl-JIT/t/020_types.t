@@ -43,7 +43,7 @@ for my $test (@tests) {
   while (@asts) {
     my $ast = pop @asts;
     push @asts, $ast->get_kids;
-    if ($ast->get_type == pj_ttype_variable) {
+    if ($ast->get_type == pj_ttype_lexical) {
         my $type = $ast->get_value_type;
         my $cls = ref($type) =~ s/.*:://r;
         push @vars, {class => $cls, tag => $type ? $type->tag : -1};
