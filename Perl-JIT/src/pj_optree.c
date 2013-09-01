@@ -456,16 +456,16 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     }
 
   case OP_LSLICE: {
-      if (!NDEBUG) {
-        assert(o->op_flags & OPf_KIDS);
-        // Paranoid: Assert two children
-        unsigned int nkids = 0;
-        for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
-          ++nkids;
-          assert(kid->op_type == OP_LIST || (kid->op_type == OP_NULL && kid->op_targ == OP_LIST));
-        }
-        assert(nkids == 2);
+#ifndef NDEBUG
+      assert(o->op_flags & OPf_KIDS);
+      // Paranoid: Assert two children
+      unsigned int nkids = 0;
+      for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
+        ++nkids;
+        assert(kid->op_type == OP_LIST || (kid->op_type == OP_NULL && kid->op_targ == OP_LIST));
       }
+      assert(nkids == 2);
+#endif
       vector<AST::Term *> tmp;
       if (pj_build_kid_terms(aTHX_ ((BINOP *)o)->op_first, visitor, tmp)) {
         pj_free_term_vector(aTHX_ tmp);
