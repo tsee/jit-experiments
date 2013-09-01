@@ -28,6 +28,9 @@ namespace PerlJIT {
       virtual bool is_array() const { return false; }
       virtual bool is_hash() const { return false; }
 
+      virtual bool is_integer() const { return false; }
+      virtual bool is_numeric() const { return false; }
+
       virtual std::string to_string() const = 0;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Type"; }
@@ -41,6 +44,9 @@ namespace PerlJIT {
       virtual bool equals(Type *other) const;
 
       virtual bool is_scalar() const { return true; }
+
+      virtual bool is_integer() const;
+      virtual bool is_numeric() const;
 
       virtual std::string to_string() const;
       virtual const char *perl_class() const

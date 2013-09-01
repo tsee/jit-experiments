@@ -28,6 +28,18 @@ pj_type_id Scalar::tag() const
   return _tag;
 }
 
+bool Scalar::is_integer() const
+{
+  return (_tag == pj_int_type || _tag == pj_uint_type);
+}
+
+bool Scalar::is_numeric() const
+{
+  return (   _tag == pj_int_type
+          || _tag == pj_uint_type
+          || _tag == pj_double_type);
+}
+
 bool Scalar::equals(Type *other) const
 {
   Scalar *o = dynamic_cast<Scalar *>(other);
