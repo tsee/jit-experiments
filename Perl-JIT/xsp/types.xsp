@@ -11,6 +11,8 @@ class Perl::JIT::AST::Type {
   bool is_scalar();
   bool is_array();
   bool is_hash();
+  bool is_opaque();
+  bool is_unspecified();
 
   bool is_integer() const;
   bool is_numeric() const;

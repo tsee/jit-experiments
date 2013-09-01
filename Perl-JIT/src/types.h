@@ -27,6 +27,8 @@ namespace PerlJIT {
       virtual bool is_scalar() const { return false; }
       virtual bool is_array() const { return false; }
       virtual bool is_hash() const { return false; }
+      virtual bool is_opaque() const { return false; }
+      virtual bool is_unspecified() const { return false; }
 
       virtual bool is_integer() const { return false; }
       virtual bool is_numeric() const { return false; }
@@ -44,6 +46,8 @@ namespace PerlJIT {
       virtual bool equals(Type *other) const;
 
       virtual bool is_scalar() const { return true; }
+      virtual bool is_unspecified() const;
+      virtual bool is_opaque() const;
 
       virtual bool is_integer() const;
       virtual bool is_numeric() const;

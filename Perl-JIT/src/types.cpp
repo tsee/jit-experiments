@@ -29,6 +29,16 @@ pj_type_id Scalar::tag() const
   return _tag;
 }
 
+bool Scalar::is_unspecified() const
+{
+  return _tag == pj_unspecified_type;
+}
+
+bool Scalar::is_opaque() const
+{
+  return _tag == pj_opaque_type;
+}
+
 bool Scalar::is_integer() const
 {
   return (_tag == pj_int_type || _tag == pj_uint_type);

@@ -157,7 +157,7 @@ sub needs_excessive_magic {
         my $node = shift @nodes;
 
         return 1 if $node->get_type == pj_ttype_lexical &&
-                    $node->get_value_type->equals(OPAQUE);
+                    $node->get_value_type->is_opaque;
         next unless $node->get_type == pj_ttype_op;
 
         my $known = $Jittable_Ops{$node->get_optype};
@@ -252,7 +252,7 @@ sub _to_nv {
         return $val;
     } elsif ($type->is_integer) {
         return jit_insn_convert($self->_fun, $val, jit_type_NV, 0);
-    } elsif ($type->equals(UNSPECIFIED)) {
+    } elsif ($type->is_unspecified) {
         return pa_sv_nv($self->_fun, $val);
     } else {
         die "Handle more coercion cases";
@@ -264,7 +264,7 @@ sub _to_numeric_type {
 
     if ($type->is_numeric) {
         return ($val, $type);
-    } elsif ($type->equals(UNSPECIFIED)) {
+    } elsif ($type->is_unspecified) {
         return (pa_sv_nv($self->_fun, $val), DOUBLE); # somewhat dubious
     } else {
         die "Handle more coercion cases";
@@ -288,7 +288,7 @@ sub _to_bool {
 
     if ($type->is_numeric) {
         return $val;
-    } elsif ($type->equals(UNSPECIFIED) || $type->equals(OPAQUE)) {
+    } elsif ($type->is_unspecified || $type->is_opaque) {
         return pa_sv_true($self->_fun, $val);
     } else {
         die "Handle more coercion cases";
