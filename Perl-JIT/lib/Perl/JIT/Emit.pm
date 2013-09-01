@@ -245,24 +245,12 @@ sub _jit_emit {
     }
 }
 
-sub _type_is_integer {
-    my ($type) = @_;
-
-    return $type->equals(INT) || $type->equals(UNSIGNED_INT);
-}
-
-sub _type_is_numeric {
-    my ($type) = @_;
-
-    return $type->equals(INT) || $type->equals(UNSIGNED_INT) || $type->equals(DOUBLE);
-}
-
 sub _to_nv {
     my ($self, $val, $type) = @_;
 
     if ($type->equals(DOUBLE)) {
         return $val;
-    } elsif (_type_is_integer($type)) {
+    } elsif ($type->is_integer) {
         return jit_insn_convert($self->_fun, $val, jit_type_NV, 0);
     } elsif ($type->equals(UNSPECIFIED)) {
         return pa_sv_nv($self->_fun, $val);
@@ -274,7 +262,7 @@ sub _to_nv {
 sub _to_numeric_type {
     my ($self, $val, $type) = @_;
 
-    if (_type_is_numeric($type)) {
+    if ($type->is_numeric) {
         return ($val, $type);
     } elsif ($type->equals(UNSPECIFIED)) {
         return (pa_sv_nv($self->_fun, $val), DOUBLE); # somewhat dubious
@@ -298,7 +286,7 @@ sub _to_type {
 sub _to_bool {
     my ($self, $val, $type) = @_;
 
-    if (_type_is_numeric($type)) {
+    if ($type->is_numeric) {
         return $val;
     } elsif ($type->equals(UNSPECIFIED) || $type->equals(OPAQUE)) {
         return pa_sv_true($self->_fun, $val);
@@ -427,7 +415,7 @@ sub _jit_emit_op {
                     $restype = INT;
                 }
                 when (pj_unop_perl_int) {
-                    if (_type_is_integer($t1)) {
+                    if ($t1->is_integer) {
                         $res = $v1;
                     }
                     else {

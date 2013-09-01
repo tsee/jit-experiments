@@ -8,6 +8,13 @@ class Perl::JIT::AST::Type {
 
   bool equals(Perl::JIT::AST::Type *type) const;
 
+  bool is_scalar();
+  bool is_array();
+  bool is_hash();
+
+  bool is_integer() const;
+  bool is_numeric() const;
+
   std::string to_string() const;
 };
 
