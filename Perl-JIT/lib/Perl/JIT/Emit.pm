@@ -116,19 +116,6 @@ my %Jittable_Ops = map { $_ => 1 } (
     pj_unop_log, pj_unop_exp, pj_unop_bool_not, pj_unop_perl_int,
 );
 
-my %Ops_Propagating_Magic = (
-    (map { $_ => 1 } (
-        pj_binop_add, pj_binop_subtract, pj_binop_multiply, pj_binop_divide,
-        pj_binop_bool_and,
-
-        pj_unop_negate, pj_unop_abs, pj_unop_sin, pj_unop_cos, pj_unop_sqrt,
-        pj_unop_log, pj_unop_exp, pj_unop_bool_not, pj_unop_perl_int,
-    )),
-    (map { $_ => 0 } (
-        pj_unop_ord, pj_unop_chr,
-    )),
-);
-
 sub is_jittable {
     my ($self, $ast) = @_;
 
@@ -139,10 +126,9 @@ sub is_jittable {
         when (pj_ttype_nulloptree) { return 1 }
         when (pj_ttype_op) {
             my $known = $Jittable_Ops{$ast->get_optype};
-            my $propagates = $Ops_Propagating_Magic{$ast->get_optype};
 
             return 0 unless $known;
-            return 1 unless $propagates;
+            return 1 unless $ast->may_have_explicit_overload;
             return !$self->needs_excessive_magic($ast);
         }
         default { return 0 }
@@ -161,9 +147,8 @@ sub needs_excessive_magic {
         next unless $node->get_type == pj_ttype_op;
 
         my $known = $Jittable_Ops{$node->get_optype};
-        my $propagates = $Ops_Propagating_Magic{$node->get_optype};
 
-        next if !$known || !$propagates;
+        next if !$known || !$node->may_have_explicit_overload;
         push @nodes, $node->get_kids;
     }
 
