@@ -396,6 +396,13 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       break;
     }
 
+  case OP_SASSIGN: {
+      MAKE_DEFAULT_KID_VECTOR
+      assert(kid_terms.size() == 2);
+      retval = new AST::Binop(o, pj_binop_sassign, kid_terms[1], kid_terms[0]);
+      break;
+    }
+
   case OP_ANDASSIGN:
   case OP_ORASSIGN:
   case OP_DORASSIGN: {
@@ -404,27 +411,18 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       //  8           <1> sassign sK/BKWARD,1 ->9
       //  7              <$> const[IV 123] s ->8
       // Patch out the sassign!
-      MAKE_DEFAULT_KID_VECTOR
-      assert(kid_terms.size() == 2);
-      if (kid_terms[1]->type == pj_ttype_op
-          && ((AST::Op *)kid_terms[1])->optype == pj_binop_sassign
-          && ((AST::Op *)kid_terms[1])->kids[1] == NULL)
-      {
-        // one of them funny sassigns...
-        PJ_DEBUG("Patching out uninteresting sassign without and/or/dor-assign.\n");
-        AST::Binop *tmp = (AST::Binop *)kid_terms[1];
-        kid_terms[1] = tmp->kids[0];
-        tmp->kids[0] = NULL; // ownership fix
-        delete tmp;
-      }
-      else {
-        kid_terms[1]->dump();
+      BINOP *bo = cBINOPo;
+      if (!bo->op_first->op_sibling ||
+          bo->op_first->op_sibling->op_type != OP_SASSIGN ||
+          !(bo->op_first->op_sibling->op_private & OPpASSIGN_BACKWARDS)) {
         abort();
       }
+      AST::Term *left = pj_build_ast(aTHX_ bo->op_first, visitor);
+      AST::Term *right = pj_build_ast(aTHX_ cBINOPx(bo->op_first->op_sibling)->op_first, visitor);
       pj_op_type t =   otype == OP_ANDASSIGN ? pj_binop_bool_and
                      : otype == OP_ORASSIGN  ? pj_binop_bool_or
                      :                         pj_binop_definedor;
-      retval = new AST::Binop(o, t, kid_terms[0], kid_terms[1]);
+      retval = new AST::Binop(o, t, left, right);
       ((AST::Binop *)retval)->set_assignment_form(true);
       break;
     }
