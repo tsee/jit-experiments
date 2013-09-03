@@ -175,17 +175,20 @@ sub _jit_emit_return {
             # to handle cases like '$x = $y += 7'
             my $targ = pa_get_targ($fun);
 
-            pa_sv_set_nv($fun, $targ, $val);
+            $self->_jit_assign_sv($targ, $val, $type);
             pa_push_sv($fun, $targ);
         }
         when (pj_opc_unop) {
             my $targ = pa_get_targ($fun);
 
-            pa_sv_set_nv($fun, $targ, $val);
+            $self->_jit_assign_sv($targ, $val, $type);
             pa_push_sv($fun, $targ);
         }
         default {
-            pa_push_sv($fun, pa_sv_2mortal(pa_new_sv_nv($val)));
+            my $sv = pa_new_mortal_svl();
+
+            $self->_jit_assign_sv($sv, $val, $type);
+            pa_push_sv($fun, $sv);
         }
     }
 }
@@ -310,6 +313,19 @@ sub _jit_get_lexical_xv {
     return (pa_get_pad_sv($fun, $padix), SV);
 }
 
+sub _jit_assign_sv {
+    my ($self, $sv, $value, $type) = @_;
+    my $fun = $self->_fun;
+
+    if ($type->equals(DOUBLE)) {
+        pa_sv_set_nv($fun, $sv, $value);
+    } elsif ($type->equals(INT)) {
+        pa_sv_set_iv($fun, $sv, $value);
+    } else {
+       die "Unable to assign ", $type->to_string, " to an SV";
+    }
+}
+
 sub _jit_emit_op {
     my ($self, $ast, $type) = @_;
     my $fun = $self->_fun;
@@ -367,7 +383,7 @@ sub _jit_emit_op {
             }
 
             if ($ast->is_assignment_form) {
-                pa_sv_set_nv($fun, $v1, $res);
+                $self->_jit_assign_sv($v1, $res, $restype);
             }
 
             return ($res, $restype);
