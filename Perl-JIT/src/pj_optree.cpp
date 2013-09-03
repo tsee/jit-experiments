@@ -363,6 +363,24 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     pj_free_term_vector(aTHX_ kid_terms);
     break;
 
+  case OP_RV2AV: {
+      if (cUNOPo->op_first->op_type == OP_GV)
+        retval = new AST::Global(o, pj_sigil_array);
+      else
+        retval = new AST::Unop(o, pj_unop_av_deref, pj_build_ast(aTHX_ cUNOPo->op_first, visitor));
+
+      break;
+    }
+
+  case OP_RV2HV: {
+      if (cUNOPo->op_first->op_type == OP_GV)
+        retval = new AST::Global(o, pj_sigil_hash);
+      else
+        retval = new AST::Unop(o, pj_unop_hv_deref, pj_build_ast(aTHX_ cUNOPo->op_first, visitor));
+
+      break;
+    }
+
   case OP_NULL: {
       MAKE_DEFAULT_KID_VECTOR
       if (kid_terms.size() == 1) {

@@ -67,6 +67,8 @@
   || otype == OP_RETURN \
   || otype == OP_REVERSE \
   || otype == OP_RIGHT_SHIFT \
+  || otype == OP_RV2AV \
+  || otype == OP_RV2HV \
   || otype == OP_RV2SV \
   || otype == OP_SASSIGN \
   || otype == OP_SAY \
@@ -166,6 +168,8 @@
   || otype == OP_RETURN \
   || otype == OP_REVERSE \
   || otype == OP_RIGHT_SHIFT \
+  || otype == OP_RV2AV \
+  || otype == OP_RV2HV \
   || otype == OP_RV2SV \
   || otype == OP_SASSIGN \
   || otype == OP_SAY \

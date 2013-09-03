@@ -44,6 +44,8 @@ typedef enum {
   pj_unop_undef,
   pj_unop_sv_deref,
   pj_unop_sv_ref,
+  pj_unop_av_deref,
+  pj_unop_hv_deref,
   pj_unop_getc,
   pj_unop_array_len,
 

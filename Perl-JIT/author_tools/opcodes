@@ -64,6 +64,8 @@ pj_unop_postdec,	pj_opc_unop,	()--,		OP_POSTDEC,	OVERLOAD,	emit,	Any
 pj_unop_undef,		pj_opc_unop,	undef(),	OP_UNDEF,	KIDS_OPTIONAL,	emit,	Scalar
 pj_unop_sv_deref,	pj_opc_unop,	sv_deref,	OP_RV2SV,	OVERLOAD,	emit,	Any
 pj_unop_sv_ref,		pj_opc_unop,	sv_ref,		OP_SREFGEN,	0,	emit,	Scalar
+pj_unop_av_deref,	pj_opc_unop,	av_deref,	OP_RV2AV,	OVERLOAD,	,	Any
+pj_unop_hv_deref,	pj_opc_unop,	hv_deref,	OP_RV2HV,	OVERLOAD,	,	Any
 pj_unop_getc,		pj_opc_unop,	getc,		OP_GETC,	KIDS_OPTIONAL,	emit,	Any
 pj_unop_array_len,	pj_opc_unop,	array_len,	OP_AV2ARYLEN,	0,	emit,	Integer # FIXME lvalue?
 
