@@ -199,10 +199,7 @@ sub _jit_emit {
             return $self->_jit_emit_const($ast, $type);
         }
         when (pj_ttype_lexical) {
-            my $fun = $self->_fun;
-            my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_pad_index);
-
-            return (pa_get_pad_sv($fun, $padix), SV);
+            return $self->_jit_get_lexical_xv($ast);
         }
         when (pj_ttype_optree) {
             return $self->_jit_emit_optree($ast, $type);
@@ -302,6 +299,15 @@ sub _jit_emit_optree {
 
     # TODO only works for scalar context
     return (pa_pop_sv($self->_fun), SV);
+}
+
+sub _jit_get_lexical_xv {
+    my ($self, $ast) = @_;
+    my $fun = $self->_fun;
+    my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_pad_index);
+
+    # TODO this value can be cached
+    return (pa_get_pad_sv($fun, $padix), SV);
 }
 
 sub _jit_emit_op {
