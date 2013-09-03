@@ -200,7 +200,7 @@ sub _jit_emit {
         }
         when (pj_ttype_lexical) {
             my $fun = $self->_fun;
-            my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_perl_op->targ);
+            my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_pad_index);
 
             return (pa_get_pad_sv($fun, $padix), UNSPECIFIED);
         }
