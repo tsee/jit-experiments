@@ -159,14 +159,18 @@ sub _jit_emit_root {
     my ($self, $ast) = @_;
     my ($val, $type) = $self->_jit_emit($ast, ANY);
 
-    $self->_jit_emit_return($ast, $val, $type) if $val;
+    $self->_jit_emit_return($ast, $ast->context, $val, $type) if $val;
 
     jit_insn_return($self->_fun, pa_get_op_next($self->_fun));
 }
 
 sub _jit_emit_return {
-    my ($self, $ast, $val, $type) = @_;
+    my ($self, $ast, $cxt, $val, $type) = @_;
     my $fun = $self->_fun;
+
+    die "Caller-determined context not implemented"
+        if $cxt == pj_context_caller;
+    return unless $cxt == pj_context_scalar;
 
     given ($ast->op_class) {
         when (pj_opc_binop) {
@@ -300,7 +304,10 @@ sub _jit_emit_optree {
     my $op = jit_value_create_long_constant($self->_fun, jit_type_ulong, ${$ast->start_op});
     pa_call_runloop($self->_fun, $op);
 
-    # TODO only works for scalar context
+    die "Caller-determined context not implemented"
+        if $ast->context == pj_context_caller;
+    return unless $ast->context == pj_context_scalar;
+
     return (pa_pop_sv($self->_fun), SV);
 }
 
