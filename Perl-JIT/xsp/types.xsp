@@ -14,6 +14,7 @@ class Perl::JIT::AST::Type {
   bool is_opaque();
   bool is_unspecified();
 
+  bool is_xv() const;
   bool is_integer() const;
   bool is_numeric() const;
 

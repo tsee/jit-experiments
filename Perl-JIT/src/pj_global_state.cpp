@@ -144,6 +144,9 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_listop_LAST);
 
   INT_CONST(pj_unspecified_type);
+  INT_CONST(pj_any_type);
+  INT_CONST(pj_sv_type);
+  INT_CONST(pj_gv_type);
   INT_CONST(pj_opaque_type);
   INT_CONST(pj_string_type);
   INT_CONST(pj_double_type);

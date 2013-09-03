@@ -39,6 +39,11 @@ bool Scalar::is_opaque() const
   return _tag == pj_opaque_type;
 }
 
+bool Scalar::is_xv() const
+{
+  return (_tag == pj_sv_type || _tag == pj_gv_type);
+}
+
 bool Scalar::is_integer() const
 {
   return (_tag == pj_int_type || _tag == pj_uint_type);

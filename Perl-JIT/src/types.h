@@ -6,6 +6,9 @@
 // TODO should this have a pj_undef_type? If so, change the AST::UndefConstant class.
 enum pj_type_id {
   pj_unspecified_type,
+  pj_any_type,
+  pj_sv_type,
+  pj_gv_type,
   pj_opaque_type,
   pj_array_type,
   pj_hash_type,
@@ -30,6 +33,7 @@ namespace PerlJIT {
       virtual bool is_opaque() const { return false; }
       virtual bool is_unspecified() const { return false; }
 
+      virtual bool is_xv() const { return false; }
       virtual bool is_integer() const { return false; }
       virtual bool is_numeric() const { return false; }
 
@@ -48,6 +52,8 @@ namespace PerlJIT {
       virtual bool is_scalar() const { return true; }
       virtual bool is_unspecified() const;
       virtual bool is_opaque() const;
+
+      virtual bool is_xv() const;
 
       virtual bool is_integer() const;
       virtual bool is_numeric() const;

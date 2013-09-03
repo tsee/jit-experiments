@@ -157,7 +157,7 @@ sub needs_excessive_magic {
 
 sub _jit_emit_root {
     my ($self, $ast) = @_;
-    my ($val, $type) = $self->_jit_emit($ast, UNSPECIFIED);
+    my ($val, $type) = $self->_jit_emit($ast, ANY);
 
     $self->_jit_emit_return($ast, $val, $type) if $val;
 
@@ -202,7 +202,7 @@ sub _jit_emit {
             my $fun = $self->_fun;
             my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_pad_index);
 
-            return (pa_get_pad_sv($fun, $padix), UNSPECIFIED);
+            return (pa_get_pad_sv($fun, $padix), SV);
         }
         when (pj_ttype_optree) {
             return $self->_jit_emit_optree($ast, $type);
@@ -237,7 +237,7 @@ sub _to_nv {
         return $val;
     } elsif ($type->is_integer) {
         return jit_insn_convert($self->_fun, $val, jit_type_NV, 0);
-    } elsif ($type->is_unspecified) {
+    } elsif ($type->equals(SV)) {
         return pa_sv_nv($self->_fun, $val);
     } else {
         die "Handle more coercion cases";
@@ -249,7 +249,7 @@ sub _to_numeric_type {
 
     if ($type->is_numeric) {
         return ($val, $type);
-    } elsif ($type->is_unspecified) {
+    } elsif ($type->equals(SV)) {
         return (pa_sv_nv($self->_fun, $val), DOUBLE); # somewhat dubious
     } else {
         die "Handle more coercion cases";
@@ -273,7 +273,7 @@ sub _to_bool {
 
     if ($type->is_numeric) {
         return $val;
-    } elsif ($type->is_unspecified || $type->is_opaque) {
+    } elsif ($type->is_xv || $type->is_opaque) {
         return pa_sv_true($self->_fun, $val);
     } else {
         die "Handle more coercion cases";
@@ -301,7 +301,7 @@ sub _jit_emit_optree {
     pa_call_runloop($self->_fun, $op);
 
     # TODO only works for scalar context
-    return (pa_pop_sv($self->_fun), UNSPECIFIED);
+    return (pa_pop_sv($self->_fun), SV);
 }
 
 sub _jit_emit_op {
