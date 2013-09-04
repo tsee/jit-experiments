@@ -178,6 +178,8 @@ namespace PerlJIT {
 
       VariableDeclaration *declaration;
 
+      int get_pad_index() const;
+
       virtual Type *get_value_type() { return declaration->get_value_type(); }
       virtual void set_value_type(Type *t) { declaration->set_value_type(t); }
 
@@ -189,6 +191,12 @@ namespace PerlJIT {
     class Global : public Identifier {
     public:
       Global(OP *p_op, pj_variable_sigil sigil);
+
+#ifdef USE_ITHREADS
+      int get_pad_index() const;
+#else
+      GV *get_gv() const;
+#endif
 
       virtual void dump(int indent_lvl);
       virtual const char *perl_class() const

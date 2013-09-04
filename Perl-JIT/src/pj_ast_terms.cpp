@@ -387,3 +387,26 @@ Binop::set_assignment_form(bool is_assignment)
 {
   is_assign_form = is_assignment;
 }
+
+int Lexical::get_pad_index() const
+{
+  return perl_op->op_targ;
+}
+
+#ifdef USE_ITHREADS
+int Global::get_pad_index() const
+{
+  if (perl_op->op_type == OP_RV2AV || perl_op->op_type == OP_RV2HV)
+    return cPADOPx(cUNOPx(perl_op)->op_first)->op_padix;
+  else
+    return cPADOPx(perl_op)->op_padix;
+}
+#else
+GV *Global::get_gv() const
+{
+  if (perl_op->op_type == OP_RV2AV || perl_op->op_type == OP_RV2HV)
+    return cGVOPx_gv(cUNOPx(perl_op)->op_first);
+  else
+    return cGVOPx_gv(perl_op);
+}
+#endif

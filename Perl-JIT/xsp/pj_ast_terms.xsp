@@ -98,11 +98,17 @@ class Perl::JIT::AST::Lexical : public Perl::JIT::AST::Identifier
   Perl::JIT::AST::VariableDeclaration *declaration %get;
   int get_ivar() const %code{% RETVAL = THIS->declaration->ivar; %};
   pj_variable_sigil get_sigil() const %code{% RETVAL = THIS->declaration->sigil; %};
-  int get_pad_index() %code{% RETVAL = THIS->perl_op->op_targ; %};
+  int get_pad_index();
 };
 
 class Perl::JIT::AST::Global : public Perl::JIT::AST::Identifier
 {
+  pj_variable_sigil sigil %get;
+#ifdef USE_ITHREADS
+  int get_pad_index() const;
+#else
+  GV *get_gv() const;
+#endif
 };
 
 class Perl::JIT::AST::Optree : public Perl::JIT::AST::Term

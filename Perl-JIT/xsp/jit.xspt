@@ -66,3 +66,19 @@
         sv_setiv(newSVrv($arg, cc_opclassname(aTHX_ $var)), PTR2IV($var));
     %};
 };
+
+%typemap{GV *}{simple}{
+    %name{GV};
+    %xs_type{T_GV};
+    %xs_input_code{%
+        if (SvROK($arg)) {
+            IV tmp = SvIV((SV*)SvRV($arg));
+            $var = INT2PTR($type,tmp);
+        }
+        else
+            croak(\"$var is not a reference\")
+    %};
+    %xs_output_code{%
+        sv_setiv(newSVrv($arg, "B::GV"), PTR2IV($var));
+    %};
+};

@@ -14,6 +14,8 @@ use B::Generate;
 use B::Replace;
 use B qw(OPf_KIDS);
 
+use Config;
+
 use Perl::JIT qw(:all);
 use Perl::JIT::Types qw(:all);
 
@@ -58,6 +60,7 @@ sub process_jit_candidates {
 
     while (my $ast = shift @$asts) {
         next if $ast->get_type == pj_ttype_lexical ||
+                $ast->get_type == pj_ttype_global ||
                 $ast->get_type == pj_ttype_constant;
 
         if ($ast->get_type == pj_ttype_nulloptree) {
@@ -122,6 +125,7 @@ sub is_jittable {
     given ($ast->get_type) {
         when (pj_ttype_constant) { return 1 }
         when (pj_ttype_lexical) { return 1 }
+        when (pj_ttype_global) { return 1 }
         when (pj_ttype_optree) { return 0 }
         when (pj_ttype_nulloptree) { return 1 }
         when (pj_ttype_op) {
@@ -207,6 +211,9 @@ sub _jit_emit {
         }
         when (pj_ttype_lexical) {
             return $self->_jit_get_lexical_xv($ast);
+        }
+        when (pj_ttype_global) {
+            return $self->_jit_get_global_xv($ast);
         }
         when (pj_ttype_optree) {
             return $self->_jit_emit_optree($ast, $type);
@@ -318,6 +325,26 @@ sub _jit_get_lexical_xv {
 
     # TODO this value can be cached
     return (pa_get_pad_sv($fun, $padix), SV);
+}
+
+sub _jit_get_global_xv {
+    my ($self, $ast) = @_;
+    my $fun = $self->_fun;
+    my $gv;
+
+    if ($Config{usethreads}) {
+        my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_pad_index);
+
+        # TODO this value can be cached
+        $gv = pa_get_pad_sv($fun, $padix);
+    } else {
+        $gv = jit_value_create_ptr_constant($fun, ${$ast->get_gv});
+    }
+
+    given ($ast->get_sigil) {
+        when (pj_sigil_scalar) { return (pa_gv_svn($fun, $gv), SV) }
+        default { die; }
+    }
 }
 
 sub _jit_assign_sv {
