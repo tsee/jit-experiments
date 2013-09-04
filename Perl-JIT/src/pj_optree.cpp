@@ -135,10 +135,12 @@ namespace PerlJIT {
       // Use type from CV's MAGIC annotation to tag VariableDeclaration here
       // or otherwise create default type
       pj_variable_sigil sigil =
-        reference->op_type == OP_PADSV ? pj_sigil_scalar :
-        reference->op_type == OP_PADAV ? pj_sigil_array :
-        reference->op_type == OP_PADHV ? pj_sigil_hash :
-                                         (pj_variable_sigil) -1;
+        reference->op_type == OP_PADSV         ? pj_sigil_scalar :
+        reference->op_type == OP_PADAV         ? pj_sigil_array :
+        reference->op_type == OP_AELEMFAST     ? pj_sigil_array :
+        reference->op_type == OP_AELEMFAST_LEX ? pj_sigil_array :
+        reference->op_type == OP_PADHV         ? pj_sigil_hash :
+                                                 (pj_variable_sigil) -1;
       if (sigil == (pj_variable_sigil) -1)
         croak("Unrecognized sigil");
 
@@ -388,22 +390,31 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     }
 
   case OP_NULL: {
+      const unsigned int targ_otype = (unsigned int)o->op_targ;
       MAKE_DEFAULT_KID_VECTOR
-      if (kid_terms.size() == 1) {
+      if (targ_otype == OP_AELEM) {
+        // AELEMFASTified aelem!
+        PJ_DEBUG("Passing through kid of ex-aelem\n");
+        retval = kid_terms[0];
+        if (kid_terms.size() > 1)
+          delete kid_terms[1];
+      }
+      else if (kid_terms.size() == 1) {
         if (o->op_targ == 0) {
           // attempt to pass through this untyped null-op. FIXME likely WRONG
           PJ_DEBUG("Passing through kid of OP_NULL\n");
           retval = kid_terms[0];
         }
         else {
-          const unsigned int targ_otype = (unsigned int)o->op_targ;
           switch (targ_otype) {
-          case OP_RV2SV: // Skip into ex-rv2sv for optimized global scalar access
-            PJ_DEBUG("Passing through kid of ex-rv2sv\n");
+          case OP_RV2AV:
+          case OP_RV2SV:
+            // Skip into ex-rv2sv for optimized global scalar/array access
+            PJ_DEBUG("Passing through kid of ex-rv2sv or ex-rv2av\n");
             retval = kid_terms[0];
             break;
           default:
-            PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
+            PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)\n", OP_NAME(o));
             pj_find_jit_candidates_internal(aTHX_ o, visitor);
             retval = new AST::Optree(o);
             pj_free_term_vector(aTHX_ kid_terms);
@@ -412,13 +423,40 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         }
       }
       else {
-        PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)", OP_NAME(o));
+        PJ_DEBUG_1("Cannot represent this NULL OP with AST. Emitting OP tree term in AST. (%s)\n", OP_NAME(o));
         pj_find_jit_candidates_internal(aTHX_ o, visitor);
         retval = new AST::Optree(o);
         pj_free_term_vector(aTHX_ kid_terms);
       }
       break;
     }
+
+#if PERL_VERSION > 14
+  case OP_AELEMFAST_LEX:
+#endif
+  case OP_AELEMFAST: {
+      AST::Term *array;
+      // Technically, AST::{Global,Lexical} usually point at other OP types,
+      // but they just so happen to behave the same when trying to access
+      // the information for finding the actual variable to read from.
+      // So this is expected to work {citation required}.
+#if PERL_VERSION <= 14
+      if (o->op_flags & OPf_SPECIAL) {
+#else
+      if (otype == OP_AELEMFAST_LEX) {
+#endif
+        // lexical
+        array = new AST::Lexical(o, visitor.get_declaration(0, o));
+      }
+      else {
+        // package var
+        array = new AST::Global(o, pj_sigil_array);
+      }
+      // aelemfast trick: embed array index in private flag space m(
+      AST::Term *constant = new AST::NumericConstant(o, (IV)o->op_private);
+      retval = new AST::Binop(o, pj_binop_aelem, array, constant);
+      break;
+  }
 
   case OP_SASSIGN: {
       MAKE_DEFAULT_KID_VECTOR

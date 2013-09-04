@@ -14,7 +14,7 @@
 # - OP_SCHOP is the single-parameter version of OP_CHOP. Treat it as the same
 #   thing in the AST. Ditto for OP_SCHOMP.
 #! jittable_root_ops=OP_SCHOP OP_SCHOMP OP_ANDASSIGN OP_ORASSIGN OP_DORASSIGN
-#! jittable_ops=OP_CONST OP_PADSV OP_PADAV OP_PADHV OP_NULL OP_GVSV
+#! jittable_ops=OP_CONST OP_PADSV OP_PADAV OP_PADHV OP_NULL OP_GVSV OP_AELEMFAST OP_AELEMFAST_LEX
 
 # Return types below are separated between Scalar and List context (Context=Type)
 # and in the absence of an =, the type goes for both contexts. The Numeric type
@@ -102,6 +102,7 @@ pj_binop_definedor,	pj_opc_binop,	//,		OP_DOR,		KIDS_CONDITIONAL|HAS_ASSIGNMENT_
 pj_binop_concat,	pj_opc_binop,	concat,		OP_CONCAT,	HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	String
 pj_binop_sassign,	pj_opc_binop,	sassign,	OP_SASSIGN,	OVERLOAD,	,	Any
 pj_binop_list_slice,	pj_opc_binop,	list slice,	OP_LSLICE,	0,	,	Scalar=Any List=List[Any]
+pj_binop_aelem,		pj_opc_binop,	array access,	OP_AELEM,	0,	emit,	Any
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any
