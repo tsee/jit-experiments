@@ -118,10 +118,10 @@ foreach my $op (@op_defs) {
   $valid_ops{ $op->[PERL_CONST] } = 1;
 }
 print $op_switch_fh "\n#define IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) ( \\\n     ";
-print $op_switch_fh join " \\\n  || ", map "otype == $_", sort keys %valid_root_ops;
+print $op_switch_fh join " \\\n  || ", map "(int)otype == $_", sort keys %valid_root_ops;
 print $op_switch_fh ")\n\n";
 print $op_switch_fh "\n#define IS_AST_COMPATIBLE_OP_TYPE(otype) ( \\\n     ";
-print $op_switch_fh join " \\\n  || ", map "otype == $_", sort keys %valid_ops;
+print $op_switch_fh join " \\\n  || ", map "(int)otype == $_", sort keys %valid_ops;
 print $op_switch_fh ")\n\n";
 
 print $op_switch_fh "\n\n#endif\n";

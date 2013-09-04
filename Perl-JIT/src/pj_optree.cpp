@@ -31,6 +31,12 @@ typedef AV PAD;
 # define PadARRAY		AvARRAY
 #endif
 
+// Should never matter, just to get the "permissible OPs" list to be
+// insensitive to not knowing OP_AELEMFAST_LEX on older perls.
+#if PERL_VERSION <= 14
+# define OP_AELEMFAST_LEX -1
+#endif
+
 namespace PerlJIT {
   class OPTreeJITCandidateFinder;
 }
