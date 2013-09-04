@@ -39,5 +39,3 @@ AST related:
 * What shall we do about "integer" variants of operations like "i_multiply"?
   => I think: Emit regular multiplication AST OP with an annotation indicating
      that it forces integer input.
-* What about arrays and other complex data structures?
-* What about GVs?
