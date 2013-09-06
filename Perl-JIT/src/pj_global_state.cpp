@@ -131,6 +131,7 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_binop_num_ge);
   INT_CONST(pj_binop_bool_and);
   INT_CONST(pj_binop_bool_or);
+  INT_CONST(pj_binop_sassign);
 
   INT_CONST(pj_listop_ternary);
 
