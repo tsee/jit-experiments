@@ -5,17 +5,18 @@
 
 // TODO should this have a pj_undef_type? If so, change the AST::UndefConstant class.
 enum pj_type_id {
-  pj_unspecified_type,
-  pj_any_type,
-  pj_sv_type,
-  pj_gv_type,
-  pj_opaque_type,
-  pj_array_type,
-  pj_hash_type,
-  pj_string_type,
-  pj_double_type,
-  pj_int_type,
-  pj_uint_type
+  pj_unspecified_type, // Unknown type that is some sort of Perl SV*
+  pj_any_type,         // Same as pj_unspecified_type BUT explicitly marked as "may be optimized if possible"
+  pj_sv_type,          // Explicit Perl Scalar (not just any SV, this is confusing)
+  pj_gv_type,          // ??? Meant to refer to non scalar SVs? or actual GVs?
+  pj_opaque_type,      // Explicitly opaque Perl SV "must not treat as anything but an unknown Perl thing"
+                       // Interaction must support ties/overloading.
+  pj_array_type,       // Explicit Perl AV type
+  pj_hash_type,        // Explicit Perl HV type
+  pj_string_type,      // Explicit JIT string type (and we haven't defined what that means)
+  pj_double_type,      // Explicit JIT floating point type
+  pj_int_type,         // Explicit JIT int type
+  pj_uint_type         // Explicit JIT uint type
 };
 
 namespace PerlJIT {
