@@ -113,7 +113,7 @@ sub jit_tree {
 
 my %Jittable_Ops = map { $_ => 1 } (
     pj_binop_add, pj_binop_subtract, pj_binop_multiply, pj_binop_divide,
-    pj_binop_bool_and,
+    pj_binop_bool_and, pj_binop_sassign,
 
     pj_unop_negate, pj_unop_abs, pj_unop_sin, pj_unop_cos, pj_unop_sqrt,
     pj_unop_log, pj_unop_exp, pj_unop_bool_not, pj_unop_perl_int,
@@ -374,9 +374,25 @@ sub _jit_assign_sv {
         pa_sv_set_nv($fun, $sv, $value);
     } elsif ($type->equals(INT)) {
         pa_sv_set_iv($fun, $sv, $value);
+    } elsif ($type->equals(SV)) {
+        pa_sv_set_sv_nosteal($fun, $sv, $value);
     } else {
-       die "Unable to assign ", $type->to_string, " to an SV";
+        die "Unable to assign ", $type->to_string, " to an SV";
     }
+}
+
+sub _jit_emit_sassign {
+    my ($self, $ast, $type) = @_;
+    my ($rv, $rt) = $self->_jit_emit($ast->get_right_kid, ANY);
+    my ($lv, $lt) = $self->_jit_emit($ast->get_left_kid, SV);
+
+    if (!$lt->equals(SV)) {
+        die "can only assign to Perl scalars, got a ", $lt->to_string;
+    }
+
+    $self->_jit_assign_sv($lv, $rv, $rt);
+
+    return ($lv, $lt);
 }
 
 sub _jit_emit_op {
@@ -387,7 +403,8 @@ sub _jit_emit_op {
         when (pj_opc_binop) {
             my ($res, $restype);
             my ($v1, $v2, $t1, $t2);
-            if (not $ast->evaluates_kids_conditionally) {
+            if (not($ast->evaluates_kids_conditionally) &&
+                $ast->get_optype != pj_binop_sassign) {
                 ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, DOUBLE);
                 ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, DOUBLE);
                 $restype = DOUBLE;
@@ -429,6 +446,9 @@ sub _jit_emit_op {
 
                     # endlabel; done.
                     jit_insn_label($fun, $endlabel);
+                }
+                when (pj_binop_sassign) {
+                    ($res, $restype) = $self->_jit_emit_sassign($ast, $type);
                 }
                 default {
                     return $self->_jit_emit_optree_jit_kids($ast, $type);
