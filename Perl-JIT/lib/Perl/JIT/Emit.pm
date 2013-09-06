@@ -299,13 +299,32 @@ sub _jit_emit_optree_jit_kids {
     return $self->_jit_emit_optree($ast, $type);
 }
 
+sub _jit_null_next {
+    my ($self, $op) = @_;
+
+    # in most cases, the exit point for an optree is the op_next
+    # pointer of the root op, but conditional operators have interesting
+    # control flows
+    if ($op->name eq 'cond_expr') {
+        $self->_jit_null_next($op->first->sibling);
+        $self->_jit_null_next($op->first->sibling->sibling);
+    } elsif ($op->name eq 'and' || $op->name eq 'andassign' ||
+             $op->name eq 'or' || $op->name eq 'orassign' ||
+             $op->name eq 'dor' || $op->name eq 'dorassign') {
+        $self->_jit_null_next($op->first->sibling);
+        $op->next(0);
+    } else {
+        $op->next(0);
+    }
+}
+
 sub _jit_emit_optree {
     my ($self, $ast) = @_;
 
     # unfortunately there is (currently) no way to clone an optree,
     # so just detach the ops from the root tree
     B::Replace::detach_tree($self->current_cv->ROOT, $ast->get_perl_op, 1);
-    $ast->get_perl_op->next(0);
+    $self->_jit_null_next($ast->get_perl_op);
     push @{$self->subtrees}, $ast->get_perl_op;
 
     my $op = jit_value_create_long_constant($self->_fun, jit_type_ulong, ${$ast->start_op});
