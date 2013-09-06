@@ -72,6 +72,8 @@ string Scalar::to_string() const
   switch (_tag) {
     PRINT_TYPE(pj_unspecified_type, "Any");
     PRINT_TYPE(pj_opaque_type, OPAQUE);
+    PRINT_TYPE(pj_sv_type, "SV");
+    PRINT_TYPE(pj_any_type, "Any");
     PRINT_TYPE(pj_string_type, STRING);
     PRINT_TYPE(pj_double_type, DOUBLE);
     PRINT_TYPE(pj_int_type, INT);
