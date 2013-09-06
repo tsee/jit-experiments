@@ -21,10 +21,9 @@ my @tests = (
   { name   => 'add variables, with declaration',
     func   => build_jit_test_sub('$a, $b', 'my $x = $a + $b;', '$x'),
     input  => [37, 5], },
-  # TODO unjitted subtrees not supported yet
-  #{ name   => 'add op nested in other ops',
-  #  func   => build_jit_test_sub('$a, $b', 'my $x = abs(abs($a) + abs($b));', '$x'),
-  #  input  => [38, 4], },
+  { name   => 'add op nested in other ops',
+    func   => build_jit_test_sub('$a, $b', 'my $x = abs(abs($a) + abs($b));', '$x'),
+    input  => [38, 4], },
 );
 
 # save typing
