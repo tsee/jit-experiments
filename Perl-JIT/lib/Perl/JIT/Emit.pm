@@ -248,7 +248,7 @@ sub _to_nv {
         return $val;
     } elsif ($type->is_integer) {
         return jit_insn_convert($self->_fun, $val, jit_type_NV, 0);
-    } elsif ($type->equals(SV)) {
+    } elsif ($type->equals(SCALAR)) {
         return pa_sv_nv($self->_fun, $val);
     } else {
         die "Handle more coercion cases";
@@ -260,7 +260,7 @@ sub _to_numeric_type {
 
     if ($type->is_numeric) {
         return ($val, $type);
-    } elsif ($type->equals(SV)) {
+    } elsif ($type->equals(SCALAR)) {
         return (pa_sv_nv($self->_fun, $val), DOUBLE); # somewhat dubious
     } else {
         die "Handle more coercion cases";
@@ -334,7 +334,7 @@ sub _jit_emit_optree {
         if $ast->context == pj_context_caller;
     return unless $ast->context == pj_context_scalar;
 
-    return (pa_pop_sv($self->_fun), SV);
+    return (pa_pop_sv($self->_fun), SCALAR);
 }
 
 sub _jit_get_lexical_xv {
@@ -343,7 +343,7 @@ sub _jit_get_lexical_xv {
     my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_pad_index);
 
     # TODO this value can be cached
-    return (pa_get_pad_sv($fun, $padix), SV);
+    return (pa_get_pad_sv($fun, $padix), SCALAR);
 }
 
 sub _jit_get_global_xv {
@@ -361,7 +361,7 @@ sub _jit_get_global_xv {
     }
 
     given ($ast->get_sigil) {
-        when (pj_sigil_scalar) { return (pa_gv_svn($fun, $gv), SV) }
+        when (pj_sigil_scalar) { return (pa_gv_svn($fun, $gv), SCALAR) }
         default { die; }
     }
 }
@@ -374,7 +374,7 @@ sub _jit_assign_sv {
         pa_sv_set_nv($fun, $sv, $value);
     } elsif ($type->equals(INT)) {
         pa_sv_set_iv($fun, $sv, $value);
-    } elsif ($type->equals(SV)) {
+    } elsif ($type->equals(SCALAR)) {
         pa_sv_set_sv_nosteal($fun, $sv, $value);
     } else {
         die "Unable to assign ", $type->to_string, " to an SV";
@@ -384,9 +384,9 @@ sub _jit_assign_sv {
 sub _jit_emit_sassign {
     my ($self, $ast, $type) = @_;
     my ($rv, $rt) = $self->_jit_emit($ast->get_right_kid, ANY);
-    my ($lv, $lt) = $self->_jit_emit($ast->get_left_kid, SV);
+    my ($lv, $lt) = $self->_jit_emit($ast->get_left_kid, SCALAR);
 
-    if (!$lt->equals(SV)) {
+    if (!$lt->equals(SCALAR)) {
         die "can only assign to Perl scalars, got a ", $lt->to_string;
     }
 

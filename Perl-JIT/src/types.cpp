@@ -41,7 +41,7 @@ bool Scalar::is_opaque() const
 
 bool Scalar::is_xv() const
 {
-  return (_tag == pj_sv_type || _tag == pj_gv_type);
+  return (_tag == pj_scalar_type || _tag == pj_gv_type);
 }
 
 bool Scalar::is_integer() const
@@ -72,7 +72,7 @@ string Scalar::to_string() const
   switch (_tag) {
     PRINT_TYPE(pj_unspecified_type, "Any");
     PRINT_TYPE(pj_opaque_type, OPAQUE);
-    PRINT_TYPE(pj_sv_type, "SV");
+    PRINT_TYPE(pj_scalar_type, "SCALAR");
     PRINT_TYPE(pj_any_type, "Any");
     PRINT_TYPE(pj_string_type, STRING);
     PRINT_TYPE(pj_double_type, DOUBLE);
