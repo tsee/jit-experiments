@@ -27,11 +27,8 @@
   - number of argument
   - inline call for "simple" subs
     - but think about caller
-* Globals (for $_)
 * Ownership for C++ objects (Type instances created from Perl need to be
   cleaned up (unless assigned to an AST node))
-* Overloading to Type instances and LibJIT types; ${$t1} == ${$t2}
-  is disgusting
 * in Emit.pm, "unspecified" currently means "a plain scalar", which feels wrong
   and there is no "I don't care" value that can be used for requested type
 
