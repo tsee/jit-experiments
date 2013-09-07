@@ -10,10 +10,17 @@ the parts of the subtree that couldn't be replaced entirely.
 Getting started
 ===============
 
-This uses libjit and ships a copy that is linked statically to the
-Perl::JIT module library. You'll need flex and bison (Berkeley yacc
-won't work), autoconf and libtool. People have managed to get this
-to build on both Linux and Mac OS X.
+This module relies on a few others that might not be on CPAN yet.
+Get the newest versions from github:
+
+  https://github.com/tsee/p5-Alien-LibJIT
+  https://github.com/mbarbon/perl-libjit
+  https://github.com/mbarbon/b-replace
+
+The former of the three builds libjit and ships a copy.
+You'll need flex and bison (Berkeley yacc won't work), autoconf
+and libtool. People have managed to get this to build on both
+Linux and Mac OS X.
 
 If you're building this straight out of the repository, then do:
 
