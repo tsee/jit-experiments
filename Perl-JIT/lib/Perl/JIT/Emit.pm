@@ -241,7 +241,7 @@ sub _jit_emit {
     }
 }
 
-sub _to_nv {
+sub _to_nv_value {
     my ($self, $val, $type) = @_;
 
     if ($type->equals(DOUBLE)) {
@@ -255,7 +255,12 @@ sub _to_nv {
     }
 }
 
-sub _to_iv {
+sub _to_nv {
+    my $self = shift;
+    return ($self->_to_nv_value(@_), DOUBLE);
+}
+
+sub _to_iv_value {
     my ($self, $val, $type) = @_;
 
     if ($type->equals(INT)) {
@@ -269,7 +274,12 @@ sub _to_iv {
     }
 }
 
-sub _to_uv {
+sub _to_iv {
+    my $self = shift;
+    return ($self->_to_iv_value(@_), INT);
+}
+
+sub _to_uv_value {
     my ($self, $val, $type) = @_;
 
     if ($type->equals(UNSIGNED_INT)) {
@@ -283,7 +293,14 @@ sub _to_uv {
     }
 }
 
-sub _to_numeric_type {
+sub _to_uv {
+    my $self = shift;
+    return ($self->_to_uv_value(@_), UNSIGNED_INT);
+}
+
+# There's no _to_numeric_value because you always need the type of
+# the return value.
+sub _to_numeric {
     my ($self, $val, $type) = @_;
 
     if ($type->is_numeric) {
@@ -315,12 +332,18 @@ sub _to_bool {
     my ($self, $val, $type) = @_;
 
     if ($type->is_numeric) {
-        return $val;
+        return ($val, $type);
     } elsif ($type->is_xv || $type->is_opaque) {
-        return pa_sv_true($self->_fun, $val);
+        return (pa_sv_true($self->_fun, $val), INT);
     } else {
         die "Handle more coercion cases";
     }
+}
+
+sub _to_bool_value {
+    my $self = shift;
+    my ($v, undef) = $self->_to_bool(@_);
+    return $v;
 }
 
 sub _jit_emit_optree_jit_kids {
@@ -443,16 +466,16 @@ sub _jit_emit_binop {
 
     given ($ast->get_optype) {
         when (pj_binop_add) {
-            $res = jit_insn_add($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
+            $res = jit_insn_add($fun, $self->_to_nv_value($v1, $t1), $self->_to_nv_value($v2, $t2));
         }
         when (pj_binop_subtract) {
-            $res = jit_insn_sub($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
+            $res = jit_insn_sub($fun, $self->_to_nv_value($v1, $t1), $self->_to_nv_value($v2, $t2));
         }
         when (pj_binop_multiply) {
-            $res = jit_insn_mul($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
+            $res = jit_insn_mul($fun, $self->_to_nv_value($v1, $t1), $self->_to_nv_value($v2, $t2));
         }
         when (pj_binop_divide) {
-            $res = jit_insn_div($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
+            $res = jit_insn_div($fun, $self->_to_nv_value($v1, $t1), $self->_to_nv_value($v2, $t2));
         }
         when (pj_binop_bool_and) {
             # TODO We ask subtrees to return a value with desired
@@ -467,13 +490,14 @@ sub _jit_emit_binop {
 
             # If value is false, then go with v1 and never look at v2
             ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, $type);
-            jit_insn_store($fun, $res, $self->_to_type($v1, $t1, $type));
-            my $tmp = $self->_to_bool($v1, $t1);
-            jit_insn_branch_if_not($fun, $tmp, $endlabel);
+            my ($tmp, undef) = $self->_to_type($v1, $t1, $type);
+            jit_insn_store($fun, $res, $tmp);
+            jit_insn_branch_if_not($fun, $self->_to_bool_value($v1, $t1), $endlabel);
 
             # Left is true, move to right operand
             ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, $type);
-            jit_insn_store($fun, $res, $self->_to_type($v2, $t2, $type));
+            ($tmp, undef) = $self->_to_type($v2, $t2, $type);
+            jit_insn_store($fun, $res, $tmp);
 
             # endlabel; done.
             jit_insn_label($fun, $endlabel);
@@ -504,28 +528,28 @@ sub _jit_emit_unop {
 
     given ($ast->get_optype) {
         when (pj_unop_negate) {
-            $res = jit_insn_neg($fun, $self->_to_nv($v1, $t1));
+            $res = jit_insn_neg($fun, $self->_to_nv_value($v1, $t1));
         }
         when (pj_unop_abs) {
-            $res = jit_insn_abs($fun, $self->_to_nv($v1, $t1));
+            $res = jit_insn_abs($fun, $self->_to_nv_value($v1, $t1));
         }
         when (pj_unop_sin) {
-            $res = jit_insn_sin($fun, $self->_to_nv($v1, $t1));
+            $res = jit_insn_sin($fun, $self->_to_nv_value($v1, $t1));
         }
         when (pj_unop_cos) {
-            $res = jit_insn_cos($fun, $self->_to_nv($v1, $t1));
+            $res = jit_insn_cos($fun, $self->_to_nv_value($v1, $t1));
         }
         when (pj_unop_sqrt) {
-            $res = jit_insn_sqrt($fun, $self->_to_nv($v1, $t1));
+            $res = jit_insn_sqrt($fun, $self->_to_nv_value($v1, $t1));
         }
         when (pj_unop_log) {
-            $res = jit_insn_log($fun, $self->_to_nv($v1, $t1));
+            $res = jit_insn_log($fun, $self->_to_nv_value($v1, $t1));
         }
         when (pj_unop_exp) {
-            $res = jit_insn_exp($fun, $self->_to_nv($v1, $t1));
+            $res = jit_insn_exp($fun, $self->_to_nv_value($v1, $t1));
         }
         when (pj_unop_bool_not) {
-            my ($tmp, $tmptype) = $self->_to_numeric_type($v1, $t1);
+            my ($tmp, $tmptype) = $self->_to_numeric($v1, $t1);
             $res = jit_insn_to_not_bool($fun, $tmp);
             $restype = INT;
         }
@@ -534,7 +558,7 @@ sub _jit_emit_unop {
                 $res = $v1;
             }
             else {
-                my ($val, $valtype) = $self->_to_numeric_type($v1, $t1);
+                my ($val, $valtype) = $self->_to_numeric($v1, $t1);
                 my $endlabel = jit_label_undefined;
                 my $neglabel = jit_label_undefined;
 
