@@ -2,6 +2,7 @@
 #define PJ_TYPES_H_
 
 #include <string>
+#include <vector>
 
 // TODO should this have a pj_undef_type? If so, change the AST::UndefConstant class.
 enum pj_type_id {
@@ -22,6 +23,10 @@ enum pj_type_id {
 
 namespace PerlJIT {
   namespace AST {
+    class Type;
+
+    Type *minimal_covering_type(const std::vector<Type *> &types);
+
     class Type {
     public:
       virtual ~Type();

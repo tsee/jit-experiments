@@ -3,6 +3,24 @@
 #include "types.h"
 #include "xsp_typedefs.h"
 
+
+%package{Perl::JIT::Types};
+
+SV *
+minimal_covering_type(std::vector<Perl::JIT::AST::Type *> types)
+  %code{%
+    PerlJIT::AST::Type *t = PerlJIT::AST::minimal_covering_type(types);
+    if (t) {
+      RETVAL = newSV(0);
+      sv_setref_pv( RETVAL, xsp_constructor_class(t->perl_class()), (void*)t );
+    }
+    else {
+      RETVAL = &PL_sv_undef;
+    }
+  %};
+
+%package{Perl::JIT};
+
 class Perl::JIT::AST::Type {
   pj_type_id tag();
 
@@ -19,6 +37,7 @@ class Perl::JIT::AST::Type {
   bool is_numeric() const;
 
   std::string to_string() const;
+
 };
 
 

@@ -3,8 +3,10 @@
 #include <stdio.h>
 #include <cstdlib>
 #include <string.h>
+#include <tr1/unordered_map>
 
 using namespace std;
+using namespace std::tr1;
 using namespace PerlJIT;
 using namespace PerlJIT::AST;
 
@@ -18,6 +20,125 @@ using namespace PerlJIT::AST;
 Type::~Type()
 {
 }
+
+
+static Type *
+minimal_covering_type_internal(const Type &left, const Type &right)
+{
+  pj_type_id left_tag = left.tag();
+  pj_type_id right_tag = right.tag();
+
+  // pj_unspecified_type and pj_any_type are the same for this logic
+  if (left_tag == pj_any_type)
+    left_tag = pj_unspecified_type;
+  if (right_tag == pj_any_type)
+    right_tag = pj_unspecified_type;
+
+  // short-circuit
+  if (left_tag == right_tag)
+    return left.clone();
+
+  // incompatible combinations with unique types
+  else if (left.is_array() || right.is_array())
+    return NULL;
+  else if (left.is_hash() || right.is_hash())
+    return NULL;
+  else if (left_tag == pj_gv_type)
+    return NULL; // FIXME GV relations a bit wobbly.
+
+  // short-circuit unspecified type with other scalar type
+  else if (left.is_unspecified() || left_tag == pj_any_type)
+    return right.clone();
+  else if (right.is_unspecified() || right_tag == pj_any_type)
+    return left.clone();
+
+  // Only descendants of opaque (== opaque scalar) left
+  else if (left_tag == pj_opaque_type)
+    return left.clone();
+  else if (right_tag == pj_opaque_type)
+    return right.clone();
+
+  // Only descendants of scalar left
+  else if (left_tag == pj_scalar_type)
+    return left.clone();
+  else if (right_tag == pj_scalar_type)
+    return right.clone();
+
+  // If *one* of them is a string, then upgrade to full scalar type
+  else if (left_tag == pj_string_type || right_tag == pj_string_type)
+    return new Scalar(pj_scalar_type);
+
+  // FIXME this is debatable. Is double really >> Int/UInt?
+  // Now, all that should be left is double, int, uint. And we already know
+  // that the two types are not the same. Since neither int >> uint or vice
+  // versa, we'll just upgrade to DOUBLE here.
+  // We'll enumerate all those cases just so that we can catch any bad
+  // assumptions in the else case instead of falling through to this case
+  // for things that weren't appropriately covered above.
+  else if (    (   left_tag == pj_double_type
+                || left_tag == pj_int_type
+                || left_tag == pj_uint_type)
+            && (   right_tag == pj_double_type
+                || right_tag == pj_int_type
+                || right_tag == pj_uint_type) )
+    return new Scalar(pj_double_type);
+
+  else {
+    printf("There's types in minimal_covering_type that aren't "
+           "handled correctly at all: left=%s right=%s",
+           left.to_string().c_str(), right.to_string().c_str());
+    abort();
+    return NULL;
+  }
+  abort(); // never reached
+  return NULL;
+}
+
+
+static unordered_map<string, Type *>
+unique_types(const vector<Type *> &types)
+{
+  unordered_map<string, Type *> uniq;
+
+  const unsigned int n = types.size();
+  for (unsigned int i = 0; i < n; ++i)
+    uniq[types[i]->to_string()] = types[i];
+
+  return uniq;
+}
+
+
+namespace PerlJIT {
+  namespace AST {
+    Type *
+    minimal_covering_type(const vector<Type *> &types)
+    {
+      unordered_map<string, Type *> uniq_types = unique_types(types);
+
+      Type *minimal_type = NULL;
+      unordered_map<string, Type *>::iterator it = uniq_types.begin();
+      unordered_map<string, Type *>::iterator end = uniq_types.end();
+      for (; it != end; ++it) {
+        Type *t = it->second;
+
+        if (minimal_type == NULL) {
+          minimal_type = t->clone();
+        }
+        else if (minimal_type->tag() != t->tag()) {
+          Type *new_type = minimal_covering_type_internal(*minimal_type, *t);
+          if (new_type != minimal_type)
+            delete minimal_type;
+          if (new_type == NULL)
+            return NULL;
+          minimal_type = new_type;
+        }
+      }
+
+      return minimal_type;
+    }
+  } // end namespace AST
+} // end namespace PerlJIT
+
 
 Scalar::Scalar(pj_type_id tag) :
   _tag(tag)

@@ -37,6 +37,33 @@
     %xs_output_code{% sv_setref_pv( $arg, xsp_constructor_class($var ? $var->perl_class() : "Perl::JIT::AST::Type"), (void*)$var ); %};
 };
 
+%typemap{std::vector<Perl::JIT::AST::Type *>}{parsed}{
+    %cpp_type{%std::vector<PerlJIT::AST::Type *>%};
+    %xs_type{%T_VEC_AST_TYPE%};
+    %xs_input_code{%
+        SV * const xsub_tmp_sv = $arg;
+        AV *argav;
+        SvGETMAGIC(xsub_tmp_sv);
+        if (SvROK(xsub_tmp_sv) && SvTYPE(SvRV(xsub_tmp_sv)) == SVt_PVAV){
+            argav = (AV*)SvRV(xsub_tmp_sv);
+        }
+        else {
+            Perl_croak(aTHX_ \"Input is not an ARRAY reference\");
+        }
+
+        const unsigned int n = av_len(argav) + 1;
+        $var.resize(n);
+        for (unsigned int i = 0; i < n; ++i) {
+            SV **svp = av_fetch(argav, i, 0);
+            if (!svp || !sv_derived_from(*svp, \"Perl::JIT::AST::Type\"))
+                Perl_croak(aTHX_ \"Element %i of input array is not an \"
+                                 \"object of type Perl::JIT::AST::Type\", (int)i);
+            $var"."[i] = (PerlJIT::AST::Type *)SvIV((SV *)SvRV( *svp ));
+        }
+    %};
+};
+
+
 %typemap{std::vector<Perl::JIT::AST::Term *>}{parsed}{
   %cpp_type{%std::vector<PerlJIT::AST::Term *>%};
   %output_list{%

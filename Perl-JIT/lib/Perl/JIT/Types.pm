@@ -19,9 +19,12 @@ use constant {
     GV             => Perl::JIT::AST::Scalar->new(pj_gv_type),
 };
 
-our @EXPORT_OK = qw(OPAQUE DOUBLE INT UNSIGNED_INT UNSPECIFIED ANY SCALAR GV);
+our @EXPORT_OK = qw(
+    OPAQUE DOUBLE INT UNSIGNED_INT UNSPECIFIED ANY SCALAR GV
+    minimal_covering_type
+);
 our %EXPORT_TAGS = (
-  all           => \@EXPORT_OK,
+    all => \@EXPORT_OK,
 );
 
 1;
