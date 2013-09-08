@@ -181,29 +181,37 @@ sub _jit_emit_return {
         if $cxt == pj_context_caller;
     return unless $cxt == pj_context_scalar;
 
+    my $res;
+
     given ($ast->op_class) {
         when (pj_opc_binop) {
             # the assumption here is that the OPf_STACKED assignment
             # has been handled by _jit_emit below, and here we only need
             # to handle cases like '$x = $y += 7'
-            my $targ = pa_get_targ($fun);
-
-            $self->_jit_assign_sv($targ, $val, $type);
-            pa_push_sv($fun, $targ);
+            if ($ast->get_optype == pj_binop_sassign) {
+                if ($type->equals(SCALAR)) {
+                    $res = $val;
+                } else {
+                    # TODO suboptimal, but correct, need to ask for SCALAR
+                    # in the call to _jit_emit() above
+                    $res = pa_new_mortal_sv();
+                }
+            } else {
+                $res = pa_get_targ($fun);
+            }
         }
         when (pj_opc_unop) {
-            my $targ = pa_get_targ($fun);
-
-            $self->_jit_assign_sv($targ, $val, $type);
-            pa_push_sv($fun, $targ);
+            $res = pa_get_targ($fun);
         }
         default {
-            my $sv = pa_new_mortal_svl();
-
-            $self->_jit_assign_sv($sv, $val, $type);
-            pa_push_sv($fun, $sv);
+            $res = pa_new_mortal_sv();
         }
     }
+
+    if ($res != $val) {
+        $self->_jit_assign_sv($res, $val, $type);
+    }
+    pa_push_sv($fun, $res);
 }
 
 sub _jit_emit {
