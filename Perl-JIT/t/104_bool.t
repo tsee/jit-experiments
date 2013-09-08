@@ -34,7 +34,7 @@ my @tests = (
 );
 
 # save typing
-$_->{output} ||= 42 for @tests;
+$_->{output} //= 42 for @tests;
 
 plan tests => count_jit_tests(\@tests);
 
