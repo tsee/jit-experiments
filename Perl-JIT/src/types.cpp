@@ -222,7 +222,7 @@ Array::Array(Type *element) :
 Type *
 Array::clone() const
 {
-  return new Array(_element);
+  return new Array(_element->clone());
 }
 
 pj_type_id Array::tag() const
@@ -255,7 +255,7 @@ Hash::Hash(Type *element) :
 Type *
 Hash::clone() const
 {
-  return new Hash(_element);
+  return new Hash(_element->clone());
 }
 
 pj_type_id Hash::tag() const
