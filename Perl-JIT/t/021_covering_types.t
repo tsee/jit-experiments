@@ -10,8 +10,8 @@ $t = minimal_covering_type([]);
 ok(!defined($t));
 
 my $str_type = Perl::JIT::AST::Scalar->new(pj_string_type);
-my $ary_type = Perl::JIT::AST::Array->new(UNSIGNED_INT); 
-my $hash_type = Perl::JIT::AST::Hash->new(UNSIGNED_INT); 
+my $ary_type = Perl::JIT::AST::Array->new(UNSIGNED_INT);
+my $hash_type = Perl::JIT::AST::Hash->new(UNSIGNED_INT);
 
 # Check roundtripping
 for my $type (SCALAR, DOUBLE, INT, UNSIGNED_INT,
