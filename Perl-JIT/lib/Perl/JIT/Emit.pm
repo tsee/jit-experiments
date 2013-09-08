@@ -60,6 +60,7 @@ sub process_jit_candidates {
 
     while (my $ast = shift @$asts) {
         next if $ast->get_type == pj_ttype_lexical ||
+                $ast->get_type == pj_ttype_variabledeclaration ||
                 $ast->get_type == pj_ttype_global ||
                 $ast->get_type == pj_ttype_constant;
 
@@ -127,6 +128,7 @@ sub is_jittable {
     given ($ast->get_type) {
         when (pj_ttype_constant) { return 1 }
         when (pj_ttype_lexical) { return 1 }
+        when (pj_ttype_variabledeclaration) { return 1 }
         when (pj_ttype_global) { return 1 }
         when (pj_ttype_optree) { return 0 }
         when (pj_ttype_nulloptree) { return 1 }
@@ -148,7 +150,8 @@ sub needs_excessive_magic {
     while (@nodes) {
         my $node = shift @nodes;
 
-        return 1 if $node->get_type == pj_ttype_lexical &&
+        return 1 if ($node->get_type == pj_ttype_lexical ||
+                     $node->get_type == pj_ttype_variabledeclaration) &&
                     $node->get_value_type->is_opaque;
         next unless $node->get_type == pj_ttype_op;
 
@@ -213,6 +216,9 @@ sub _jit_emit {
         }
         when (pj_ttype_lexical) {
             return $self->_jit_get_lexical_xv($ast);
+        }
+        when (pj_ttype_variabledeclaration) {
+            return $self->_jit_get_lexical_declaration_xv($ast);
         }
         when (pj_ttype_global) {
             return $self->_jit_get_global_xv($ast);
@@ -395,6 +401,19 @@ sub _jit_emit_optree {
     return unless $ast->context == pj_context_scalar;
 
     return (pa_pop_sv($self->_fun), SCALAR);
+}
+
+sub _jit_get_lexical_declaration_xv {
+    my ($self, $ast) = @_;
+    my $fun = $self->_fun;
+    my $padix = jit_value_create_nint_constant($fun, jit_type_nint, $ast->get_pad_index);
+    my $svp = pa_get_pad_sv_address($fun, $padix);
+    my $sv = jit_insn_load_elem($fun, $svp, jit_value_create_nint_constant($fun, jit_type_nint, 0), jit_type_void_ptr);
+
+    pa_save_clearsv($fun, $svp);
+
+    # TODO this value can be cached
+    return ($sv, SCALAR);
 }
 
 sub _jit_get_lexical_xv {
