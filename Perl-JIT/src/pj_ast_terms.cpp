@@ -388,6 +388,12 @@ Binop::set_assignment_form(bool is_assignment)
   is_assign_form = is_assignment;
 }
 
+bool
+Binop::is_synthesized_assignment() const
+{
+  return optype == pj_binop_sassign && kids[1]->perl_op == perl_op;
+}
+
 int Lexical::get_pad_index() const
 {
   return perl_op->op_targ;

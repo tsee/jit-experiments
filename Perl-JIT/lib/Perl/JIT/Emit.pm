@@ -137,6 +137,8 @@ sub is_jittable {
 
             return 0 unless $known;
             return 1 unless $ast->may_have_explicit_overload;
+            return $self->is_jittable($ast->get_right_kid)
+                if $ast->op_class == pj_opc_binop && $ast->is_synthesized_assignment;
             return !$self->needs_excessive_magic($ast);
         }
         default { return 0 }
@@ -176,6 +178,10 @@ sub _jit_emit_root {
 sub _jit_emit_return {
     my ($self, $ast, $cxt, $val, $type) = @_;
     my $fun = $self->_fun;
+
+    # TODO OPs with OPpTARGET_MY flag are in scalar context even when
+    # they should be in void context, so we're emitting an useless push
+    # below
 
     die "Caller-determined context not implemented"
         if $cxt == pj_context_caller;

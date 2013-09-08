@@ -141,8 +141,12 @@ namespace PerlJIT {
         reference->op_type == OP_AELEMFAST_LEX ? pj_sigil_array :
         reference->op_type == OP_PADHV         ? pj_sigil_hash :
                                                  (pj_variable_sigil) -1;
-      if (sigil == (pj_variable_sigil) -1)
-        croak("Unrecognized sigil");
+      if (sigil == (pj_variable_sigil) -1) {
+        if (PL_opargs[reference->op_type] & OA_TARGLEX)
+          sigil = pj_sigil_scalar;
+        else
+          croak("Unrecognized sigil");
+      }
 
       decl = new AST::VariableDeclaration(declaration, variables.size(), sigil);
       if (typed_declarations) {
@@ -253,6 +257,21 @@ pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::T
   return 0;
 }
 
+static PerlJIT::AST::Term *
+pj_build_targmy_assignment(PerlJIT::AST::Term *term, OPTreeJITCandidateFinder &visitor)
+{
+  OP *o = term->perl_op;
+
+  if (!(PL_opargs[o->op_type] & OA_TARGLEX))
+    return term;
+  if (!(o->op_private & OPpTARGET_MY))
+    return term;
+
+  AST::Lexical *var = new AST::Lexical(o, visitor.get_declaration(0, o));
+
+  return new AST::Binop(o, pj_binop_sassign, var, term);
+}
+
 /* Walk OP tree recursively, build ASTs, build subtrees */
 static PerlJIT::AST::Term *
 pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
@@ -290,6 +309,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       MAKE_DEFAULT_KID_VECTOR                                 \
       assert(kid_terms.size() == 1);                          \
       retval = new AST::Unop(o, pj_op_type, kid_terms[0]);    \
+      retval = pj_build_targmy_assignment(retval, visitor);   \
       break;                                                  \
     }
 
@@ -301,6 +321,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         retval = new AST::Unop(o, pj_op_type, kid_terms[0]);  \
       else /* no kids */                                      \
         retval = new AST::Unop(o, pj_op_type, NULL);          \
+      retval = pj_build_targmy_assignment(retval, visitor);   \
       break;                                                  \
     }
 
@@ -309,6 +330,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       MAKE_DEFAULT_KID_VECTOR                                             \
       assert(kid_terms.size() == 2);                                      \
       retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]); \
+      retval = pj_build_targmy_assignment(retval, visitor);               \
       break;                                                              \
     }
 
@@ -319,6 +341,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       if (kid_terms.size() < 2)                                           \
         kid_terms.push_back(NULL);                                        \
       retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]); \
+      retval = pj_build_targmy_assignment(retval, visitor);               \
       break;                                                              \
     }
 

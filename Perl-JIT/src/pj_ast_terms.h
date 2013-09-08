@@ -238,6 +238,7 @@ namespace PerlJIT {
 
       bool is_assignment_form();
       void set_assignment_form(bool is_assignment);
+      bool is_synthesized_assignment() const;
 
       virtual void dump(int indent_lvl = 0);
       pj_op_class op_class()
