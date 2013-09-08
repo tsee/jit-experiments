@@ -427,139 +427,154 @@ sub _jit_emit_sassign {
     return ($lv, $lt);
 }
 
+sub _jit_emit_binop {
+    my ($self, $ast, $type) = @_;
+    my $fun = $self->_fun;
+
+    my ($res, $restype);
+    my ($v1, $v2, $t1, $t2);
+
+    if (not($ast->evaluates_kids_conditionally) &&
+        $ast->get_optype != pj_binop_sassign) {
+        ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, DOUBLE);
+        ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, DOUBLE);
+        $restype = DOUBLE;
+    }
+
+    given ($ast->get_optype) {
+        when (pj_binop_add) {
+            $res = jit_insn_add($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
+        }
+        when (pj_binop_subtract) {
+            $res = jit_insn_sub($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
+        }
+        when (pj_binop_multiply) {
+            $res = jit_insn_mul($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
+        }
+        when (pj_binop_divide) {
+            $res = jit_insn_div($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
+        }
+        when (pj_binop_bool_and) {
+            # TODO We ask subtrees to return a value with desired
+            #      type, but we need coercion when that is not the case.
+            #      More correct would be to pick the output type based
+            #      on the input types and ignore what the caller would have
+            #      liked to get.
+
+            my $endlabel = jit_label_undefined;
+            $res = $self->_jit_create_value($type);
+            $restype = $type;
+
+            # If value is false, then go with v1 and never look at v2
+            ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, $type);
+            jit_insn_store($fun, $res, $self->_to_type($v1, $t1, $type));
+            my $tmp = $self->_to_bool($v1, $t1);
+            jit_insn_branch_if_not($fun, $tmp, $endlabel);
+
+            # Left is true, move to right operand
+            ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, $type);
+            jit_insn_store($fun, $res, $self->_to_type($v2, $t2, $type));
+
+            # endlabel; done.
+            jit_insn_label($fun, $endlabel);
+        }
+        when (pj_binop_sassign) {
+            ($res, $restype) = $self->_jit_emit_sassign($ast, $type);
+        }
+        default {
+            return $self->_jit_emit_optree_jit_kids($ast, $type);
+        }
+    }
+
+    if ($ast->is_assignment_form) {
+        $self->_jit_assign_sv($v1, $res, $restype);
+    }
+
+    return ($res, $restype);
+}
+
+sub _jit_emit_unop {
+    my ($self, $ast, $type) = @_;
+    my $fun = $self->_fun;
+
+    my ($v1, $t1) = $self->_jit_emit($ast->get_kid, DOUBLE);
+    my ($res, $restype);
+
+    $restype = DOUBLE;
+
+    given ($ast->get_optype) {
+        when (pj_unop_negate) {
+            $res = jit_insn_neg($fun, $self->_to_nv($v1, $t1));
+        }
+        when (pj_unop_abs) {
+            $res = jit_insn_abs($fun, $self->_to_nv($v1, $t1));
+        }
+        when (pj_unop_sin) {
+            $res = jit_insn_sin($fun, $self->_to_nv($v1, $t1));
+        }
+        when (pj_unop_cos) {
+            $res = jit_insn_cos($fun, $self->_to_nv($v1, $t1));
+        }
+        when (pj_unop_sqrt) {
+            $res = jit_insn_sqrt($fun, $self->_to_nv($v1, $t1));
+        }
+        when (pj_unop_log) {
+            $res = jit_insn_log($fun, $self->_to_nv($v1, $t1));
+        }
+        when (pj_unop_exp) {
+            $res = jit_insn_exp($fun, $self->_to_nv($v1, $t1));
+        }
+        when (pj_unop_bool_not) {
+            my ($tmp, $tmptype) = $self->_to_numeric_type($v1, $t1);
+            $res = jit_insn_to_not_bool($fun, $tmp);
+            $restype = INT;
+        }
+        when (pj_unop_perl_int) {
+            if ($t1->is_integer) {
+                $res = $v1;
+            }
+            else {
+                my ($val, $valtype) = $self->_to_numeric_type($v1, $t1);
+                my $endlabel = jit_label_undefined;
+                my $neglabel = jit_label_undefined;
+
+                # if value < 0.0, then goto neglabel
+                my $constval = jit_value_create_NV_constant($fun, 0.0);
+                my $tmpval = jit_insn_lt($fun, $val, $constval);
+                jit_insn_branch_if($fun, $tmpval, $neglabel);
+
+                # else use floor, then goto endlabel
+                $res = jit_insn_floor($fun, $val);
+                jit_insn_branch($fun, $endlabel);
+
+                # neglabel: use ceil, fall through to endlabel
+                jit_insn_label($fun, $neglabel);
+                my $tmprv = jit_insn_ceil($fun, $val);
+                jit_insn_store($fun, $res, $tmprv);
+
+                # endlabel; done.
+                jit_insn_label($fun, $endlabel);
+            }
+            $restype = INT;
+        }
+        default {
+            return $self->_jit_emit_optree_jit_kids($ast, $type);
+        }
+    }
+
+    return ($res, $restype);
+}
+
 sub _jit_emit_op {
     my ($self, $ast, $type) = @_;
     my $fun = $self->_fun;
 
     given ($ast->op_class) {
         when (pj_opc_binop) {
-            my ($res, $restype);
-            my ($v1, $v2, $t1, $t2);
-            if (not($ast->evaluates_kids_conditionally) &&
-                $ast->get_optype != pj_binop_sassign) {
-                ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, DOUBLE);
-                ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, DOUBLE);
-                $restype = DOUBLE;
-            }
-
-            given ($ast->get_optype) {
-                when (pj_binop_add) {
-                    $res = jit_insn_add($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
-                }
-                when (pj_binop_subtract) {
-                    $res = jit_insn_sub($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
-                }
-                when (pj_binop_multiply) {
-                    $res = jit_insn_mul($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
-                }
-                when (pj_binop_divide) {
-                    $res = jit_insn_div($fun, $self->_to_nv($v1, $t1), $self->_to_nv($v2, $t2));
-                }
-                when (pj_binop_bool_and) {
-                    # TODO We ask subtrees to return a value with desired
-                    #      type, but we need coercion when that is not the case.
-                    #      More correct would be to pick the output type based
-                    #      on the input types and ignore what the caller would have
-                    #      liked to get.
-
-                    my $endlabel = jit_label_undefined;
-                    $res = $self->_jit_create_value($type);
-                    $restype = $type;
-
-                    # If value is false, then go with v1 and never look at v2
-                    ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, $type);
-                    jit_insn_store($fun, $res, $self->_to_type($v1, $t1, $type));
-                    my $tmp = $self->_to_bool($v1, $t1);
-                    jit_insn_branch_if_not($fun, $tmp, $endlabel);
-
-                    # Left is true, move to right operand
-                    ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, $type);
-                    jit_insn_store($fun, $res, $self->_to_type($v2, $t2, $type));
-
-                    # endlabel; done.
-                    jit_insn_label($fun, $endlabel);
-                }
-                when (pj_binop_sassign) {
-                    ($res, $restype) = $self->_jit_emit_sassign($ast, $type);
-                }
-                default {
-                    return $self->_jit_emit_optree_jit_kids($ast, $type);
-                }
-            }
-
-            if ($ast->is_assignment_form) {
-                $self->_jit_assign_sv($v1, $res, $restype);
-            }
-
-            return ($res, $restype);
+            return $self->_jit_emit_binop($ast, $type);
         }
         when (pj_opc_unop) {
-            my ($v1, $t1) = $self->_jit_emit($ast->get_kid, DOUBLE);
-            my ($res, $restype);
-
-            $restype = DOUBLE;
-
-            given ($ast->get_optype) {
-                when (pj_unop_negate) {
-                    $res = jit_insn_neg($fun, $self->_to_nv($v1, $t1));
-                }
-                when (pj_unop_abs) {
-                    $res = jit_insn_abs($fun, $self->_to_nv($v1, $t1));
-                }
-                when (pj_unop_sin) {
-                    $res = jit_insn_sin($fun, $self->_to_nv($v1, $t1));
-                }
-                when (pj_unop_cos) {
-                    $res = jit_insn_cos($fun, $self->_to_nv($v1, $t1));
-                }
-                when (pj_unop_sqrt) {
-                    $res = jit_insn_sqrt($fun, $self->_to_nv($v1, $t1));
-                }
-                when (pj_unop_log) {
-                    $res = jit_insn_log($fun, $self->_to_nv($v1, $t1));
-                }
-                when (pj_unop_exp) {
-                    $res = jit_insn_exp($fun, $self->_to_nv($v1, $t1));
-                }
-                when (pj_unop_bool_not) {
-                    my ($tmp, $tmptype) = $self->_to_numeric_type($v1, $t1);
-                    $res = jit_insn_to_not_bool($fun, $tmp);
-                    $restype = INT;
-                }
-                when (pj_unop_perl_int) {
-                    if ($t1->is_integer) {
-                        $res = $v1;
-                    }
-                    else {
-                        my ($val, $valtype) = $self->_to_numeric_type($v1, $t1);
-                        my $endlabel = jit_label_undefined;
-                        my $neglabel = jit_label_undefined;
-
-                        # if value < 0.0, then goto neglabel
-                        my $constval = jit_value_create_NV_constant($fun, 0.0);
-                        my $tmpval = jit_insn_lt($fun, $val, $constval);
-                        jit_insn_branch_if($fun, $tmpval, $neglabel);
-
-                        # else use floor, then goto endlabel
-                        $res = jit_insn_floor($fun, $val);
-                        jit_insn_branch($fun, $endlabel);
-
-                        # neglabel: use ceil, fall through to endlabel
-                        jit_insn_label($fun, $neglabel);
-                        my $tmprv = jit_insn_ceil($fun, $val);
-                        jit_insn_store($fun, $res, $tmprv);
-
-                        # endlabel; done.
-                        jit_insn_label($fun, $endlabel);
-                    }
-                    $restype = INT;
-                }
-                default {
-                    return $self->_jit_emit_optree_jit_kids($ast, $type);
-                }
-            }
-
-            return ($res, $restype);
+            return $self->_jit_emit_unop($ast, $type);
         }
         default {
             return $self->_jit_emit_optree_jit_kids($ast, $type);
