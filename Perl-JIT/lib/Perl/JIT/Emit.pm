@@ -303,9 +303,9 @@ sub _to_type {
     } elsif ($to_type->equals(DOUBLE)) {
         return $self->_to_nv($val, $type);
     } elsif ($to_type->equals(INT)) {
-        return $self->to_iv($val, $type);
+        return $self->_to_iv($val, $type);
     } elsif ($to_type->equals(UNSIGNED_INT)) {
-        return $self->to_uv($val, $type);
+        return $self->_to_uv($val, $type);
     } else {
         die "Handle more coercion cases";
     }
