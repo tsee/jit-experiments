@@ -25,6 +25,8 @@ namespace PerlJIT {
     class Type {
     public:
       virtual ~Type();
+      virtual Type *clone() const = 0;
+
       virtual pj_type_id tag() const = 0;
 
       virtual bool equals(Type *other) const = 0;
@@ -47,6 +49,8 @@ namespace PerlJIT {
     class Scalar : public Type {
     public:
       Scalar(pj_type_id tag);
+      virtual Type *clone() const;
+
       virtual pj_type_id tag() const;
 
       virtual bool equals(Type *other) const;
@@ -70,6 +74,8 @@ namespace PerlJIT {
     class Array : public Type {
     public:
       Array(Type *element);
+      virtual Type *clone() const;
+
       virtual pj_type_id tag() const;
       Type *element() const;
 
@@ -87,6 +93,8 @@ namespace PerlJIT {
     class Hash : public Type {
     public:
       Hash(Type *element);
+      virtual Type *clone() const;
+
       virtual pj_type_id tag() const;
       Type *element() const;
 

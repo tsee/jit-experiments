@@ -24,6 +24,12 @@ Scalar::Scalar(pj_type_id tag) :
 {
 }
 
+Type *
+Scalar::clone() const
+{
+  return new Scalar(_tag);
+}
+
 pj_type_id Scalar::tag() const
 {
   return _tag;
@@ -89,6 +95,12 @@ Array::Array(Type *element) :
 {
 }
 
+Type *
+Array::clone() const
+{
+  return new Array(_element);
+}
+
 pj_type_id Array::tag() const
 {
   return pj_array_type;
@@ -114,6 +126,12 @@ string Array::to_string() const
 Hash::Hash(Type *element) :
   _element(element)
 {
+}
+
+Type *
+Hash::clone() const
+{
+  return new Hash(_element);
 }
 
 pj_type_id Hash::tag() const
