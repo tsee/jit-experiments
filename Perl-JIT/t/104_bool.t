@@ -3,7 +3,7 @@
 use t::lib::Perl::JIT::Test;
 
 my %ops = map {$_ => { name => $_ }} qw(
-  not and or
+  not and or cond_expr
 );
 
 # FIXME the 1+ prefixes in the tests are to protect the scalar assignments from
@@ -44,6 +44,22 @@ my @tests = (
     opgrep => [$ops{and}],
     output => 1,
     input  => [2, 0], },
+  { name   => 'wrapped-ternary: left',
+    func   => build_jit_test_sub('$a, $b, $c', 'my $x = 1+($a ? $b : $c);', '$x'),
+    opgrep => [$ops{cond_expr}],
+    output => 3,
+    input  => [1, 2, 3], },
+  { name   => 'wrapped-ternary: right',
+    func   => build_jit_test_sub('$a, $b, $c', 'my $x = 1+($a ? $b : $c);', '$x'),
+    opgrep => [$ops{cond_expr}],
+    output => 4,
+    input  => [0, 2, 3], },
+  # FIXME fails without 1+ prefix
+  #{ name   => 'ternary: left',
+  #  func   => build_jit_test_sub('$a, $b, $c', 'my $x = ($a ? $b : $c);', '$x'),
+  #  opgrep => [$ops{cond_expr}],
+  #  output => 2,
+  #  input  => [1, 2, 3], },
 );
 
 # save typing

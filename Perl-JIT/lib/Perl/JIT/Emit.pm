@@ -115,6 +115,8 @@ my %Jittable_Ops = map { $_ => 1 } (
     pj_binop_add, pj_binop_subtract, pj_binop_multiply, pj_binop_divide,
     pj_binop_bool_and, pj_binop_sassign,
 
+    pj_listop_ternary,
+
     pj_unop_negate, pj_unop_abs, pj_unop_sin, pj_unop_cos, pj_unop_sqrt,
     pj_unop_log, pj_unop_exp, pj_unop_bool_not, pj_unop_perl_int,
 );
@@ -592,16 +594,66 @@ sub _jit_emit_unop {
     return ($res, $restype);
 }
 
-sub _jit_emit_op {
+sub _jit_emit_listop {
     my ($self, $ast, $type) = @_;
     my $fun = $self->_fun;
 
+    my ($res, $restype);
+    my @kids = $ast->get_kids;
+
+    $restype = UNSPECIFIED;
+
+    given ($ast->get_optype) {
+        when (pj_listop_ternary) {
+            # TODO We ask subtrees to return a value with desired
+            #      type, but we need coercion when that is not the case.
+            #      More correct would be to pick the output type based
+            #      on the input types and ignore what the caller would have
+            #      liked to get.
+            $res = $self->_jit_create_value($type);
+            $restype = $type;
+
+            # FIXME instead of DOUBLE, really should pass in "NUMERIC" or even "BOOL"
+            my $endlabel = jit_label_undefined;
+            my $leftlabel = jit_label_undefined;
+
+            my ($cond_val, $cond_type) = $self->_jit_emit($kids[0], ANY);
+            jit_insn_branch_if($fun, $self->_to_bool_value($cond_val, $cond_type), $leftlabel);
+
+            my ($right_v, $right_t) = $self->_jit_emit($kids[2], $type);
+            my ($tmp, undef) = $self->_to_type($right_v, $right_t, $type);
+            jit_insn_store($fun, $res, $tmp);
+            jit_insn_branch($fun, $endlabel);
+
+            # leftlabel; assign to output.
+            jit_insn_label($fun, $leftlabel);
+            my ($left_v, $left_t) = $self->_jit_emit($kids[1], $type);
+            ($tmp, undef) = $self->_to_type($left_v, $left_t, $type);
+            jit_insn_store($fun, $res, $tmp);
+
+            # endlabel; done.
+            jit_insn_label($fun, $endlabel);
+        }
+        default {
+            return $self->_jit_emit_optree_jit_kids($ast, $type);
+        }
+    }
+
+    return ($res, $restype);
+}
+
+sub _jit_emit_op {
+    my ($self, $ast, $type) = @_;
+
     given ($ast->op_class) {
+        when (pj_opc_unop) {
+            return $self->_jit_emit_unop($ast, $type);
+        }
         when (pj_opc_binop) {
             return $self->_jit_emit_binop($ast, $type);
         }
-        when (pj_opc_unop) {
-            return $self->_jit_emit_unop($ast, $type);
+        when (pj_opc_listop) {
+            return $self->_jit_emit_listop($ast, $type);
         }
         default {
             return $self->_jit_emit_optree_jit_kids($ast, $type);
