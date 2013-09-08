@@ -10,7 +10,7 @@ enum pj_type_id {
                        // "Any" means any return type is equally valid/desired.
   pj_scalar_type,      // Explicit Perl Scalar (not any SV, but any scalar SV)
   pj_gv_type,          // Actual GV type.
-  pj_opaque_type,      // Explicitly opaque Perl SV "must not treat as anything but an unknown Perl thing"
+  pj_opaque_type,      // Explicitly opaque Perl Scalar(!) "must not treat as anything but an unknown Perl thing"
                        // Interaction must support ties/overloading.
   pj_array_type,       // Explicit array type (commonly a Perl AV)
   pj_hash_type,        // Explicit hash type (commonly a Perl HV)
