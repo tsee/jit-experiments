@@ -5,16 +5,29 @@ use t::lib::Perl::JIT::Test;
 my %ops = map {$_ => { name => $_ }} qw(
   not and or
 );
+
+# FIXME the 1+ prefixes in the tests are to protect the scalar assignments from
+#       the ANY return types of some of the logops.
 my @tests = (
-  { name   => 'boolean not false to true',
+  { name   => 'wrapped: boolean not false to true',
     func   => build_jit_test_sub('$a', 'my $x = 1 + !$a;', '$x'),
     opgrep => [$ops{not}],
     output => 2,
     input  => [0], },
-  { name   => 'boolean not true to false',
+  { name   => 'wrapped: boolean not true to false',
     func   => build_jit_test_sub('$a', 'my $x = 1 + !$a;', '$x'),
     opgrep => [$ops{not}],
     output => 1,
+    input  => [1], },
+  { name   => 'boolean not false to true',
+    func   => build_jit_test_sub('$a', 'my $x = !$a;', '$x'),
+    opgrep => [$ops{not}],
+    output => 1,
+    input  => [0], },
+  { name   => 'boolean not true to false',
+    func   => build_jit_test_sub('$a', 'my $x = !$a;', '$x'),
+    opgrep => [$ops{not}],
+    output => 0,
     input  => [1], },
   { name   => 'boolean and (yes)',
     func   => build_jit_test_sub('$a, $b', 'my $x = 1+($a && $b);', '$x'),
