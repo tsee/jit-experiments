@@ -543,6 +543,10 @@ sub _jit_emit_binop {
     }
 
     if ($ast->is_assignment_form) {
+        # TODO proper LVALUE treatment
+        if (!$t1->equals(SCALAR)) {
+            die "can only assign to Perl scalars, got a ", $t1->to_string;
+        }
         $self->_jit_assign_sv($v1, $res, $restype);
     }
 
