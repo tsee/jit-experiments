@@ -315,8 +315,11 @@ sub _to_numeric {
 sub _to_type {
     my ($self, $val, $type, $to_type) = @_;
 
-    if ($to_type->equals($type)) {
-        return $val;
+    if ($to_type->equals($type)
+        || $to_type->equals(ANY)
+        || $to_type->equals(UNSPECIFIED))
+    {
+        return ($val, $type);
     } elsif ($to_type->equals(DOUBLE)) {
         return $self->_to_nv($val, $type);
     } elsif ($to_type->equals(INT)) {
