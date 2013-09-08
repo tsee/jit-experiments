@@ -255,6 +255,34 @@ sub _to_nv {
     }
 }
 
+sub _to_iv {
+    my ($self, $val, $type) = @_;
+
+    if ($type->equals(INT)) {
+        return $val;
+    } elsif ($type->equals(UNSIGNED_INT) || $type->euqals(DOUBLE)) {
+        return jit_insn_convert($self->_fun, $val, jit_type_IV, 0);
+    } elsif ($type->equals(SCALAR)) {
+        return pa_sv_iv($self->_fun, $val);
+    } else {
+        die "Handle more coercion cases";
+    }
+}
+
+sub _to_uv {
+    my ($self, $val, $type) = @_;
+
+    if ($type->equals(UNSIGNED_INT)) {
+        return $val;
+    } elsif ($type->equals(INT) || $type->euqals(DOUBLE)) {
+        return jit_insn_convert($self->_fun, $val, jit_type_UV, 0);
+    } elsif ($type->equals(SCALAR)) {
+        return pa_sv_uv($self->_fun, $val);
+    } else {
+        die "Handle more coercion cases";
+    }
+}
+
 sub _to_numeric_type {
     my ($self, $val, $type) = @_;
 
@@ -274,6 +302,10 @@ sub _to_type {
         return $val;
     } elsif ($to_type->equals(DOUBLE)) {
         return $self->_to_nv($val, $type);
+    } elsif ($to_type->equals(INT)) {
+        return $self->to_iv($val, $type);
+    } elsif ($to_type->equals(UNSIGNED_INT)) {
+        return $self->to_uv($val, $type);
     } else {
         die "Handle more coercion cases";
     }
