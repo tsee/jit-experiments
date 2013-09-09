@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <string.h>
 #include <tr1/unordered_map>
+#include <typeinfo>
 
 using namespace std;
 using namespace std::tr1;
@@ -35,8 +36,39 @@ minimal_covering_type_internal(const Type &left, const Type &right)
     right_tag = pj_unspecified_type;
 
   // short-circuit
-  if (left_tag == right_tag)
-    return left.clone();
+  if (left_tag == right_tag) {
+    if (!left.is_composite())
+      return left.clone();
+    else {
+      // Array or Hash
+      Type *left_elem;
+      Type *right_elem;
+      try {
+        const Array &left_comp = dynamic_cast<const Array &>(left);
+        const Array &right_comp = dynamic_cast<const Array &>(right);
+        left_elem = left_comp.element();
+        right_elem = right_comp.element();
+      }
+      catch (const std::bad_cast& e) {
+        const Hash &left_comp = dynamic_cast<const Hash &>(left);
+        const Hash &right_comp = dynamic_cast<const Hash &>(right);
+        left_elem = left_comp.element();
+        right_elem = right_comp.element();
+      }
+      //printf("# Recursing for %s and %s\n", left_elem->to_string().c_str(), right_elem->to_string().c_str());
+      Type *res = minimal_covering_type_internal(*left_elem, *right_elem);
+      if (res == NULL)
+        return res;
+      if (res->equals(left_elem)) {
+        delete res;
+        return left.clone();
+      }
+      else {
+        delete res;
+        return right.clone();
+      }
+    }
+  }
 
   // incompatible combinations with unique types
   else if (left.is_array() || right.is_array())
@@ -124,8 +156,10 @@ namespace PerlJIT {
         if (minimal_type == NULL) {
           minimal_type = t->clone();
         }
-        else if (minimal_type->tag() != t->tag()) {
+        else if (!minimal_type->equals(t)) {
+          //printf("Cmp %s and %s\n", minimal_type->to_string().c_str(), t->to_string().c_str());
           Type *new_type = minimal_covering_type_internal(*minimal_type, *t);
+          //printf("Result: %s\n", new_type == NULL ? "NULL" : new_type->to_string().c_str());
           if (new_type != minimal_type)
             delete minimal_type;
           if (new_type == NULL)
