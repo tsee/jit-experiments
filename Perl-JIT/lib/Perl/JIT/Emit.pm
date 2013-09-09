@@ -522,12 +522,6 @@ sub _jit_emit_binop {
             $res = jit_insn_div($fun, $self->_to_nv_value($v1, $t1), $self->_to_nv_value($v2, $t2));
         }
         when (pj_binop_bool_and) {
-            # TODO We ask subtrees to return a value with desired
-            #      type, but we need coercion when that is not the case.
-            #      More correct would be to pick the output type based
-            #      on the input types and ignore what the caller would have
-            #      liked to get.
-
             my $endlabel = jit_label_undefined;
             $restype = minimal_covering_type([$ast->get_left_kid->get_value_type(),
                                               $ast->get_right_kid->get_value_type()]);
