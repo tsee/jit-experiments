@@ -272,7 +272,7 @@ sub _to_nv_value {
         return jit_insn_convert($self->_fun, $val, jit_type_NV, 0);
     } elsif ($type->equals(SCALAR)) {
         return pa_sv_nv($self->_fun, $val);
-    } elsif ($type->equals(UNSPECIFIED) || $type->equals(ANY)) { # FIXME Mattia, please review this
+    } elsif ($type->equals(UNSPECIFIED)) {
         return pa_sv_iv($self->_fun, $val);
     } else {
         die "Handle more coercion cases (here: from " . $type->to_string() . " to NV)";
@@ -312,7 +312,7 @@ sub _to_uv_value {
         return jit_insn_convert($self->_fun, $val, jit_type_UV, 0);
     } elsif ($type->equals(SCALAR)) {
         return pa_sv_uv($self->_fun, $val);
-    } elsif ($type->equals(UNSPECIFIED) || $type->equals(ANY)) { # FIXME Mattia, please review this
+    } elsif ($type->equals(UNSPECIFIED)) {
         return pa_sv_iv($self->_fun, $val);
     } else {
         die "Handle more coercion cases";
@@ -473,7 +473,7 @@ sub _jit_assign_sv {
         pa_sv_set_iv($fun, $sv, $value);
     } elsif ($type->equals(SCALAR)) {
         pa_sv_set_sv_nosteal($fun, $sv, $value);
-    } elsif ($type->equals(UNSPECIFIED) || $type->equals(ANY)) { # FIXME Mattia, please review this
+    } elsif ($type->equals(UNSPECIFIED)) {
         pa_sv_set_sv_nosteal($fun, $sv, $value);
     } else {
         die "Unable to assign ", $type->to_string, " to an SV";
@@ -485,7 +485,7 @@ sub _jit_emit_sassign {
     my ($rv, $rt) = $self->_jit_emit($ast->get_right_kid, ANY);
     my ($lv, $lt) = $self->_jit_emit($ast->get_left_kid, SCALAR);
 
-    if (not($lt->equals(SCALAR) || $lt->equals(ANY) || $lt->equals(UNSPECIFIED))) { # FIXME Mattia, please review this
+    if (not($lt->equals(SCALAR) || $lt->equals(UNSPECIFIED))) {
         die "can only assign to Perl scalars, got a ", $lt->to_string;
     }
 
