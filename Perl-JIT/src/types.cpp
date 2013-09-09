@@ -47,9 +47,9 @@ minimal_covering_type_internal(const Type &left, const Type &right)
     return NULL; // FIXME GV relations a bit wobbly.
 
   // short-circuit unspecified type with other scalar type
-  else if (left.is_unspecified() || left_tag == pj_any_type)
+  else if (left.is_unspecified())
     return right.clone();
-  else if (right.is_unspecified() || right_tag == pj_any_type)
+  else if (right.is_unspecified())
     return left.clone();
 
   // Only descendants of opaque (== opaque scalar) left
