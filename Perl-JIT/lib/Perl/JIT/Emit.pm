@@ -114,7 +114,7 @@ sub jit_tree {
 
 my %Jittable_Ops = map { $_ => 1 } (
     pj_binop_add, pj_binop_subtract, pj_binop_multiply, pj_binop_divide,
-    pj_binop_bool_and, pj_binop_sassign,
+    pj_binop_bool_and, pj_binop_bool_or, pj_binop_sassign,
 
     pj_listop_ternary,
 
@@ -533,6 +533,27 @@ sub _jit_emit_binop {
             my ($tmp, undef) = $self->_to_type($v1, $t1, $restype);
             jit_insn_store($fun, $res, $tmp);
             jit_insn_branch_if_not($fun, $self->_to_bool_value($v1, $t1), $endlabel);
+
+            # Left is true, move to right operand
+            ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, $type);
+            ($tmp, undef) = $self->_to_type($v2, $t2, $restype);
+            jit_insn_store($fun, $res, $tmp);
+
+            # endlabel; done.
+            jit_insn_label($fun, $endlabel);
+        }
+        when (pj_binop_bool_or) {
+            my $endlabel = jit_label_undefined;
+            $restype = minimal_covering_type([$ast->get_left_kid->get_value_type(),
+                                              $ast->get_right_kid->get_value_type()]);
+            $restype = OPAQUE if !defined($restype); # FIXME shady
+            $res = $self->_jit_create_value($restype);
+
+            # If value is false, then go with v1 and never look at v2
+            ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, $restype);
+            my ($tmp, undef) = $self->_to_type($v1, $t1, $restype);
+            jit_insn_store($fun, $res, $tmp);
+            jit_insn_branch_if($fun, $self->_to_bool_value($v1, $t1), $endlabel);
 
             # Left is true, move to right operand
             ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, $type);
