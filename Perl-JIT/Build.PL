@@ -8,14 +8,16 @@ use File::Spec;
 use lib File::Spec->catdir($Bin, 'inc');
 use Getopt::Long qw(GetOptions);
 my $DEBUG = $ENV{DEBUG};
+my $DEBUG_SYMBOLS;
 GetOptions(
   'debug|DEBUG+' => \$DEBUG,
+  'g' => \$DEBUG_SYMBOLS,
 );
 
 use Module::Build::PerlJIT;
 
 my @extra_compiler_flags;
-if ($DEBUG) {
+if ($DEBUG) { # superset of $DEBUG_SYMBOLS
   push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra);
   if ($DEBUG > 1) {
     push @extra_compiler_flags, qw(-pedantic);
@@ -26,6 +28,10 @@ if ($DEBUG) {
 
   open my $fh, ">", "DEBUGGING" or die $!;
   close $fh or die $!;
+}
+elsif ($DEBUG_SYMBOLS) { # subset of $DEBUG
+  push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra -DNDEBUG);
+  push @extra_compiler_flags, qw(-Wno-unused-function -Wno-unused-parameter -Wno-unused-variable);
 }
 else {
   push @extra_compiler_flags, qw(-DNDEBUG);
