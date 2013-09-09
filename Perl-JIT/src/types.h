@@ -39,6 +39,7 @@ namespace PerlJIT {
       virtual bool is_scalar() const { return false; }
       virtual bool is_array() const { return false; }
       virtual bool is_hash() const { return false; }
+      virtual bool is_composite() const { return false; }
       virtual bool is_opaque() const { return false; }
       virtual bool is_unspecified() const { return false; }
 
@@ -87,6 +88,7 @@ namespace PerlJIT {
       virtual bool equals(Type *other) const;
 
       virtual bool is_array() const { return true; }
+      virtual bool is_composite() const { return true; }
 
       virtual std::string to_string() const;
       virtual const char *perl_class() const
@@ -106,6 +108,7 @@ namespace PerlJIT {
       virtual bool equals(Type *other) const;
 
       virtual bool is_hash() const { return true; }
+      virtual bool is_composite() const { return true; }
 
       virtual std::string to_string() const;
       virtual const char *perl_class() const
