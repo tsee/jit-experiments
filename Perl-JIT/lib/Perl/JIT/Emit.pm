@@ -272,8 +272,10 @@ sub _to_nv_value {
         return jit_insn_convert($self->_fun, $val, jit_type_NV, 0);
     } elsif ($type->equals(SCALAR)) {
         return pa_sv_nv($self->_fun, $val);
+    } elsif ($type->equals(UNSPECIFIED) || $type->equals(ANY)) { # FIXME Mattia, please review this
+        return pa_sv_iv($self->_fun, $val);
     } else {
-        die "Handle more coercion cases";
+        die "Handle more coercion cases (here: from " . $type->to_string() . " to NV)";
     }
 }
 
@@ -287,7 +289,7 @@ sub _to_iv_value {
 
     if ($type->equals(INT)) {
         return $val;
-    } elsif ($type->equals(UNSIGNED_INT) || $type->euqals(DOUBLE)) {
+    } elsif ($type->equals(UNSIGNED_INT) || $type->equals(DOUBLE)) {
         return jit_insn_convert($self->_fun, $val, jit_type_IV, 0);
     } elsif ($type->equals(SCALAR)) {
         return pa_sv_iv($self->_fun, $val);
@@ -306,10 +308,12 @@ sub _to_uv_value {
 
     if ($type->equals(UNSIGNED_INT)) {
         return $val;
-    } elsif ($type->equals(INT) || $type->euqals(DOUBLE)) {
+    } elsif ($type->equals(INT) || $type->equals(DOUBLE)) {
         return jit_insn_convert($self->_fun, $val, jit_type_UV, 0);
     } elsif ($type->equals(SCALAR)) {
         return pa_sv_uv($self->_fun, $val);
+    } elsif ($type->equals(UNSPECIFIED) || $type->equals(ANY)) { # FIXME Mattia, please review this
+        return pa_sv_iv($self->_fun, $val);
     } else {
         die "Handle more coercion cases";
     }
@@ -469,6 +473,8 @@ sub _jit_assign_sv {
         pa_sv_set_iv($fun, $sv, $value);
     } elsif ($type->equals(SCALAR)) {
         pa_sv_set_sv_nosteal($fun, $sv, $value);
+    } elsif ($type->equals(UNSPECIFIED) || $type->equals(ANY)) { # FIXME Mattia, please review this
+        pa_sv_set_sv_nosteal($fun, $sv, $value);
     } else {
         die "Unable to assign ", $type->to_string, " to an SV";
     }
@@ -523,18 +529,20 @@ sub _jit_emit_binop {
             #      liked to get.
 
             my $endlabel = jit_label_undefined;
-            $res = $self->_jit_create_value($type);
-            $restype = $type;
+            $restype = minimal_covering_type([$ast->get_left_kid->get_value_type(),
+                                              $ast->get_right_kid->get_value_type()]);
+            $restype = OPAQUE if !defined($restype); # FIXME shady
+            $res = $self->_jit_create_value($restype);
 
             # If value is false, then go with v1 and never look at v2
-            ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, $type);
-            my ($tmp, undef) = $self->_to_type($v1, $t1, $type);
+            ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, $restype);
+            my ($tmp, undef) = $self->_to_type($v1, $t1, $restype);
             jit_insn_store($fun, $res, $tmp);
             jit_insn_branch_if_not($fun, $self->_to_bool_value($v1, $t1), $endlabel);
 
             # Left is true, move to right operand
             ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, $type);
-            ($tmp, undef) = $self->_to_type($v2, $t2, $type);
+            ($tmp, undef) = $self->_to_type($v2, $t2, $restype);
             jit_insn_store($fun, $res, $tmp);
 
             # endlabel; done.
