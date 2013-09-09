@@ -273,9 +273,11 @@ sub run_jit_tests {
 
 sub build_jit_test_sub {
   my ($params, $code, $retval) = @_;
+  my $param_code = defined($params) ? "my ($params) = \@_;" : "";
   my $subcode = qq[
+    use Perl::JIT;
     \$sub = sub {
-      my ($params) = \@_;
+      $param_code
 
       $code;
 
