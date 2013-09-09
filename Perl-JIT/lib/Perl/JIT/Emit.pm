@@ -485,7 +485,7 @@ sub _jit_emit_sassign {
     my ($rv, $rt) = $self->_jit_emit($ast->get_right_kid, ANY);
     my ($lv, $lt) = $self->_jit_emit($ast->get_left_kid, SCALAR);
 
-    if (!$lt->equals(SCALAR)) {
+    if (not($lt->equals(SCALAR) || $lt->equals(ANY) || $lt->equals(UNSPECIFIED))) { # FIXME Mattia, please review this
         die "can only assign to Perl scalars, got a ", $lt->to_string;
     }
 
@@ -665,30 +665,26 @@ sub _jit_emit_listop {
 
     given ($ast->get_optype) {
         when (pj_listop_ternary) {
-            # TODO We ask subtrees to return a value with desired
-            #      type, but we need coercion when that is not the case.
-            #      More correct would be to pick the output type based
-            #      on the input types and ignore what the caller would have
-            #      liked to get.
-            $res = $self->_jit_create_value($type);
-            $restype = $type;
+            $restype = minimal_covering_type([$kids[1]->get_value_type(),
+                                              $kids[2]->get_value_type()]);
+            $restype = OPAQUE if !defined($restype); # FIXME shady
+            $res = $self->_jit_create_value($restype);
 
-            # FIXME instead of DOUBLE, really should pass in "NUMERIC" or even "BOOL"
             my $endlabel = jit_label_undefined;
             my $leftlabel = jit_label_undefined;
 
             my ($cond_val, $cond_type) = $self->_jit_emit($kids[0], ANY);
             jit_insn_branch_if($fun, $self->_to_bool_value($cond_val, $cond_type), $leftlabel);
 
-            my ($right_v, $right_t) = $self->_jit_emit($kids[2], $type);
-            my ($tmp, undef) = $self->_to_type($right_v, $right_t, $type);
+            my ($right_v, $right_t) = $self->_jit_emit($kids[2], $restype);
+            my ($tmp, undef) = $self->_to_type($right_v, $right_t, $restype);
             jit_insn_store($fun, $res, $tmp);
             jit_insn_branch($fun, $endlabel);
 
             # leftlabel; assign to output.
             jit_insn_label($fun, $leftlabel);
-            my ($left_v, $left_t) = $self->_jit_emit($kids[1], $type);
-            ($tmp, undef) = $self->_to_type($left_v, $left_t, $type);
+            my ($left_v, $left_t) = $self->_jit_emit($kids[1], $restype);
+            ($tmp, undef) = $self->_to_type($left_v, $left_t, $restype);
             jit_insn_store($fun, $res, $tmp);
 
             # endlabel; done.
