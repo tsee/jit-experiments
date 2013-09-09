@@ -193,6 +193,7 @@ namespace PerlJIT {
     CV *containing_cv;
     pj_declaration_map_t *typed_declarations;
     OP *last_nextstate;
+  private:
     AST::StatementSequence *current_sequence;
   }; // end class OPTreeJITCandidateFinder
 }
