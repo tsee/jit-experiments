@@ -63,6 +63,7 @@
   || (int)otype == OP_PREINC \
   || (int)otype == OP_PRINT \
   || (int)otype == OP_PRTF \
+  || (int)otype == OP_PUSH \
   || (int)otype == OP_QUOTEMETA \
   || (int)otype == OP_RAND \
   || (int)otype == OP_READ \
@@ -98,6 +99,7 @@
   || (int)otype == OP_UC \
   || (int)otype == OP_UCFIRST \
   || (int)otype == OP_UNDEF \
+  || (int)otype == OP_UNSHIFT \
   || (int)otype == OP_VEC)
 
 
@@ -169,6 +171,7 @@
   || (int)otype == OP_PREINC \
   || (int)otype == OP_PRINT \
   || (int)otype == OP_PRTF \
+  || (int)otype == OP_PUSH \
   || (int)otype == OP_QUOTEMETA \
   || (int)otype == OP_RAND \
   || (int)otype == OP_READ \
@@ -204,6 +207,7 @@
   || (int)otype == OP_UC \
   || (int)otype == OP_UCFIRST \
   || (int)otype == OP_UNDEF \
+  || (int)otype == OP_UNSHIFT \
   || (int)otype == OP_VEC)
 
 
