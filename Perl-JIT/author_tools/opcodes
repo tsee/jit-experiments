@@ -108,6 +108,7 @@ pj_binop_sassign,	pj_opc_binop,	sassign,	OP_SASSIGN,	OVERLOAD,	,	Any
 pj_binop_list_slice,	pj_opc_binop,	list slice,	OP_LSLICE,	0,	,	Scalar=Any List=List[Any]
 pj_binop_aelem,		pj_opc_binop,	array access,	OP_AELEM,	0,	emit,	Any
 pj_binop_helem,		pj_opc_binop,	hash access,	OP_HELEM,	0,	emit,	Any
+pj_binop_bless,		pj_opc_binop,	bless(),	OP_BLESS,	KIDS_OPTIONAL,	emit,	Any
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any
