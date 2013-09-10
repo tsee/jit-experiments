@@ -236,8 +236,6 @@ string Scalar::to_string() const
     PRINT_TYPE(pj_scalar_type, "Scalar");
     PRINT_TYPE(pj_gv_type, "GV");
     PRINT_TYPE(pj_opaque_type, OPAQUE);
-    PRINT_TYPE(pj_array_type, "Array");
-    PRINT_TYPE(pj_hash_type, "Hash");
     PRINT_TYPE(pj_string_type, STRING);
     PRINT_TYPE(pj_double_type, DOUBLE);
     PRINT_TYPE(pj_int_type, INT);
