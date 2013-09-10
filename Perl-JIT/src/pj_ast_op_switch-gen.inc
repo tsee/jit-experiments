@@ -12,6 +12,8 @@
   || (int)otype == OP_AELEM \
   || (int)otype == OP_ALARM \
   || (int)otype == OP_ANDASSIGN \
+  || (int)otype == OP_ANONHASH \
+  || (int)otype == OP_ANONLIST \
   || (int)otype == OP_ATAN2 \
   || (int)otype == OP_AV2ARYLEN \
   || (int)otype == OP_BIT_AND \
@@ -117,6 +119,8 @@
   || (int)otype == OP_ALARM \
   || (int)otype == OP_AND \
   || (int)otype == OP_ANDASSIGN \
+  || (int)otype == OP_ANONHASH \
+  || (int)otype == OP_ANONLIST \
   || (int)otype == OP_ATAN2 \
   || (int)otype == OP_AV2ARYLEN \
   || (int)otype == OP_BIT_AND \

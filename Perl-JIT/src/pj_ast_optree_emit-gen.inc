@@ -96,6 +96,8 @@ EMIT_LISTOP_CODE(OP_REVERSE, pj_listop_reverse)
 EMIT_LISTOP_CODE(OP_UNSHIFT, pj_listop_unshift)
 EMIT_LISTOP_CODE(OP_PUSH, pj_listop_push)
 EMIT_LISTOP_CODE(OP_SPLICE, pj_listop_splice)
+EMIT_LISTOP_CODE(OP_ANONLIST, pj_listop_anonlist)
+EMIT_LISTOP_CODE(OP_ANONHASH, pj_listop_anonhash)
 
 
 #endif

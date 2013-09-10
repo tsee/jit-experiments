@@ -108,6 +108,8 @@ typedef enum {
   pj_listop_unshift,
   pj_listop_push,
   pj_listop_splice,
+  pj_listop_anonlist,
+  pj_listop_anonhash,
 
   // Op class ranges
 
@@ -118,11 +120,11 @@ typedef enum {
   pj_binop_LAST  = pj_binop_bless,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_splice,
+  pj_listop_LAST  = pj_listop_anonhash,
 
   // Global op range:
   pj_op_FIRST = pj_unop_empty,
-  pj_op_LAST = pj_listop_splice
+  pj_op_LAST = pj_listop_anonhash
 } pj_op_type;
 
 #endif
