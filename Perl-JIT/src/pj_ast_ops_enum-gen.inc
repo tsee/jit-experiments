@@ -52,6 +52,7 @@ typedef enum {
   pj_unop_array_shift,
   pj_unop_array_pop,
   pj_unop_caller,
+  pj_unop_wantarray,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -89,6 +90,7 @@ typedef enum {
   pj_binop_aelem,
   pj_binop_helem,
   pj_binop_bless,
+  pj_binop_crypt,
 
   // Op class: pj_opc_listop
   pj_listop_ternary,
@@ -114,10 +116,10 @@ typedef enum {
   // Op class ranges
 
   pj_unop_FIRST = pj_unop_empty,
-  pj_unop_LAST  = pj_unop_caller,
+  pj_unop_LAST  = pj_unop_wantarray,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_bless,
+  pj_binop_LAST  = pj_binop_crypt,
 
   pj_listop_FIRST = pj_listop_ternary,
   pj_listop_LAST  = pj_listop_anonhash,

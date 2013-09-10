@@ -72,6 +72,8 @@ pj_unop_array_len,	pj_opc_unop,	array_len,	OP_AV2ARYLEN,	0,	emit,	Integer # FIXM
 pj_unop_array_shift,	pj_opc_unop,	shift(),	OP_SHIFT,	KIDS_OPTIONAL,	emit,	Any
 pj_unop_array_pop,	pj_opc_unop,	pop(),		OP_POP,		KIDS_OPTIONAL,	emit,	Any
 pj_unop_caller,		pj_opc_unop,	caller(),	OP_CALLER,	KIDS_OPTIONAL,	emit,	Scalar=Any List=List[Any]
+pj_unop_wantarray,	pj_opc_unop,	wantarray(),	OP_WANTARRAY,	KIDS_OPTIONAL,	emit,	Scalar # really has no kid ever!
+pj_unop_study,		pj_opc_unop,	study(),	OP_STUDY,	KIDS_OPTIONAL,	emit,	UnsignedInteger
 
 # binops
 pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric
@@ -109,6 +111,7 @@ pj_binop_list_slice,	pj_opc_binop,	list slice,	OP_LSLICE,	0,	,	Scalar=Any List=L
 pj_binop_aelem,		pj_opc_binop,	array access,	OP_AELEM,	0,	emit,	Any
 pj_binop_helem,		pj_opc_binop,	hash access,	OP_HELEM,	0,	emit,	Any
 pj_binop_bless,		pj_opc_binop,	bless(),	OP_BLESS,	KIDS_OPTIONAL,	emit,	Any
+pj_binop_crypt,		pj_opc_binop,	crypt(),	OP_CRYPT,	0,	emit,	String
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any

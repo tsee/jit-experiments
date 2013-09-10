@@ -28,6 +28,7 @@
   || (int)otype == OP_CONCAT \
   || (int)otype == OP_COND_EXPR \
   || (int)otype == OP_COS \
+  || (int)otype == OP_CRYPT \
   || (int)otype == OP_DEFINED \
   || (int)otype == OP_DIVIDE \
   || (int)otype == OP_DORASSIGN \
@@ -107,7 +108,8 @@
   || (int)otype == OP_UCFIRST \
   || (int)otype == OP_UNDEF \
   || (int)otype == OP_UNSHIFT \
-  || (int)otype == OP_VEC)
+  || (int)otype == OP_VEC \
+  || (int)otype == OP_WANTARRAY)
 
 
 #define IS_AST_COMPATIBLE_OP_TYPE(otype) ( \
@@ -136,6 +138,7 @@
   || (int)otype == OP_COND_EXPR \
   || (int)otype == OP_CONST \
   || (int)otype == OP_COS \
+  || (int)otype == OP_CRYPT \
   || (int)otype == OP_DEFINED \
   || (int)otype == OP_DIVIDE \
   || (int)otype == OP_DOR \
@@ -222,7 +225,8 @@
   || (int)otype == OP_UCFIRST \
   || (int)otype == OP_UNDEF \
   || (int)otype == OP_UNSHIFT \
-  || (int)otype == OP_VEC)
+  || (int)otype == OP_VEC \
+  || (int)otype == OP_WANTARRAY)
 
 
 
