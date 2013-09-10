@@ -55,6 +55,7 @@
   || (int)otype == OP_OCT \
   || (int)otype == OP_ORASSIGN \
   || (int)otype == OP_ORD \
+  || (int)otype == OP_POP \
   || (int)otype == OP_POSTDEC \
   || (int)otype == OP_POSTINC \
   || (int)otype == OP_POW \
@@ -79,6 +80,7 @@
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGT \
+  || (int)otype == OP_SHIFT \
   || (int)otype == OP_SIN \
   || (int)otype == OP_SLE \
   || (int)otype == OP_SLEEP \
@@ -159,6 +161,7 @@
   || (int)otype == OP_PADAV \
   || (int)otype == OP_PADHV \
   || (int)otype == OP_PADSV \
+  || (int)otype == OP_POP \
   || (int)otype == OP_POSTDEC \
   || (int)otype == OP_POSTINC \
   || (int)otype == OP_POW \
@@ -183,6 +186,7 @@
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGT \
+  || (int)otype == OP_SHIFT \
   || (int)otype == OP_SIN \
   || (int)otype == OP_SLE \
   || (int)otype == OP_SLEEP \
