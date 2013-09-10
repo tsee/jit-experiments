@@ -413,6 +413,15 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       break;
     }
 
+  case OP_RV2GV: {
+      if (cUNOPo->op_first->op_type == OP_GV)
+        retval = new AST::Global(o, pj_sigil_glob);
+      else
+        retval = new AST::Unop(o, pj_unop_gv_deref, pj_build_ast(aTHX_ cUNOPo->op_first, visitor));
+
+      break;
+    }
+
   case OP_NULL: {
       const unsigned int targ_otype = (unsigned int)o->op_targ;
       MAKE_DEFAULT_KID_VECTOR

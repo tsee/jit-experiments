@@ -17,6 +17,7 @@
   || (int)otype == OP_BIT_AND \
   || (int)otype == OP_BIT_OR \
   || (int)otype == OP_BIT_XOR \
+  || (int)otype == OP_CALLER \
   || (int)otype == OP_CHOMP \
   || (int)otype == OP_CHOP \
   || (int)otype == OP_CHR \
@@ -72,6 +73,7 @@
   || (int)otype == OP_REVERSE \
   || (int)otype == OP_RIGHT_SHIFT \
   || (int)otype == OP_RV2AV \
+  || (int)otype == OP_RV2GV \
   || (int)otype == OP_RV2HV \
   || (int)otype == OP_RV2SV \
   || (int)otype == OP_SASSIGN \
@@ -119,6 +121,7 @@
   || (int)otype == OP_BIT_AND \
   || (int)otype == OP_BIT_OR \
   || (int)otype == OP_BIT_XOR \
+  || (int)otype == OP_CALLER \
   || (int)otype == OP_CHOMP \
   || (int)otype == OP_CHOP \
   || (int)otype == OP_CHR \
@@ -182,6 +185,7 @@
   || (int)otype == OP_REVERSE \
   || (int)otype == OP_RIGHT_SHIFT \
   || (int)otype == OP_RV2AV \
+  || (int)otype == OP_RV2GV \
   || (int)otype == OP_RV2HV \
   || (int)otype == OP_RV2SV \
   || (int)otype == OP_SASSIGN \
