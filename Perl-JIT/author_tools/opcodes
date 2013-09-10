@@ -124,4 +124,5 @@ pj_listop_return,	pj_opc_listop,	return,		OP_RETURN,	0,	emit,	Any
 pj_listop_reverse,	pj_opc_listop,	reverse,	OP_REVERSE,	0,	emit,	Scalar=String List=List[Any]
 pj_listop_unshift,	pj_opc_listop,	unshift(),	OP_UNSHIFT,	0,	emit,	Integer
 pj_listop_push,		pj_opc_listop,	push(),		OP_PUSH,	0,	emit,	Integer
+pj_listop_splice,	pj_opc_listop,	splice(),	OP_SPLICE,	0,	emit,	Scalar=Any List=List[Any]
 

@@ -98,6 +98,7 @@ static const char *pj_ast_op_names[] = {
   "reverse",        // pj_listop_reverse     (pj_opc_listop)
   "unshift()",      // pj_listop_unshift     (pj_opc_listop)
   "push()",         // pj_listop_push        (pj_opc_listop)
+  "splice()",       // pj_listop_splice      (pj_opc_listop)
 };
 
 static unsigned int pj_ast_op_flags[] = {
@@ -194,6 +195,7 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_listop_reverse     (pj_opc_listop)
   0,                                                    // pj_listop_unshift     (pj_opc_listop)
   0,                                                    // pj_listop_push        (pj_opc_listop)
+  0,                                                    // pj_listop_splice      (pj_opc_listop)
 };
 
 #endif
