@@ -33,6 +33,7 @@
   || (int)otype == OP_GETC \
   || (int)otype == OP_GMTIME \
   || (int)otype == OP_GT \
+  || (int)otype == OP_HELEM \
   || (int)otype == OP_HEX \
   || (int)otype == OP_INT \
   || (int)otype == OP_JOIN \
@@ -136,6 +137,7 @@
   || (int)otype == OP_GMTIME \
   || (int)otype == OP_GT \
   || (int)otype == OP_GVSV \
+  || (int)otype == OP_HELEM \
   || (int)otype == OP_HEX \
   || (int)otype == OP_INT \
   || (int)otype == OP_JOIN \

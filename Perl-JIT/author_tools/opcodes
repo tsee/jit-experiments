@@ -68,8 +68,8 @@ pj_unop_av_deref,	pj_opc_unop,	av_deref,	OP_RV2AV,	OVERLOAD,	,	Any
 pj_unop_hv_deref,	pj_opc_unop,	hv_deref,	OP_RV2HV,	OVERLOAD,	,	Any
 pj_unop_getc,		pj_opc_unop,	getc,		OP_GETC,	KIDS_OPTIONAL,	emit,	Any
 pj_unop_array_len,	pj_opc_unop,	array_len,	OP_AV2ARYLEN,	0,	emit,	Integer # FIXME lvalue?
-pj_unop_array_shift,	pj_opc_unop,	shift(),	OP_SHIFT,	KIDS_OPTIONAL,	emit,	Scalar
-pj_unop_array_pop,	pj_opc_unop,	pop(),		OP_POP,		KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_array_shift,	pj_opc_unop,	shift(),	OP_SHIFT,	KIDS_OPTIONAL,	emit,	Any
+pj_unop_array_pop,	pj_opc_unop,	pop(),		OP_POP,		KIDS_OPTIONAL,	emit,	Any
 
 # binops
 pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric
@@ -105,6 +105,7 @@ pj_binop_concat,	pj_opc_binop,	concat,		OP_CONCAT,	HAS_ASSIGNMENT_FORM|OVERLOAD,
 pj_binop_sassign,	pj_opc_binop,	sassign,	OP_SASSIGN,	OVERLOAD,	,	Any
 pj_binop_list_slice,	pj_opc_binop,	list slice,	OP_LSLICE,	0,	,	Scalar=Any List=List[Any]
 pj_binop_aelem,		pj_opc_binop,	array access,	OP_AELEM,	0,	emit,	Any
+pj_binop_helem,		pj_opc_binop,	hash access,	OP_HELEM,	0,	emit,	Any
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any
