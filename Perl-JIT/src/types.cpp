@@ -75,7 +75,7 @@ minimal_covering_type_internal(const Type &left, const Type &right)
     return NULL;
   else if (left.is_hash() || right.is_hash())
     return NULL;
-  else if (left_tag == pj_gv_type)
+  else if (left_tag == pj_gv_type || right_tag == pj_gv_type)
     return NULL; // FIXME GV relations a bit wobbly.
 
   // short-circuit unspecified type with other scalar type
