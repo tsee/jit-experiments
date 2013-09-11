@@ -38,6 +38,33 @@
   || (int)otype == OP_DORASSIGN \
   || (int)otype == OP_EQ \
   || (int)otype == OP_EXP \
+  || (int)otype == OP_FTATIME \
+  || (int)otype == OP_FTBINARY \
+  || (int)otype == OP_FTBLK \
+  || (int)otype == OP_FTCHR \
+  || (int)otype == OP_FTCTIME \
+  || (int)otype == OP_FTDIR \
+  || (int)otype == OP_FTEEXEC \
+  || (int)otype == OP_FTEOWNED \
+  || (int)otype == OP_FTEREAD \
+  || (int)otype == OP_FTEWRITE \
+  || (int)otype == OP_FTFILE \
+  || (int)otype == OP_FTIS \
+  || (int)otype == OP_FTLINK \
+  || (int)otype == OP_FTMTIME \
+  || (int)otype == OP_FTPIPE \
+  || (int)otype == OP_FTREXEC \
+  || (int)otype == OP_FTROWNED \
+  || (int)otype == OP_FTRREAD \
+  || (int)otype == OP_FTRWRITE \
+  || (int)otype == OP_FTSGID \
+  || (int)otype == OP_FTSIZE \
+  || (int)otype == OP_FTSOCK \
+  || (int)otype == OP_FTSUID \
+  || (int)otype == OP_FTSVTX \
+  || (int)otype == OP_FTTEXT \
+  || (int)otype == OP_FTTTY \
+  || (int)otype == OP_FTZERO \
   || (int)otype == OP_GE \
   || (int)otype == OP_GETC \
   || (int)otype == OP_GMTIME \
@@ -56,6 +83,7 @@
   || (int)otype == OP_LOCALTIME \
   || (int)otype == OP_LOG \
   || (int)otype == OP_LSLICE \
+  || (int)otype == OP_LSTAT \
   || (int)otype == OP_LT \
   || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \
@@ -108,6 +136,7 @@
   || (int)otype == OP_SQRT \
   || (int)otype == OP_SRAND \
   || (int)otype == OP_SREFGEN \
+  || (int)otype == OP_STAT \
   || (int)otype == OP_STUB \
   || (int)otype == OP_STUDY \
   || (int)otype == OP_SUBSTR \
@@ -162,6 +191,33 @@
   || (int)otype == OP_DORASSIGN \
   || (int)otype == OP_EQ \
   || (int)otype == OP_EXP \
+  || (int)otype == OP_FTATIME \
+  || (int)otype == OP_FTBINARY \
+  || (int)otype == OP_FTBLK \
+  || (int)otype == OP_FTCHR \
+  || (int)otype == OP_FTCTIME \
+  || (int)otype == OP_FTDIR \
+  || (int)otype == OP_FTEEXEC \
+  || (int)otype == OP_FTEOWNED \
+  || (int)otype == OP_FTEREAD \
+  || (int)otype == OP_FTEWRITE \
+  || (int)otype == OP_FTFILE \
+  || (int)otype == OP_FTIS \
+  || (int)otype == OP_FTLINK \
+  || (int)otype == OP_FTMTIME \
+  || (int)otype == OP_FTPIPE \
+  || (int)otype == OP_FTREXEC \
+  || (int)otype == OP_FTROWNED \
+  || (int)otype == OP_FTRREAD \
+  || (int)otype == OP_FTRWRITE \
+  || (int)otype == OP_FTSGID \
+  || (int)otype == OP_FTSIZE \
+  || (int)otype == OP_FTSOCK \
+  || (int)otype == OP_FTSUID \
+  || (int)otype == OP_FTSVTX \
+  || (int)otype == OP_FTTEXT \
+  || (int)otype == OP_FTTTY \
+  || (int)otype == OP_FTZERO \
   || (int)otype == OP_GE \
   || (int)otype == OP_GETC \
   || (int)otype == OP_GMTIME \
@@ -181,6 +237,7 @@
   || (int)otype == OP_LOCALTIME \
   || (int)otype == OP_LOG \
   || (int)otype == OP_LSLICE \
+  || (int)otype == OP_LSTAT \
   || (int)otype == OP_LT \
   || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \
@@ -238,6 +295,7 @@
   || (int)otype == OP_SQRT \
   || (int)otype == OP_SRAND \
   || (int)otype == OP_SREFGEN \
+  || (int)otype == OP_STAT \
   || (int)otype == OP_STUB \
   || (int)otype == OP_STUDY \
   || (int)otype == OP_SUBSTR \

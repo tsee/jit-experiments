@@ -197,36 +197,6 @@ ssockopt	setsockopt		ck_fun		is@	Fs S S S
 getsockname	getsockname		ck_fun		is%	Fs
 getpeername	getpeername		ck_fun		is%	Fs
 
-lstat		lstat			ck_ftst		u-	F?
-stat		stat			ck_ftst		u-	F?
-ftrread		-R			ck_ftst		isu-	F-+
-ftrwrite	-W			ck_ftst		isu-	F-+
-ftrexec		-X			ck_ftst		isu-	F-+
-fteread		-r			ck_ftst		isu-	F-+
-ftewrite	-w			ck_ftst		isu-	F-+
-fteexec		-x			ck_ftst		isu-	F-+
-ftis		-e			ck_ftst		isu-	F-
-ftsize		-s			ck_ftst		istu-	F-
-ftmtime		-M			ck_ftst		stu-	F-
-ftatime		-A			ck_ftst		stu-	F-
-ftctime		-C			ck_ftst		stu-	F-
-ftrowned	-O			ck_ftst		isu-	F-
-fteowned	-o			ck_ftst		isu-	F-
-ftzero		-z			ck_ftst		isu-	F-
-ftsock		-S			ck_ftst		isu-	F-
-ftchr		-c			ck_ftst		isu-	F-
-ftblk		-b			ck_ftst		isu-	F-
-ftfile		-f			ck_ftst		isu-	F-
-ftdir		-d			ck_ftst		isu-	F-
-ftpipe		-p			ck_ftst		isu-	F-
-ftsuid		-u			ck_ftst		isu-	F-
-ftsgid		-g			ck_ftst		isu-	F-
-ftsvtx		-k			ck_ftst		isu-	F-
-ftlink		-l			ck_ftst		isu-	F-
-fttty		-t			ck_ftst		is-	F-
-fttext		-T			ck_ftst		isu-	F-
-ftbinary	-B			ck_ftst		isu-	F-
-
 open_dir	opendir			ck_fun		is@	F S
 readdir		readdir			ck_fun		%	DF
 telldir		telldir			ck_fun		st%	DF

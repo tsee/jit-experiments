@@ -78,6 +78,37 @@ pj_unop_chdir,		pj_opc_unop,	chdir(),	OP_CHDIR,	KIDS_OPTIONAL,	emit,	UnsignedInt
 pj_unop_chroot,		pj_opc_unop,	chroot(),	OP_CHROOT,	KIDS_OPTIONAL,	emit,	UnsignedInteger
 pj_unop_readlink,	pj_opc_unop,	readlink(),	OP_READLINK,	KIDS_OPTIONAL,	emit,	Scalar # String?
 pj_unop_rmdir,		pj_opc_unop,	rmdir(),	OP_RMDIR,	KIDS_OPTIONAL,	emit,	UnsignedInteger # Boolean
+pj_unop_stat,		pj_opc_unop,	stat(),		OP_STAT,	KIDS_OPTIONAL,	emit,	Scalar=Any List=List[Any]
+pj_unop_lstat,		pj_opc_unop,	lstat(),	OP_LSTAT,	KIDS_OPTIONAL,	emit,	Scalar=Any List=List[Any]
+
+pj_unop_ft_rread,	pj_opc_unop,	ft -R,		OP_FTRREAD,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_rwrite,	pj_opc_unop,	ft -W,		OP_FTRWRITE,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_rexec,	pj_opc_unop,	ft -X,		OP_FTREXEC,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_eread,	pj_opc_unop,	ft -r,		OP_FTEREAD,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_ewrite,	pj_opc_unop,	ft -w,		OP_FTEWRITE,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_eexec,	pj_opc_unop,	ft -x,		OP_FTEEXEC,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_is,		pj_opc_unop,	ft -e,		OP_FTIS,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_size,	pj_opc_unop,	ft -s,		OP_FTSIZE,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_mtime,	pj_opc_unop,	ft -M,		OP_FTMTIME,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_atime,	pj_opc_unop,	ft -A,		OP_FTATIME,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_ctime,	pj_opc_unop,	ft -C,		OP_FTCTIME,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_rowned,	pj_opc_unop,	ft -O,		OP_FTROWNED,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_eowned,	pj_opc_unop,	ft -o,		OP_FTEOWNED,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_zero,	pj_opc_unop,	ft -z,		OP_FTZERO,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_sock,	pj_opc_unop,	ft -S,		OP_FTSOCK,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_chr,		pj_opc_unop,	ft -c,		OP_FTCHR,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_blk,		pj_opc_unop,	ft -b,		OP_FTBLK,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_file,	pj_opc_unop,	ft -f,		OP_FTFILE,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_dir,		pj_opc_unop,	ft -d,		OP_FTDIR,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_pipe,	pj_opc_unop,	ft -p,		OP_FTPIPE,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_suid,	pj_opc_unop,	ft -u,		OP_FTSUID,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_sgid,	pj_opc_unop,	ft -g,		OP_FTSGID,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_svtx,	pj_opc_unop,	ft -k,		OP_FTSVTX,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_link,	pj_opc_unop,	ft -l,		OP_FTLINK,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_tty,		pj_opc_unop,	ft -t,		OP_FTTTY,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_text,	pj_opc_unop,	ft -T,		OP_FTTEXT,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_ft_binary,	pj_opc_unop,	ft -B,		OP_FTBINARY,	KIDS_OPTIONAL,	emit,	Scalar
+
 
 # binops
 pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric
