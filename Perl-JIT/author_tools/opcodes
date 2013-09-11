@@ -107,6 +107,7 @@ pj_unop_ft_link,	pj_opc_unop,	ft -l,		OP_FTLINK,	KIDS_OPTIONAL,	emit,	Scalar
 pj_unop_ft_tty,		pj_opc_unop,	ft -t,		OP_FTTTY,	KIDS_OPTIONAL,	emit,	Scalar
 pj_unop_ft_text,	pj_opc_unop,	ft -T,		OP_FTTEXT,	KIDS_OPTIONAL,	emit,	Scalar
 pj_unop_ft_binary,	pj_opc_unop,	ft -B,		OP_FTBINARY,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_exit,		pj_opc_unop,	exit(),		OP_EXIT,	KIDS_OPTIONAL,	emit,	Scalar
 
 
 # binops

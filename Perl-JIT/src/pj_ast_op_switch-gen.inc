@@ -37,6 +37,7 @@
   || (int)otype == OP_DIVIDE \
   || (int)otype == OP_DORASSIGN \
   || (int)otype == OP_EQ \
+  || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
   || (int)otype == OP_FTATIME \
   || (int)otype == OP_FTBINARY \
@@ -192,6 +193,7 @@
   || (int)otype == OP_DOR \
   || (int)otype == OP_DORASSIGN \
   || (int)otype == OP_EQ \
+  || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
   || (int)otype == OP_FTATIME \
   || (int)otype == OP_FTBINARY \

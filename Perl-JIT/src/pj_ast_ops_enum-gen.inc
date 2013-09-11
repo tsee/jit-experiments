@@ -87,6 +87,7 @@ typedef enum {
   pj_unop_ft_tty,
   pj_unop_ft_text,
   pj_unop_ft_binary,
+  pj_unop_exit,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -160,7 +161,7 @@ typedef enum {
   // Op class ranges
 
   pj_unop_FIRST = pj_unop_empty,
-  pj_unop_LAST  = pj_unop_ft_binary,
+  pj_unop_LAST  = pj_unop_exit,
 
   pj_binop_FIRST = pj_binop_add,
   pj_binop_LAST  = pj_binop_mkdir,
