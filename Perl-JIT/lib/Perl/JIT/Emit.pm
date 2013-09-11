@@ -522,43 +522,70 @@ sub _jit_emit_binop {
             $res = jit_insn_div($fun, $self->_to_nv_value($v1, $t1), $self->_to_nv_value($v2, $t2));
         }
         when (pj_binop_bool_and) {
-            my $endlabel = jit_label_undefined;
-            $restype = minimal_covering_type([$ast->get_left_kid->get_value_type(),
-                                              $ast->get_right_kid->get_value_type()]);
+            my ($endlabel, $set_left, $set_right) = map jit_label_undefined, 1..3;
+
+            # Compute LHS value
+            ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, ANY);
+            jit_insn_branch($fun, $set_left);
+
+            # Compute RHS value and minimal covering type
+            jit_insn_label($fun, $set_right);
+            ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, ANY);
+
+            $restype = minimal_covering_type([$t1, $t2]);
             $restype = OPAQUE if !defined($restype); # FIXME shady
             $res = $self->_jit_create_value($restype);
 
-            # If value is false, then go with v1 and never look at v2
-            ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, $restype);
-            my ($tmp, undef) = $self->_to_type($v1, $t1, $restype);
+            # Store RHS value and jump ot end
+            my ($tmp, undef) = $self->_to_type($v2, $t2, $restype);
+            jit_insn_store($fun, $res, $tmp);
+            jit_insn_branch($fun, $endlabel);
+
+            # Store LHS value and jump ot end if false, otherwise jump to RHS
+            jit_insn_label($fun, $set_left);
+            ($tmp, undef) = $self->_to_type($v1, $t1, $restype);
             jit_insn_store($fun, $res, $tmp);
             jit_insn_branch_if_not($fun, $self->_to_bool_value($v1, $t1), $endlabel);
+            jit_insn_branch($fun, $set_right);
 
-            # Left is true, move to right operand
-            ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, $type);
-            ($tmp, undef) = $self->_to_type($v2, $t2, $restype);
-            jit_insn_store($fun, $res, $tmp);
+            # This reorders the blocks so LHS computation and LHS
+            # storing are contiguous and the jump is optimized away
+            jit_insn_move_blocks_to_end($fun, $set_right, $set_left);
 
             # endlabel; done.
             jit_insn_label($fun, $endlabel);
         }
         when (pj_binop_bool_or) {
-            my $endlabel = jit_label_undefined;
-            $restype = minimal_covering_type([$ast->get_left_kid->get_value_type(),
-                                              $ast->get_right_kid->get_value_type()]);
+            my ($endlabel, $set_left, $set_right) = map jit_label_undefined, 1..3;
+
+            # Compute LHS value
+            ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, ANY);
+            jit_insn_branch($fun, $set_left);
+
+            # Compute RHS value and minimal covering type
+            jit_insn_label($fun, $set_right);
+            ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, ANY);
+
+            $restype = minimal_covering_type([$t1, $t2]);
             $restype = OPAQUE if !defined($restype); # FIXME shady
             $res = $self->_jit_create_value($restype);
 
-            # If value is false, then go with v1 and never look at v2
-            ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, $restype);
-            my ($tmp, undef) = $self->_to_type($v1, $t1, $restype);
+            # Store RHS value and jump ot end
+            ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, $type);
+            my ($tmp, undef) = $self->_to_type($v2, $t2, $restype);
+            jit_insn_store($fun, $res, $tmp);
+            jit_insn_branch($fun, $endlabel);
+
+            # Store LHS value and jump to end if true, otherwise jump to RHS
+            jit_insn_label($fun, $set_left);
+            ($tmp, undef) = $self->_to_type($v1, $t1, $restype);
             jit_insn_store($fun, $res, $tmp);
             jit_insn_branch_if($fun, $self->_to_bool_value($v1, $t1), $endlabel);
+            jit_insn_branch($fun, $set_right);
 
-            # Left is true, move to right operand
-            ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, $type);
-            ($tmp, undef) = $self->_to_type($v2, $t2, $restype);
-            jit_insn_store($fun, $res, $tmp);
+            # This reorders the blocks so LHS computation and LHS
+            # storing are contiguous and the jump is optimized away
+            jit_insn_move_blocks_to_end($fun, $set_right, $set_left);
 
             # endlabel; done.
             jit_insn_label($fun, $endlabel);

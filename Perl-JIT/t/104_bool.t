@@ -107,6 +107,16 @@ my @tests = (
     opgrep => [$ops{cond_expr}],
     output => 2,
     input  => [1, 2, 3], },
+  { name   => 'complex boolean - or first',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a || ($b && $b));', '$x'),
+    opgrep => [@ops{qw(or and)}],
+    output => 9,
+    input  => [0, 9], },
+  { name   => 'complex boolean - and first',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a && ($b || $b));', '$x'),
+    opgrep => [@ops{qw(or and)}],
+    output => 9,
+    input  => [7, 9], },
 );
 
 # save typing
