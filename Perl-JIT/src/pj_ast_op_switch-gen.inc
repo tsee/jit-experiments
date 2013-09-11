@@ -21,9 +21,13 @@
   || (int)otype == OP_BIT_XOR \
   || (int)otype == OP_BLESS \
   || (int)otype == OP_CALLER \
+  || (int)otype == OP_CHDIR \
+  || (int)otype == OP_CHMOD \
   || (int)otype == OP_CHOMP \
   || (int)otype == OP_CHOP \
+  || (int)otype == OP_CHOWN \
   || (int)otype == OP_CHR \
+  || (int)otype == OP_CHROOT \
   || (int)otype == OP_COMPLEMENT \
   || (int)otype == OP_CONCAT \
   || (int)otype == OP_COND_EXPR \
@@ -47,11 +51,13 @@
   || (int)otype == OP_LE \
   || (int)otype == OP_LEFT_SHIFT \
   || (int)otype == OP_LENGTH \
+  || (int)otype == OP_LINK \
   || (int)otype == OP_LIST \
   || (int)otype == OP_LOCALTIME \
   || (int)otype == OP_LOG \
   || (int)otype == OP_LSLICE \
   || (int)otype == OP_LT \
+  || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \
   || (int)otype == OP_MULTIPLY \
   || (int)otype == OP_NCMP \
@@ -73,9 +79,12 @@
   || (int)otype == OP_QUOTEMETA \
   || (int)otype == OP_RAND \
   || (int)otype == OP_READ \
+  || (int)otype == OP_READLINK \
+  || (int)otype == OP_RENAME \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
   || (int)otype == OP_RIGHT_SHIFT \
+  || (int)otype == OP_RMDIR \
   || (int)otype == OP_RV2AV \
   || (int)otype == OP_RV2GV \
   || (int)otype == OP_RV2HV \
@@ -100,14 +109,18 @@
   || (int)otype == OP_SRAND \
   || (int)otype == OP_SREFGEN \
   || (int)otype == OP_STUB \
+  || (int)otype == OP_STUDY \
   || (int)otype == OP_SUBSTR \
   || (int)otype == OP_SUBTRACT \
+  || (int)otype == OP_SYMLINK \
   || (int)otype == OP_TIME \
   || (int)otype == OP_TMS \
   || (int)otype == OP_UC \
   || (int)otype == OP_UCFIRST \
   || (int)otype == OP_UNDEF \
+  || (int)otype == OP_UNLINK \
   || (int)otype == OP_UNSHIFT \
+  || (int)otype == OP_UTIME \
   || (int)otype == OP_VEC \
   || (int)otype == OP_WANTARRAY)
 
@@ -130,9 +143,13 @@
   || (int)otype == OP_BIT_XOR \
   || (int)otype == OP_BLESS \
   || (int)otype == OP_CALLER \
+  || (int)otype == OP_CHDIR \
+  || (int)otype == OP_CHMOD \
   || (int)otype == OP_CHOMP \
   || (int)otype == OP_CHOP \
+  || (int)otype == OP_CHOWN \
   || (int)otype == OP_CHR \
+  || (int)otype == OP_CHROOT \
   || (int)otype == OP_COMPLEMENT \
   || (int)otype == OP_CONCAT \
   || (int)otype == OP_COND_EXPR \
@@ -159,11 +176,13 @@
   || (int)otype == OP_LE \
   || (int)otype == OP_LEFT_SHIFT \
   || (int)otype == OP_LENGTH \
+  || (int)otype == OP_LINK \
   || (int)otype == OP_LIST \
   || (int)otype == OP_LOCALTIME \
   || (int)otype == OP_LOG \
   || (int)otype == OP_LSLICE \
   || (int)otype == OP_LT \
+  || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \
   || (int)otype == OP_MULTIPLY \
   || (int)otype == OP_NCMP \
@@ -190,9 +209,12 @@
   || (int)otype == OP_QUOTEMETA \
   || (int)otype == OP_RAND \
   || (int)otype == OP_READ \
+  || (int)otype == OP_READLINK \
+  || (int)otype == OP_RENAME \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
   || (int)otype == OP_RIGHT_SHIFT \
+  || (int)otype == OP_RMDIR \
   || (int)otype == OP_RV2AV \
   || (int)otype == OP_RV2GV \
   || (int)otype == OP_RV2HV \
@@ -217,14 +239,18 @@
   || (int)otype == OP_SRAND \
   || (int)otype == OP_SREFGEN \
   || (int)otype == OP_STUB \
+  || (int)otype == OP_STUDY \
   || (int)otype == OP_SUBSTR \
   || (int)otype == OP_SUBTRACT \
+  || (int)otype == OP_SYMLINK \
   || (int)otype == OP_TIME \
   || (int)otype == OP_TMS \
   || (int)otype == OP_UC \
   || (int)otype == OP_UCFIRST \
   || (int)otype == OP_UNDEF \
+  || (int)otype == OP_UNLINK \
   || (int)otype == OP_UNSHIFT \
+  || (int)otype == OP_UTIME \
   || (int)otype == OP_VEC \
   || (int)otype == OP_WANTARRAY)
 

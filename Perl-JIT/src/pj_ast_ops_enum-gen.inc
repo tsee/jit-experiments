@@ -53,6 +53,11 @@ typedef enum {
   pj_unop_array_pop,
   pj_unop_caller,
   pj_unop_wantarray,
+  pj_unop_study,
+  pj_unop_chdir,
+  pj_unop_chroot,
+  pj_unop_readlink,
+  pj_unop_rmdir,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -91,6 +96,10 @@ typedef enum {
   pj_binop_helem,
   pj_binop_bless,
   pj_binop_crypt,
+  pj_binop_rename,
+  pj_binop_link,
+  pj_binop_symlink,
+  pj_binop_mkdir,
 
   // Op class: pj_opc_listop
   pj_listop_ternary,
@@ -112,21 +121,25 @@ typedef enum {
   pj_listop_splice,
   pj_listop_anonlist,
   pj_listop_anonhash,
+  pj_listop_chown,
+  pj_listop_unlink,
+  pj_listop_chmod,
+  pj_listop_utime,
 
   // Op class ranges
 
   pj_unop_FIRST = pj_unop_empty,
-  pj_unop_LAST  = pj_unop_wantarray,
+  pj_unop_LAST  = pj_unop_rmdir,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_crypt,
+  pj_binop_LAST  = pj_binop_mkdir,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_anonhash,
+  pj_listop_LAST  = pj_listop_utime,
 
   // Global op range:
   pj_op_FIRST = pj_unop_empty,
-  pj_op_LAST = pj_listop_anonhash
+  pj_op_LAST = pj_listop_utime
 } pj_op_type;
 
 #endif

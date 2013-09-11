@@ -74,6 +74,10 @@ pj_unop_array_pop,	pj_opc_unop,	pop(),		OP_POP,		KIDS_OPTIONAL,	emit,	Any
 pj_unop_caller,		pj_opc_unop,	caller(),	OP_CALLER,	KIDS_OPTIONAL,	emit,	Scalar=Any List=List[Any]
 pj_unop_wantarray,	pj_opc_unop,	wantarray(),	OP_WANTARRAY,	KIDS_OPTIONAL,	emit,	Scalar # really has no kid ever!
 pj_unop_study,		pj_opc_unop,	study(),	OP_STUDY,	KIDS_OPTIONAL,	emit,	UnsignedInteger
+pj_unop_chdir,		pj_opc_unop,	chdir(),	OP_CHDIR,	KIDS_OPTIONAL,	emit,	UnsignedInteger
+pj_unop_chroot,		pj_opc_unop,	chroot(),	OP_CHROOT,	KIDS_OPTIONAL,	emit,	UnsignedInteger
+pj_unop_readlink,	pj_opc_unop,	readlink(),	OP_READLINK,	KIDS_OPTIONAL,	emit,	Scalar # String?
+pj_unop_rmdir,		pj_opc_unop,	rmdir(),	OP_RMDIR,	KIDS_OPTIONAL,	emit,	UnsignedInteger # Boolean
 
 # binops
 pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric
@@ -112,6 +116,10 @@ pj_binop_aelem,		pj_opc_binop,	array access,	OP_AELEM,	0,	emit,	Any
 pj_binop_helem,		pj_opc_binop,	hash access,	OP_HELEM,	0,	emit,	Any
 pj_binop_bless,		pj_opc_binop,	bless(),	OP_BLESS,	KIDS_OPTIONAL,	emit,	Any
 pj_binop_crypt,		pj_opc_binop,	crypt(),	OP_CRYPT,	0,	emit,	String
+pj_binop_rename,	pj_opc_binop,	rename(),	OP_RENAME,	0,	emit,	UnsignedInteger # Boolean
+pj_binop_link,		pj_opc_binop,	link(),		OP_LINK,	0,	emit,	UnsignedInteger # Boolean
+pj_binop_symlink,	pj_opc_binop,	symlink(),	OP_SYMLINK,	0,	emit,	UnsignedInteger # Boolean
+pj_binop_mkdir,		pj_opc_binop,	mkdir(),	OP_MKDIR,	KIDS_OPTIONAL,	emit,	UnsignedInteger # Boolean
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any
@@ -133,4 +141,8 @@ pj_listop_push,		pj_opc_listop,	push(),		OP_PUSH,	0,	emit,	Integer
 pj_listop_splice,	pj_opc_listop,	splice(),	OP_SPLICE,	0,	emit,	Scalar=Any List=List[Any]
 pj_listop_anonlist,	pj_opc_listop,	anon array [],	OP_ANONLIST,	0,	emit,	Scalar
 pj_listop_anonhash,	pj_opc_listop,	anon hash {},	OP_ANONHASH,	0,	emit,	Scalar
+pj_listop_chown,	pj_opc_listop,	chown(),	OP_CHOWN,	0,	emit,	Integer
+pj_listop_unlink,	pj_opc_listop,	unlink(),	OP_UNLINK,	0,	emit,	Scalar # count or false
+pj_listop_chmod,	pj_opc_listop,	chmod(),	OP_CHMOD,	0,	emit,	UnsignedInteger
+pj_listop_utime,	pj_opc_listop,	utime(),	OP_UTIME,	0,	emit,	UnsignedInteger
 
