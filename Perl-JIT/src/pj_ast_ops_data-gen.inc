@@ -148,6 +148,8 @@ static const char *pj_ast_op_names[] = {
   "unlink()",       // pj_listop_unlink      (pj_opc_listop)
   "chmod()",        // pj_listop_chmod       (pj_opc_listop)
   "utime()",        // pj_listop_utime       (pj_opc_listop)
+  "split()",        // pj_listop_split       (pj_opc_listop)
+  "warn()",         // pj_listop_warn        (pj_opc_listop)
 };
 
 static unsigned int pj_ast_op_flags[] = {
@@ -294,6 +296,8 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_listop_unlink      (pj_opc_listop)
   0,                                                    // pj_listop_chmod       (pj_opc_listop)
   0,                                                    // pj_listop_utime       (pj_opc_listop)
+  0,                                                    // pj_listop_split       (pj_opc_listop)
+  0,                                                    // pj_listop_warn        (pj_opc_listop)
 };
 
 #endif

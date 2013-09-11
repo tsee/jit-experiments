@@ -80,7 +80,6 @@ pj_unop_readlink,	pj_opc_unop,	readlink(),	OP_READLINK,	KIDS_OPTIONAL,	emit,	Sca
 pj_unop_rmdir,		pj_opc_unop,	rmdir(),	OP_RMDIR,	KIDS_OPTIONAL,	emit,	UnsignedInteger # Boolean
 pj_unop_stat,		pj_opc_unop,	stat(),		OP_STAT,	KIDS_OPTIONAL,	emit,	Scalar=Any List=List[Any]
 pj_unop_lstat,		pj_opc_unop,	lstat(),	OP_LSTAT,	KIDS_OPTIONAL,	emit,	Scalar=Any List=List[Any]
-
 pj_unop_ft_rread,	pj_opc_unop,	ft -R,		OP_FTRREAD,	KIDS_OPTIONAL,	emit,	Scalar
 pj_unop_ft_rwrite,	pj_opc_unop,	ft -W,		OP_FTRWRITE,	KIDS_OPTIONAL,	emit,	Scalar
 pj_unop_ft_rexec,	pj_opc_unop,	ft -X,		OP_FTREXEC,	KIDS_OPTIONAL,	emit,	Scalar
@@ -176,4 +175,6 @@ pj_listop_chown,	pj_opc_listop,	chown(),	OP_CHOWN,	0,	emit,	Integer
 pj_listop_unlink,	pj_opc_listop,	unlink(),	OP_UNLINK,	0,	emit,	Scalar # count or false
 pj_listop_chmod,	pj_opc_listop,	chmod(),	OP_CHMOD,	0,	emit,	UnsignedInteger
 pj_listop_utime,	pj_opc_listop,	utime(),	OP_UTIME,	0,	emit,	UnsignedInteger
+pj_listop_split,	pj_opc_listop,	split(),	OP_SPLIT,	0,	emit,	Scalar=Any List=List[Any]
+pj_listop_warn,		pj_opc_listop,	warn(),		OP_WARN,	0,	emit,	UnsignedInteger # Boolean (yes)
 

@@ -132,6 +132,7 @@
   || (int)otype == OP_SLT \
   || (int)otype == OP_SNE \
   || (int)otype == OP_SPLICE \
+  || (int)otype == OP_SPLIT \
   || (int)otype == OP_SPRINTF \
   || (int)otype == OP_SQRT \
   || (int)otype == OP_SRAND \
@@ -151,7 +152,8 @@
   || (int)otype == OP_UNSHIFT \
   || (int)otype == OP_UTIME \
   || (int)otype == OP_VEC \
-  || (int)otype == OP_WANTARRAY)
+  || (int)otype == OP_WANTARRAY \
+  || (int)otype == OP_WARN)
 
 
 #define IS_AST_COMPATIBLE_OP_TYPE(otype) ( \
@@ -291,6 +293,7 @@
   || (int)otype == OP_SLT \
   || (int)otype == OP_SNE \
   || (int)otype == OP_SPLICE \
+  || (int)otype == OP_SPLIT \
   || (int)otype == OP_SPRINTF \
   || (int)otype == OP_SQRT \
   || (int)otype == OP_SRAND \
@@ -310,7 +313,8 @@
   || (int)otype == OP_UNSHIFT \
   || (int)otype == OP_UTIME \
   || (int)otype == OP_VEC \
-  || (int)otype == OP_WANTARRAY)
+  || (int)otype == OP_WANTARRAY \
+  || (int)otype == OP_WARN)
 
 
 

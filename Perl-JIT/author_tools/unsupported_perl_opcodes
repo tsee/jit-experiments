@@ -89,7 +89,6 @@ boolkeys	boolkeys		ck_fun		%	H
 
 unpack		unpack			ck_fun		u@	S S?
 pack		pack			ck_fun		mst@	S L
-split		split			ck_split	t@	S S S
 
 # requires thinking?
 list		list			ck_null		m@	L
@@ -112,7 +111,6 @@ method		method lookup		ck_method	d1
 entersub	subroutine entry	ck_subr		dmt1	L
 leavesub	subroutine exit		ck_null		1	
 leavesublv	lvalue subroutine return	ck_null		1	
-warn		warn			ck_fun		imst@	L
 die		die			ck_die		dimst@	L
 reset		symbol reset		ck_fun		is%	S?
 

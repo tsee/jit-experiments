@@ -154,6 +154,8 @@ typedef enum {
   pj_listop_unlink,
   pj_listop_chmod,
   pj_listop_utime,
+  pj_listop_split,
+  pj_listop_warn,
 
   // Op class ranges
 
@@ -164,11 +166,11 @@ typedef enum {
   pj_binop_LAST  = pj_binop_mkdir,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_utime,
+  pj_listop_LAST  = pj_listop_warn,
 
   // Global op range:
   pj_op_FIRST = pj_unop_empty,
-  pj_op_LAST = pj_listop_utime
+  pj_op_LAST = pj_listop_warn
 } pj_op_type;
 
 #endif

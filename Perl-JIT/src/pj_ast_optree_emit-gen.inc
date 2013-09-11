@@ -142,6 +142,8 @@ EMIT_LISTOP_CODE(OP_CHOWN, pj_listop_chown)
 EMIT_LISTOP_CODE(OP_UNLINK, pj_listop_unlink)
 EMIT_LISTOP_CODE(OP_CHMOD, pj_listop_chmod)
 EMIT_LISTOP_CODE(OP_UTIME, pj_listop_utime)
+EMIT_LISTOP_CODE(OP_SPLIT, pj_listop_split)
+EMIT_LISTOP_CODE(OP_WARN, pj_listop_warn)
 
 
 #endif
