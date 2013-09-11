@@ -1,0 +1,338 @@
+Perl opcodes that are still todo or possibly todo/reconsider
+
+scalar		scalar			ck_fun		s%	S
+pushmark	pushmark		ck_null		s0	
+
+# What else can a const be? Likely done
+const		constant item		ck_svconst	s$	
+
+gvsv		scalar variable		ck_null		ds$	
+gv		glob value		ck_null		ds$	
+gelem		glob elem		ck_null		d2	S S
+padany		private value		ck_null		d0
+
+pushre		push regexp		ck_null		d/
+
+rv2cv		subroutine dereference	ck_rvconst	d1
+prototype	subroutine prototype	ck_null		s%	S
+
+#done?
+refgen		reference constructor	ck_spair	m1	L
+srefgen		single ref constructor	ck_null		fs1	S
+ref		reference-type operator	ck_fun		stu%	S?
+
+backtick	quoted execution (``, qx)	ck_open		tu%	S?
+# glob defaults its first arg to $_
+glob		glob			ck_glob		t@	S?
+readline	<HANDLE>		ck_readline	t%	F?
+rcatline	append I/O operator	ck_null		t$
+
+regcmaybe	regexp internal guard	ck_fun		s1	S
+regcreset	regexp internal reset	ck_fun		s1	S
+regcomp		regexp compilation	ck_null		s|	S
+match		pattern match (m//)	ck_match	d/
+qr		pattern quote (qr//)	ck_match	s/
+subst		substitution (s///)	ck_match	dis/	S
+substcont	substitution iterator	ck_null		dis|	
+trans		transliteration (tr///)	ck_match	is"	S
+# y///r
+transr		transliteration (tr///)	ck_match	is"	S
+
+aassign		list assignment		ck_null		t2	L L
+
+pos		match position		ck_lfun		stu%	S?
+
+i_preinc	integer preincrement (++)	ck_lfun		dis1	S
+i_predec	integer predecrement (--)	ck_lfun		dis1	S
+i_postinc	integer postincrement (++)	ck_lfun		disT1	S
+i_postdec	integer postdecrement (--)	ck_lfun		disT1	S
+i_multiply	integer multiplication (*)	ck_null		ifsT2	S S
+i_divide	integer division (/)	ck_null		ifsT2	S S
+i_modulo	integer modulus (%)	ck_null		ifsT2	S S
+i_add		integer addition (+)	ck_null		ifsT2	S S
+i_subtract	integer subtraction (-)	ck_null		ifsT2	S S
+i_lt		integer lt (<)		ck_cmp		ifs2	S S<
+i_gt		integer gt (>)		ck_cmp		ifs2	S S<
+i_le		integer le (<=)		ck_cmp		ifs2	S S<
+i_ge		integer ge (>=)		ck_cmp		ifs2	S S<
+i_eq		integer eq (==)		ck_null		ifs2	S S<
+i_ne		integer ne (!=)		ck_null		ifs2	S S<
+i_ncmp		integer comparison (<=>)	ck_null		ifst2	S S<
+i_negate	integer negation (-)	ck_null		ifsT1	S
+
+repeat		repeat (x)		ck_repeat	mt2	L S
+
+stringify	string			ck_fun		fsT@	S
+
+smartmatch	smart match		ck_smartmatch	s2
+
+index		index			ck_index	isT@	S S S?
+rindex		rindex			ck_index	isT@	S S S?
+
+formline	formline		ck_fun		ms@	S L
+
+aslice		array slice		ck_null		m@	A L
+
+aeach		each on array		ck_each		%	A
+akeys		keys on array		ck_each		t%	A
+avalues		values on array		ck_each		t%	A
+
+
+each		each			ck_each		%	H
+values		values			ck_each		t%	H
+keys		keys			ck_each		t%	H
+delete		delete			ck_delete	%	S
+exists		exists			ck_exists	is%	S
+hslice		hash slice		ck_null		m@	H L
+boolkeys	boolkeys		ck_fun		%	H
+
+
+unpack		unpack			ck_fun		u@	S S?
+pack		pack			ck_fun		mst@	S L
+split		split			ck_split	t@	S S S
+
+# requires thinking?
+list		list			ck_null		m@	L
+
+sort		sort			ck_sort		dm@	C? L
+# reverse is "done", but requires thinking for sort
+reverse		reverse			ck_fun		mt@	L
+
+grepstart	grep			ck_grep		dm@	C L
+grepwhile	grep iterator		ck_null		dt|	
+
+mapstart	map			ck_grep		dm@	C L
+mapwhile	map iterator		ck_null		dt|
+
+range		flipflop		ck_null		|	S S
+flip		range (or flip)		ck_null		1	S S
+flop		range (or flop)		ck_null		1
+
+method		method lookup		ck_method	d1
+entersub	subroutine entry	ck_subr		dmt1	L
+leavesub	subroutine exit		ck_null		1	
+leavesublv	lvalue subroutine return	ck_null		1	
+warn		warn			ck_fun		imst@	L
+die		die			ck_die		dimst@	L
+reset		symbol reset		ck_fun		is%	S?
+
+lineseq		line sequence		ck_null		@	
+dbstate		debug next statement	ck_null		s;	
+unstack		iteration finalizer	ck_null		s0
+enter		block entry		ck_null		0	
+leave		block exit		ck_null		@	
+scope		block			ck_null		@	
+enteriter	foreach loop entry	ck_null		d{	
+iter		foreach loop iterator	ck_null		0	
+enterloop	loop entry		ck_null		d{	
+leaveloop	loop exit		ck_null		2	
+return		return			ck_return	dm@	L
+last		last			ck_null		ds}	
+next		next			ck_null		ds}	
+redo		redo			ck_null		ds}	
+dump		dump			ck_null		ds}	
+goto		goto			ck_null		ds}	
+exit		exit			ck_exit		ds%	S?
+method_named	method with known name	ck_null		d$
+
+entergiven	given()			ck_null		d|
+leavegiven	leave given block	ck_null		1
+enterwhen	when()			ck_null		d|
+leavewhen	leave when block	ck_null		1
+break		break			ck_null		0
+continue	continue		ck_null		0
+
+open		open			ck_open		ismt@	F S? L
+close		close			ck_fun		is%	F?
+pipe_op		pipe			ck_fun		is@	F F
+
+fileno		fileno			ck_fun		ist%	F
+umask		umask			ck_fun		ist%	S?
+binmode		binmode			ck_fun		s@	F S?
+
+tie		tie			ck_fun		idms@	R S L
+untie		untie			ck_fun		is%	R
+tied		tied			ck_fun		s%	R
+dbmopen		dbmopen			ck_fun		is@	H S S
+dbmclose	dbmclose		ck_fun		is%	H
+
+sselect		select system call	ck_select	t@	S S S S
+select		select			ck_select	st@	F?
+
+getc		getc			ck_eof		st%	F?
+read		read			ck_fun		imst@	F R S S?
+enterwrite	write			ck_fun		dis%	F?
+leavewrite	write exit		ck_null		1	
+
+sysopen		sysopen			ck_fun		s@	F S S S?
+sysseek		sysseek			ck_fun		s@	F S S
+sysread		sysread			ck_fun		imst@	F R S S?
+syswrite	syswrite		ck_fun		imst@	F S S? S?
+
+eof		eof			ck_eof		is%	F?
+tell		tell			ck_tell		st%	F?
+seek		seek			ck_tell		s@	F S S
+# truncate really behaves as if it had both "S S" and "F S"
+truncate	truncate		ck_trunc	is@	S S
+
+fcntl		fcntl			ck_fun		st@	F S S
+ioctl		ioctl			ck_fun		st@	F S S
+flock		flock			ck_fun		isT@	F S
+
+send		send			ck_fun		imst@	Fs S S S?
+recv		recv			ck_fun		imst@	Fs R S S
+
+socket		socket			ck_fun		is@	Fs S S S
+sockpair	socketpair		ck_fun		is@	Fs Fs S S S
+
+bind		bind			ck_fun		is@	Fs S
+connect		connect			ck_fun		is@	Fs S
+listen		listen			ck_fun		is@	Fs S
+accept		accept			ck_fun		ist@	Fs Fs
+shutdown	shutdown		ck_fun		ist@	Fs S
+
+gsockopt	getsockopt		ck_fun		is@	Fs S S
+ssockopt	setsockopt		ck_fun		is@	Fs S S S
+
+getsockname	getsockname		ck_fun		is%	Fs
+getpeername	getpeername		ck_fun		is%	Fs
+
+lstat		lstat			ck_ftst		u-	F?
+stat		stat			ck_ftst		u-	F?
+ftrread		-R			ck_ftst		isu-	F-+
+ftrwrite	-W			ck_ftst		isu-	F-+
+ftrexec		-X			ck_ftst		isu-	F-+
+fteread		-r			ck_ftst		isu-	F-+
+ftewrite	-w			ck_ftst		isu-	F-+
+fteexec		-x			ck_ftst		isu-	F-+
+ftis		-e			ck_ftst		isu-	F-
+ftsize		-s			ck_ftst		istu-	F-
+ftmtime		-M			ck_ftst		stu-	F-
+ftatime		-A			ck_ftst		stu-	F-
+ftctime		-C			ck_ftst		stu-	F-
+ftrowned	-O			ck_ftst		isu-	F-
+fteowned	-o			ck_ftst		isu-	F-
+ftzero		-z			ck_ftst		isu-	F-
+ftsock		-S			ck_ftst		isu-	F-
+ftchr		-c			ck_ftst		isu-	F-
+ftblk		-b			ck_ftst		isu-	F-
+ftfile		-f			ck_ftst		isu-	F-
+ftdir		-d			ck_ftst		isu-	F-
+ftpipe		-p			ck_ftst		isu-	F-
+ftsuid		-u			ck_ftst		isu-	F-
+ftsgid		-g			ck_ftst		isu-	F-
+ftsvtx		-k			ck_ftst		isu-	F-
+ftlink		-l			ck_ftst		isu-	F-
+fttty		-t			ck_ftst		is-	F-
+fttext		-T			ck_ftst		isu-	F-
+ftbinary	-B			ck_ftst		isu-	F-
+
+# chdir really behaves as if it had both "S?" and "F?"
+chdir		chdir			ck_chdir	isT%	S?
+chown		chown			ck_fun		imsT@	L
+chroot		chroot			ck_fun		isTu%	S?
+unlink		unlink			ck_fun		imsTu@	L
+chmod		chmod			ck_fun		imsT@	L
+utime		utime			ck_fun		imsT@	L
+rename		rename			ck_fun		isT@	S S
+link		link			ck_fun		isT@	S S
+symlink		symlink			ck_fun		isT@	S S
+readlink	readlink		ck_fun		stu%	S?
+mkdir		mkdir			ck_fun		isTu@	S? S?
+rmdir		rmdir			ck_fun		isTu%	S?
+
+open_dir	opendir			ck_fun		is@	F S
+readdir		readdir			ck_fun		%	DF
+telldir		telldir			ck_fun		st%	DF
+seekdir		seekdir			ck_fun		s@	DF S
+rewinddir	rewinddir		ck_fun		s%	DF
+closedir	closedir		ck_fun		is%	DF
+
+fork		fork			ck_null		ist0	
+wait		wait			ck_null		isT0	
+waitpid		waitpid			ck_fun		isT@	S S
+system		system			ck_exec		imsT@	S? L
+exec		exec			ck_exec		dimsT@	S? L
+kill		kill			ck_fun		dimsT@	L
+getppid		getppid			ck_null		isT0	
+getpgrp		getpgrp			ck_fun		isT%	S?
+setpgrp		setpgrp			ck_fun		isT@	S? S?
+getpriority	getpriority		ck_fun		isT@	S S
+setpriority	setpriority		ck_fun		isT@	S S S
+
+shmget		shmget			ck_fun		imst@	S S S
+shmctl		shmctl			ck_fun		imst@	S S S
+shmread		shmread			ck_fun		imst@	S S S S
+shmwrite	shmwrite		ck_fun		imst@	S S S S
+
+msgget		msgget			ck_fun		imst@	S S
+msgctl		msgctl			ck_fun		imst@	S S S
+msgsnd		msgsnd			ck_fun		imst@	S S S
+msgrcv		msgrcv			ck_fun		imst@	S S S S S
+
+semop		semop			ck_fun		imst@	S S
+semget		semget			ck_fun		imst@	S S S
+semctl		semctl			ck_fun		imst@	S S S S
+
+require		require			ck_require	du%	S?
+dofile		do "file"		ck_fun		d1	S
+hintseval	eval hints		ck_svconst	s$
+entereval	eval "string"		ck_eval		du%	S?
+leaveeval	eval "string" exit	ck_null		1	S
+#evalonce	eval constant string	ck_null		d1	S
+entertry	eval {block}		ck_eval		d|	
+leavetry	eval {block} exit	ck_null		@	
+
+ghbyname	gethostbyname		ck_fun		%	S
+ghbyaddr	gethostbyaddr		ck_fun		@	S S
+ghostent	gethostent		ck_null		0	
+gnbyname	getnetbyname		ck_fun		%	S
+gnbyaddr	getnetbyaddr		ck_fun		@	S S
+gnetent		getnetent		ck_null		0	
+gpbyname	getprotobyname		ck_fun		%	S
+gpbynumber	getprotobynumber	ck_fun		@	S
+gprotoent	getprotoent		ck_null		0	
+gsbyname	getservbyname		ck_fun		@	S S
+gsbyport	getservbyport		ck_fun		@	S S
+gservent	getservent		ck_null		0	
+shostent	sethostent		ck_fun		is%	S
+snetent		setnetent		ck_fun		is%	S
+sprotoent	setprotoent		ck_fun		is%	S
+sservent	setservent		ck_fun		is%	S
+ehostent	endhostent		ck_null		is0	
+enetent		endnetent		ck_null		is0	
+eprotoent	endprotoent		ck_null		is0	
+eservent	endservent		ck_null		is0	
+gpwnam		getpwnam		ck_fun		%	S
+gpwuid		getpwuid		ck_fun		%	S
+gpwent		getpwent		ck_null		0	
+spwent		setpwent		ck_null		is0	
+epwent		endpwent		ck_null		is0	
+ggrnam		getgrnam		ck_fun		%	S
+ggrgid		getgrgid		ck_fun		%	S
+ggrent		getgrent		ck_null		0	
+sgrent		setgrent		ck_null		is0	
+egrent		endgrent		ck_null		is0	
+getlogin	getlogin		ck_null		st0	
+
+syscall		syscall			ck_fun		imst@	S L
+
+# For multi-threading
+lock		lock			ck_rfun		s%	R
+
+once		once			ck_null		|	
+
+custom		unknown custom operator		ck_null		0
+
+# For smart dereference for each/keys/values
+reach		each on reference			ck_each		%	S
+rkeys		keys on reference			ck_each		t%	S
+rvalues		values on reference			ck_each		t%	S
+
+# For CORE:: subs
+coreargs	CORE:: subroutine	ck_null		$	
+
+runcv		__SUB__			ck_null		s0
+
+# fc and \F
+fc		fc			ck_fun		fstu%	S?
