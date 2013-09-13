@@ -86,6 +86,8 @@ static const char *pj_ast_op_names[] = {
   "ft -T",          // pj_unop_ft_text       (pj_opc_unop)
   "ft -B",          // pj_unop_ft_binary     (pj_opc_unop)
   "exit()",         // pj_unop_exit          (pj_opc_unop)
+  "backticks",      // pj_unop_backtick      (pj_opc_unop)
+  "pos()",          // pj_unop_pos           (pj_opc_unop)
   "+",              // pj_binop_add          (pj_opc_binop)
   "-",              // pj_binop_subtract     (pj_opc_binop)
   "*",              // pj_binop_multiply     (pj_opc_binop)
@@ -151,6 +153,9 @@ static const char *pj_ast_op_names[] = {
   "utime()",        // pj_listop_utime       (pj_opc_listop)
   "split()",        // pj_listop_split       (pj_opc_listop)
   "warn()",         // pj_listop_warn        (pj_opc_listop)
+  "regexp match",   // pj_listop_match       (pj_opc_listop)
+  "index()",        // pj_listop_index       (pj_opc_listop)
+  "rindex()",       // pj_listop_rindex      (pj_opc_listop)
 };
 
 static unsigned int pj_ast_op_flags[] = {
@@ -235,6 +240,8 @@ static unsigned int pj_ast_op_flags[] = {
   PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_ft_text       (pj_opc_unop)
   PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_ft_binary     (pj_opc_unop)
   PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_exit          (pj_opc_unop)
+  0,                                                    // pj_unop_backtick      (pj_opc_unop)
+  0,                                                    // pj_unop_pos           (pj_opc_unop)
   PJ_ASTf_HAS_ASSIGNMENT_FORM|PJ_ASTf_OVERLOAD,         // pj_binop_add          (pj_opc_binop)
   PJ_ASTf_HAS_ASSIGNMENT_FORM|PJ_ASTf_OVERLOAD,         // pj_binop_subtract     (pj_opc_binop)
   PJ_ASTf_HAS_ASSIGNMENT_FORM|PJ_ASTf_OVERLOAD,         // pj_binop_multiply     (pj_opc_binop)
@@ -300,6 +307,9 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_listop_utime       (pj_opc_listop)
   0,                                                    // pj_listop_split       (pj_opc_listop)
   0,                                                    // pj_listop_warn        (pj_opc_listop)
+  0,                                                    // pj_listop_match       (pj_opc_listop)
+  0,                                                    // pj_listop_index       (pj_opc_listop)
+  0,                                                    // pj_listop_rindex      (pj_opc_listop)
 };
 
 #endif

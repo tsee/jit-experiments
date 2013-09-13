@@ -16,6 +16,7 @@
   || (int)otype == OP_ANONLIST \
   || (int)otype == OP_ATAN2 \
   || (int)otype == OP_AV2ARYLEN \
+  || (int)otype == OP_BACKTICK \
   || (int)otype == OP_BIT_AND \
   || (int)otype == OP_BIT_OR \
   || (int)otype == OP_BIT_XOR \
@@ -72,6 +73,7 @@
   || (int)otype == OP_GT \
   || (int)otype == OP_HELEM \
   || (int)otype == OP_HEX \
+  || (int)otype == OP_INDEX \
   || (int)otype == OP_INT \
   || (int)otype == OP_JOIN \
   || (int)otype == OP_LC \
@@ -86,6 +88,7 @@
   || (int)otype == OP_LSLICE \
   || (int)otype == OP_LSTAT \
   || (int)otype == OP_LT \
+  || (int)otype == OP_MATCH \
   || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \
   || (int)otype == OP_MULTIPLY \
@@ -97,6 +100,7 @@
   || (int)otype == OP_ORASSIGN \
   || (int)otype == OP_ORD \
   || (int)otype == OP_POP \
+  || (int)otype == OP_POS \
   || (int)otype == OP_POSTDEC \
   || (int)otype == OP_POSTINC \
   || (int)otype == OP_POW \
@@ -113,6 +117,7 @@
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
   || (int)otype == OP_RIGHT_SHIFT \
+  || (int)otype == OP_RINDEX \
   || (int)otype == OP_RMDIR \
   || (int)otype == OP_RV2AV \
   || (int)otype == OP_RV2GV \
@@ -170,6 +175,7 @@
   || (int)otype == OP_ANONLIST \
   || (int)otype == OP_ATAN2 \
   || (int)otype == OP_AV2ARYLEN \
+  || (int)otype == OP_BACKTICK \
   || (int)otype == OP_BIT_AND \
   || (int)otype == OP_BIT_OR \
   || (int)otype == OP_BIT_XOR \
@@ -229,6 +235,7 @@
   || (int)otype == OP_GVSV \
   || (int)otype == OP_HELEM \
   || (int)otype == OP_HEX \
+  || (int)otype == OP_INDEX \
   || (int)otype == OP_INT \
   || (int)otype == OP_JOIN \
   || (int)otype == OP_LC \
@@ -243,6 +250,7 @@
   || (int)otype == OP_LSLICE \
   || (int)otype == OP_LSTAT \
   || (int)otype == OP_LT \
+  || (int)otype == OP_MATCH \
   || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \
   || (int)otype == OP_MULTIPLY \
@@ -259,6 +267,7 @@
   || (int)otype == OP_PADHV \
   || (int)otype == OP_PADSV \
   || (int)otype == OP_POP \
+  || (int)otype == OP_POS \
   || (int)otype == OP_POSTDEC \
   || (int)otype == OP_POSTINC \
   || (int)otype == OP_POW \
@@ -275,6 +284,7 @@
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
   || (int)otype == OP_RIGHT_SHIFT \
+  || (int)otype == OP_RINDEX \
   || (int)otype == OP_RMDIR \
   || (int)otype == OP_RV2AV \
   || (int)otype == OP_RV2GV \

@@ -21,7 +21,6 @@ refgen		reference constructor	ck_spair	m1	L
 srefgen		single ref constructor	ck_null		fs1	S
 ref		reference-type operator	ck_fun		stu%	S?
 
-backtick	quoted execution (``, qx)	ck_open		tu%	S?
 # glob defaults its first arg to $_
 glob		glob			ck_glob		t@	S?
 readline	<HANDLE>		ck_readline	t%	F?
@@ -39,8 +38,6 @@ trans		transliteration (tr///)	ck_match	is"	S
 transr		transliteration (tr///)	ck_match	is"	S
 
 aassign		list assignment		ck_null		t2	L L
-
-pos		match position		ck_lfun		stu%	S?
 
 i_preinc	integer preincrement (++)	ck_lfun		dis1	S
 i_predec	integer predecrement (--)	ck_lfun		dis1	S
@@ -65,9 +62,6 @@ repeat		repeat (x)		ck_repeat	mt2	L S
 stringify	string			ck_fun		fsT@	S
 
 smartmatch	smart match		ck_smartmatch	s2
-
-index		index			ck_index	isT@	S S S?
-rindex		rindex			ck_index	isT@	S S S?
 
 formline	formline		ck_fun		ms@	S L
 

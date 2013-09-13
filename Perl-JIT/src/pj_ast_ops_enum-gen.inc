@@ -88,6 +88,8 @@ typedef enum {
   pj_unop_ft_text,
   pj_unop_ft_binary,
   pj_unop_exit,
+  pj_unop_backtick,
+  pj_unop_pos,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -157,21 +159,24 @@ typedef enum {
   pj_listop_utime,
   pj_listop_split,
   pj_listop_warn,
+  pj_listop_match,
+  pj_listop_index,
+  pj_listop_rindex,
 
   // Op class ranges
 
   pj_unop_FIRST = pj_unop_empty,
-  pj_unop_LAST  = pj_unop_exit,
+  pj_unop_LAST  = pj_unop_pos,
 
   pj_binop_FIRST = pj_binop_add,
   pj_binop_LAST  = pj_binop_mkdir,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_warn,
+  pj_listop_LAST  = pj_listop_rindex,
 
   // Global op range:
   pj_op_FIRST = pj_unop_empty,
-  pj_op_LAST = pj_listop_warn
+  pj_op_LAST = pj_listop_rindex
 } pj_op_type;
 
 #endif

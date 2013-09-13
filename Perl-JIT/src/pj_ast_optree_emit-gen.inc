@@ -83,6 +83,8 @@ EMIT_UNOP_CODE_OPTIONAL(OP_FTTTY, pj_unop_ft_tty)
 EMIT_UNOP_CODE_OPTIONAL(OP_FTTEXT, pj_unop_ft_text)
 EMIT_UNOP_CODE_OPTIONAL(OP_FTBINARY, pj_unop_ft_binary)
 EMIT_UNOP_CODE_OPTIONAL(OP_EXIT, pj_unop_exit)
+EMIT_UNOP_CODE(OP_BACKTICK, pj_unop_backtick)
+EMIT_UNOP_CODE(OP_POS, pj_unop_pos)
 EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
 EMIT_BINOP_CODE(OP_SUBTRACT, pj_binop_subtract)
 EMIT_BINOP_CODE(OP_MULTIPLY, pj_binop_multiply)
@@ -145,6 +147,9 @@ EMIT_LISTOP_CODE(OP_CHMOD, pj_listop_chmod)
 EMIT_LISTOP_CODE(OP_UTIME, pj_listop_utime)
 EMIT_LISTOP_CODE(OP_SPLIT, pj_listop_split)
 EMIT_LISTOP_CODE(OP_WARN, pj_listop_warn)
+EMIT_LISTOP_CODE(OP_MATCH, pj_listop_match)
+EMIT_LISTOP_CODE(OP_INDEX, pj_listop_index)
+EMIT_LISTOP_CODE(OP_RINDEX, pj_listop_rindex)
 
 
 #endif
