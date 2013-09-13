@@ -692,27 +692,37 @@ sub _jit_emit_listop {
 
     given ($ast->get_optype) {
         when (pj_listop_ternary) {
-            $restype = minimal_covering_type([$kids[1]->get_value_type(),
-                                              $kids[2]->get_value_type()]);
-            $restype = OPAQUE if !defined($restype); # FIXME shady
-            $res = $self->_jit_create_value($restype);
-
-            my $endlabel = jit_label_undefined;
-            my $leftlabel = jit_label_undefined;
+            my ($endlabel, $leftlabel, $set_right) = map jit_label_undefined, 1..3;
 
             my ($cond_val, $cond_type) = $self->_jit_emit($kids[0], ANY);
             jit_insn_branch_if($fun, $self->_to_bool_value($cond_val, $cond_type), $leftlabel);
 
+            # Compute RHS value
             my ($right_v, $right_t) = $self->_jit_emit($kids[2], $restype);
-            my ($tmp, undef) = $self->_to_type($right_v, $right_t, $restype);
+            jit_insn_branch($fun, $set_right);
+
+            # Compute LHS value and minimal covering type
+            jit_insn_label($fun, $leftlabel);
+            my ($left_v, $left_t) = $self->_jit_emit($kids[1], $restype);
+
+            $restype = minimal_covering_type([$left_t, $right_t]);
+            $restype = OPAQUE if !defined($restype); # FIXME shady
+            $res = $self->_jit_create_value($restype);
+
+            # Store LHS value and jump to end
+            my ($tmp, undef) = $self->_to_type($left_v, $left_t, $restype);
             jit_insn_store($fun, $res, $tmp);
             jit_insn_branch($fun, $endlabel);
 
-            # leftlabel; assign to output.
-            jit_insn_label($fun, $leftlabel);
-            my ($left_v, $left_t) = $self->_jit_emit($kids[1], $restype);
-            ($tmp, undef) = $self->_to_type($left_v, $left_t, $restype);
+            # Store RHS value and jump to end
+            jit_insn_label($fun, $set_right);
+            ($tmp, undef) = $self->_to_type($right_v, $right_t, $restype);
             jit_insn_store($fun, $res, $tmp);
+            jit_insn_branch($fun, $endlabel);
+
+            # This reorders the blocks so RHS computation and RHS
+            # storing are contiguous and the jump is optimized away
+            jit_insn_move_blocks_to_end($fun, $leftlabel, $set_right);
 
             # endlabel; done.
             jit_insn_label($fun, $endlabel);

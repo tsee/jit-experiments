@@ -117,6 +117,16 @@ my @tests = (
     opgrep => [@ops{qw(or and)}],
     output => 9,
     input  => [7, 9], },
+  { name   => 'complex ternary on true branch',
+    func   => build_jit_test_sub('$a, $b, $c, $d, $e', 'my $x = ($a ? $b ? $c : $d : $e);', '$x'),
+    opgrep => [@ops{qw(cond_expr)}],
+    output => 3,
+    input  => [1, 2, 3, 4, 5], },
+  { name   => 'complex ternary on false branch',
+    func   => build_jit_test_sub('$a, $b, $c, $d, $e', 'my $x = ($a ? $b : $c ? $d : $e);', '$x'),
+    opgrep => [@ops{qw(cond_expr)}],
+    output => 4,
+    input  => [0, 2, 3, 4, 5], },
 );
 
 # save typing
