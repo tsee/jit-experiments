@@ -81,6 +81,20 @@ sub process_jit_candidates {
     }
 }
 
+sub _add_kid {
+    my ($self, $op, $kid) = @_;
+
+    $op->flags($op->flags | OPf_KIDS);
+    if (!$op->first) {
+        $op->first($kid);
+        $op->last($kid);
+    } else {
+        $op->last->sibling($kid);
+        $op->last($kid);
+        $kid->sibling(0);
+    }
+}
+
 sub jit_tree {
     my ($self, $ast) = @_;
 
@@ -94,11 +108,8 @@ sub jit_tree {
     my $op;
 
     if (@{$self->subtrees}) {
-        my $tree = $self->subtrees;
-
-        $tree->[$_]->sibling($tree->[$_ + 1]) for 0 .. $#$tree;
-        $tree->[-1]->sibling(0);
-        $op = B::LISTOP->new('list', OPf_KIDS, $tree->[0], @$tree > 1 ? $tree->[-1] : 0);
+        $op = B::LISTOP->new('list', 0, 0, 0);
+        $self->_add_kid($op, $_) for @{$self->subtrees};
     } else {
         $op = B::OP->new('stub', 0);
     }
