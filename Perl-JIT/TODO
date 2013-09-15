@@ -17,9 +17,7 @@
   - analyze control flow and avoid always assigning to the Perl scalar
     (see also doc/codegen.txt)
 * Port to LLVM instead of libjit?
-* Support everything the old JIT does
 * Fix Emit code
-* Check support for logical/ternary ops
 * Support more type than just doubles in code generator
 * Fix all TODOs in Emit.pm
 * Think about integrating guards at runtime
@@ -29,8 +27,6 @@
     - but think about caller
 * Ownership for C++ objects (Type instances created from Perl need to be
   cleaned up (unless assigned to an AST node))
-* in Emit.pm, "unspecified" currently means "a plain scalar", which feels wrong
-  and there is no "I don't care" value that can be used for requested type
 
 AST related:
 * What shall we do about "integer" variants of operations like "i_multiply"?
