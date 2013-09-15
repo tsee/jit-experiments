@@ -110,6 +110,12 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_unop_defined);
   INT_CONST(pj_unop_ord);
   INT_CONST(pj_unop_chr);
+  INT_CONST(pj_unop_preinc);
+  INT_CONST(pj_unop_postinc);
+  INT_CONST(pj_unop_predec);
+  INT_CONST(pj_unop_postdec);
+  INT_CONST(pj_unop_sv_ref);
+  INT_CONST(pj_unop_sv_deref);
 
   INT_CONST(pj_binop_add);
   INT_CONST(pj_binop_subtract);
