@@ -68,17 +68,51 @@ sub process_jit_candidates {
             # The tree has been marked for deletion, so just detach it
             B::Replace::detach_tree($self->current_cv->ROOT, $ast->get_perl_op);
         }
-        elsif ($self->is_jittable($ast)) {
-            local $self->{subtrees} = [];
-            my $op = $self->jit_tree($ast);
+        elsif ($ast->get_type == pj_ttype_statementsequence) {
+            my @seq;
 
-            # TODO add B::Replace API taking the CV
-            B::Replace::replace_tree($self->current_cv->ROOT, $ast->get_perl_op, $op);
+            # only consider a sequence of statements we can JIT
+            for my $stmt ($ast->get_kids) {
+                if ($self->is_jittable($stmt)) {
+                    push @seq, $stmt;
+                } else {
+                    if (@seq) {
+                        $self->jit_statement_sequence(\@seq);
+                        @seq = ();
+                    }
+
+                    # this recursive call preserves the property that
+                    # ASTs are processed in execution order
+                    $self->process_jit_candidates([$stmt->get_kid]);
+                }
+            }
+
+            $self->jit_statement_sequence(\@seq) if @seq;
+        }
+        elsif ($self->is_jittable($ast)) {
+            $self->jit_tree($ast);
         }
         else {
             unshift @$asts, $ast->get_kids;
         }
     }
+}
+
+sub jit_tree {
+    my ($self, $ast) = @_;
+    my $op = $self->_jit_trees([$ast]);
+
+    # TODO add B::Replace API taking the CV
+    B::Replace::replace_tree($self->current_cv->ROOT, $ast->get_perl_op, $op, 1);
+}
+
+sub jit_statement_sequence {
+    my ($self, $asts) = @_;
+    my $op = $self->_jit_trees($asts);
+
+    # this assumes all the ASTs are statements, and that all nextstate
+    # OPs have been detached
+    B::Replace::replace_sequence($self->current_cv->ROOT, $asts->[0]->get_kid->get_perl_op, $asts->[-1]->get_kid->get_perl_op, $op);
 }
 
 sub _add_kid {
@@ -95,11 +129,16 @@ sub _add_kid {
     }
 }
 
-sub jit_tree {
-    my ($self, $ast) = @_;
+sub _jit_trees {
+    my ($self, $asts) = @_;
 
+    local $self->{subtrees} = [];
     local $self->{_fun} = my $fun = pa_create_pp($self->jit_context);
-    $self->_jit_emit_root($ast);
+    for my $ast (@$asts) {
+        $self->_jit_emit_root($ast);
+    }
+
+    jit_insn_return($self->_fun, pa_get_op_next($self->_fun));
 
     # here it'd be nice to use custom ops, but they are registered by
     # PP function address; we could use a trampoline address (with
@@ -118,7 +157,7 @@ sub jit_tree {
     jit_function_compile($fun);
 
     $op->ppaddr(jit_function_to_closure($fun));
-    $op->targ($ast->get_perl_op->targ);
+    $op->targ($asts->[-1]->get_perl_op->targ);
 
     return $op;
 }
@@ -143,6 +182,7 @@ sub is_jittable {
         when (pj_ttype_global) { return 1 }
         when (pj_ttype_optree) { return 0 }
         when (pj_ttype_nulloptree) { return 1 }
+        when (pj_ttype_statement) { return $self->is_jittable($ast->get_kid) }
         when (pj_ttype_op) {
             my $known = $Jittable_Ops{$ast->get_optype};
 
@@ -182,8 +222,6 @@ sub _jit_emit_root {
     my ($val, $type) = $self->_jit_emit($ast, ANY);
 
     $self->_jit_emit_return($ast, $ast->context, $val, $type) if $val;
-
-    jit_insn_return($self->_fun, pa_get_op_next($self->_fun));
 }
 
 sub _jit_emit_return {
@@ -267,6 +305,15 @@ sub _jit_emit {
             } else {
                 return $self->_jit_emit_optree_jit_kids($ast, $type);
             }
+        }
+        when (pj_ttype_statement) {
+            B::Replace::detach_tree($self->current_cv->ROOT, $ast->get_perl_op, 1);
+            push @{$self->subtrees}, $ast->get_perl_op;
+            pa_pp_nextstate($self->_fun, $ast->get_perl_op);
+            return $self->_jit_emit($ast->get_kid, $type);
+        }
+        when (pj_ttype_statementsequence) {
+            die "Sequences can only appear at top level";
         }
         default {
             return $self->_jit_emit_optree_jit_kids($ast, $type);
