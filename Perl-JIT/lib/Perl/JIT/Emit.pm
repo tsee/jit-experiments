@@ -855,4 +855,11 @@ sub _jit_emit_const {
     }
 }
 
+sub _concise_dump {
+    my ($self) = @_;
+    require B::Concise;
+    B::Concise::reset_sequence();
+    B::Concise::compile('', '', $self->current_cv->object_2svref)->();
+}
+
 1;
