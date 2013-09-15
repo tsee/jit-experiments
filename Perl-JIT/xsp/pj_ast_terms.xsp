@@ -123,6 +123,8 @@ class Perl::JIT::AST::NullOptree : public Perl::JIT::AST::Term
 class Perl::JIT::AST::Statement : public Perl::JIT::AST::Term
 {
   std::vector<Perl::JIT::AST::Term *> kids %get;
+  Perl::JIT::AST::Term *get_kid() %code{% RETVAL = THIS->kids[0]; %};
+  void set_kid(Perl::JIT::AST::Term *k) %code{% THIS->kids[0] = k; %};
 };
 
 class Perl::JIT::AST::StatementSequence : public Perl::JIT::AST::Term
