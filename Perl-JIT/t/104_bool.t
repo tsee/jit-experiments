@@ -3,7 +3,7 @@
 use t::lib::Perl::JIT::Test;
 
 my %ops = map {$_ => { name => $_ }} qw(
-  not and or cond_expr
+  not and or cond_expr eq ne lt le gt ge
 );
 
 # FIXME the 1+ prefixes in the tests are to protect the scalar assignments from
@@ -127,6 +127,86 @@ my @tests = (
     opgrep => [@ops{qw(cond_expr)}],
     output => 4,
     input  => [0, 2, 3, 4, 5], },
+  { name   => 'num ==, int, true',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a == $b);', '$x'),
+    opgrep => [$ops{eq}],
+    output => 1,
+    input  => [1, 1], },
+  { name   => 'num ==, int, false',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a == $b);', '$x'),
+    opgrep => [$ops{eq}],
+    output => 0, # FIXME should be ''
+    input  => [1, 2], },
+  { name   => 'num ==, float, true',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a == $b);', '$x'),
+    opgrep => [$ops{eq}],
+    output => 1,
+    input  => [1.123, 1.123], },
+  { name   => 'num ==, float, false',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a == $b);', '$x'),
+    opgrep => [$ops{eq}],
+    output => 0, # FIXME should be ''
+    input  => [1.123, 2.123], },
+  { name   => 'num ==, typed int, true',
+    func   => build_jit_test_sub(undef, 'typed Int ($a, $b)=@_; my $x = ($a == $b);', '$x'),
+    opgrep => [$ops{eq}],
+    output => 1,
+    input  => [42, 42], },
+  { name   => 'num ==, typed double, false',
+    func   => build_jit_test_sub(undef, 'typed Double ($a, $b)=@_; my $x = ($a == $b);', '$x'),
+    opgrep => [$ops{eq}],
+    output => 0, # FIXME shoule be ''
+    input  => [43, 42.123], },
+  { name   => 'num !=, false',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a != $b);', '$x'),
+    opgrep => [$ops{ne}],
+    output => 0, # FIXME should be ''
+    input  => [1, 1], },
+  { name   => 'num !=, true',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a != $b);', '$x'),
+    opgrep => [$ops{ne}],
+    output => 1,
+    input  => [1, 2], },
+  { name   => 'num <, false',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a < $b);', '$x'),
+    opgrep => [$ops{lt}],
+    output => 0, # FIXME should be ''
+    input  => [1, 1], },
+  { name   => 'num <, true',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a < $b);', '$x'),
+    opgrep => [$ops{lt}],
+    output => 1,
+    input  => [1, 2], },
+  { name   => 'num <=, true',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a <= $b);', '$x'),
+    opgrep => [$ops{le}],
+    output => 1,
+    input  => [1.1, 1.1], },
+  { name   => 'num <=, false',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a <= $b);', '$x'),
+    opgrep => [$ops{le}],
+    output => 0, # FIXME should be ''
+    input  => [3, 2], },
+  { name   => 'num >, true',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a > $b);', '$x'),
+    opgrep => [$ops{gt}],
+    output => 1,
+    input  => [3.1, 1], },
+  { name   => 'num >, false',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a > $b);', '$x'),
+    opgrep => [$ops{gt}],
+    output => 0, # FIXME should be ''
+    input  => [1, 1], },
+  { name   => 'num >=, true',
+    func   => build_jit_test_sub('$a, $b', 'no warnings; my $x = ($a >= $b);', '$x'),
+    opgrep => [$ops{ge}],
+    output => 1,
+    input  => ["123asd", 2], },
+  { name   => 'num >=, true',
+    func   => build_jit_test_sub('$a, $b', 'my $x = ($a >= $b);', '$x'),
+    opgrep => [$ops{ge}],
+    output => 1,
+    input  => [2, 2], },
 );
 
 # save typing

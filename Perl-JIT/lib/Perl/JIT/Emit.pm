@@ -165,6 +165,8 @@ sub _jit_trees {
 my %Jittable_Ops = map { $_ => 1 } (
     pj_binop_add, pj_binop_subtract, pj_binop_multiply, pj_binop_divide,
     pj_binop_bool_and, pj_binop_bool_or, pj_binop_sassign,
+    pj_binop_num_eq, pj_binop_num_ne, pj_binop_num_lt, pj_binop_num_le,
+    pj_binop_num_gt, pj_binop_num_ge,
 
     pj_listop_ternary,
 
@@ -579,6 +581,16 @@ sub _jit_emit_binop {
         when (pj_binop_divide) {
             $res = jit_insn_div($fun, $self->_to_nv_value($v1, $t1), $self->_to_nv_value($v2, $t2));
         }
+        if (   $_ == pj_binop_num_eq
+            || $_ == pj_binop_num_ne
+            || $_ == pj_binop_num_lt
+            || $_ == pj_binop_num_le
+            || $_ == pj_binop_num_gt
+            || $_ == pj_binop_num_ge)
+        {
+            ($res, $restype) = $self->_emit_numeric_test($v1, $t1, $v2, $t2, $ast->get_optype);
+            break;
+        }
         when (pj_binop_bool_and) {
             my ($endlabel, $set_left, $set_right) = map jit_label_undefined, 1..3;
 
@@ -665,6 +677,33 @@ sub _jit_emit_binop {
     }
 
     return ($res, $restype);
+}
+
+sub _emit_numeric_test {
+    my ($self, $v1, $t1, $v2, $t2, $optype) = @_;
+    my $fun = $self->_fun;
+    my ($vn1, $tn1) = $self->_to_numeric($v1, $t1);
+    my ($vn2, $tn2) = $self->_to_numeric($v2, $t1);
+
+    my $res;
+    if ($optype == pj_binop_num_eq) {
+        $res = jit_insn_eq($fun, $vn1, $vn2);
+    } elsif ($optype == pj_binop_num_ne) {
+        $res = jit_insn_ne($fun, $vn1, $vn2);
+    } elsif ($optype == pj_binop_num_lt) {
+        $res = jit_insn_lt($fun, $vn1, $vn2);
+    } elsif ($optype == pj_binop_num_le) {
+        $res = jit_insn_le($fun, $vn1, $vn2);
+    } elsif ($optype == pj_binop_num_gt) {
+        $res = jit_insn_gt($fun, $vn1, $vn2);
+    } elsif ($optype == pj_binop_num_ge) {
+        $res = jit_insn_ge($fun, $vn1, $vn2);
+    } else {
+        die "Invalid numeric equality test, can't emit"
+    }
+
+    # FIXME returns 0 for "false", but perl comparisons return ""!
+    return($res, INT);
 }
 
 sub _jit_emit_unop {
