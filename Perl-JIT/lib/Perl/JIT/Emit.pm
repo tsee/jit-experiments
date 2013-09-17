@@ -641,7 +641,6 @@ sub _jit_emit_binop {
             $res = $self->_jit_create_value($restype);
 
             # Store RHS value and jump ot end
-            ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, $type);
             my ($tmp, undef) = $self->_to_type($v2, $t2, $restype);
             jit_insn_store($fun, $res, $tmp);
             jit_insn_branch($fun, $endlabel);
