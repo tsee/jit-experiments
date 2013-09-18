@@ -262,6 +262,8 @@ sub install_deps {
                 or not($perl->can_load_dependency($_))
              } @Dependencies;
   if (@deps) {
+    print "Installing the following dependencies: @deps\n"
+      if $Verbose >= 0;
     sys_fatal($cpan_cmd, @deps);
   }
   else {
