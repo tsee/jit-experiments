@@ -34,9 +34,9 @@ GetOptions(
 $Verbose //= 0;
 
 # Depending on verbosity, we'll just capture or we'll actually show what's going on.
-my $capture_sub        = $Verbose ? \&Capture::Tiny::tee        : \&Capture::Tiny::capture;
-my $capture_stdout_sub = $Verbose ? \&Capture::Tiny::tee_stdout : \&Capture::Tiny::capture_stdout;
-my $capture_merged_sub = $Verbose ? \&Capture::Tiny::tee_merged : \&Capture::Tiny::capture_merged;
+my $capture_sub        = sub {$Verbose ? goto &Capture::Tiny::tee        : goto &Capture::Tiny::capture};
+my $capture_stdout_sub = sub {$Verbose ? goto &Capture::Tiny::tee_stdout : goto &Capture::Tiny::capture_stdout};
+my $capture_merged_sub = sub {$Verbose ? goto &Capture::Tiny::tee_merged : goto &Capture::Tiny::capture_merged};
 
 my @common_options = (
   'perl|p=s',
@@ -72,7 +72,7 @@ sub cmd_test {
   GetOptions(
     my $opt = {},
     @common_options,
-    'clean|c',
+    #'clean|c',
   );
 
   my $custom_component = shift @ARGV;
@@ -101,17 +101,14 @@ sub cmd_test {
     foreach my $name (@perls) {
       my $perl = $cfg->get_perl($name);
       my $perl_bin = $perl->executable;
+      print "Testing $component with $name:\n" if $Verbose >= 0;
       eval {
         chdir($cfg->{custom}{$component});
         my $build_pl = -f "dev_Build.PL" ? "dev_Build.PL" : "Build.PL";
-        if ($opt->{clean}) {
-          sys($perl_bin, qw(Build realclean));
-          sys_fatal(qw(git clean -dxf));
-        }
-        if (not -d "blib") {
-          sys_fatal($perl_bin, $build_pl);
-          sys_fatal($perl_bin, qw(Build));
-        }
+        sys($perl_bin, qw(Build realclean));
+        sys_fatal($perl_bin, $build_pl);
+        sys_fatal($perl_bin, qw(Build));
+        local $Verbose = $Verbose > 1 ? $Verbose : 2;
         sys($perl_bin, qw(Build test));
         1
       } or do {
@@ -148,7 +145,6 @@ sub cmd_install {
     my $opt = {},
     @common_options,
     'test',
-    'clean|c',
   );
 
   my @perls = grok_perl_list($opt);
@@ -216,7 +212,7 @@ sub install_custom {
     my $cwd = cwd();
     eval {
       chdir($path) or die "Failed to chdir to '$path'";
-      if ($opt->{clean} && -f "Build") {
+      if (-f "Build") {
         sys($perl, qw(Build realclean)); # non-fatal
       }
 
@@ -340,11 +336,11 @@ sub sys_fatal {
   my $str = $capture_merged_sub->(sub {
     $exit = system(@args);
   });
-  if ($Verbose >= 0) {
-    $exit and die "Failed to run command \"@_\": $?. Output was:\n$str";
+  if ($Verbose == 0 && $exit) {
+    die "Failed to run command \"@_\": $?. Output was:\n$str";
   }
-  else {
-    $exit and die "Failed to run command \"@_\": $?";
+  elsif ($exit) {
+    die "Failed to run command \"@_\": $?";
   }
   return $exit;
 }
