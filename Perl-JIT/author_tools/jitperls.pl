@@ -49,7 +49,8 @@ my %cmds = (
   build_perl    => \&cmd_build_perl, # build one or multiple perls
   install_deps  => \&cmd_install_deps, # install dependencies from CPAN
   install       => \&cmd_install, # install custom code
-  'do'          => \&cmd_do, # run oneliner using one or multiple perls
+  perldo        => \&cmd_perldo, # run oneliner using one or multiple perls
+  do            => \&cmd_do, # run shell command with one of the perls in PATH
   test          => \&cmd_test, # run one or multiple component tests
 );
 
@@ -179,7 +180,7 @@ sub cmd_install_deps {
   }
 }
 
-sub cmd_do {
+sub cmd_perldo {
   my ($cfg) = @_;
 
   GetOptions(
@@ -197,6 +198,26 @@ sub cmd_do {
     my $perl_cmd = $perl->executable;
     local $ENV{PATH} = join(":", $perl->bin_dir, $ENV{PATH});
     sys_fatal($perl_cmd, @args);
+  }
+}
+
+sub cmd_do {
+  my ($cfg) = @_;
+
+  GetOptions(
+    my $opt = {},
+    @common_options,
+  );
+
+  my @perls = grok_perl_list($opt);
+  shift @ARGV if $ARGV[0] eq '--';
+
+  foreach my $name (@perls) {
+    my $perl = $cfg->get_perl($name);
+    local $ENV{PATH} = join(":", $perl->bin_dir, $ENV{PATH});
+    print "Running command for $name...\n"
+      if $Verbose >= 0;
+    system(@ARGV);
   }
 }
 
