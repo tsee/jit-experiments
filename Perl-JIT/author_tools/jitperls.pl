@@ -72,7 +72,6 @@ sub cmd_test {
   GetOptions(
     my $opt = {},
     @common_options,
-    #'clean|c',
   );
 
   my $custom_component = shift @ARGV;
@@ -101,10 +100,12 @@ sub cmd_test {
     foreach my $name (@perls) {
       my $perl = $cfg->get_perl($name);
       my $perl_bin = $perl->executable;
+      local $ENV{PATH} = join(":", $perl->bin_dir, $ENV{PATH});
       print "Testing $component with $name:\n" if $Verbose >= 0;
       eval {
         chdir($cfg->{custom}{$component});
         my $build_pl = -f "dev_Build.PL" ? "dev_Build.PL" : "Build.PL";
+        sys_fatal($perl_bin, $build_pl);
         sys($perl_bin, qw(Build realclean));
         sys_fatal($perl_bin, $build_pl);
         sys_fatal($perl_bin, qw(Build));
@@ -192,8 +193,9 @@ sub cmd_do {
   my @perls = grok_perl_list($opt);
 
   foreach my $name (@perls) {
-    my $spec = $cfg->get_perl($name);
-    my $perl_cmd = $spec->executable;
+    my $perl = $cfg->get_perl($name);
+    my $perl_cmd = $perl->executable;
+    local $ENV{PATH} = join(":", $perl->bin_dir, $ENV{PATH});
     sys_fatal($perl_cmd, @args);
   }
 }
@@ -206,16 +208,15 @@ sub install_custom {
   my $custom = $cfg->{custom};
 
   my $perl = $spec->executable;
+  local $ENV{PATH} = join(":", $spec->bin_dir, $ENV{PATH});
 
   foreach my $custom_name (@{$custom_order}) {
     my $path = $custom->{$custom_name};
+    print "Installing $custom_name into " . $spec->{name} . "\n"
+      if $Verbose >= 0;
     my $cwd = cwd();
     eval {
       chdir($path) or die "Failed to chdir to '$path'";
-      if (-f "Build") {
-        sys($perl, qw(Build realclean)); # non-fatal
-      }
-
       if (not -f "dev_Build.PL") {
         sys_fatal("dzil", "build");
         opendir my $dh, "." or die $!;
@@ -233,6 +234,11 @@ sub install_custom {
         print "Copying Build.PL as dev_Build.PL\n" if $Verbose >= 0;
         cp(File::Spec->catfile($dist_dirs[0], "Build.PL"), "dev_Build.PL");
       }
+      if (-f "Build") {
+        sys($perl, "dev_Build.PL");
+        sys($perl, qw(Build realclean)); # non-fatal
+      }
+
 
       sys_fatal($perl, "dev_Build.PL");
       sys_fatal($perl, "Build", "test") if $opt->{test};
@@ -250,6 +256,7 @@ sub install_deps {
   my ($cfg, $perl, $opt) = @_;
   build_perl($cfg, $perl) if not $perl->is_built;
 
+  local $ENV{PATH} = join(":", $perl->bin_dir, $ENV{PATH});
   my $cpan_cmd = $perl->executable("cpan");
   die "Strange, can't seem to run '$cpan_cmd'" if not -x $cpan_cmd;
 
@@ -401,10 +408,15 @@ package MyPerl {
     return bless($spec => $class);
   }
 
+  sub bin_dir {
+    my $self = shift;
+    return File::Spec->catfile($self->{path}, "bin");
+  }
+
   sub executable {
     my $self = shift;
     my $which = shift // "perl";
-    return File::Spec->catfile($self->{path}, "bin", $which);
+    return File::Spec->catfile($self->bin_dir, $which);
   }
 
   sub is_built {
