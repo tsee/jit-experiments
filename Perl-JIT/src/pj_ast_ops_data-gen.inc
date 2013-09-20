@@ -156,6 +156,7 @@ static const char *pj_ast_op_names[] = {
   "regexp match",   // pj_listop_match       (pj_opc_listop)
   "index()",        // pj_listop_index       (pj_opc_listop)
   "rindex()",       // pj_listop_rindex      (pj_opc_listop)
+  "scope",          // pj_listop_scope       (pj_opc_listop)
 };
 
 static unsigned int pj_ast_op_flags[] = {
@@ -310,6 +311,7 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_listop_match       (pj_opc_listop)
   0,                                                    // pj_listop_index       (pj_opc_listop)
   0,                                                    // pj_listop_rindex      (pj_opc_listop)
+  0,                                                    // pj_listop_scope       (pj_opc_listop)
 };
 
 #endif

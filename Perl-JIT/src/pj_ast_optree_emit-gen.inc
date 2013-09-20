@@ -150,6 +150,7 @@ EMIT_LISTOP_CODE(OP_WARN, pj_listop_warn)
 EMIT_LISTOP_CODE(OP_MATCH, pj_listop_match)
 EMIT_LISTOP_CODE(OP_INDEX, pj_listop_index)
 EMIT_LISTOP_CODE(OP_RINDEX, pj_listop_rindex)
+EMIT_LISTOP_CODE(OP_SCOPE, pj_listop_scope)
 
 
 #endif

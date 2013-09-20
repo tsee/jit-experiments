@@ -498,6 +498,18 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       break;
     }
 
+  case OP_LEAVE: {
+      MAKE_DEFAULT_KID_VECTOR
+      if (kid_terms.size()
+          && (dynamic_cast<AST::Optree *>(kid_terms[0]) != NULL)
+          && kid_terms[0]->perl_op->op_type == OP_ENTER)
+      {
+        kid_terms.erase(kid_terms.begin());
+      }
+      retval = new AST::Listop(o, pj_listop_scope, kid_terms);
+      break;
+    }
+
   case OP_ANDASSIGN:
   case OP_ORASSIGN:
   case OP_DORASSIGN: {
