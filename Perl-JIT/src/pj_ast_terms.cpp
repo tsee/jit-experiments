@@ -133,6 +133,15 @@ Listop::Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children)
   kids = children;
 }
 
+
+Block::Block(OP *p_op, Term *statements)
+  : Op(p_op, pj_op_scope)
+{
+  kids.resize(1);
+  kids[0] = statements;
+}
+
+
 Statement::Statement(OP *p_nextstate, Term *term)
   : Term(p_nextstate, pj_ttype_statement)
 {
@@ -294,6 +303,9 @@ void Binop::dump(int indent_lvl)
 
 void Listop::dump(int indent_lvl)
 { S_dump_op(this, "Listop", false, indent_lvl); }
+
+void Block::dump(int indent_lvl)
+{ S_dump_op(this, "Block", false, indent_lvl); }
 
 void List::dump(int indent_lvl)
 {

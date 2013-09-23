@@ -273,6 +273,25 @@ pj_build_targmy_assignment(PerlJIT::AST::Term *term, OPTreeJITCandidateFinder &v
   return new AST::Binop(o, pj_binop_sassign, var, term);
 }
 
+static PerlJIT::AST::Term *
+pj_build_block_or_term(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
+{
+  if (start->op_type != OP_NEXTSTATE)
+    return pj_build_ast(aTHX_ start, visitor);
+
+  AST::StatementSequence *seq = new AST::StatementSequence();
+
+  while (start && start->op_type == OP_NEXTSTATE && start->op_sibling) {
+    AST::Term *expression = pj_build_ast(aTHX_ start->op_sibling, visitor);
+    AST::Statement *stmt = new AST::Statement(start, expression);
+
+    seq->kids.push_back(stmt);
+    start = start->op_sibling->op_sibling;
+  }
+
+  return seq;
+}
+
 /* Walk OP tree recursively, build ASTs, build subtrees */
 static PerlJIT::AST::Term *
 pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
@@ -495,6 +514,23 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       MAKE_DEFAULT_KID_VECTOR
       assert(kid_terms.size() == 2);
       retval = new AST::Binop(o, pj_binop_sassign, kid_terms[1], kid_terms[0]);
+      break;
+    }
+
+  case OP_SCOPE: {
+      assert(cLOOPo->op_first->op_type == OP_NULL &&
+             cLOOPo->op_first->op_targ == OP_NEXTSTATE);
+      AST::Term *term = pj_build_ast(aTHX_ cLOOPo->op_first->op_sibling, visitor);
+      retval = new AST::Block(o, term);
+      break;
+    }
+
+  case OP_LEAVE: {
+      LOOP *enter = cLOOPx(cBINOPo->op_first);
+      assert(enter->op_type == OP_ENTER &&
+             enter->op_sibling->op_type == OP_NEXTSTATE);
+      AST::Term *statements = pj_build_block_or_term(aTHX_ enter->op_sibling, visitor);
+      retval = new AST::Block(o, statements);
       break;
     }
 

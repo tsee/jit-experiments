@@ -79,6 +79,7 @@
   || (int)otype == OP_LC \
   || (int)otype == OP_LCFIRST \
   || (int)otype == OP_LE \
+  || (int)otype == OP_LEAVE \
   || (int)otype == OP_LEFT_SHIFT \
   || (int)otype == OP_LENGTH \
   || (int)otype == OP_LINK \
@@ -128,6 +129,7 @@
   || (int)otype == OP_SCHOMP \
   || (int)otype == OP_SCHOP \
   || (int)otype == OP_SCMP \
+  || (int)otype == OP_SCOPE \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGT \
@@ -241,6 +243,7 @@
   || (int)otype == OP_LC \
   || (int)otype == OP_LCFIRST \
   || (int)otype == OP_LE \
+  || (int)otype == OP_LEAVE \
   || (int)otype == OP_LEFT_SHIFT \
   || (int)otype == OP_LENGTH \
   || (int)otype == OP_LINK \
@@ -295,6 +298,7 @@
   || (int)otype == OP_SCHOMP \
   || (int)otype == OP_SCHOP \
   || (int)otype == OP_SCMP \
+  || (int)otype == OP_SCOPE \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGT \

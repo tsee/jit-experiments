@@ -28,7 +28,8 @@ typedef enum {
 typedef enum {
   pj_opc_unop,
   pj_opc_binop,
-  pj_opc_listop
+  pj_opc_listop,
+  pj_opc_block
 } pj_op_class;
 
 // These fly in close formation with the OPf_WANT* flags in core
@@ -259,6 +260,17 @@ namespace PerlJIT {
         { return pj_opc_listop; }
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Listop"; }
+    };
+
+    class Block : public Op {
+    public:
+      Block(OP *p_op, Term *statements);
+
+      virtual void dump(int indent_lvl = 0);
+      pj_op_class op_class()
+        { return pj_opc_block; }
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Block"; }
     };
 
     class Optree : public Term {

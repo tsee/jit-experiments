@@ -163,6 +163,9 @@ typedef enum {
   pj_listop_index,
   pj_listop_rindex,
 
+  // Op class: pj_opc_block
+  pj_op_scope,
+
   // Op class ranges
 
   pj_unop_FIRST = pj_unop_empty,
@@ -174,9 +177,12 @@ typedef enum {
   pj_listop_FIRST = pj_listop_ternary,
   pj_listop_LAST  = pj_listop_rindex,
 
+  pj_block_FIRST = pj_op_scope,
+  pj_block_LAST  = pj_op_scope,
+
   // Global op range:
   pj_op_FIRST = pj_unop_empty,
-  pj_op_LAST = pj_listop_rindex
+  pj_op_LAST = pj_op_scope
 } pj_op_type;
 
 #endif

@@ -13,7 +13,7 @@
 # Special: Additional valid OPs for the filter macro.
 # - OP_SCHOP is the single-parameter version of OP_CHOP. Treat it as the same
 #   thing in the AST. Ditto for OP_SCHOMP.
-#! jittable_root_ops=OP_SCHOP OP_SCHOMP OP_ANDASSIGN OP_ORASSIGN OP_DORASSIGN
+#! jittable_root_ops=OP_SCHOP OP_SCHOMP OP_ANDASSIGN OP_ORASSIGN OP_DORASSIGN OP_LEAVE
 #! jittable_ops=OP_CONST OP_PADSV OP_PADAV OP_PADHV OP_NULL OP_GVSV OP_AELEMFAST OP_AELEMFAST_LEX
 
 # Return types below are separated between Scalar and List context (Context=Type)
@@ -184,3 +184,4 @@ pj_listop_match,	pj_opc_listop,	regexp match,	OP_MATCH,	0,	emit,	Scalar=Any List
 pj_listop_index,	pj_opc_listop,	index(),	OP_INDEX,	0,	emit,	Integer
 pj_listop_rindex,	pj_opc_listop,	rindex(),	OP_RINDEX,	0,	emit,	Integer
 
+pj_op_scope,		pj_opc_block,	scope,		OP_SCOPE,	0,	,	Scalar=Any List=List[Any]
