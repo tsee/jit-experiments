@@ -281,12 +281,28 @@ pj_build_block_or_term(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
 
   AST::StatementSequence *seq = new AST::StatementSequence();
 
+  // Consider this:
+  // perl author_tools/jit_ast_dump.pl -c -e '$x = do {1;1;1;1;1}'
+  // That emits a chain of
+  //   nextstate->null->null->nextstate->...->nextstate->const
+  // But we really just want nextstate->const, so do all the skipping
+  // over in here.
   while (start && start->op_type == OP_NEXTSTATE && start->op_sibling) {
-    AST::Term *expression = pj_build_ast(aTHX_ start->op_sibling, visitor);
-    AST::Statement *stmt = new AST::Statement(start, expression);
+    OP *nextstate = start;
+    start = start->op_sibling;
+    while (start && (start->op_type == OP_NULL || start->op_type == OP_NEXTSTATE))
+    {
+      // If we find more nextstates connected with nulls, then use
+      // the last nextstate in the sequence.
+      if (start->op_type == OP_NEXTSTATE)
+        nextstate = start;
+      start = start->op_sibling;
+    }
+    AST::Term *expression = pj_build_ast(aTHX_ start, visitor);
+    AST::Statement *stmt = new AST::Statement(nextstate, expression);
 
     seq->kids.push_back(stmt);
-    start = start->op_sibling->op_sibling;
+    start = start->op_sibling;
   }
 
   return seq;
