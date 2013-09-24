@@ -8,7 +8,7 @@ use File::Spec;
 use lib File::Spec->catdir($Bin, 'inc');
 use Getopt::Long qw(GetOptions);
 my $DEBUG = $ENV{DEBUG};
-my $DEBUG_SYMBOLS;
+my $DEBUG_SYMBOLS = $ENV{DEBUG_SYMBOLS};
 GetOptions(
   'debug|DEBUG+' => \$DEBUG,
   'g' => \$DEBUG_SYMBOLS,
