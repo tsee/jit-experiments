@@ -97,49 +97,7 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_context_scalar);
   INT_CONST(pj_context_list);
 
-  INT_CONST(pj_unop_negate);
-  INT_CONST(pj_unop_sin);
-  INT_CONST(pj_unop_cos);
-  INT_CONST(pj_unop_abs);
-  INT_CONST(pj_unop_sqrt);
-  INT_CONST(pj_unop_log);
-  INT_CONST(pj_unop_exp);
-  INT_CONST(pj_unop_perl_int);
-  INT_CONST(pj_unop_bitwise_not);
-  INT_CONST(pj_unop_bool_not);
-  INT_CONST(pj_unop_defined);
-  INT_CONST(pj_unop_ord);
-  INT_CONST(pj_unop_chr);
-  INT_CONST(pj_unop_preinc);
-  INT_CONST(pj_unop_postinc);
-  INT_CONST(pj_unop_predec);
-  INT_CONST(pj_unop_postdec);
-  INT_CONST(pj_unop_sv_ref);
-  INT_CONST(pj_unop_sv_deref);
-
-  INT_CONST(pj_binop_add);
-  INT_CONST(pj_binop_subtract);
-  INT_CONST(pj_binop_multiply);
-  INT_CONST(pj_binop_divide);
-  INT_CONST(pj_binop_modulo);
-  INT_CONST(pj_binop_atan2);
-  INT_CONST(pj_binop_pow);
-  INT_CONST(pj_binop_left_shift);
-  INT_CONST(pj_binop_right_shift);
-  INT_CONST(pj_binop_bitwise_and);
-  INT_CONST(pj_binop_bitwise_or);
-  INT_CONST(pj_binop_bitwise_xor);
-  INT_CONST(pj_binop_num_eq);
-  INT_CONST(pj_binop_num_ne);
-  INT_CONST(pj_binop_num_lt);
-  INT_CONST(pj_binop_num_le);
-  INT_CONST(pj_binop_num_gt);
-  INT_CONST(pj_binop_num_ge);
-  INT_CONST(pj_binop_bool_and);
-  INT_CONST(pj_binop_bool_or);
-  INT_CONST(pj_binop_sassign);
-
-  INT_CONST(pj_listop_ternary);
+#include "pj_ast_ops_const-gen.inc"
 
   INT_CONST(pj_unop_FIRST);
   INT_CONST(pj_unop_LAST);

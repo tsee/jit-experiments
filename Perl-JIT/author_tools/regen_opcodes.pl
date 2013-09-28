@@ -146,6 +146,12 @@ foreach my $op (@op_defs) {
 print $optree_emit_fh "\n\n#endif\n";
 close $optree_emit_fh;
 
+my $xs_const_fh = prep_xs_const_fh();
+foreach my $op (@op_defs) {
+  printf $xs_const_fh "  INT_CONST(%s);\n", $op->[AST_CONST];
+}
+print $xs_const_fh "\n\n#endif\n";
+close $xs_const_fh;
 
 sub generic_header {
   my $fh = shift;
@@ -185,6 +191,13 @@ sub prep_optree_emit_file {
   my $file = "src/pj_ast_optree_emit-gen.inc";
   open my $data_fh, ">", $file or die $!;
   generic_header($data_fh, "PJ_AST_OPTREE_EMIT_GEN_INC_");
+  return $data_fh;
+}
+
+sub prep_xs_const_fh {
+  my $file = "src/pj_ast_ops_const-gen.inc";
+  open my $data_fh, ">", $file or die $!;
+  generic_header($data_fh, "PJ_AST_OPS_CONST_GEN_INC_");
   return $data_fh;
 }
 
