@@ -18,6 +18,10 @@ Term::Term(OP *p_op, pj_term_type t, Type *v_type)
   : type(t), perl_op(p_op), _value_type(v_type)
 {}
 
+Empty::Empty()
+  : Term(NULL, pj_ttype_empty)
+{}
+
 List::List()
   : Term(NULL, pj_ttype_list)
 {}
@@ -140,6 +144,23 @@ Block::Block(OP *p_op, Term *statements)
   kids.resize(1);
   kids[0] = statements;
 }
+
+
+BareBlock::BareBlock(OP *p_op, Term *_body, Term *_continuation)
+  : Term(p_op, pj_ttype_bareblock), body(_body), continuation(_continuation)
+{}
+
+
+While::While(OP *p_op, Term *_condition, Term *_body, Term *_continuation)
+  : Term(p_op, pj_ttype_while), condition(_condition),
+    body(_body), continuation(_continuation)
+{}
+
+
+For::For(OP *p_op, Term *_init, Term *_condition, Term *_step, Term *_body)
+  : Term(p_op, pj_ttype_for), init(_init), condition(_condition),
+    step(_step), body(_body)
+{}
 
 
 Statement::Statement(OP *p_nextstate, Term *term)
@@ -307,6 +328,53 @@ void Listop::dump(int indent_lvl)
 void Block::dump(int indent_lvl)
 { S_dump_op(this, "Block", false, indent_lvl); }
 
+void BareBlock::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("BareBlock (\n");
+  body->dump(indent_lvl + 1);
+  if (continuation) {
+    S_dump_tree_indent(indent_lvl);
+    printf(") Continue (\n");
+    continuation->dump(indent_lvl + 1);
+  }
+  S_dump_tree_indent(indent_lvl);
+  printf(")\n");
+}
+
+void While::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("While (\n");
+  condition->dump(indent_lvl + 2);
+  body->dump(indent_lvl + 1);
+  if (continuation) {
+    S_dump_tree_indent(indent_lvl);
+    printf(") Continue (\n");
+    continuation->dump(indent_lvl + 1);
+  }
+  S_dump_tree_indent(indent_lvl);
+  printf(")\n");
+}
+
+void For::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("For (\n");
+  init->dump(indent_lvl + 2);
+  condition->dump(indent_lvl + 2);
+  step->dump(indent_lvl + 2);
+  body->dump(indent_lvl + 1);
+  S_dump_tree_indent(indent_lvl);
+  printf(")\n");
+}
+
+void Empty::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("Empty\n");
+}
+
 void List::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
@@ -428,3 +496,38 @@ GV *Global::get_gv() const
     return cGVOPx_gv(perl_op);
 }
 #endif
+
+std::vector<PerlJIT::AST::Term *> BareBlock::get_kids()
+{
+  std::vector<PerlJIT::AST::Term *> kids;
+
+  kids.push_back(body);
+  if (continuation)
+    kids.push_back(continuation);
+
+  return kids;
+}
+
+std::vector<PerlJIT::AST::Term *> While::get_kids()
+{
+  std::vector<PerlJIT::AST::Term *> kids;
+
+  kids.push_back(condition);
+  kids.push_back(body);
+  if (continuation)
+    kids.push_back(continuation);
+
+  return kids;
+}
+
+std::vector<PerlJIT::AST::Term *> For::get_kids()
+{
+  std::vector<PerlJIT::AST::Term *> kids;
+
+  kids.push_back(init);
+  kids.push_back(condition);
+  kids.push_back(step);
+  kids.push_back(body);
+
+  return kids;
+}

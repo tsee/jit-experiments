@@ -18,6 +18,10 @@ class Perl::JIT::AST::Term {
   void dump();
 };
 
+class Perl::JIT::AST::Empty : public Perl::JIT::AST::Term
+{
+};
+
 class Perl::JIT::AST::List : public Perl::JIT::AST::Term
 {
   std::vector<Perl::JIT::AST::Term *> kids %get;
@@ -63,6 +67,33 @@ class Perl::JIT::AST::Listop : public Perl::JIT::AST::Op
 
 class Perl::JIT::AST::Block : public Perl::JIT::AST::Op
 {};
+
+class Perl::JIT::AST::BareBlock : public Perl::JIT::AST::Term
+{
+  Perl::JIT::AST::Term *body %get;
+  Perl::JIT::AST::Term *continuation %get;
+
+  std::vector<Perl::JIT::AST::Term *> get_kids();
+};
+
+class Perl::JIT::AST::While : public Perl::JIT::AST::Term
+{
+  Perl::JIT::AST::Term *condition %get;
+  Perl::JIT::AST::Term *body %get;
+  Perl::JIT::AST::Term *continuation %get;
+
+  std::vector<Perl::JIT::AST::Term *> get_kids();
+};
+
+class Perl::JIT::AST::For : public Perl::JIT::AST::Term
+{
+  Perl::JIT::AST::Term *init %get;
+  Perl::JIT::AST::Term *condition %get;
+  Perl::JIT::AST::Term *step %get;
+  Perl::JIT::AST::Term *body %get;
+
+  std::vector<Perl::JIT::AST::Term *> get_kids();
+};
 
 class Perl::JIT::AST::Constant : public Perl::JIT::AST::Term
 {

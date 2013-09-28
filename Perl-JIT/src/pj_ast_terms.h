@@ -22,7 +22,11 @@ typedef enum {
   pj_ttype_nulloptree,
   pj_ttype_op,
   pj_ttype_statementsequence,
-  pj_ttype_statement
+  pj_ttype_statement,
+  pj_ttype_bareblock,
+  pj_ttype_while,
+  pj_ttype_for,
+  pj_ttype_empty
 } pj_term_type;
 
 typedef enum {
@@ -85,6 +89,15 @@ namespace PerlJIT {
 
     protected:
       Type *_value_type;
+    };
+
+    class Empty : public Term {
+    public:
+      Empty();
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Empty"; }
     };
 
     // A relatively low-on-semantics group of things, such as for
@@ -271,6 +284,51 @@ namespace PerlJIT {
         { return pj_opc_block; }
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Block"; }
+    };
+
+    class BareBlock : public Term {
+    public:
+      BareBlock(OP *p_op, Term *body, Term *continuation);
+
+      Term *body;
+      Term *continuation;
+
+      std::vector<PerlJIT::AST::Term *> get_kids();
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::BareBlock"; }
+    };
+
+    class While : public Term {
+    public:
+      While(OP *p_op, Term *condition, Term *body, Term *continuation);
+
+      Term *condition;
+      Term *body;
+      Term *continuation;
+
+      std::vector<PerlJIT::AST::Term *> get_kids();
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::While"; }
+    };
+
+    class For : public Term {
+    public:
+      For(OP *p_op, Term *init, Term *condition, Term *step, Term *body);
+
+      Term *init;
+      Term *condition;
+      Term *step;
+      Term *body;
+
+      std::vector<PerlJIT::AST::Term *> get_kids();
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::For"; }
     };
 
     class Optree : public Term {

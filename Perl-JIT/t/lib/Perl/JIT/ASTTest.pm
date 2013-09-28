@@ -14,10 +14,14 @@ use Test::Simple;
 
 our @EXPORT = (qw(
   ast_anything
+  ast_empty
   ast_constant
   ast_lexical
   ast_statement
   ast_statementsequence
+  ast_bareblock
+  ast_while
+  ast_for
   ast_unop
   ast_binop
   ast_listop
@@ -31,6 +35,7 @@ sub _matches {
 
   given ($pattern->{type}) {
     when ('anything') { return 1 }
+    when ('empty') { return $ast->get_type == pj_ttype_empty }
     when ('constant') {
       return 0 unless $ast->get_type == pj_ttype_constant;
       return 0 if defined $pattern->{value_type} &&
@@ -71,6 +76,26 @@ sub _matches {
       }
 
       return 1;
+    }
+    when ('bareblock') {
+      return 0 unless $ast->get_type == pj_ttype_bareblock;
+      return _matches($ast->get_body, $pattern->{body}) &&
+             (!defined $pattern->{continuation} ||
+              _matches($ast->get_continuation, $pattern->{continuation}));
+    }
+    when ('while') {
+      return 0 unless $ast->get_type == pj_ttype_while;
+      return _matches($ast->get_condition, $pattern->{condition}) &&
+             _matches($ast->get_body, $pattern->{body}) &&
+             (!defined $pattern->{continuation} ||
+              _matches($ast->get_continuation, $pattern->{continuation}));
+    }
+    when ('for') {
+      return 0 unless $ast->get_type == pj_ttype_for;
+      return _matches($ast->get_init, $pattern->{init}) &&
+             _matches($ast->get_condition, $pattern->{condition}) &&
+             _matches($ast->get_step, $pattern->{step}) &&
+             _matches($ast->get_body, $pattern->{body});
     }
     when ('unop') {
       return 0 unless $ast->get_type == pj_ttype_op;
@@ -140,6 +165,10 @@ sub ast_anything {
   return {type => 'anything'};
 }
 
+sub ast_empty {
+  return {type => 'empty'}
+}
+
 sub ast_constant {
   my ($value, $type) = @_;
 
@@ -176,6 +205,26 @@ sub ast_statementsequence {
   my ($statements) = @_;
 
   return {type => 'statementsequence', statements => _force_statements($statements)};
+}
+
+sub ast_bareblock {
+  my ($body, $continuation) = @_;
+
+  return {type => 'bareblock', body => $body, continuation => $continuation};
+}
+
+sub ast_while {
+  my ($condition, $body, $continuation) = @_;
+
+  return {type => 'while', condition => $condition,
+          body => $body, continuation => $continuation};
+}
+
+sub ast_for {
+  my ($init, $condition, $step, $body) = @_;
+
+  return {type => 'for', init => $init, condition => $condition,
+          step => $step, body => $body};
 }
 
 sub ast_unop {

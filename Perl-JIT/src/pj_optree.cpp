@@ -70,7 +70,8 @@ namespace PerlJIT {
   {
   public:
     OPTreeJITCandidateFinder(pTHX_ CV *cv)
-      : containing_cv(cv), last_nextstate(NULL), current_sequence(NULL)
+      : containing_cv(cv), last_nextstate(NULL), current_sequence(NULL),
+        skip_next_leaveloop(false)
     {
       // typed_declarations may end up being NULL!
       if (cv != NULL)
@@ -88,16 +89,31 @@ namespace PerlJIT {
         return VISIT_SKIP;
       }
 
+      // C-style for loops with initializer are emitted as the sequence
+      // nextstate -> initializer -> unstack -> leaveloop
+      //
+      // this is handled in pj_build_ast() by processing the unstack/leaveloop
+      // after ASTifying the initializer, so here we skip the loop body
+      // if it was already processed
+      if (otype == OP_LEAVELOOP && skip_next_leaveloop) {
+        skip_next_leaveloop = false;
+        return VISIT_SKIP;
+      }
+
       PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
 
       /* Attempt JIT if the right OP type. Don't recurse if so. */
-      if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype)) {
+      if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) ||
+          /* temporary -- leaving foreach for another weekend... */
+          (otype == OP_LEAVELOOP && cUNOPo->op_first->op_type != OP_ENTERITER)) {
         PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
         if (ast) {
           if (last_nextstate && last_nextstate->op_sibling == o)
             create_statement(ast);
           else
             candidates.push_back(ast);
+          if (otype != OP_LEAVELOOP && ast->type == pj_ttype_for)
+            skip_next_leaveloop = true;
           last_nextstate = NULL;
         }
         return VISIT_SKIP;
@@ -195,6 +211,7 @@ namespace PerlJIT {
     OP *last_nextstate;
   private:
     AST::StatementSequence *current_sequence;
+    bool skip_next_leaveloop;
   }; // end class OPTreeJITCandidateFinder
 }
 
@@ -290,7 +307,9 @@ pj_build_block_or_term(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
   while (start && start->op_type == OP_NEXTSTATE && start->op_sibling) {
     OP *nextstate = start;
     start = start->op_sibling;
-    while (start && (start->op_type == OP_NULL || start->op_type == OP_NEXTSTATE))
+    while (start && (start->op_type == OP_NULL ||
+                     start->op_type == OP_NEXTSTATE ||
+                     start->op_type == OP_UNSTACK))
     {
       // If we find more nextstates connected with nulls, then use
       // the last nextstate in the sequence.
@@ -298,6 +317,8 @@ pj_build_block_or_term(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
         nextstate = start;
       start = start->op_sibling;
     }
+    if (!start)
+      break;
     AST::Term *expression = pj_build_ast(aTHX_ start, visitor);
     AST::Statement *stmt = new AST::Statement(nextstate, expression);
 
@@ -306,6 +327,112 @@ pj_build_block_or_term(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
   }
 
   return seq;
+}
+
+static PerlJIT::AST::Term *
+pj_build_body(pTHX_ OP *body, OPTreeJITCandidateFinder &visitor)
+{
+  if (!body)
+    return new PerlJIT::AST::Empty();
+
+  if (body->op_type == OP_SCOPE) {
+    if (cUNOPx(body)->op_first->op_type != OP_STUB) {
+      OP *first = cUNOPx(body)->op_first;
+
+      if (first->op_type == OP_NULL && first->op_targ == OP_NEXTSTATE)
+        first = first->op_sibling;
+      return pj_build_block_or_term(aTHX_ first, visitor);
+    }
+  } else if (body->op_type == OP_LEAVE) {
+    return pj_build_block_or_term(aTHX_ body, visitor);
+  } else if (body->op_type != OP_STUB)
+    return pj_build_block_or_term(aTHX_ body, visitor);
+
+  return new PerlJIT::AST::Empty();
+}
+
+static PerlJIT::AST::For *
+pj_build_for(pTHX_ OP *start, PerlJIT::AST::Term *init, LOGOP *condition, OP *step, OP *body, OPTreeJITCandidateFinder &visitor)
+{
+  PerlJIT::AST::Term *ast_condition = NULL, *ast_step = NULL, *ast_body = NULL;
+  OP *start_op = init ? init->perl_op : start;
+  if (!init)
+    init = new PerlJIT::AST::Empty();
+
+  ast_condition = condition ? pj_build_ast(aTHX_ condition->op_first, visitor) :
+                              new PerlJIT::AST::Empty();
+  ast_body = pj_build_body(aTHX_ body, visitor);
+  ast_step = step ? pj_build_ast(aTHX_ step, visitor) :
+                    new PerlJIT::AST::Empty();
+
+  return new PerlJIT::AST::For(start_op, init, ast_condition, ast_step, ast_body);
+}
+
+static PerlJIT::AST::While *
+pj_build_while(pTHX_ OP *start, LOGOP *condition, OP *body, OP *cont, OPTreeJITCandidateFinder &visitor)
+{
+  PerlJIT::AST::Term *ast_condition = NULL, *ast_body = NULL, *ast_cont = NULL;
+
+  ast_condition = condition ? pj_build_ast(aTHX_ condition->op_first, visitor) :
+                              new PerlJIT::AST::Empty();
+  ast_body = pj_build_body(aTHX_ body, visitor);
+  ast_cont = pj_build_body(aTHX_ cont, visitor);
+
+  return new PerlJIT::AST::While(start, ast_condition, ast_body, ast_cont);
+}
+
+static PerlJIT::AST::BareBlock *
+pj_build_block(pTHX_ OP *start, OP *body, OP *cont, OPTreeJITCandidateFinder &visitor)
+{
+  PerlJIT::AST::Term *ast_body = NULL, *ast_cont = NULL;
+
+  ast_body = pj_build_body(aTHX_ body, visitor);
+  ast_cont = pj_build_body(aTHX_ cont, visitor);
+
+  return new PerlJIT::AST::BareBlock(start, ast_body, ast_cont);
+}
+
+static PerlJIT::AST::Term *
+pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinder &visitor)
+{
+  LOOP *enter = cLOOPx(cBINOPx(start)->op_first);
+  LOGOP *cond = NULL;
+  LISTOP *lineseq = NULL;
+  OP *cont = NULL, *step = NULL;
+  bool has_cond = enter->op_sibling->op_type == OP_NULL;
+
+  if (has_cond) {
+    cond = cLOGOPx(cUNOPx(enter->op_sibling)->op_first);
+    lineseq = cLISTOPx(cond->op_first->op_sibling);
+  } else {
+    lineseq = cLISTOPx(enter->op_sibling);
+  }
+
+  bool is_loop = lineseq->op_last->op_type == OP_UNSTACK;
+  // loops with a single block (for loops w/o a step, while/blocks
+  // without a continue have an OP_NEXTSTATE as the kid of lineseq,
+  // otherwise they have an OP_LEAVE/OP_ENTER pair or OP_SCOPE
+  bool has_one_subexpr = lineseq->op_first->op_type == OP_NEXTSTATE;
+  bool has_continue = false;
+  OP *body = lineseq->op_first;
+
+  if (!has_one_subexpr) {
+    unsigned int otype = lineseq->op_first->op_sibling->op_type;
+
+    has_continue = otype == OP_LEAVE || otype == OP_SCOPE;
+  }
+
+  if (has_continue)
+    cont = lineseq->op_first->op_sibling;
+  else if (!has_one_subexpr && lineseq->op_first->op_type != OP_STUB)
+    step = lineseq->op_first->op_sibling;
+
+  if (init || step)
+    return pj_build_for(aTHX_ start, init, cond, step, body, visitor);
+  else if (is_loop)
+    return pj_build_while(aTHX_ start, cond, body, cont, visitor);
+  else
+    return pj_build_block(aTHX_ start, body, cont, visitor);
 }
 
 /* Walk OP tree recursively, build ASTs, build subtrees */
@@ -318,7 +445,9 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 
   const unsigned int otype = o->op_type;
   PJ_DEBUG_1("pj_build_ast ASTing OP of type %s\n", OP_NAME(o));
-  if (!IS_AST_COMPATIBLE_OP_TYPE(otype)) {
+  if (!IS_AST_COMPATIBLE_OP_TYPE(otype) &&
+      /* temporary -- leaving foreach for another weekend... */
+      !(otype == OP_LEAVELOOP && cUNOPo->op_first->op_type != OP_ENTERITER)) {
     // Can't represent OP with AST. So instead, recursively scan for
     // separate candidates and treat as subtree.
     PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST (Perl OP=%s).\n", OP_NAME(o));
@@ -550,6 +679,10 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       break;
     }
 
+  case OP_LEAVELOOP:
+    retval = pj_build_loop(aTHX_ o, NULL, visitor);
+    break;
+
   case OP_ANDASSIGN:
   case OP_ORASSIGN:
   case OP_DORASSIGN: {
@@ -653,6 +786,13 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
           && (kid = PMOP_pmreplroot(cPMOPo)))
     {}
   */
+
+  // special-case for C-style for, see also skip_next_leaveloop
+  if (o->op_sibling &&
+      o->op_sibling->op_type == OP_UNSTACK &&
+      o->op_sibling->op_sibling &&
+      o->op_sibling->op_sibling->op_type == OP_LEAVELOOP)
+    retval = pj_build_loop(aTHX_ o->op_sibling->op_sibling, retval, visitor);
 
   if (PJ_DEBUGGING && retval != NULL)
     retval->dump();
