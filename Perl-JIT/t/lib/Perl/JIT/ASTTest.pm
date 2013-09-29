@@ -21,6 +21,7 @@ our @EXPORT = (qw(
   ast_unop
   ast_binop
   ast_listop
+  ast_block
 
   ast_contains
 ), @Perl::JIT::EXPORT_OK);
@@ -98,6 +99,13 @@ sub _matches {
       }
 
       return 1;
+    }
+    when ('block') {
+      return 0 unless $ast->get_type == pj_ttype_op;
+      return 0 unless $ast->op_class == pj_opc_block;
+      my @kids = $ast->get_kids;
+      die "Blocks can only have one kid" if @kids != 1;
+      return _matches($kids[0], $pattern->{body});
     }
   }
 }
@@ -186,6 +194,12 @@ sub ast_listop {
   my ($op, $terms) = @_;
 
   return {type => 'listop', op => $op, terms => $terms};
+}
+
+sub ast_block {
+  my ($body) = @_;
+
+  return {type => 'block', body => $body};
 }
 
 package t::lib::Perl::JIT::ASTTest;

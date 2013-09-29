@@ -91,6 +91,7 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_opc_unop);
   INT_CONST(pj_opc_binop);
   INT_CONST(pj_opc_listop);
+  INT_CONST(pj_opc_block);
 
   INT_CONST(pj_context_caller);
   INT_CONST(pj_context_void);
