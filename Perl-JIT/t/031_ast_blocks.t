@@ -25,5 +25,11 @@ ast_contains(sub { do { do {my $a} } },
                  ast_lexical('$a')
                )
              ));
+ast_contains(sub { our $x; do { do {$x = 123} } },
+             ast_block(
+               ast_block(
+                 ast_global('$x')
+               )
+             ));
 
 done_testing();
