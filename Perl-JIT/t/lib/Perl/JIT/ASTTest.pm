@@ -17,6 +17,7 @@ our @EXPORT = (qw(
   ast_empty
   ast_constant
   ast_lexical
+  ast_global
   ast_statement
   ast_statementsequence
   ast_bareblock
@@ -59,6 +60,12 @@ sub _matches {
     }
     when ('lexical') {
       return 0 unless $ast->get_type == pj_ttype_lexical || $ast->get_type == pj_ttype_variabledeclaration;
+      return 0 unless $ast->get_sigil == $pattern->{sigil};
+
+      return 1;
+    }
+    when ('global') {
+      return 0 unless $ast->get_type == pj_ttype_global;
       return 0 unless $ast->get_sigil == $pattern->{sigil};
 
       return 1;
@@ -185,6 +192,16 @@ sub ast_lexical {
                           pj_sigil_hash;
 
   return {type => 'lexical', sigil => $sigil, name => $2};
+}
+
+sub ast_global {
+  my ($name) = @_;
+  die "Invalid name '$name'" unless $name =~ /^([\$\@\%])(.+)$/;
+  my $sigil = $1 eq '$' ? pj_sigil_scalar :
+              $1 eq '@' ? pj_sigil_array :
+                          pj_sigil_hash;
+
+  return {type => 'global', sigil => $sigil, name => $2};
 }
 
 sub ast_statement {

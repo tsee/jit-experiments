@@ -19,5 +19,11 @@ ast_contains(sub { do { no warnings 'void'; 1; 2; 3; 4 } },
                  ast_constant(4)
                ])
              ));
+ast_contains(sub { do { do {my $a} } },
+             ast_block(
+               ast_block(
+                 ast_lexical('$a')
+               )
+             ));
 
 done_testing();
