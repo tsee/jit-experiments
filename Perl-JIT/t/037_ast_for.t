@@ -86,5 +86,12 @@ ast_contains(sub { my $i; for (;;) { } },
                ast_empty(),
                ast_empty(),
              ));
+ast_contains(sub { my $i; for (;;) {do{$i++}} },
+             ast_while(
+               ast_empty(),
+               ast_statementsequence([
+                 ast_unop(pj_unop_postinc, ast_lexical('$i')),
+               ])
+             ));
 
 done_testing();
