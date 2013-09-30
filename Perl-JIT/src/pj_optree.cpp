@@ -372,13 +372,24 @@ static PerlJIT::AST::While *
 pj_build_while(pTHX_ OP *start, LOGOP *condition, OP *body, OP *cont, OPTreeJITCandidateFinder &visitor)
 {
   PerlJIT::AST::Term *ast_condition = NULL, *ast_body = NULL, *ast_cont = NULL;
+  bool is_until = false;
 
-  ast_condition = condition ? pj_build_ast(aTHX_ condition->op_first, visitor) :
-                              new PerlJIT::AST::Empty();
+  if (condition) {
+    if (condition->op_type == OP_OR &&
+        condition->op_first->op_type == OP_NULL &&
+        condition->op_first->op_targ == OP_NOT) {
+      is_until = true;
+      ast_condition = pj_build_ast(aTHX_ cUNOPx(condition->op_first)->op_first, visitor);
+    } else
+      ast_condition = pj_build_ast(aTHX_ condition->op_first, visitor);
+  } else
+    ast_condition = new PerlJIT::AST::Empty();
+
   ast_body = pj_build_body(aTHX_ body, visitor);
   ast_cont = pj_build_body(aTHX_ cont, visitor);
 
-  return new PerlJIT::AST::While(start, ast_condition, ast_body, ast_cont);
+  return new PerlJIT::AST::While(start, ast_condition, is_until,
+                                 ast_body, ast_cont);
 }
 
 static PerlJIT::AST::BareBlock *

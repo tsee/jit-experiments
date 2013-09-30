@@ -21,6 +21,7 @@ our @EXPORT = (qw(
   ast_statementsequence
   ast_bareblock
   ast_while
+  ast_until
   ast_for
   ast_unop
   ast_binop
@@ -85,6 +86,7 @@ sub _matches {
     }
     when ('while') {
       return 0 unless $ast->get_type == pj_ttype_while;
+      return 0 unless $ast->get_negated == $pattern->{negated};
       return _matches($ast->get_condition, $pattern->{condition}) &&
              _matches($ast->get_body, $pattern->{body}) &&
              (!defined $pattern->{continuation} ||
@@ -216,7 +218,14 @@ sub ast_bareblock {
 sub ast_while {
   my ($condition, $body, $continuation) = @_;
 
-  return {type => 'while', condition => $condition,
+  return {type => 'while', condition => $condition, negated => 0,
+          body => $body, continuation => $continuation};
+}
+
+sub ast_until {
+  my ($condition, $body, $continuation) = @_;
+
+  return {type => 'while', condition => $condition, negated => 1,
           body => $body, continuation => $continuation};
 }
 

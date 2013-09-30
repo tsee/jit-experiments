@@ -79,6 +79,7 @@ class Perl::JIT::AST::BareBlock : public Perl::JIT::AST::Term
 class Perl::JIT::AST::While : public Perl::JIT::AST::Term
 {
   Perl::JIT::AST::Term *condition %get;
+  bool negated %get;
   Perl::JIT::AST::Term *body %get;
   Perl::JIT::AST::Term *continuation %get;
 

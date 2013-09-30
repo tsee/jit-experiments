@@ -302,9 +302,10 @@ namespace PerlJIT {
 
     class While : public Term {
     public:
-      While(OP *p_op, Term *condition, Term *body, Term *continuation);
+      While(OP *p_op, Term *condition, bool negated, Term *body, Term *continuation);
 
       Term *condition;
+      bool negated;
       Term *body;
       Term *continuation;
 
