@@ -27,9 +27,13 @@ ast_contains(sub { do { do {my $a} } },
              ));
 ast_contains(sub { our $x; do { do {$x = 123} } },
              ast_block(
-               ast_block(
-                 ast_global('$x')
-               )
+               ast_statementsequence([
+                 ast_block(
+                   ast_statementsequence([
+                     ast_binop(pj_binop_sassign, ast_global('$x'), ast_constant(123)),
+                   ])
+                 )
+               ])
              ));
 
 done_testing();
