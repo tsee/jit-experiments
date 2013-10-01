@@ -425,6 +425,8 @@ pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinde
   // without a continue have an OP_NEXTSTATE as the kid of lineseq,
   // otherwise they have an OP_LEAVE/OP_ENTER pair or OP_SCOPE
   bool has_one_subexpr = lineseq->op_first->op_type == OP_NEXTSTATE;
+  bool is_modifier = lineseq->op_first->op_sibling &&
+                     lineseq->op_first->op_sibling->op_type != OP_UNSTACK;
   bool has_continue = false;
   OP *body = lineseq->op_first;
 
@@ -436,7 +438,8 @@ pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinde
 
   if (has_continue)
     cont = lineseq->op_first->op_sibling;
-  else if (!has_one_subexpr && lineseq->op_first->op_type != OP_STUB)
+  else if (!has_one_subexpr && lineseq->op_first->op_type != OP_STUB &&
+           is_modifier)
     step = lineseq->op_first->op_sibling;
 
   if (init || step)
@@ -684,10 +687,29 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 
   case OP_LEAVE: {
       LOOP *enter = cLOOPx(cBINOPo->op_first);
-      assert(enter->op_type == OP_ENTER &&
-             enter->op_sibling->op_type == OP_NEXTSTATE);
-      AST::Term *statements = pj_build_block_or_term(aTHX_ enter->op_sibling, visitor);
-      retval = new AST::Block(o, statements);
+      OP *start = enter->op_sibling;
+      assert(enter->op_type == OP_ENTER);
+      // while/until statement modifier, including do {} while
+      if (start->op_type == OP_NULL && start->op_flags & OPf_KIDS) {
+        UNOP *null = cUNOPx(start);
+        if (null->op_first->op_type == OP_AND ||
+            null->op_first->op_type == OP_OR) {
+          // statement modifier whith condition
+          retval = pj_build_loop(aTHX_ o, NULL, visitor);
+        } else if (null->op_first->op_type == OP_LINESEQ &&
+                   cLISTOPx(null->op_first)->op_first->op_sibling &&
+                   cLISTOPx(null->op_first)->op_first->op_sibling->op_type == OP_UNSTACK) {
+          // statement modifier whith always-true condition
+          retval = pj_build_while(aTHX_ o, NULL, cLISTOPx(null->op_first)->op_first, NULL, visitor);
+        }
+      }
+
+      // assume a do{} block without modifier
+      if (!retval) {
+        AST::Term *statements = pj_build_block_or_term(aTHX_ start, visitor);
+        retval = new AST::Block(o, statements);
+      }
+
       break;
     }
 
