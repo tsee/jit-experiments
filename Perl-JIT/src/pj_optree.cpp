@@ -307,7 +307,9 @@ pj_build_block_or_term(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
   while (start && start->op_type == OP_NEXTSTATE && start->op_sibling) {
     OP *nextstate = start;
     start = start->op_sibling;
-    while (start && ((start->op_type == OP_NULL && !cUNOPx(start)->op_first) ||
+    while (start && ((start->op_type == OP_NULL &&
+                      !((start->op_flags & OPf_KIDS) &&
+                        cUNOPx(start)->op_first)) ||
                      start->op_type == OP_NEXTSTATE ||
                      start->op_type == OP_UNSTACK))
     {
