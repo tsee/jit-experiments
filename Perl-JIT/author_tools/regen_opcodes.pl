@@ -136,6 +136,7 @@ foreach my $op (@op_defs) {
     my $optype = $op->[AST_CLASS] eq 'pj_opc_unop'   ? 'UNOP'
                : $op->[AST_CLASS] eq 'pj_opc_binop'  ? 'BINOP'
                : $op->[AST_CLASS] eq 'pj_opc_listop' ? 'LISTOP'
+               : $op->[AST_CLASS] eq 'pj_opc_baseop' ? 'BASEOP'
                : die "Unrecognized AST class: '$op->[AST_CONST]'!";
 
     print $optree_emit_fh "EMIT_${optype}_CODE$optional("

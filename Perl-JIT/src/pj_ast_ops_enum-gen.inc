@@ -6,10 +6,15 @@
 
 typedef enum {
 
+  // Op class: pj_opc_baseop
+  pj_baseop_time,
+  pj_baseop_times,
+  pj_baseop_next,
+  pj_baseop_last,
+  pj_baseop_redo,
+  pj_baseop_empty,
+
   // Op class: pj_opc_unop
-  pj_unop_empty,
-  pj_unop_time,
-  pj_unop_times,
   pj_unop_localtime,
   pj_unop_gmtime,
   pj_unop_alarm,
@@ -168,7 +173,10 @@ typedef enum {
 
   // Op class ranges
 
-  pj_unop_FIRST = pj_unop_empty,
+  pj_baseop_FIRST = pj_baseop_time,
+  pj_baseop_LAST  = pj_baseop_empty,
+
+  pj_unop_FIRST = pj_unop_localtime,
   pj_unop_LAST  = pj_unop_pos,
 
   pj_binop_FIRST = pj_binop_add,
@@ -181,7 +189,7 @@ typedef enum {
   pj_block_LAST  = pj_op_scope,
 
   // Global op range:
-  pj_op_FIRST = pj_unop_empty,
+  pj_op_FIRST = pj_baseop_time,
   pj_op_LAST = pj_op_scope
 } pj_op_type;
 

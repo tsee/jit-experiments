@@ -4,9 +4,12 @@
 // Modify the generating script author_tools/regen_opcodes.pl and its data file
 // "author_tools/opcodes" instead!
 
-  INT_CONST(pj_unop_empty);
-  INT_CONST(pj_unop_time);
-  INT_CONST(pj_unop_times);
+  INT_CONST(pj_baseop_time);
+  INT_CONST(pj_baseop_times);
+  INT_CONST(pj_baseop_next);
+  INT_CONST(pj_baseop_last);
+  INT_CONST(pj_baseop_redo);
+  INT_CONST(pj_baseop_empty);
   INT_CONST(pj_unop_localtime);
   INT_CONST(pj_unop_gmtime);
   INT_CONST(pj_unop_alarm);

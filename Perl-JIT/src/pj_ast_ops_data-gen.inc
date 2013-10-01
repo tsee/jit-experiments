@@ -5,9 +5,12 @@
 // "author_tools/opcodes" instead!
 
 static const char *pj_ast_op_names[] = {
-  "()",             // pj_unop_empty         (pj_opc_unop)
-  "time()",         // pj_unop_time          (pj_opc_unop)
-  "times()",        // pj_unop_times         (pj_opc_unop)
+  "time()",         // pj_baseop_time        (pj_opc_baseop)
+  "times()",        // pj_baseop_times       (pj_opc_baseop)
+  "next",           // pj_baseop_next        (pj_opc_baseop)
+  "last",           // pj_baseop_last        (pj_opc_baseop)
+  "redo",           // pj_baseop_redo        (pj_opc_baseop)
+  "()",             // pj_baseop_empty       (pj_opc_baseop)
   "localtime()",    // pj_unop_localtime     (pj_opc_unop)
   "gmtime()",       // pj_unop_gmtime        (pj_opc_unop)
   "alarm()",        // pj_unop_alarm         (pj_opc_unop)
@@ -160,9 +163,12 @@ static const char *pj_ast_op_names[] = {
 };
 
 static unsigned int pj_ast_op_flags[] = {
-  PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_empty         (pj_opc_unop)
-  PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_time          (pj_opc_unop)
-  PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_times         (pj_opc_unop)
+  0,                                                    // pj_baseop_time        (pj_opc_baseop)
+  0,                                                    // pj_baseop_times       (pj_opc_baseop)
+  0,                                                    // pj_baseop_next        (pj_opc_baseop)
+  0,                                                    // pj_baseop_last        (pj_opc_baseop)
+  0,                                                    // pj_baseop_redo        (pj_opc_baseop)
+  0,                                                    // pj_baseop_empty       (pj_opc_baseop)
   PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_localtime     (pj_opc_unop)
   PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_gmtime        (pj_opc_unop)
   PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_alarm         (pj_opc_unop)

@@ -30,6 +30,7 @@ typedef enum {
 } pj_term_type;
 
 typedef enum {
+  pj_opc_baseop,
   pj_opc_unop,
   pj_opc_binop,
   pj_opc_listop,
@@ -232,6 +233,18 @@ namespace PerlJIT {
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Op"; }
       virtual ~Op();
+    };
+
+    class Baseop : public Op {
+    public:
+      Baseop(OP *p_op, pj_op_type t);
+
+      pj_op_class op_class()
+        { return pj_opc_baseop; }
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Baseop"; }
     };
 
     class Unop : public Op {

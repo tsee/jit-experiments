@@ -259,7 +259,7 @@ pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::T
         pj_free_term_vector(aTHX_ kid_terms);
         return 1;
       }
-      else if (kid_term->type == pj_ttype_op && ((AST::Op *)kid_term)->optype == pj_unop_empty) {
+      else if (kid_term->type == pj_ttype_op && ((AST::Op *)kid_term)->optype == pj_baseop_empty) {
         // empty list is not really a kid, don't include in child list
         delete kid_term;
       }
@@ -485,6 +485,15 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     pj_free_term_vector(aTHX_ kid_terms);                 \
     return NULL;                                          \
   }                                                       \
+
+#define EMIT_BASEOP_CODE(perl_op_type, pj_op_type)            \
+  case perl_op_type: {                                        \
+      MAKE_DEFAULT_KID_VECTOR                                 \
+      assert(kid_terms.size() == 0);                          \
+      retval = new AST::Baseop(o, pj_op_type);                \
+      retval = pj_build_targmy_assignment(retval, visitor);   \
+      break;                                                  \
+    }
 
 #define EMIT_UNOP_CODE(perl_op_type, pj_op_type)              \
   case perl_op_type: {                                        \
@@ -751,11 +760,11 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         }
         else { // list or void context
           // FIXME really, empty list
-          retval = new AST::Unop(o, pj_unop_empty, NULL);
+          retval = new AST::Baseop(o, pj_baseop_empty);
         }
       }
       else { // undecidable yet
-        retval = new AST::Unop(o, pj_unop_empty, NULL);
+        retval = new AST::Baseop(o, pj_baseop_empty);
       }
       break;
     }

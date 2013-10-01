@@ -117,6 +117,12 @@ Unop::Unop(OP *p_op, pj_op_type t, Term *kid)
 }
 
 
+Baseop::Baseop(OP *p_op, pj_op_type t)
+  : Op(p_op, t)
+{
+}
+
+
 Binop::Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2)
   : Op(p_op, t), is_assign_form(false)
 {
@@ -303,7 +309,12 @@ static void
 S_dump_op(PerlJIT::AST::Op *o, const char *op_str, bool is_assignment_form, int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  printf("%s '%s%s' (\n", op_str, o->name(), is_assignment_form ? "=" : "");
+  printf("%s '%s%s'", op_str, o->name(), is_assignment_form ? "=" : "");
+  if (o->op_class() == pj_opc_baseop) {
+    printf("\n");
+    return;
+  }
+  printf(" (\n");
   const unsigned int n = o->kids.size();
   for (unsigned int i = 0; i < n; ++i) {
     if (o->kids[i] == NULL) {
@@ -317,6 +328,9 @@ S_dump_op(PerlJIT::AST::Op *o, const char *op_str, bool is_assignment_form, int 
   printf(")\n");
 }
 
+
+void Baseop::dump(int indent_lvl)
+{ S_dump_op(this, "Baseop", false, indent_lvl); }
 
 void Unop::dump(int indent_lvl)
 { S_dump_op(this, "Unop", false, indent_lvl); }

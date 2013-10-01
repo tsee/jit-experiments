@@ -26,10 +26,15 @@
 # Format:
 # AST op, AST op class, op name, Perl OP, C flags, options, return type
 
-# unops (but eg. time(), OP_STUB are really null-ary...)
-pj_unop_empty,		pj_opc_unop,	(),		OP_STUB, 	KIDS_OPTIONAL,	,	Any # really: empty list in list/void or undef in scalar context
-pj_unop_time,		pj_opc_unop,	time(),		OP_TIME, 	KIDS_OPTIONAL,	emit,	Integer
-pj_unop_times,		pj_opc_unop,	times(),	OP_TMS, 	KIDS_OPTIONAL,	emit,	Scalar=Double List=Double Double Double Double
+# baseop
+pj_baseop_time,		pj_opc_baseop,	time(),		OP_TIME, 	0,	emit,	Integer
+pj_baseop_times,	pj_opc_baseop,	times(),	OP_TMS, 	0,	emit,	Scalar=Double List=Double Double Double Double
+pj_baseop_next,		pj_opc_baseop,	next,		OP_NEXT,	0,	emit,	Any # really never returns...
+pj_baseop_last,		pj_opc_baseop,	last,		OP_LAST,	0,	emit,	Any # really never returns...
+pj_baseop_redo,		pj_opc_baseop,	redo,		OP_REDO,	0,	emit,	Any # really never returns...
+pj_baseop_empty,	pj_opc_baseop,	(),		OP_STUB, 	0,	,	Any # really: empty list in list/void or undef in scalar context
+
+# unops (but some OP_STUB are really null-ary... => baseop)
 pj_unop_localtime,	pj_opc_unop,	localtime(),	OP_LOCALTIME, 	KIDS_OPTIONAL,	emit,	Scalar=String List=Integer Integer Integer Integer Integer Double Integer Integer Integer
 pj_unop_gmtime,		pj_opc_unop,    gmtime(),	OP_GMTIME, 	KIDS_OPTIONAL,	emit,	Scalar=String List=Integer Integer Integer Integer Integer Double Integer Integer Integer
 pj_unop_alarm,		pj_opc_unop,    alarm(),	OP_ALARM, 	KIDS_OPTIONAL,	emit,   Any

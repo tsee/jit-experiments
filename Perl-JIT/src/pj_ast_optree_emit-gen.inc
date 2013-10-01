@@ -6,8 +6,11 @@
 
 // case X: for the things that are simple to emit based on their Op class
 
-EMIT_UNOP_CODE_OPTIONAL(OP_TIME, pj_unop_time)
-EMIT_UNOP_CODE_OPTIONAL(OP_TMS, pj_unop_times)
+EMIT_BASEOP_CODE(OP_TIME, pj_baseop_time)
+EMIT_BASEOP_CODE(OP_TMS, pj_baseop_times)
+EMIT_BASEOP_CODE(OP_NEXT, pj_baseop_next)
+EMIT_BASEOP_CODE(OP_LAST, pj_baseop_last)
+EMIT_BASEOP_CODE(OP_REDO, pj_baseop_redo)
 EMIT_UNOP_CODE_OPTIONAL(OP_LOCALTIME, pj_unop_localtime)
 EMIT_UNOP_CODE_OPTIONAL(OP_GMTIME, pj_unop_gmtime)
 EMIT_UNOP_CODE_OPTIONAL(OP_ALARM, pj_unop_alarm)

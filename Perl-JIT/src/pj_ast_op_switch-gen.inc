@@ -76,6 +76,7 @@
   || (int)otype == OP_INDEX \
   || (int)otype == OP_INT \
   || (int)otype == OP_JOIN \
+  || (int)otype == OP_LAST \
   || (int)otype == OP_LC \
   || (int)otype == OP_LCFIRST \
   || (int)otype == OP_LE \
@@ -96,6 +97,7 @@
   || (int)otype == OP_NCMP \
   || (int)otype == OP_NE \
   || (int)otype == OP_NEGATE \
+  || (int)otype == OP_NEXT \
   || (int)otype == OP_NOT \
   || (int)otype == OP_OCT \
   || (int)otype == OP_ORASSIGN \
@@ -114,6 +116,7 @@
   || (int)otype == OP_RAND \
   || (int)otype == OP_READ \
   || (int)otype == OP_READLINK \
+  || (int)otype == OP_REDO \
   || (int)otype == OP_RENAME \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
@@ -240,6 +243,7 @@
   || (int)otype == OP_INDEX \
   || (int)otype == OP_INT \
   || (int)otype == OP_JOIN \
+  || (int)otype == OP_LAST \
   || (int)otype == OP_LC \
   || (int)otype == OP_LCFIRST \
   || (int)otype == OP_LE \
@@ -260,6 +264,7 @@
   || (int)otype == OP_NCMP \
   || (int)otype == OP_NE \
   || (int)otype == OP_NEGATE \
+  || (int)otype == OP_NEXT \
   || (int)otype == OP_NOT \
   || (int)otype == OP_NULL \
   || (int)otype == OP_OCT \
@@ -283,6 +288,7 @@
   || (int)otype == OP_RAND \
   || (int)otype == OP_READ \
   || (int)otype == OP_READLINK \
+  || (int)otype == OP_REDO \
   || (int)otype == OP_RENAME \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
