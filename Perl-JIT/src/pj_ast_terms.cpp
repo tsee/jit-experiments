@@ -334,7 +334,7 @@ void BareBlock::dump(int indent_lvl)
   S_dump_tree_indent(indent_lvl);
   printf("BareBlock (\n");
   body->dump(indent_lvl + 1);
-  if (continuation) {
+  if (continuation->type != pj_ttype_empty) {
     S_dump_tree_indent(indent_lvl);
     printf(") Continue (\n");
     continuation->dump(indent_lvl + 1);
@@ -349,7 +349,7 @@ void While::dump(int indent_lvl)
   printf("%s (\n", negated ? "Until": "While");
   condition->dump(indent_lvl + 2);
   body->dump(indent_lvl + 1);
-  if (continuation) {
+  if (continuation->type != pj_ttype_empty) {
     S_dump_tree_indent(indent_lvl);
     printf(") Continue (\n");
     continuation->dump(indent_lvl + 1);
@@ -503,7 +503,7 @@ std::vector<PerlJIT::AST::Term *> BareBlock::get_kids()
   std::vector<PerlJIT::AST::Term *> kids;
 
   kids.push_back(body);
-  if (continuation)
+  if (continuation->type != pj_ttype_empty)
     kids.push_back(continuation);
 
   return kids;
@@ -515,7 +515,7 @@ std::vector<PerlJIT::AST::Term *> While::get_kids()
 
   kids.push_back(condition);
   kids.push_back(body);
-  if (continuation)
+  if (continuation->type != pj_ttype_empty)
     kids.push_back(continuation);
 
   return kids;
