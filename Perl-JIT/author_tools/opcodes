@@ -115,6 +115,7 @@ pj_unop_ft_binary,	pj_opc_unop,	ft -B,		OP_FTBINARY,	KIDS_OPTIONAL,	emit,	Scalar
 pj_unop_exit,		pj_opc_unop,	exit(),		OP_EXIT,	KIDS_OPTIONAL,	emit,	Scalar
 pj_unop_backtick,	pj_opc_unop,	backticks,	OP_BACKTICK,	0,	emit,	Scalar
 pj_unop_pos,		pj_opc_unop,	pos(),		OP_POS,		0,	emit,	Scalar
+pj_unop_ref,		pj_opc_unop,	ref(),		OP_REF,		KIDS_OPTIONAL,	emit,	String
 
 
 # binops

@@ -90,6 +90,7 @@
   INT_CONST(pj_unop_exit);
   INT_CONST(pj_unop_backtick);
   INT_CONST(pj_unop_pos);
+  INT_CONST(pj_unop_ref);
   INT_CONST(pj_binop_add);
   INT_CONST(pj_binop_subtract);
   INT_CONST(pj_binop_multiply);

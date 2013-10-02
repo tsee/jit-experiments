@@ -117,6 +117,7 @@
   || (int)otype == OP_READ \
   || (int)otype == OP_READLINK \
   || (int)otype == OP_REDO \
+  || (int)otype == OP_REF \
   || (int)otype == OP_RENAME \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
@@ -289,6 +290,7 @@
   || (int)otype == OP_READ \
   || (int)otype == OP_READLINK \
   || (int)otype == OP_REDO \
+  || (int)otype == OP_REF \
   || (int)otype == OP_RENAME \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
