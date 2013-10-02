@@ -110,6 +110,7 @@
   || (int)otype == OP_PREDEC \
   || (int)otype == OP_PREINC \
   || (int)otype == OP_PRINT \
+  || (int)otype == OP_PROTOTYPE \
   || (int)otype == OP_PRTF \
   || (int)otype == OP_PUSH \
   || (int)otype == OP_QUOTEMETA \
@@ -283,6 +284,7 @@
   || (int)otype == OP_PREDEC \
   || (int)otype == OP_PREINC \
   || (int)otype == OP_PRINT \
+  || (int)otype == OP_PROTOTYPE \
   || (int)otype == OP_PRTF \
   || (int)otype == OP_PUSH \
   || (int)otype == OP_QUOTEMETA \

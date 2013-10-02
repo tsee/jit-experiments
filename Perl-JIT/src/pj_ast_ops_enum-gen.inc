@@ -96,6 +96,7 @@ typedef enum {
   pj_unop_backtick,
   pj_unop_pos,
   pj_unop_ref,
+  pj_unop_prototype,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -178,7 +179,7 @@ typedef enum {
   pj_baseop_LAST  = pj_baseop_empty,
 
   pj_unop_FIRST = pj_unop_localtime,
-  pj_unop_LAST  = pj_unop_ref,
+  pj_unop_LAST  = pj_unop_prototype,
 
   pj_binop_FIRST = pj_binop_add,
   pj_binop_LAST  = pj_binop_mkdir,

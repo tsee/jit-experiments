@@ -14,7 +14,6 @@ padany		private value		ck_null		d0
 pushre		push regexp		ck_null		d/
 
 rv2cv		subroutine dereference	ck_rvconst	d1
-prototype	subroutine prototype	ck_null		s%	S
 
 #done?
 refgen		reference constructor	ck_spair	m1	L
