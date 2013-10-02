@@ -80,6 +80,7 @@ class Perl::JIT::AST::While : public Perl::JIT::AST::Term
 {
   Perl::JIT::AST::Term *condition %get;
   bool negated %get;
+  bool evaluate_after %get;
   Perl::JIT::AST::Term *body %get;
   Perl::JIT::AST::Term *continuation %get;
 

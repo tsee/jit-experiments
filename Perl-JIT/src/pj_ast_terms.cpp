@@ -151,9 +151,10 @@ BareBlock::BareBlock(OP *p_op, Term *_body, Term *_continuation)
 {}
 
 
-While::While(OP *p_op, Term *_condition, bool _negated,
+While::While(OP *p_op, Term *_condition, bool _negated, bool _evaluate_after,
              Term *_body, Term *_continuation)
-  : Term(p_op, pj_ttype_while), condition(_condition), negated(_negated),
+  : Term(p_op, pj_ttype_while), condition(_condition),
+    evaluate_after(_evaluate_after), negated(_negated),
     body(_body), continuation(_continuation)
 {}
 
@@ -346,7 +347,7 @@ void BareBlock::dump(int indent_lvl)
 void While::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  printf("%s (\n", negated ? "Until": "While");
+  printf("%s%s (\n", evaluate_after ? "Do" : "", negated ? "Until": "While");
   condition->dump(indent_lvl + 2);
   body->dump(indent_lvl + 1);
   if (continuation->type != pj_ttype_empty) {

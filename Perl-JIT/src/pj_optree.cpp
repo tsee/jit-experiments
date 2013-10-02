@@ -374,8 +374,10 @@ pj_build_while(pTHX_ OP *start, LOGOP *condition, OP *body, OP *cont, OPTreeJITC
 {
   PerlJIT::AST::Term *ast_condition = NULL, *ast_body = NULL, *ast_cont = NULL;
   bool is_until = false;
+  bool is_do = false;
 
   if (condition) {
+    is_do = condition->op_other == cUNOPx(start)->op_first->op_next;
     if (condition->op_type == OP_OR &&
         condition->op_first->op_type == OP_NULL &&
         condition->op_first->op_targ == OP_NOT) {
@@ -389,7 +391,7 @@ pj_build_while(pTHX_ OP *start, LOGOP *condition, OP *body, OP *cont, OPTreeJITC
   ast_body = pj_build_body(aTHX_ body, visitor);
   ast_cont = pj_build_body(aTHX_ cont, visitor);
 
-  return new PerlJIT::AST::While(start, ast_condition, is_until,
+  return new PerlJIT::AST::While(start, ast_condition, is_until, is_do,
                                  ast_body, ast_cont);
 }
 
