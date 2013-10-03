@@ -773,7 +773,10 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       MAKE_DEFAULT_KID_VECTOR
       if (kid_terms.size() == 1)
         retval = kid_terms[0];
-      else if (0) { // FIXME if context is "list", don't emit this
+      else if (pj_op_context(OP_GIMME(o, pj_context_caller)) == pj_context_list) {
+        // FIXME this can often be flattened into the parent list!?
+        retval = new AST::List(kid_terms);
+        retval->perl_op = 0; // likely unnecessary, but just in case
       }
       else
         retval = new AST::Listop(o, pj_listop_list2scalar, kid_terms);
