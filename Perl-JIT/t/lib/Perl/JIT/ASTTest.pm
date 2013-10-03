@@ -8,6 +8,7 @@ no warnings $] < 5.018 ? 'redefine' : 'experimental';
 use warnings 'redefine';
 
 use Exporter 'import';
+use Carp qw(croak);
 
 use Perl::JIT qw(:all);
 use Test::Simple;
@@ -24,10 +25,12 @@ our @EXPORT = (qw(
   ast_while
   ast_until
   ast_for
+  ast_baseop
   ast_unop
   ast_binop
   ast_listop
   ast_block
+  ast_list
 
   ast_contains
 ), @Perl::JIT::EXPORT_OK);
@@ -106,6 +109,12 @@ sub _matches {
              _matches($ast->get_step, $pattern->{step}) &&
              _matches($ast->get_body, $pattern->{body});
     }
+    when ('baseop') {
+      return 0 unless $ast->get_type == pj_ttype_op;
+      return 0 unless $ast->op_class == pj_opc_unop;
+      return 0 unless $ast->get_optype == $pattern->{op};
+      return 1;
+    }
     when ('unop') {
       return 0 unless $ast->get_type == pj_ttype_op;
       return 0 unless $ast->op_class == pj_opc_unop;
@@ -140,6 +149,17 @@ sub _matches {
       my @kids = $ast->get_kids;
       die "Blocks can only have one kid" if @kids != 1;
       return _matches($kids[0], $pattern->{body});
+    }
+    when ('list') {
+      return 0 unless $ast->get_type == pj_ttype_list;
+      my @kids = $ast->get_kids;
+      return 0 unless @kids == @{$pattern->{terms}};
+
+      for my $i (0 .. $#kids) {
+        return 0 if !_matches($kids[$i], $pattern->{terms}[$i]);
+      }
+
+      return 1;
     }
   }
 }
@@ -253,14 +273,26 @@ sub ast_for {
           step => $step, body => $body};
 }
 
+sub ast_baseop {
+  my ($op) = @_;
+  croak("ast_baseop: Called with wrong number of parameters. Do you want a different class of op?")
+    if @_ != 1; 
+
+  return {type => 'baseop', op => $op};
+}
+
 sub ast_unop {
   my ($op, $term) = @_;
+  croak("ast_unop: Called with wrong number of parameters. Do you want a different class of op?")
+    if @_ != 2; 
 
   return {type => 'unop', op => $op, term => $term};
 }
 
 sub ast_binop {
   my ($op, $left, $right) = @_;
+  croak("ast_binop: Called with wrong number of parameters. Do you want a different class of op?")
+    if @_ != 3;
 
   return {type => 'binop', op => $op, left => $left, right => $right};
 }
@@ -269,6 +301,12 @@ sub ast_listop {
   my ($op, $terms) = @_;
 
   return {type => 'listop', op => $op, terms => $terms};
+}
+
+sub ast_list {
+  my (@terms) = @_;
+
+  return {type => 'list', terms => \@terms};
 }
 
 sub ast_block {
