@@ -124,6 +124,7 @@
   INT_CONST(pj_binop_concat);
   INT_CONST(pj_binop_sassign);
   INT_CONST(pj_binop_list_slice);
+  INT_CONST(pj_binop_array_slice);
   INT_CONST(pj_binop_aelem);
   INT_CONST(pj_binop_helem);
   INT_CONST(pj_binop_bless);

@@ -14,6 +14,7 @@
   || (int)otype == OP_ANDASSIGN \
   || (int)otype == OP_ANONHASH \
   || (int)otype == OP_ANONLIST \
+  || (int)otype == OP_ASLICE \
   || (int)otype == OP_ATAN2 \
   || (int)otype == OP_AV2ARYLEN \
   || (int)otype == OP_BACKTICK \
@@ -180,6 +181,7 @@
   || (int)otype == OP_ANDASSIGN \
   || (int)otype == OP_ANONHASH \
   || (int)otype == OP_ANONLIST \
+  || (int)otype == OP_ASLICE \
   || (int)otype == OP_ATAN2 \
   || (int)otype == OP_AV2ARYLEN \
   || (int)otype == OP_BACKTICK \

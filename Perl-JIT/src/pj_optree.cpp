@@ -773,6 +773,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       MAKE_DEFAULT_KID_VECTOR
       if (kid_terms.size() == 1)
         retval = kid_terms[0];
+      else if (0) { // FIXME if context is "list", don't emit this
+      }
       else
         retval = new AST::Listop(o, pj_listop_list2scalar, kid_terms);
       break;
@@ -803,6 +805,41 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         return NULL;
       }
       retval = new AST::Binop(o, pj_binop_list_slice, kid1, new AST::List(tmp));
+      break;
+    }
+
+  case OP_ASLICE: {
+#ifndef NDEBUG
+      {
+        assert(o->op_flags & OPf_KIDS);
+        // Paranoid: Assert three children: pushmark, list, array
+        unsigned int nkids = 0;
+        OP *kid = ((UNOP*)o)->op_first;
+        assert(kid && kid->op_type == OP_PUSHMARK);
+        kid = kid->op_sibling;
+        assert(kid);
+        kid = kid->op_sibling;
+        assert(kid);
+        assert(!kid->op_sibling);
+      }
+#endif
+
+      // slice list; may be a real list op or just a single thing
+      OP *kid = ((UNOP *)o)->op_first->op_sibling;
+      AST::Term *kid_term = pj_build_ast(aTHX_ kid, visitor);
+      if (kid_term->type == pj_ttype_op
+          && ((AST::Op *)kid_term)->optype == pj_listop_list2scalar)
+      {
+        AST::Listop *listop = (AST::Listop *)kid_term;
+        AST::List *tmp = new AST::List(listop->kids);
+        listop->kids.clear();
+        delete kid_term;
+        kid_term = (AST::Term *)tmp;
+      }
+
+      // array
+      AST::Term *kid_term2 = pj_build_ast(aTHX_ kid->op_sibling, visitor);
+      retval = new AST::Binop(o, pj_binop_array_slice, kid_term, kid_term2);
       break;
     }
 
