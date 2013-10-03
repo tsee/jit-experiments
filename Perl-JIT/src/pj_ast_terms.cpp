@@ -160,7 +160,7 @@ BareBlock::BareBlock(OP *p_op, Term *_body, Term *_continuation)
 While::While(OP *p_op, Term *_condition, bool _negated, bool _evaluate_after,
              Term *_body, Term *_continuation)
   : Term(p_op, pj_ttype_while), condition(_condition),
-    evaluate_after(_evaluate_after), negated(_negated),
+    negated(_negated), evaluate_after(_evaluate_after),
     body(_body), continuation(_continuation)
 {}
 
