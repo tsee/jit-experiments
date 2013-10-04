@@ -154,6 +154,7 @@
   || (int)otype == OP_STAT \
   || (int)otype == OP_STUB \
   || (int)otype == OP_STUDY \
+  || (int)otype == OP_SUBST \
   || (int)otype == OP_SUBSTR \
   || (int)otype == OP_SUBTRACT \
   || (int)otype == OP_SYMLINK \
@@ -329,6 +330,7 @@
   || (int)otype == OP_STAT \
   || (int)otype == OP_STUB \
   || (int)otype == OP_STUDY \
+  || (int)otype == OP_SUBST \
   || (int)otype == OP_SUBSTR \
   || (int)otype == OP_SUBTRACT \
   || (int)otype == OP_SYMLINK \

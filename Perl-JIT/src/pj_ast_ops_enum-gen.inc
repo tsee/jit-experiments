@@ -168,6 +168,7 @@ typedef enum {
   pj_listop_split,
   pj_listop_warn,
   pj_listop_match,
+  pj_listop_subst,
   pj_listop_index,
   pj_listop_rindex,
 

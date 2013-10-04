@@ -153,6 +153,7 @@ EMIT_LISTOP_CODE(OP_UTIME, pj_listop_utime)
 EMIT_LISTOP_CODE(OP_SPLIT, pj_listop_split)
 EMIT_LISTOP_CODE(OP_WARN, pj_listop_warn)
 EMIT_LISTOP_CODE(OP_MATCH, pj_listop_match)
+EMIT_LISTOP_CODE(OP_SUBST, pj_listop_subst)
 EMIT_LISTOP_CODE(OP_INDEX, pj_listop_index)
 EMIT_LISTOP_CODE(OP_RINDEX, pj_listop_rindex)
 

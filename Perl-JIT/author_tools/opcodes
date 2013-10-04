@@ -189,6 +189,7 @@ pj_listop_utime,	pj_opc_listop,	utime(),	OP_UTIME,	0,	emit,	UnsignedInteger
 pj_listop_split,	pj_opc_listop,	split(),	OP_SPLIT,	0,	emit,	Scalar=Any List=List[Any]
 pj_listop_warn,		pj_opc_listop,	warn(),		OP_WARN,	0,	emit,	UnsignedInteger # Boolean (yes)
 pj_listop_match,	pj_opc_listop,	regexp match,	OP_MATCH,	0,	emit,	Scalar=Any List=List[Any] # could be a binop?
+pj_listop_subst,	pj_opc_listop,	regexp subst,	OP_SUBST,	0,	emit,	Scalar=Any List=List[Any] # could be a binop?
 pj_listop_index,	pj_opc_listop,	index(),	OP_INDEX,	0,	emit,	Integer
 pj_listop_rindex,	pj_opc_listop,	rindex(),	OP_RINDEX,	0,	emit,	Integer
 
