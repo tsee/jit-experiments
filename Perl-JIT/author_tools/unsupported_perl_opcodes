@@ -63,8 +63,6 @@ smartmatch	smart match		ck_smartmatch	s2
 
 formline	formline		ck_fun		ms@	S L
 
-aslice		array slice		ck_null		m@	A L
-
 aeach		each on array		ck_each		%	A
 akeys		keys on array		ck_each		t%	A
 avalues		values on array		ck_each		t%	A

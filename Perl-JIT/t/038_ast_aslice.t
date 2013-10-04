@@ -21,5 +21,16 @@ ast_contains(sub { my $x; @global[$global, 2, $x, @global] },
                ),
                ast_global('@global')
              ));
+ast_contains(sub { my $x; @global[($global, (2, ($x))), (@global)] },
+             ast_binop(
+               pj_binop_array_slice,
+               ast_list(
+                 ast_global('$global'),
+                 ast_constant(2),
+                 ast_lexical('$x'),
+                 ast_global('@global'),
+               ),
+               ast_global('@global')
+             ));
 
 done_testing();

@@ -27,8 +27,26 @@ List::List()
 {}
 
 List::List(const std::vector<Term *> &kid_terms)
-  : Term(NULL, pj_ttype_list), kids(kid_terms)
-{}
+  : Term(NULL, pj_ttype_list)
+{
+  // Flatten nested AST::List's. Need only one level of
+  // flattening since they all flattened on construction (hopefully).
+  const unsigned int n = kid_terms.size();
+  for (unsigned int i = 0; i < n; ++i) {
+    if (kid_terms[i]->type == pj_ttype_list) {
+      List *l = (List *)kid_terms[i];
+      // transfer ownership if sub-elements
+      std::vector<Term *> &nested_kids = l->kids;
+      for (unsigned int j = 0; j < nested_kids.size(); ++j) {
+        kids.push_back(nested_kids[j]);
+      }
+      nested_kids.clear();
+      delete l;
+    }
+    else
+      kids.push_back(kid_terms[i]);
+  }
+}
 
 Constant::Constant(OP *p_op, Type *v_type)
   : Term(p_op, pj_ttype_constant, v_type)
