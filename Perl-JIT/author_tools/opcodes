@@ -192,5 +192,6 @@ pj_listop_match,	pj_opc_listop,	regexp match,	OP_MATCH,	0,	emit,	Scalar=Any List
 pj_listop_subst,	pj_opc_listop,	regexp subst,	OP_SUBST,	0,	emit,	Scalar=Any List=List[Any] # could be a binop?
 pj_listop_index,	pj_opc_listop,	index(),	OP_INDEX,	0,	emit,	Integer
 pj_listop_rindex,	pj_opc_listop,	rindex(),	OP_RINDEX,	0,	emit,	Integer
+pj_listop_repeat,	pj_opc_listop,	x operator,	OP_REPEAT,	0,	,	Scalar=Any List=List[Any]
 
 pj_op_scope,		pj_opc_block,	scope,		OP_SCOPE,	0,	,	Scalar=Any List=List[Any]

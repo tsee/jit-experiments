@@ -233,20 +233,20 @@ pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::T
   unsigned int ikid = 0;
   if (o->op_flags & OPf_KIDS) {
     for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
-      PJ_DEBUG_2("pj_build_ast considering kid (%u) type %s\n", ikid, OP_NAME(kid));
+      PJ_DEBUG_2("pj_build_kid_terms considering kid (%u) type %s\n", ikid, OP_NAME(kid));
       if (PJ_DEBUGGING && kid->op_type == OP_NULL) {
-        printf("             kid is OP_NULL and used to be %s\n", PL_op_name[kid->op_targ]);
+        printf("                   kid is OP_NULL and used to be %s\n", PL_op_name[kid->op_targ]);
       }
 
       if (kid->op_type == OP_NULL && !(kid->op_flags & OPf_KIDS)) {
-        PJ_DEBUG_1("Skipping kid (%u) since it's an OP_NULL without kids.\n", ikid);
+        PJ_DEBUG_1("pj_build_kid_terms skipping kid (%u) since it's an OP_NULL without kids.\n", ikid);
         continue;
       }
 
       // FIXME possibly wrong. PUSHMARK assumed to be an implementation detail that is not
       //       strictly necessary in an AST listop. Totally speculative.
       if (kid->op_type == OP_PUSHMARK && !(kid->op_flags & OPf_KIDS)) {
-        PJ_DEBUG_1("Skipping kid (%u) since it's an OP_PUSHMARK without kids.\n", ikid);
+        PJ_DEBUG_1("pj_build_kid_terms skipping kid (%u) since it's an OP_PUSHMARK without kids.\n", ikid);
         continue;
       }
 
@@ -255,20 +255,21 @@ pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::T
       // Handle a few special kid cases
       if (kid_term == NULL) {
         // Failed to build sub-AST, free ASTs build thus far before bailing
-        PJ_DEBUG("Failed to build sub-AST - unwinding.\n");
+        PJ_DEBUG("pj_build_kid_terms failed to build sub-AST - unwinding.\n");
         pj_free_term_vector(aTHX_ kid_terms);
         return 1;
       }
       else if (kid_term->type == pj_ttype_op && ((AST::Op *)kid_term)->optype == pj_baseop_empty) {
         // empty list is not really a kid, don't include in child list
         delete kid_term;
+        // FIXME segv on "perl author_tools/jit_ast_dump.pl -c -e '@x = () x 12'" since the OP_STUB is "important"
       }
       else {
         kid_terms.push_back(kid_term);
       }
 
       if (PJ_DEBUGGING)
-        printf("pj_build_ast got kid (%u, %p) of type %s in return\n", ikid, kid_term, kid_term->perl_class());
+        printf("pj_build_kid_terms got kid (%u, %p) of type %s in return\n", ikid, kid_term, kid_term->perl_class());
       ++ikid;
     } // end for kids
   } // end if have kids
@@ -612,6 +613,21 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       break;
     }
 
+  case OP_REPEAT: {
+      MAKE_DEFAULT_KID_VECTOR
+      if (kid_terms.size() == 1) {
+        // One list. Weird edge case in Perl (IMO). Move repetition out.
+        assert(kid_terms[0]->type == pj_ttype_list);
+        AST::List *l = (AST::List *)kid_terms[0];
+        assert(l->kids.size() >= 2);
+        AST::Term *rep = l->kids.back();
+        l->kids.pop_back();
+        kid_terms.push_back(rep);
+      }
+      retval = new AST::Listop(o, pj_listop_repeat, kid_terms);
+      break;
+    }
+
   case OP_NULL: {
       const unsigned int targ_otype = (unsigned int)o->op_targ;
       MAKE_DEFAULT_KID_VECTOR
@@ -621,6 +637,9 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         retval = kid_terms[0];
         if (kid_terms.size() > 1)
           delete kid_terms[1];
+      }
+      else if (targ_otype == OP_LIST) {
+        retval = new AST::List(kid_terms);
       }
       else if (kid_terms.size() == 1) {
         if (o->op_targ == 0) {

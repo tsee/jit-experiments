@@ -171,6 +171,7 @@ typedef enum {
   pj_listop_subst,
   pj_listop_index,
   pj_listop_rindex,
+  pj_listop_repeat,
 
   // Op class: pj_opc_block
   pj_op_scope,
@@ -187,7 +188,7 @@ typedef enum {
   pj_binop_LAST  = pj_binop_mkdir,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_rindex,
+  pj_listop_LAST  = pj_listop_repeat,
 
   pj_block_FIRST = pj_op_scope,
   pj_block_LAST  = pj_op_scope,

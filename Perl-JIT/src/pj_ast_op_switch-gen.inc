@@ -121,6 +121,7 @@
   || (int)otype == OP_REDO \
   || (int)otype == OP_REF \
   || (int)otype == OP_RENAME \
+  || (int)otype == OP_REPEAT \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
   || (int)otype == OP_RIGHT_SHIFT \
@@ -297,6 +298,7 @@
   || (int)otype == OP_REDO \
   || (int)otype == OP_REF \
   || (int)otype == OP_RENAME \
+  || (int)otype == OP_REPEAT \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
   || (int)otype == OP_RIGHT_SHIFT \
