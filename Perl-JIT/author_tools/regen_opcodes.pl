@@ -112,6 +112,7 @@ close $enum_fh;
 my $op_switch_fh = prep_ast_gen_op_switch_file();
 print $op_switch_fh "// Macros to determine which Perl OPs to ASTify\n";
 foreach my $op (@op_defs) {
+  next if has_option($op, "declareonly");
   if (not has_option($op, "nonroot")) {
     $valid_root_ops{ $op->[PERL_CONST] } = 1;
   }

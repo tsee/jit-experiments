@@ -5,8 +5,9 @@
 # instead of the longer "PJ_ASTf_KIDS_OPTIONAL".
 
 # Options:
-# - emit => actually emit as code to include for main OP switch in src/pj_optree.c FIXME this does nothing yet
+# - emit => actually emit as code to include for main OP switch in src/pj_optree.c
 # - nonroot => don't build AST for this OP if it's at the root of a potential AST
+# - declareonly => never build AST for this OP
 
 # Alas, the order is important. Keep unops/binops/listops together, please.
 
