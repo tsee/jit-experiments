@@ -162,6 +162,7 @@ pj_binop_rename,	pj_opc_binop,	rename(),	OP_RENAME,	0,	emit,	UnsignedInteger # B
 pj_binop_link,		pj_opc_binop,	link(),		OP_LINK,	0,	emit,	UnsignedInteger # Boolean
 pj_binop_symlink,	pj_opc_binop,	symlink(),	OP_SYMLINK,	0,	emit,	UnsignedInteger # Boolean
 pj_binop_mkdir,		pj_opc_binop,	mkdir(),	OP_MKDIR,	KIDS_OPTIONAL,	emit,	UnsignedInteger # Boolean
+pj_binop_range,		pj_opc_binop,	range(),	OP_RANGE,	KIDS_OPTIONAL,	declareonly,	Scalar=UnsignedInteger List=List[Any]
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any

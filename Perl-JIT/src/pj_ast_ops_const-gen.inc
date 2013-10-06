@@ -133,6 +133,7 @@
   INT_CONST(pj_binop_link);
   INT_CONST(pj_binop_symlink);
   INT_CONST(pj_binop_mkdir);
+  INT_CONST(pj_binop_range);
   INT_CONST(pj_listop_ternary);
   INT_CONST(pj_listop_substr);
   INT_CONST(pj_listop_chop);

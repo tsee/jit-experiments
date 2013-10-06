@@ -140,6 +140,7 @@ typedef enum {
   pj_binop_link,
   pj_binop_symlink,
   pj_binop_mkdir,
+  pj_binop_range,
 
   // Op class: pj_opc_listop
   pj_listop_ternary,
@@ -185,7 +186,7 @@ typedef enum {
   pj_unop_LAST  = pj_unop_prototype,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_mkdir,
+  pj_binop_LAST  = pj_binop_range,
 
   pj_listop_FIRST = pj_listop_ternary,
   pj_listop_LAST  = pj_listop_repeat,
