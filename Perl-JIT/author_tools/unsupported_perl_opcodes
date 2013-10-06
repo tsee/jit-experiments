@@ -103,10 +103,6 @@ die		die			ck_die		dimst@	L
 reset		symbol reset		ck_fun		is%	S?
 
 dbstate		debug next statement	ck_null		s;	
-enteriter	foreach loop entry	ck_null		d{	
-iter		foreach loop iterator	ck_null		0	
-enterloop	loop entry		ck_null		d{	
-leaveloop	loop exit		ck_null		2	
 dump		dump			ck_null		ds}	
 goto		goto			ck_null		ds}	
 method_named	method with known name	ck_null		d$

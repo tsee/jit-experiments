@@ -25,6 +25,7 @@ our @EXPORT = (qw(
   ast_while
   ast_until
   ast_for
+  ast_foreach
   ast_baseop
   ast_unop
   ast_binop
@@ -108,6 +109,14 @@ sub _matches {
              _matches($ast->get_condition, $pattern->{condition}) &&
              _matches($ast->get_step, $pattern->{step}) &&
              _matches($ast->get_body, $pattern->{body});
+    }
+    when ('foreach') {
+      return 0 unless $ast->get_type == pj_ttype_foreach;
+      return _matches($ast->get_iterator, $pattern->{iterator}) &&
+             _matches($ast->get_expression, $pattern->{expression}) &&
+             _matches($ast->get_body, $pattern->{body}) &&
+             (!defined $pattern->{continuation} ||
+              _matches($ast->get_continuation, $pattern->{continuation}));
     }
     when ('baseop') {
       return 0 unless $ast->get_type == pj_ttype_op;
@@ -216,9 +225,10 @@ sub ast_lexical {
 
 sub ast_global {
   my ($name) = @_;
-  die "Invalid name '$name'" unless $name =~ /^([\$\@\%])(.+)$/;
+  die "Invalid name '$name'" unless $name =~ /^([\$\@\%\*])(.+)$/;
   my $sigil = $1 eq '$' ? pj_sigil_scalar :
               $1 eq '@' ? pj_sigil_array :
+              $1 eq '*' ? pj_sigil_glob :
                           pj_sigil_hash;
 
   return {type => 'global', sigil => $sigil, name => $2};
@@ -271,6 +281,13 @@ sub ast_for {
 
   return {type => 'for', init => $init, condition => $condition,
           step => $step, body => $body};
+}
+
+sub ast_foreach {
+  my ($iterator, $expression, $body, $continuation) = @_;
+
+  return {type => 'foreach', iterator => $iterator, expression => $expression,
+          body => $body, continuation => $continuation};
 }
 
 sub ast_baseop {

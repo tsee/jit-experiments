@@ -189,6 +189,12 @@ For::For(OP *p_op, Term *_init, Term *_condition, Term *_step, Term *_body)
 {}
 
 
+Foreach::Foreach(OP *p_op, Term *_iterator, Term *_expression, Term *_body, Term *_continuation)
+  : Term(p_op, pj_ttype_foreach), iterator(_iterator), expression(_expression),
+    body(_body), continuation(_continuation)
+{}
+
+
 Statement::Statement(OP *p_nextstate, Term *term)
   : Term(p_nextstate, pj_ttype_statement)
 {
@@ -403,6 +409,22 @@ void For::dump(int indent_lvl)
   printf(")\n");
 }
 
+void Foreach::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("Foreach (\n");
+  iterator->dump(indent_lvl + 2);
+  expression->dump(indent_lvl + 2);
+  body->dump(indent_lvl + 1);
+  if (continuation->type != pj_ttype_empty) {
+    S_dump_tree_indent(indent_lvl);
+    printf(") Continue (\n");
+    continuation->dump(indent_lvl + 1);
+  }
+  S_dump_tree_indent(indent_lvl);
+  printf(")\n");
+}
+
 void Empty::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
@@ -562,6 +584,18 @@ std::vector<PerlJIT::AST::Term *> For::get_kids()
   kids.push_back(condition);
   kids.push_back(step);
   kids.push_back(body);
+
+  return kids;
+}
+
+std::vector<PerlJIT::AST::Term *> Foreach::get_kids()
+{
+  std::vector<PerlJIT::AST::Term *> kids;
+
+  kids.push_back(iterator);
+  kids.push_back(expression);
+  kids.push_back(body);
+  kids.push_back(continuation);
 
   return kids;
 }

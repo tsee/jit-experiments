@@ -103,9 +103,7 @@ namespace PerlJIT {
       PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
 
       /* Attempt JIT if the right OP type. Don't recurse if so. */
-      if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) ||
-          /* temporary -- leaving foreach for another weekend... */
-          (otype == OP_LEAVELOOP && cUNOPo->op_first->op_type != OP_ENTERITER)) {
+      if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype)) {
         PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
         if (ast) {
           if (last_nextstate && last_nextstate->op_sibling == o)
@@ -152,6 +150,7 @@ namespace PerlJIT {
       // or otherwise create default type
       pj_variable_sigil sigil =
         reference->op_type == OP_PADSV         ? pj_sigil_scalar :
+        reference->op_type == OP_ENTERITER     ? pj_sigil_scalar :
         reference->op_type == OP_PADAV         ? pj_sigil_array :
         reference->op_type == OP_AELEMFAST     ? pj_sigil_array :
         reference->op_type == OP_AELEMFAST_LEX ? pj_sigil_array :
@@ -407,6 +406,66 @@ pj_build_block(pTHX_ OP *start, OP *body, OP *cont, OPTreeJITCandidateFinder &vi
   return new PerlJIT::AST::BareBlock(start, ast_body, ast_cont);
 }
 
+
+static AST::Term *
+pj_build_foreach(pTHX_ OP *start, OP *body, OP *cont, OPTreeJITCandidateFinder &visitor)
+{
+  AST::Term *ast_body = NULL, *ast_cont = NULL, *ast_iterator = NULL, *ast_expression = NULL;
+  LOOP *enter = cLOOPx(cBINOPx(start)->op_first);
+  OP *args = cUNOPx(enter->op_first->op_sibling)->op_first->op_sibling;
+
+  // iterator
+  if (enter->op_targ) {
+    if (enter->op_private & OPpLVAL_INTRO)
+      ast_iterator = visitor.get_declaration((OP *) enter, (OP *) enter);
+    else
+      ast_iterator = new AST::Lexical((OP *) enter, visitor.get_declaration(0, (OP *) enter));
+  } else {
+    OP *iterator = enter->op_first->op_sibling->op_sibling;
+
+    if (iterator->op_type == OP_GV)
+      ast_iterator = new AST::Global(iterator, pj_sigil_glob);
+    else
+      ast_iterator = pj_build_ast(aTHX_ iterator, visitor);
+  }
+
+  OP *expr = NULL;
+  if (enter->op_flags & OPf_STACKED) {
+    // handles 'for $a..$b' and 'for @x'
+    OP *first = cUNOPx(enter->op_first->op_sibling)->op_first->op_sibling;
+    OP *second = first->op_sibling;
+
+    if (second)
+      ast_expression = new AST::Binop(enter->op_first->op_sibling, pj_binop_range,
+                                      pj_build_ast(aTHX_ first, visitor),
+                                      pj_build_ast(aTHX_ second, visitor));
+    else
+      expr = first;
+  } else {
+    expr = enter->op_first->op_sibling;
+  }
+
+  // skip over optimized-out reverse()
+  if (expr && expr->op_type == OP_NULL && expr->op_targ == OP_REVERSE)
+    expr = cLISTOPx(expr)->op_first->op_sibling;
+  if (!ast_expression)
+    ast_expression = pj_build_ast(aTHX_ expr, visitor);
+
+  // add extra node for the optimized-out reverse
+  if (enter->op_private & OPpITER_REVERSED) {
+    std::vector<AST::Term *> kids;
+
+    kids.resize(1);
+    kids[0] = ast_expression;
+    ast_expression = new AST::Listop(enter->op_first->op_sibling, pj_listop_reverse, kids);
+  }
+
+  ast_body = pj_build_body(aTHX_ body, visitor);
+  ast_cont = pj_build_body(aTHX_ cont, visitor);
+
+  return new AST::Foreach(start, ast_iterator, ast_expression, ast_body, ast_cont);
+}
+
 static PerlJIT::AST::Term *
 pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinder &visitor)
 {
@@ -447,6 +506,8 @@ pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinde
 
   if (init || step)
     return pj_build_for(aTHX_ start, init, cond, step, body, visitor);
+  else if (enter->op_type == OP_ENTERITER)
+    return pj_build_foreach(aTHX_ start, body, cont, visitor);
   else if (is_loop)
     return pj_build_while(aTHX_ start, cond, body, cont, visitor);
   else
@@ -463,9 +524,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 
   const unsigned int otype = o->op_type;
   PJ_DEBUG_1("pj_build_ast ASTing OP of type %s\n", OP_NAME(o));
-  if (!IS_AST_COMPATIBLE_OP_TYPE(otype) &&
-      /* temporary -- leaving foreach for another weekend... */
-      !(otype == OP_LEAVELOOP && cUNOPo->op_first->op_type != OP_ENTERITER)) {
+  if (!IS_AST_COMPATIBLE_OP_TYPE(otype)) {
     // Can't represent OP with AST. So instead, recursively scan for
     // separate candidates and treat as subtree.
     PJ_DEBUG_1("Cannot represent this OP with AST. Emitting OP tree term in AST (Perl OP=%s).\n", OP_NAME(o));
