@@ -9,9 +9,11 @@ use lib File::Spec->catdir($Bin, 'inc');
 use Getopt::Long qw(GetOptions);
 my $DEBUG = $ENV{DEBUG};
 my $DEBUG_SYMBOLS = $ENV{DEBUG_SYMBOLS};
+my $ASSERTS = $ENV{ASSERTS};
 GetOptions(
   'debug|DEBUG+' => \$DEBUG,
   'g' => \$DEBUG_SYMBOLS,
+  'a' => \$ASSERTS,
 );
 
 use Module::Build::PerlJIT;
@@ -27,10 +29,11 @@ if ($DEBUG) { # superset of $DEBUG_SYMBOLS
   }
 }
 elsif ($DEBUG_SYMBOLS) { # subset of $DEBUG
-  push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra -DNDEBUG);
+  push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra);
   push @extra_compiler_flags, qw(-Wno-unused-function -Wno-unused-parameter -Wno-unused-variable);
 }
-else {
+
+if (!$ASSERTS and !$DEBUG) {
   push @extra_compiler_flags, qw(-DNDEBUG);
 }
 
