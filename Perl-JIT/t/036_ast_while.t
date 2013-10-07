@@ -56,6 +56,11 @@ ast_contains(sub { my $i; while (1) { } },
                ast_empty(),
                ast_empty(),
              ));
+ast_contains(sub { my $i; while (1) { 1 } },
+             ast_while(
+               ast_empty(),
+               ast_empty(),
+             ));
 ast_contains(sub { my $i; while (1) { } continue { } },
              ast_while(
                ast_empty(),

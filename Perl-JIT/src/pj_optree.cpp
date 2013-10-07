@@ -293,7 +293,8 @@ pj_build_targmy_assignment(PerlJIT::AST::Term *term, OPTreeJITCandidateFinder &v
 static PerlJIT::AST::Term *
 pj_build_block_or_term(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
 {
-  if (start->op_type != OP_NEXTSTATE)
+  if (start->op_type != OP_NEXTSTATE &&
+      (start->op_type != OP_NULL || start->op_flags & OPf_KIDS))
     return pj_build_ast(aTHX_ start, visitor);
 
   AST::StatementSequence *seq = new AST::StatementSequence();
@@ -327,7 +328,12 @@ pj_build_block_or_term(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
     start = start->op_sibling;
   }
 
-  return seq;
+  if (seq->kids.size())
+    return seq;
+
+  // empty sequence, return an empty statement
+  delete seq;
+  return new AST::Empty();
 }
 
 static PerlJIT::AST::Term *

@@ -34,6 +34,12 @@ ast_contains(sub { for (0..9) { my $j = $_ } },
                    ast_binop(pj_binop_sassign, ast_lexical('$j'), ast_global('$_')),
                ]),
              ));
+ast_contains(sub { for (0..9) { 1 } },
+             ast_foreach(
+               ast_global('*_'),
+               ast_binop(pj_binop_range, ast_constant(0), ast_constant(9)),
+               ast_empty(),
+             ));
 ast_contains(sub { my $j = $_ for 0..9 },
              ast_foreach(
                ast_global('*_'),
