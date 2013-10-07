@@ -18,7 +18,6 @@ libjit/ar-lib
 libjit/m4
 libjit/compile
 libjit/test-driver
-DEBUGGING
 dev_Build.PL
 ctest/100c_ast
 CTESTS

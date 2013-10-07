@@ -25,9 +25,6 @@ if ($DEBUG) { # superset of $DEBUG_SYMBOLS
   else {
     push @extra_compiler_flags, qw(-Wno-unused-function -Wno-unused-parameter -Wno-unused-variable);
   }
-
-  open my $fh, ">", "DEBUGGING" or die $!;
-  close $fh or die $!;
 }
 elsif ($DEBUG_SYMBOLS) { # subset of $DEBUG
   push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra -DNDEBUG);

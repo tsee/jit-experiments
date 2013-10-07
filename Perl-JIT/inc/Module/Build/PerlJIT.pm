@@ -41,7 +41,6 @@ sub ACTION_code {
 
 sub ACTION_realclean {
     my ($self) = @_;
-    unlink("DEBUGGING");
     return $self->SUPER::ACTION_realclean(@_);
 }
 
