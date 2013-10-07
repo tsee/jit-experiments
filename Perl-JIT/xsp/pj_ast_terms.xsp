@@ -44,6 +44,9 @@ class Perl::JIT::AST::Op : public Perl::JIT::AST::Term
     %code{% RETVAL = THIS->flags() & PJ_ASTf_OVERLOAD; %};
 };
 
+class Perl::JIT::AST::Baseop : public Perl::JIT::AST::Op
+{};
+
 class Perl::JIT::AST::Unop : public Perl::JIT::AST::Op
 {
   Perl::JIT::AST::Term *get_kid() %code{% RETVAL = THIS->kids[0]; %};
