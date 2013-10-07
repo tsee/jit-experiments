@@ -14,8 +14,8 @@
 # Special: Additional valid OPs for the filter macro.
 # - OP_SCHOP is the single-parameter version of OP_CHOP. Treat it as the same
 #   thing in the AST. Ditto for OP_SCHOMP.
-#! jittable_root_ops=OP_SCHOP OP_SCHOMP OP_ANDASSIGN OP_ORASSIGN OP_DORASSIGN OP_LEAVE OP_LEAVELOOP
-#! jittable_ops=OP_CONST OP_PADSV OP_PADAV OP_PADHV OP_NULL OP_GVSV OP_AELEMFAST OP_AELEMFAST_LEX
+#! jittable_root_ops=OP_SCHOP OP_SCHOMP OP_ANDASSIGN OP_ORASSIGN OP_DORASSIGN OP_LEAVE OP_LEAVELOOP OP_PADSV OP_PADAV OP_PADHV
+#! jittable_ops=OP_CONST OP_NULL OP_GVSV OP_AELEMFAST OP_AELEMFAST_LEX
 
 # Return types below are separated between Scalar and List context (Context=Type)
 # and in the absence of an =, the type goes for both contexts. The Numeric type

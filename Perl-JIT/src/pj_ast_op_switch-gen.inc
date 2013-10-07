@@ -104,6 +104,9 @@
   || (int)otype == OP_OCT \
   || (int)otype == OP_ORASSIGN \
   || (int)otype == OP_ORD \
+  || (int)otype == OP_PADAV \
+  || (int)otype == OP_PADHV \
+  || (int)otype == OP_PADSV \
   || (int)otype == OP_POP \
   || (int)otype == OP_POS \
   || (int)otype == OP_POSTDEC \
