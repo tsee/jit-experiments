@@ -120,7 +120,7 @@ sub _matches {
     }
     when ('baseop') {
       return 0 unless $ast->get_type == pj_ttype_op;
-      return 0 unless $ast->op_class == pj_opc_unop;
+      return 0 unless $ast->op_class == pj_opc_baseop;
       return 0 unless $ast->get_optype == $pattern->{op};
       return 1;
     }
