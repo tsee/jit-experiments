@@ -78,8 +78,9 @@ pj_get_typed_variable_declarations(pTHX_ CV *cv)
 
 // Just advance the lexer until whitespace is found and return the
 // string up to that point as a C++ string.
+// Will stop at maxlen (and return "") unless maxlen is 0
 STATIC string
-S_lex_to_whitespace(pTHX)
+S_lex_to_whitespace(pTHX, STRLEN maxlen)
 {
   char *start = PL_parser->bufptr;
   while (1) {
@@ -89,6 +90,11 @@ S_lex_to_whitespace(pTHX)
       if (isSPACE(*s)) {
         lex_read_to(s); /* skip Perl's lexer/parser ahead to end of type */
         return string(start, (size_t)(s-start));
+      }
+      else if (maxlen && (size_t)(s-start) > maxlen) {
+        lex_read_to(s); /* skip Perl's lexer/parser ahead to end of type */
+        lex_read_space(0);
+        return string(""); /* end of code */
       }
       s++;
     }
@@ -117,7 +123,7 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
   if (c < 0 || isSPACE(c))
     croak("syntax error");
   // inch our way forward to end-of-type
-  string type_str =  S_lex_to_whitespace(aTHX);
+  string type_str =  S_lex_to_whitespace(aTHX, 0);
   if (type_str == string(""))
     croak("syntax error while extracting variable type");
 
@@ -125,7 +131,7 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
   if (type == NULL)
     croak("syntax error '%s' does not name a type", type_str.c_str());
 
-  // Skip space (which we know to exist from S_lex_to_whitespace
+  // Skip space (which we know to exist from S_lex_to_whitespace)
   lex_read_space(0);
 
   // Oh man, this is so wrong. Secretly inject a bit of code into the
@@ -169,12 +175,39 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
   *op_ptr = parsed_optree;
 }
 
+STATIC int
+S_parse_typed_keyword(pTHX)
+{
+  I32 c;
+
+  lex_read_space(0);
+  c = lex_peek_unichar(0);
+  // Read more into buffer if necessary
+  if (c < 0) {
+    if ( !lex_next_chunk(LEX_KEEP_PREVIOUS) )
+      return 0;
+    else
+      c = lex_peek_unichar(0);
+  }
+  if (c < 0 || isSPACE(c))
+    return 0;
+
+  char *end = NULL;
+  string typed_kw_str = S_peek_to_whitespace(aTHX, 5, &end);
+
+  if (typed_kw_str != string("typed")) {
+    return 0;
+  }
+  lex_read_to(end); // commit
+  printf("'%s'\n", typed_kw_str.c_str());
+  return 1;
+}
 
 // Main keyword plugin hook for JIT type annotations
 int
 pj_jit_type_keyword_plugin(pTHX_ char *keyword_ptr, STRLEN keyword_len, OP **op_ptr)
 {
-  /* Enforce lexical scope of this keyword plugin */
+  // Enforce lexical scope of this keyword plugin
   HV *hints;
   if (!(hints = GvHV(PL_hintgv)))
     return FALSE;
