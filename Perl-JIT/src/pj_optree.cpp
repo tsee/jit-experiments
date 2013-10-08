@@ -81,8 +81,17 @@ namespace PerlJIT {
     visit_control_t
     visit_op(pTHX_ OP *o, OP *parentop)
     {
-      unsigned int otype;
-      otype = o->op_type;
+      unsigned int otype = o->op_type;
+      bool astify_kid = false;
+
+      // handles top-level do{} blocks and if()/unless() statements; can
+      // be removed when removing the rest of the code handling statement
+      // sequences
+      if (otype == OP_NULL && (o->op_flags & OPf_KIDS)) {
+        unsigned int ktype = cUNOPo->op_first->op_type;
+
+        astify_kid = ktype == OP_SCOPE;
+      }
 
       if (otype == OP_NEXTSTATE) {
         last_nextstate = o;
@@ -103,8 +112,9 @@ namespace PerlJIT {
       PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
 
       /* Attempt JIT if the right OP type. Don't recurse if so. */
-      if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype)) {
-        PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ o, *this);
+      if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) || astify_kid) {
+        OP *source = astify_kid ? cUNOPo->op_first : o;
+        PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ source, *this);
         if (ast) {
           if (last_nextstate && last_nextstate->op_sibling == o)
             create_statement(ast);
