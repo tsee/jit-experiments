@@ -773,11 +773,14 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     }
 
   case OP_SCOPE: {
-      if (cLOOPo->op_first->op_type == OP_NULL &&
-          cLOOPo->op_first->op_targ == OP_NEXTSTATE) {
-        AST::Term *term = pj_build_ast(aTHX_ cLOOPo->op_first->op_sibling, visitor);
-        retval = new AST::Block(o, term);
+      AST::Term *term;
+      if (!cLOOPo->op_first->op_sibling) {
+        term = new AST::Empty();
       }
+      else {
+        term = pj_build_ast(aTHX_ cLOOPo->op_first->op_sibling, visitor);
+      }
+      retval = new AST::Block(o, term);
       break;
     }
 
