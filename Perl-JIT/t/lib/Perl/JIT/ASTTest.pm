@@ -57,6 +57,9 @@ sub _matches {
         when (pj_uint_type) {
           return $ast->get_uint_value == $pattern->{value};
         }
+        when (pj_unspecified_type) {
+          return !defined $pattern->{value};
+        }
         default {
           die "Unhandled constant type in pattern" ;
         }
