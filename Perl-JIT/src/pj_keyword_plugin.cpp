@@ -132,7 +132,7 @@ S_peek_to_whitespace(pTHX, STRLEN maxlen, char **endptr)
 // Parse a Perl::JIT type. Requires space before the type.
 // croaks on error.
 STATIC AST::Type *
-S_parse_type(pTHX, string &type_str)
+S_parse_type(pTHX)
 {
   I32 c;
 
@@ -145,13 +145,15 @@ S_parse_type(pTHX, string &type_str)
   c = lex_peek_unichar(0);
   if (c < 0 || isSPACE(c))
     croak("syntax error");
-
   // inch our way forward to end-of-type
-  type_str =  S_lex_to_whitespace(aTHX, 0);
+  string type_str =  S_lex_to_whitespace(aTHX, 0);
   if (type_str == string(""))
     croak("syntax error while extracting variable type");
 
-  return AST::parse_type(type_str);
+  AST::Type *type = AST::parse_type(type_str);
+  if (type == NULL)
+    croak("syntax error '%s' does not name a type", type_str.c_str());
+  return type;
 }
 
 // This handles the following cases, but doesn't include
@@ -163,11 +165,7 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
 {
   I32 c;
 
-  string type_str;
-  AST::Type *type = S_parse_type(aTHX, type_str);
-
-  if (type == NULL)
-    croak("syntax error '%s' does not name a type", type_str.c_str());
+  AST::Type *type = S_parse_type(aTHX);
 
   // Skip space (which we know to exist from S_lex_to_whitespace in S_parse_type)
   lex_read_space(0);
