@@ -494,8 +494,12 @@ pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinde
   if (has_cond) {
     cond = cLOGOPx(cUNOPx(enter->op_sibling)->op_first);
     lineseq = cLISTOPx(cond->op_first->op_sibling);
-  } else {
+  } else if (enter->op_sibling->op_type == OP_STUB) {
+    return new AST::Empty();
+  } else if (enter->op_sibling->op_type == OP_LINESEQ) {
     lineseq = cLISTOPx(enter->op_sibling);
+  } else {
+    return NULL;
   }
 
   bool is_loop = lineseq->op_last->op_type == OP_UNSTACK;

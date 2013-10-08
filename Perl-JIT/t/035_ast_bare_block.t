@@ -18,5 +18,10 @@ ast_contains(sub { my $i; {;} continue { ++$i } },
                ast_empty(),
                ast_unop(pj_unop_preinc, ast_lexical('$i')),
              ));
+ast_contains(sub { {;}; my $b },
+             ast_statementsequence([
+               ast_empty(),
+               ast_lexical('$b'),
+             ]));
 
 done_testing();
