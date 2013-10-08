@@ -129,12 +129,10 @@ S_peek_to_whitespace(pTHX, STRLEN maxlen, char **endptr)
   }
 }
 
-// This handles the following cases, but doesn't include
-// scanning over the "typed" keyword.
-// typed <type> SCALAR
-// typed <type> (DECL-LIST)
-STATIC void
-S_parse_typed_declaration(pTHX_ OP **op_ptr)
+// Parse a Perl::JIT type. Requires space before the type.
+// croaks on error.
+STATIC AST::Type *
+S_parse_type(pTHX, string &type_str)
 {
   I32 c;
 
@@ -147,16 +145,31 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
   c = lex_peek_unichar(0);
   if (c < 0 || isSPACE(c))
     croak("syntax error");
+
   // inch our way forward to end-of-type
-  string type_str =  S_lex_to_whitespace(aTHX, 0);
+  type_str =  S_lex_to_whitespace(aTHX, 0);
   if (type_str == string(""))
     croak("syntax error while extracting variable type");
 
-  AST::Type *type = AST::parse_type(type_str);
+  return AST::parse_type(type_str);
+}
+
+// This handles the following cases, but doesn't include
+// scanning over the "typed" keyword.
+// typed <type> SCALAR
+// typed <type> (DECL-LIST)
+STATIC void
+S_parse_typed_declaration(pTHX_ OP **op_ptr)
+{
+  I32 c;
+
+  string type_str;
+  AST::Type *type = S_parse_type(aTHX, type_str);
+
   if (type == NULL)
     croak("syntax error '%s' does not name a type", type_str.c_str());
 
-  // Skip space (which we know to exist from S_lex_to_whitespace)
+  // Skip space (which we know to exist from S_lex_to_whitespace in S_parse_type)
   lex_read_space(0);
 
   // Oh man, this is so wrong. Secretly inject a bit of code into the
@@ -224,7 +237,7 @@ S_parse_typed_keyword(pTHX)
     return 0;
   }
   lex_read_to(end); // commit
-  printf("'%s'\n", typed_kw_str.c_str());
+
   return 1;
 }
 
