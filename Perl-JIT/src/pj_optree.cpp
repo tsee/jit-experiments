@@ -261,13 +261,13 @@ pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::T
       else if (kid_term->type == pj_ttype_op && ((AST::Op *)kid_term)->optype == pj_baseop_empty) {
         // empty list is not really a kid, don't include in child list
         delete kid_term;
-        // FIXME segv on "perl author_tools/jit_ast_dump.pl -c -e '@x = () x 12'" since the OP_STUB is "important"
+        kid_term = NULL;
       }
       else {
         kid_terms.push_back(kid_term);
       }
 
-      if (PJ_DEBUGGING)
+      if (PJ_DEBUGGING && kid_term)
         printf("pj_build_kid_terms got kid (%u, %p) of type %s in return\n", ikid, kid_term, kid_term->perl_class());
       ++ikid;
     } // end for kids
