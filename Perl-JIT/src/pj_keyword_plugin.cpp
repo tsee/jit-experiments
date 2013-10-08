@@ -106,6 +106,31 @@ S_lex_to_whitespace(pTHX, STRLEN maxlen)
   }
 }
 
+// Same as S_lex_to_whitespace, but doesn't commit. Doesn't read space after.
+STATIC string
+S_peek_to_whitespace(pTHX, STRLEN maxlen, char **endptr)
+{
+  char *start = PL_parser->bufptr;
+  while (1) {
+    char * const end = PL_parser->bufend;
+    char *s = PL_parser->bufptr;
+    while (end-s >= 1) {
+      if (isSPACE(*s)) {
+        if (endptr != NULL)
+          *endptr = s;
+        return string(start, (size_t)(s-start));
+      }
+      else if (maxlen && (size_t)(s-start) > maxlen)
+        return string("");
+      s++;
+    }
+    if ( !lex_next_chunk(LEX_KEEP_PREVIOUS) )
+      return string("");
+  }
+}
+
+// This handles the following cases, but doesn't include
+// scanning over the "typed" keyword.
 // typed <type> SCALAR
 // typed <type> (DECL-LIST)
 STATIC void
