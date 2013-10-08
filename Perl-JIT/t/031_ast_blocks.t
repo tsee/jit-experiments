@@ -41,5 +41,27 @@ ast_contains(sub { my $a; do { my $c }; my $b },
                ast_block(ast_lexical('$c')),
                ast_lexical('$b'),
              ]));
+ast_contains(sub { my $a; do {}; my $b },
+             ast_statementsequence([
+               ast_lexical('$a'),
+               ast_empty(),
+               ast_lexical('$b'),
+             ]));
+ast_contains(sub { my $a; do {do {}}; my $b },
+             ast_statementsequence([
+               ast_lexical('$a'),
+               ast_empty(),
+               ast_lexical('$b'),
+             ]));
+ast_contains(sub { my $a = do {do {}} },
+             ast_binop(pj_binop_sassign,
+                       ast_lexical('$a'),
+                       ast_empty()),
+             );
+ast_contains(sub { my $a = do { () } },
+             ast_binop(pj_binop_sassign,
+                       ast_lexical('$a'),
+                       ast_block(ast_constant(undef))),
+             );
 
 done_testing();

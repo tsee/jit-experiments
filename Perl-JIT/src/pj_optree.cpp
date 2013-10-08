@@ -332,6 +332,8 @@ pj_build_block_or_term(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
     if (!start)
       break;
     AST::Term *expression = pj_build_ast(aTHX_ start, visitor);
+    if (expression->type == pj_ttype_empty)
+      continue;
     AST::Statement *stmt = new AST::Statement(nextstate, expression);
 
     seq->kids.push_back(stmt);
@@ -787,14 +789,14 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     }
 
   case OP_SCOPE: {
-      AST::Term *term;
       if (!cLOOPo->op_first->op_sibling) {
-        term = new AST::Empty();
+        retval = new AST::Empty();
       }
       else {
-        term = pj_build_ast(aTHX_ cLOOPo->op_first->op_sibling, visitor);
+        retval = pj_build_ast(aTHX_ cLOOPo->op_first->op_sibling, visitor);
+        if (retval->type != pj_ttype_empty)
+          retval = new AST::Block(o, retval);
       }
-      retval = new AST::Block(o, term);
       break;
     }
 
