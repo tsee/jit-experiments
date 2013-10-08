@@ -20,7 +20,10 @@ ast_contains(sub { my $a = 2; ++$a; return; },
                ast_anything,
              ]));
 ast_contains(sub { my $a; my @a; my %h; },
-               ast_lexical('$a')
-             );
+             ast_statementsequence([
+               ast_lexical('$a'),
+               ast_lexical('@a'),
+               ast_lexical('%a'),
+             ]));
 
 done_testing();
