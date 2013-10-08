@@ -20,7 +20,7 @@ use Module::Build::PerlJIT;
 
 my @extra_compiler_flags;
 if ($DEBUG) { # superset of $DEBUG_SYMBOLS
-  push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra);
+  push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra -DDEBUG_OUTPUT);
   if ($DEBUG > 1) {
     push @extra_compiler_flags, qw(-pedantic);
   }

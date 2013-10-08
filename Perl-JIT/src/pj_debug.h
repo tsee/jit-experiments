@@ -3,7 +3,7 @@
 
 /* Set up debugging output to be compiled out without assertions */
 
-#ifdef NDEBUG
+#ifndef DEBUG_OUTPUT
 #  define PJ_DEBUGGING 0
 #  define PJ_DEBUG(s) ((void)(s))
 #  define PJ_DEBUG_1(s, par1) ((void)(s), (void)(par1))
