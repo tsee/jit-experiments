@@ -222,6 +222,50 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
   *op_ptr = parsed_optree;
 }
 
+STATIC void
+S_parse_typed_loop(pTHX_ OP **op_ptr)
+{
+  I32 c;
+
+  AST::Type *type = S_parse_type(aTHX);
+
+  // Skip space (which we know to exist from S_lex_to_whitespace in S_parse_type)
+  lex_read_space(0);
+
+  // Oh man, this is so wrong. Secretly inject a bit of code into the
+  // parse so that we can use Perl's parser to grok the declaration.
+  lex_stuff_pvs(" for my ", 0);
+
+  // Let Perl parse the full for(each) loop with the artificial header
+  // from here on out:
+  OP *parsed_optree = parse_fullstmt(0);
+  if (parsed_optree == NULL)
+    croak("syntax error while parsing typed loop variable declaration in for(each) loop");
+
+  // Logic to find declaration
+  assert(parsed_optree->op_type == OP_LINESEQ);
+  assert(cUNOPx(parsed_optree)->op_first->op_type == OP_NEXTSTATE);
+  OP *o = cUNOPx(parsed_optree)->op_first;
+  assert(o->op_sibling->op_type == OP_LEAVELOOP);
+  assert(o->op_sibling->op_first->op_type == OP_ENTERITER);
+  o = cUNOPx(o->op_sibling)->op_first; // o is enteriter now
+
+  // See pp_enteriter
+  // This OP_ENTERITER is going to make do as a variable declaration.
+  assert(o->op_targ); // "my" variable
+  assert(o->op_private & OPpLVAL_INTRO); // for my $x (...)
+
+  // Get existing declarations or create new container
+  pj_declaration_map_t *decl_map = S_get_or_makedeclaration_map(aTHX);
+
+  // Add to the declaration map
+  (*decl_map)[o->op_targ] = TypedPadSvOp(type, o);
+  (*decl_map)[o->op_targ].set_type_ownership(true);
+
+  // Actually output the OP tree that Perl constructed for us.
+  *op_ptr = parsed_optree;
+}
+
 STATIC int
 S_parse_typed_keyword(pTHX)
 {
@@ -262,6 +306,7 @@ pj_jit_type_keyword_plugin(pTHX_ char *keyword_ptr, STRLEN keyword_len, OP **op_
     return FALSE;
 
   int ret;
+  // Match "typed Int $foo"
   if (keyword_len == 5 && memcmp(keyword_ptr, "typed", 5) == 0)
   {
     SAVETMPS;
@@ -269,6 +314,21 @@ pj_jit_type_keyword_plugin(pTHX_ char *keyword_ptr, STRLEN keyword_len, OP **op_
     ret = KEYWORD_PLUGIN_EXPR;
     //ret = KEYWORD_PLUGIN_STMT;
     FREETMPS;
+  }
+  // Match "for typed Int $foo (1..10) {}"
+  else if (   (keyword_len == 3 && memcmp(keyword_ptr, "for", 3) == 0)
+           || (keyword_len == 7 && memcmp(keyword_ptr, "foreach", 7) == 0) )
+  {
+    const int have_typed_keyword = S_parse_typed_keyword(aTHX);
+    if (have_typed_keyword) {
+      SAVETMPS;
+      S_parse_typed_loop(aTHX_ op_ptr); // sets *op_ptr or croaks
+      ret = KEYWORD_PLUGIN_EXPR;
+      FREETMPS;
+    }
+    else { // Normal for/forach, we don't handle that.
+      ret = (*PJ_next_keyword_plugin)(aTHX_ keyword_ptr, keyword_len, op_ptr);
+    }
   }
   else {
     ret = (*PJ_next_keyword_plugin)(aTHX_ keyword_ptr, keyword_len, op_ptr);
