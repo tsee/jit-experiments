@@ -156,6 +156,25 @@ S_parse_type(pTHX)
   return type;
 }
 
+// Fetches the declaration map from MAGIC attached to the CV or
+// creates it if there's none yet.
+STATIC pj_declaration_map_t *
+S_get_or_makedeclaration_map(pTHX)
+{
+  pj_declaration_map_t *decl_map;
+
+  decl_map = pj_get_typed_variable_declarations(aTHX_ PL_compcv);
+  if (decl_map == NULL) {
+    decl_map = new pj_declaration_map_t;
+    (void)sv_magicext(
+      (SV *)PL_compcv, NULL, PERL_MAGIC_ext, &PJ_type_annotate_mg_vtbl,
+      (char *)decl_map, 0
+    );
+  }
+
+  return decl_map;
+}
+
 // This handles the following cases, but doesn't include
 // scanning over the "typed" keyword.
 // typed <type> SCALAR
@@ -185,15 +204,7 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
   const vector<OP *> &declaration_ops = extractor.get_padsv_ops();
 
   // Get existing declarations or create new container
-  pj_declaration_map_t *decl_map;
-  decl_map = pj_get_typed_variable_declarations(aTHX_ PL_compcv);
-  if (decl_map == NULL) {
-    decl_map = new pj_declaration_map_t;
-    (void)sv_magicext(
-      (SV *)PL_compcv, NULL, PERL_MAGIC_ext, &PJ_type_annotate_mg_vtbl,
-      (char *)decl_map, 0
-    );
-  }
+  pj_declaration_map_t *decl_map = S_get_or_makedeclaration_map(aTHX);
 
   // Add to the declaration map
   const unsigned int ndecl = declaration_ops.size();
