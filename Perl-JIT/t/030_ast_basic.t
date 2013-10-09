@@ -25,5 +25,10 @@ ast_contains(sub { my $a; my @a; my %h; },
                ast_lexical('@a'),
                ast_lexical('%a'),
              ]));
+ast_contains(sub { my ($a, $b); print $a, $b; },
+             ast_listop(pj_listop_print, [
+               ast_lexical('$a'),
+               ast_lexical('$b'),
+             ]));
 
 done_testing();

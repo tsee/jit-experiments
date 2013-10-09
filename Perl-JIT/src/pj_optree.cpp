@@ -252,6 +252,16 @@ pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::T
         continue;
       }
 
+#if PERL_VERSION >= 18
+      // The padrange optimization leaves the OP_PADxV ops in place,
+      // so we can just skip it and continue parsing the remaining
+      // kids
+      if (kid->op_type == OP_PADRANGE) {
+        PJ_DEBUG_1("pj_build_kid_terms skipping kid (%u) since it's an OP_PADRANGE.\n", ikid);
+        continue;
+      }
+#endif
+
       // FIXME possibly wrong. PUSHMARK assumed to be an implementation detail that is not
       //       strictly necessary in an AST listop. Totally speculative.
       if (kid->op_type == OP_PUSHMARK && !(kid->op_flags & OPf_KIDS)) {
