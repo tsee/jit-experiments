@@ -244,11 +244,13 @@ S_parse_typed_loop(pTHX_ OP **op_ptr)
 
   // Logic to find declaration
   assert(parsed_optree->op_type == OP_LINESEQ);
-  assert(cUNOPx(parsed_optree)->op_first->op_type == OP_NEXTSTATE);
-  OP *o = cUNOPx(parsed_optree)->op_first;
-  assert(o->op_sibling->op_type == OP_LEAVELOOP);
-  assert(o->op_sibling->op_first->op_type == OP_ENTERITER);
-  o = cUNOPx(o->op_sibling)->op_first; // o is enteriter now
+  OP *lineseq = parsed_optree;
+  parsed_optree = cUNOPx(parsed_optree)->op_first;
+  assert(parsed_optree->op_type == OP_NEXTSTATE);
+  assert(parsed_optree->op_sibling->op_type == OP_LEAVELOOP);
+  assert(parsed_optree->op_sibling->op_first->op_type == OP_ENTERITER);
+  OP *o = cUNOPx(parsed_optree->op_sibling)->op_first; // o is enteriter now
+  Perl_op_null(aTHX_ lineseq);
 
   // See pp_enteriter
   // This OP_ENTERITER is going to make do as a variable declaration.
