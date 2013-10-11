@@ -145,18 +145,11 @@ S_peek_to_whitespace(pTHX, STRLEN maxlen, char **endptr)
   return string("");
 }
 
-// Parse a Perl::JIT type. Requires space before the type.
-// croaks on error.
+// Parse a Perl::JIT type. Croaks on error.
 STATIC AST::Type *
 S_parse_type(pTHX)
 {
   I32 c;
-
-  // need space before type
-  c = lex_peek_unichar(0);
-  if (c < 0 || !isSPACE(c))
-    croak("syntax error");
-  lex_read_space(0);
 
   c = lex_peek_unichar(0);
   if (c < 0 || isSPACE(c))
@@ -199,6 +192,12 @@ STATIC void
 S_parse_typed_declaration(pTHX_ OP **op_ptr)
 {
   I32 c;
+
+  // Need space before type
+  c = lex_peek_unichar(0);
+  if (c < 0 || !isSPACE(c))
+    croak("syntax error");
+  lex_read_space(0);
 
   AST::Type *type = S_parse_type(aTHX);
 
@@ -310,6 +309,36 @@ S_parse_typed_keyword(pTHX)
   return 1;
 }
 
+
+// Look at input, see if it starts with spaces followed by a valid identifier
+// start character. Returns ptr to first character of identifier or NULL.
+char *
+S_peek_starts_like_identifier(pTHX)
+{
+  char *start = PL_parser->bufptr;
+  char *s = PL_parser->bufptr;
+  while (1) {
+    char * const end = PL_parser->bufend;
+    while (end-s >= 1) {
+      if (!isSPACE(*s)) {
+        return isWORDCHAR(*s) ? s : NULL;
+      }
+      s++;
+    }
+    if ( !lex_next_chunk(LEX_KEEP_PREVIOUS) ) {
+      return 0;
+    }
+    else {
+      // protect against realloc in lex_next_chunk
+      const ptrdiff_t d = s-start;
+      start = PL_parser->bufptr;
+      s = start + d;
+    }
+  }
+  abort(); // should never happen.
+  return 0;
+}
+
 // Main keyword plugin hook for JIT type annotations
 int
 pj_jit_type_keyword_plugin(pTHX_ char *keyword_ptr, STRLEN keyword_len, OP **op_ptr)
@@ -335,9 +364,34 @@ pj_jit_type_keyword_plugin(pTHX_ char *keyword_ptr, STRLEN keyword_len, OP **op_
   else if (   (keyword_len == 3 && memcmp(keyword_ptr, "for", 3) == 0)
            || (keyword_len == 7 && memcmp(keyword_ptr, "foreach", 7) == 0) )
   {
-    const int have_typed_keyword = S_parse_typed_keyword(aTHX);
-    if (have_typed_keyword) {
+    int is_typed_loop = S_parse_typed_keyword(aTHX);
+
+    if (!is_typed_loop) {
+      // Try to see if it's the "for Int $foo (){}" form
+      char *first_char = S_peek_starts_like_identifier(aTHX);
+      if (first_char) {
+        // Check whether we have to extend the buffer
+        if (PL_parser->bufend - first_char < 3) {
+          char *tmp = PL_parser->bufptr;
+          if ( !lex_next_chunk(LEX_KEEP_PREVIOUS) )
+            croak("syntax error");
+          first_char = PL_parser->bufptr + (first_char-tmp);
+        }
+
+        // Check for "for my $foo"
+        if (*first_char != 'm'
+            || *(first_char+1) != 'y'
+            || isWORDCHAR(*(first_char+2)))
+        {
+          is_typed_loop = 1;
+        }
+      }
+    }
+
+    if (is_typed_loop) {
       SAVETMPS;
+
+      lex_read_space(0);
       S_parse_typed_loop(aTHX_ op_ptr); // sets *op_ptr or croaks
       ret = KEYWORD_PLUGIN_EXPR;
       FREETMPS;
