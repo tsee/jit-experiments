@@ -198,8 +198,6 @@ S_get_or_makedeclaration_map(pTHX)
 STATIC void
 S_parse_typed_declaration(pTHX_ OP **op_ptr)
 {
-  I32 c;
-
   AST::Type *type = S_parse_type(aTHX);
 
   // Skip space (which we know to exist from S_lex_to_whitespace in S_parse_type)
@@ -241,8 +239,6 @@ S_parse_typed_declaration(pTHX_ OP **op_ptr)
 STATIC void
 S_parse_typed_loop(pTHX_ OP **op_ptr)
 {
-  I32 c;
-
   AST::Type *type = S_parse_type(aTHX);
 
   // Skip space (which we know to exist from S_lex_to_whitespace in S_parse_type)
