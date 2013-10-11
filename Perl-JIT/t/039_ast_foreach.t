@@ -77,5 +77,13 @@ ast_contains(sub { our $x; my $j = $_ for $x },
                ),
                ast_binop(pj_binop_sassign, ast_lexical('$j'), ast_global('$_')),
              ));
+ast_contains(sub { use Perl::JIT; for typed Int $i (0..9) { my $j = $i } },
+             ast_foreach(
+               ast_lexical('$i'),
+               ast_binop(pj_binop_range, ast_constant(0), ast_constant(9)),
+               ast_statementsequence([
+                   ast_binop(pj_binop_sassign, ast_lexical('$j'), ast_lexical('$i')),
+               ]),
+             ));
 
 done_testing();
