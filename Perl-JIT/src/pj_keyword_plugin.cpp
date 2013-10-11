@@ -83,9 +83,9 @@ STATIC string
 S_lex_to_whitespace(pTHX, STRLEN maxlen)
 {
   char *start = PL_parser->bufptr;
+  char *s = PL_parser->bufptr;
   while (1) {
     char * const end = PL_parser->bufend;
-    char *s = PL_parser->bufptr;
     while (end-s >= 1) {
       if (isSPACE(*s)) {
         lex_read_to(s); /* skip Perl's lexer/parser ahead to end of type */
@@ -103,7 +103,15 @@ S_lex_to_whitespace(pTHX, STRLEN maxlen)
       lex_read_space(0);
       return string(""); /* end of code */
     }
+    else {
+      // protect against realloc in lex_next_chunk
+      const ptrdiff_t d = s-start;
+      start = PL_parser->bufptr;
+      s = start + d;
+    }
   }
+  abort(); // should never happen.
+  return string("");
 }
 
 // Same as S_lex_to_whitespace, but doesn't commit. Doesn't read space after.
@@ -111,9 +119,9 @@ STATIC string
 S_peek_to_whitespace(pTHX, STRLEN maxlen, char **endptr)
 {
   char *start = PL_parser->bufptr;
+  char *s = PL_parser->bufptr;
   while (1) {
     char * const end = PL_parser->bufend;
-    char *s = PL_parser->bufptr;
     while (end-s >= 1) {
       if (isSPACE(*s)) {
         if (endptr != NULL)
@@ -126,7 +134,15 @@ S_peek_to_whitespace(pTHX, STRLEN maxlen, char **endptr)
     }
     if ( !lex_next_chunk(LEX_KEEP_PREVIOUS) )
       return string("");
+    else {
+      // protect against realloc in lex_next_chunk
+      const ptrdiff_t d = s-start;
+      start = PL_parser->bufptr;
+      s = start + d;
+    }
   }
+  abort(); // should never happen.
+  return string("");
 }
 
 // Parse a Perl::JIT type. Requires space before the type.
