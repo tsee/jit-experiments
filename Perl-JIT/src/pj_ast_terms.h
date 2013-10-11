@@ -229,11 +229,16 @@ namespace PerlJIT {
 
       pj_op_type optype;
       std::vector<PerlJIT::AST::Term *> kids;
+      bool is_integer_variant() { return _is_integer_variant; }
+      void set_integer_variant(bool is_integer_variant) { _is_integer_variant = is_integer_variant; }
 
       virtual void dump(int indent_lvl = 0) = 0;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Op"; }
       virtual ~Op();
+
+    private:
+      bool _is_integer_variant;
     };
 
     class Baseop : public Op {

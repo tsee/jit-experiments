@@ -608,11 +608,34 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       break;                                                  \
     }
 
+#define EMIT_UNOP_INTEGER_CODE(perl_op_type, pj_op_type)      \
+  case perl_op_type: {                                        \
+      MAKE_DEFAULT_KID_VECTOR                                 \
+      assert(kid_terms.size() == 1 || kid_terms.size() == 0); \
+      if (kid_terms.size() == 1)                              \
+        retval = new AST::Unop(o, pj_op_type, kid_terms[0]);  \
+      else /* no kids */                                      \
+        retval = new AST::Unop(o, pj_op_type, NULL);          \
+      ((AST::Op *)retval)->set_integer_variant(true);         \
+      retval = pj_build_targmy_assignment(retval, visitor);   \
+      break;                                                  \
+    }
+
 #define EMIT_BINOP_CODE(perl_op_type, pj_op_type)                         \
   case perl_op_type: {                                                    \
       MAKE_DEFAULT_KID_VECTOR                                             \
       assert(kid_terms.size() == 2);                                      \
       retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]); \
+      retval = pj_build_targmy_assignment(retval, visitor);               \
+      break;                                                              \
+    }
+
+#define EMIT_BINOP_INTEGER_CODE(perl_op_type, pj_op_type)                 \
+  case perl_op_type: {                                                    \
+      MAKE_DEFAULT_KID_VECTOR                                             \
+      assert(kid_terms.size() == 2);                                      \
+      retval = new AST::Binop(o, pj_op_type, kid_terms[0], kid_terms[1]); \
+      ((AST::Op *)retval)->set_integer_variant(true);                     \
       retval = pj_build_targmy_assignment(retval, visitor);               \
       break;                                                              \
     }
@@ -964,6 +987,24 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_LISTOP_CODE(OP_SCHOP, pj_listop_chop)
     EMIT_LISTOP_CODE(OP_SCHOMP, pj_listop_chomp)
 
+    EMIT_BINOP_INTEGER_CODE(OP_I_ADD, pj_binop_add)
+    EMIT_BINOP_INTEGER_CODE(OP_I_SUBTRACT, pj_binop_subtract)
+    EMIT_BINOP_INTEGER_CODE(OP_I_MULTIPLY, pj_binop_multiply)
+    EMIT_BINOP_INTEGER_CODE(OP_I_DIVIDE, pj_binop_divide)
+    EMIT_BINOP_INTEGER_CODE(OP_I_MODULO, pj_binop_modulo)
+    EMIT_BINOP_INTEGER_CODE(OP_I_EQ, pj_binop_num_eq)
+    EMIT_BINOP_INTEGER_CODE(OP_I_NE, pj_binop_num_ne)
+    EMIT_BINOP_INTEGER_CODE(OP_I_LT, pj_binop_num_lt)
+    EMIT_BINOP_INTEGER_CODE(OP_I_GT, pj_binop_num_gt)
+    EMIT_BINOP_INTEGER_CODE(OP_I_LE, pj_binop_num_le)
+    EMIT_BINOP_INTEGER_CODE(OP_I_GE, pj_binop_num_ge)
+    EMIT_BINOP_INTEGER_CODE(OP_I_NCMP, pj_binop_num_cmp)
+    EMIT_UNOP_INTEGER_CODE(OP_I_PREINC, pj_unop_preinc)
+    EMIT_UNOP_INTEGER_CODE(OP_I_PREDEC, pj_unop_predec)
+    EMIT_UNOP_INTEGER_CODE(OP_I_POSTINC, pj_unop_postinc)
+    EMIT_UNOP_INTEGER_CODE(OP_I_POSTDEC, pj_unop_postdec)
+    EMIT_UNOP_INTEGER_CODE(OP_I_NEGATE, pj_unop_negate)
+
 // Include auto-generated OP case list using the EMIT_*_CODE* macros
 #include "pj_ast_optree_emit-gen.inc"
 
@@ -974,9 +1015,11 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 
 #undef MAKE_DEFAULT_KID_VECTOR
 #undef EMIT_BINOP_CODE
+#undef EMIT_BINOP_INTEGER_CODE
 #undef EMIT_BINOP_CODE_OPTIONAL
 #undef EMIT_UNOP_CODE
 #undef EMIT_UNOP_CODE_OPTIONAL
+#undef EMIT_UNOP_INTEGER_CODE
 #undef EMIT_LISTOP_CODE
 
   /* PMOP doesn't matter for JIT right now */

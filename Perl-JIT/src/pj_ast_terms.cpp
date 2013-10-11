@@ -120,7 +120,7 @@ NullOptree::NullOptree(OP *p_op)
 
 
 Op::Op(OP *p_op, pj_op_type t)
-  : Term(p_op, pj_ttype_op), optype(t)
+  : Term(p_op, pj_ttype_op), optype(t), _is_integer_variant(false)
 {}
 
 Unop::Unop(OP *p_op, pj_op_type t, Term *kid)
@@ -333,7 +333,14 @@ static void
 S_dump_op(PerlJIT::AST::Op *o, const char *op_str, bool is_assignment_form, int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  printf("%s '%s%s'", op_str, o->name(), is_assignment_form ? "=" : "");
+  printf(
+    "%s '%s%s%s'",
+    op_str,
+    o->name(),
+    is_assignment_form ? "=" : "",
+    o->is_integer_variant() ? ", Integer variant" : ""
+  );
+
   if (o->op_class() == pj_opc_baseop) {
     printf("\n");
     return;

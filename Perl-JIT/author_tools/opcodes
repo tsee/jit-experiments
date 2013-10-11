@@ -15,6 +15,9 @@
 # - OP_SCHOP is the single-parameter version of OP_CHOP. Treat it as the same
 #   thing in the AST. Ditto for OP_SCHOMP.
 #! jittable_root_ops=OP_SCHOP OP_SCHOMP OP_ANDASSIGN OP_ORASSIGN OP_DORASSIGN OP_LEAVE OP_LEAVELOOP OP_PADSV OP_PADAV OP_PADHV
+#! jittable_root_ops=OP_I_MULTIPLY OP_I_DIVIDE OP_I_ADD OP_I_SUBTRACT OP_I_PREINC OP_I_PREDEC OP_I_POSTINC OP_I_POSTDEC OP_I_MODULO OP_I_NEGATE
+#! jittable_root_ops=OP_I_LT OP_I_GT OP_I_LE OP_I_GE OP_I_EQ OP_I_NE OP_I_NCMP
+#
 #! jittable_ops=OP_CONST OP_NULL OP_GVSV OP_AELEMFAST OP_AELEMFAST_LEX
 
 # Return types below are separated between Scalar and List context (Context=Type)

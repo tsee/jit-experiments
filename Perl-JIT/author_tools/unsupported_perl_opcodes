@@ -35,24 +35,6 @@ transr		transliteration (tr///)	ck_match	is"	S
 
 aassign		list assignment		ck_null		t2	L L
 
-i_preinc	integer preincrement (++)	ck_lfun		dis1	S
-i_predec	integer predecrement (--)	ck_lfun		dis1	S
-i_postinc	integer postincrement (++)	ck_lfun		disT1	S
-i_postdec	integer postdecrement (--)	ck_lfun		disT1	S
-i_multiply	integer multiplication (*)	ck_null		ifsT2	S S
-i_divide	integer division (/)	ck_null		ifsT2	S S
-i_modulo	integer modulus (%)	ck_null		ifsT2	S S
-i_add		integer addition (+)	ck_null		ifsT2	S S
-i_subtract	integer subtraction (-)	ck_null		ifsT2	S S
-i_lt		integer lt (<)		ck_cmp		ifs2	S S<
-i_gt		integer gt (>)		ck_cmp		ifs2	S S<
-i_le		integer le (<=)		ck_cmp		ifs2	S S<
-i_ge		integer ge (>=)		ck_cmp		ifs2	S S<
-i_eq		integer eq (==)		ck_null		ifs2	S S<
-i_ne		integer ne (!=)		ck_null		ifs2	S S<
-i_ncmp		integer comparison (<=>)	ck_null		ifst2	S S<
-i_negate	integer negation (-)	ck_null		ifsT1	S
-
 repeat		repeat (x)		ck_repeat	mt2	L S
 
 stringify	string			ck_fun		fsT@	S

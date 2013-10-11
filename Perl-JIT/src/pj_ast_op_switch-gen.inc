@@ -76,6 +76,23 @@
   || (int)otype == OP_HEX \
   || (int)otype == OP_INDEX \
   || (int)otype == OP_INT \
+  || (int)otype == OP_I_ADD \
+  || (int)otype == OP_I_DIVIDE \
+  || (int)otype == OP_I_EQ \
+  || (int)otype == OP_I_GE \
+  || (int)otype == OP_I_GT \
+  || (int)otype == OP_I_LE \
+  || (int)otype == OP_I_LT \
+  || (int)otype == OP_I_MODULO \
+  || (int)otype == OP_I_MULTIPLY \
+  || (int)otype == OP_I_NCMP \
+  || (int)otype == OP_I_NE \
+  || (int)otype == OP_I_NEGATE \
+  || (int)otype == OP_I_POSTDEC \
+  || (int)otype == OP_I_POSTINC \
+  || (int)otype == OP_I_PREDEC \
+  || (int)otype == OP_I_PREINC \
+  || (int)otype == OP_I_SUBTRACT \
   || (int)otype == OP_JOIN \
   || (int)otype == OP_LAST \
   || (int)otype == OP_LC \
@@ -252,6 +269,23 @@
   || (int)otype == OP_HEX \
   || (int)otype == OP_INDEX \
   || (int)otype == OP_INT \
+  || (int)otype == OP_I_ADD \
+  || (int)otype == OP_I_DIVIDE \
+  || (int)otype == OP_I_EQ \
+  || (int)otype == OP_I_GE \
+  || (int)otype == OP_I_GT \
+  || (int)otype == OP_I_LE \
+  || (int)otype == OP_I_LT \
+  || (int)otype == OP_I_MODULO \
+  || (int)otype == OP_I_MULTIPLY \
+  || (int)otype == OP_I_NCMP \
+  || (int)otype == OP_I_NE \
+  || (int)otype == OP_I_NEGATE \
+  || (int)otype == OP_I_POSTDEC \
+  || (int)otype == OP_I_POSTINC \
+  || (int)otype == OP_I_PREDEC \
+  || (int)otype == OP_I_PREINC \
+  || (int)otype == OP_I_SUBTRACT \
   || (int)otype == OP_JOIN \
   || (int)otype == OP_LAST \
   || (int)otype == OP_LC \
