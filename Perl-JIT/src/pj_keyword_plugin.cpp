@@ -80,7 +80,7 @@ pj_get_typed_variable_declarations(pTHX_ CV *cv)
 // string up to that point as a C++ string.
 // Will stop at maxlen (and return "") unless maxlen is 0
 STATIC string
-S_lex_to_whitespace(pTHX, STRLEN maxlen)
+S_lex_to_whitespace(pTHX_ STRLEN maxlen)
 {
   char *start = PL_parser->bufptr;
   char *s = PL_parser->bufptr;
@@ -116,7 +116,7 @@ S_lex_to_whitespace(pTHX, STRLEN maxlen)
 
 // Same as S_lex_to_whitespace, but doesn't commit. Doesn't read space after.
 STATIC string
-S_peek_to_whitespace(pTHX, STRLEN maxlen, char **endptr)
+S_peek_to_whitespace(pTHX_ STRLEN maxlen, char **endptr)
 {
   char *start = PL_parser->bufptr;
   char *s = PL_parser->bufptr;
@@ -162,7 +162,7 @@ S_parse_type(pTHX)
   if (c < 0 || isSPACE(c))
     croak("syntax error");
   // inch our way forward to end-of-type
-  string type_str =  S_lex_to_whitespace(aTHX, 0);
+  string type_str =  S_lex_to_whitespace(aTHX_ 0);
   if (type_str == string(""))
     croak("syntax error while extracting variable type");
 
@@ -300,7 +300,7 @@ S_parse_typed_keyword(pTHX)
     return 0;
 
   char *end = NULL;
-  string typed_kw_str = S_peek_to_whitespace(aTHX, 5, &end);
+  string typed_kw_str = S_peek_to_whitespace(aTHX_ 5, &end);
 
   if (typed_kw_str != string("typed")) {
     return 0;
