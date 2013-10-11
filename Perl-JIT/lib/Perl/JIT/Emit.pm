@@ -568,18 +568,22 @@ sub _jit_emit_binop {
         $restype = DOUBLE;
     }
 
+    my $num_conversion = $ast->is_integer_variant
+                         ? "_to_iv_value"
+                         : "_to_nv_value";
+
     given ($ast->get_optype) {
         when (pj_binop_add) {
-            $res = jit_insn_add($fun, $self->_to_nv_value($v1, $t1), $self->_to_nv_value($v2, $t2));
+            $res = jit_insn_add($fun, $self->$num_conversion($v1, $t1), $self->$num_conversion($v2, $t2));
         }
         when (pj_binop_subtract) {
-            $res = jit_insn_sub($fun, $self->_to_nv_value($v1, $t1), $self->_to_nv_value($v2, $t2));
+            $res = jit_insn_sub($fun, $self->$num_conversion($v1, $t1), $self->$num_conversion($v2, $t2));
         }
         when (pj_binop_multiply) {
-            $res = jit_insn_mul($fun, $self->_to_nv_value($v1, $t1), $self->_to_nv_value($v2, $t2));
+            $res = jit_insn_mul($fun, $self->$num_conversion($v1, $t1), $self->$num_conversion($v2, $t2));
         }
         when (pj_binop_divide) {
-            $res = jit_insn_div($fun, $self->_to_nv_value($v1, $t1), $self->_to_nv_value($v2, $t2));
+            $res = jit_insn_div($fun, $self->$num_conversion($v1, $t1), $self->$num_conversion($v2, $t2));
         }
         if (   $_ == pj_binop_num_eq
             || $_ == pj_binop_num_ne
@@ -588,7 +592,7 @@ sub _jit_emit_binop {
             || $_ == pj_binop_num_gt
             || $_ == pj_binop_num_ge)
         {
-            ($res, $restype) = $self->_emit_numeric_test($v1, $t1, $v2, $t2, $ast->get_optype);
+            ($res, $restype) = $self->_emit_numeric_test($ast, $v1, $t1, $v2, $t2);
             break;
         }
         when (pj_binop_bool_and) {
@@ -679,10 +683,18 @@ sub _jit_emit_binop {
 }
 
 sub _emit_numeric_test {
-    my ($self, $v1, $t1, $v2, $t2, $optype) = @_;
+    my ($self, $ast, $v1, $t1, $v2, $t2) = @_;
+
+    my $optype = $ast->get_optype;
     my $fun = $self->_fun;
-    my ($vn1, $tn1) = $self->_to_numeric($v1, $t1);
-    my ($vn2, $tn2) = $self->_to_numeric($v2, $t1);
+
+    my ($vn1, $tn1) = $ast->is_integer_variant
+                      ? $self->_to_numeric($v1, $t1)
+                      : ($self->_to_iv_value($v1, $t1), INT);
+
+    my ($vn2, $tn2) = $ast->is_integer_variant
+                      ? $self->_to_numeric($v2, $t2)
+                      : ($self->_to_iv_value($v2, $t2), INT);
 
     my $res;
     if ($optype == pj_binop_num_eq) {
@@ -714,9 +726,12 @@ sub _jit_emit_unop {
 
     $restype = DOUBLE;
 
+    my $flex_num_conversion = $ast->is_integer_variant
+                              ? "_to_iv_value"
+                              : "_to_nv_value";
     given ($ast->get_optype) {
         when (pj_unop_negate) {
-            $res = jit_insn_neg($fun, $self->_to_nv_value($v1, $t1));
+            $res = jit_insn_neg($fun, $self->$flex_num_conversion($v1, $t1));
         }
         when (pj_unop_abs) {
             $res = jit_insn_abs($fun, $self->_to_nv_value($v1, $t1));
