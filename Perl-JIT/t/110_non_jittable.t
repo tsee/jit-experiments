@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-use t::lib::Perl::JIT::Test tests => 11;
+use t::lib::Perl::JIT::Test tests => 14;
 
 use Perl::JIT;
 
@@ -10,6 +10,14 @@ sub test_not_jitted {
     my ($a) = @_;
 
     my $x = srand($a + 4) + 8;
+
+    return $x;
+}
+
+sub test_not_jitted_notarg {
+    my ($a) = @_;
+
+    my $x = srand($a > 4);
 
     return $x;
 }
@@ -43,6 +51,10 @@ sub test_typed_scalar_nomagic {
 is_jitting(\&test_not_jitted, [{name => 'add'}]);
 is(test_not_jitted(42), 54);
 is_not_jitted(\&test_not_jitted, [{name => 'srand'}]);
+
+is_jitting(\&test_not_jitted_notarg, [{name => 'gt'}]);
+is(test_not_jitted_notarg(42), 1);
+is_not_jitted(\&test_not_jitted_notarg, [{name => 'srand'}]);
 
 is_jitting(\&test_not_jitted_chain, [{name => 'add'}]);
 is(test_not_jitted(42), 54);

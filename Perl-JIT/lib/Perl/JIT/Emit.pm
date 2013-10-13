@@ -221,7 +221,7 @@ sub needs_excessive_magic {
 
 sub _jit_emit_root {
     my ($self, $ast) = @_;
-    my ($val, $type) = $self->_jit_emit($ast, ANY);
+    my ($val, $type) = $self->_jit_emit($ast, $ast->get_perl_op->targ ? ANY : SCALAR);
 
     $self->_jit_emit_return($ast, $ast->context, $val, $type) if $val;
 }
@@ -254,8 +254,12 @@ sub _jit_emit_return {
                     $res = pa_new_mortal_sv();
                 }
             } else {
-                die "OP without target" unless $ast->get_perl_op->targ;
-                $res = pa_get_targ($fun);
+                if (!$ast->get_perl_op->targ && $type->equals(SCALAR)) {
+                    $res = $val;
+                } else {
+                    die "OP without target" unless $ast->get_perl_op->targ;
+                    $res = pa_get_targ($fun);
+                }
             }
         }
         when (pj_opc_unop) {
@@ -556,6 +560,17 @@ sub _jit_emit_sassign {
     return ($lv, $lt);
 }
 
+sub _is_numeric_comparison {
+    my ($op) = @_;
+
+    return    $op == pj_binop_num_eq
+           || $op == pj_binop_num_ne
+           || $op == pj_binop_num_lt
+           || $op == pj_binop_num_le
+           || $op == pj_binop_num_gt
+           || $op == pj_binop_num_ge;
+}
+
 sub _jit_emit_binop {
     my ($self, $ast, $type) = @_;
     my $fun = $self->_fun;
@@ -587,14 +602,8 @@ sub _jit_emit_binop {
         when (pj_binop_divide) {
             $res = jit_insn_div($fun, $self->$num_conversion($v1, $t1), $self->$num_conversion($v2, $t2));
         }
-        if (   $_ == pj_binop_num_eq
-            || $_ == pj_binop_num_ne
-            || $_ == pj_binop_num_lt
-            || $_ == pj_binop_num_le
-            || $_ == pj_binop_num_gt
-            || $_ == pj_binop_num_ge)
-        {
-            ($res, $restype) = $self->_emit_numeric_test($ast, $v1, $t1, $v2, $t2);
+        if (_is_numeric_comparison($_)) {
+            ($res, $restype) = $self->_emit_numeric_test($ast, $type, $v1, $t1, $v2, $t2);
             break;
         }
         when (pj_binop_bool_and) {
@@ -685,7 +694,7 @@ sub _jit_emit_binop {
 }
 
 sub _emit_numeric_test {
-    my ($self, $ast, $v1, $t1, $v2, $t2) = @_;
+    my ($self, $ast, $type, $v1, $t1, $v2, $t2) = @_;
 
     my $optype = $ast->get_optype;
     my $fun = $self->_fun;
@@ -715,8 +724,25 @@ sub _emit_numeric_test {
         die "Invalid numeric equality test, can't emit"
     }
 
-    # FIXME returns 0 for "false", but perl comparisons return ""!
-    return($res, INT);
+    if ($type->equals(SCALAR)) {
+        my ($true, $end) = (jit_label_undefined, jit_label_undefined);
+        my $yes_no = jit_value_create($fun, jit_type_void_ptr);
+
+        jit_insn_branch_if($fun, $res, $true);
+
+        jit_insn_store($fun, $yes_no, pa_sv_no($fun));
+        jit_insn_branch($fun, $end);
+
+        jit_insn_label($fun, $true);
+        jit_insn_store($fun, $yes_no, pa_sv_yes($fun));
+
+        jit_insn_label($fun, $end);
+
+        return ($yes_no, SCALAR);
+    } else {
+        # FIXME returns 0 for "false", but perl comparisons return ""!
+        return ($res, INT);
+    }
 }
 
 sub _jit_emit_unop {
