@@ -254,10 +254,12 @@ sub _jit_emit_return {
                     $res = pa_new_mortal_sv();
                 }
             } else {
+                die "OP without target" unless $ast->get_perl_op->targ;
                 $res = pa_get_targ($fun);
             }
         }
         when (pj_opc_unop) {
+            die "OP without target" unless $ast->get_perl_op->targ;
             $res = pa_get_targ($fun);
         }
         default {
