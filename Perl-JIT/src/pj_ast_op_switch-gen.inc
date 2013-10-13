@@ -7,7 +7,8 @@
 // Macros to determine which Perl OPs to ASTify
 
 #define IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) ( \
-     (int)otype == OP_ABS \
+     (int)otype == OP_AASSIGN \
+  || (int)otype == OP_ABS \
   || (int)otype == OP_ADD \
   || (int)otype == OP_AELEM \
   || (int)otype == OP_ALARM \
@@ -194,7 +195,8 @@
 
 
 #define IS_AST_COMPATIBLE_OP_TYPE(otype) ( \
-     (int)otype == OP_ABS \
+     (int)otype == OP_AASSIGN \
+  || (int)otype == OP_ABS \
   || (int)otype == OP_ADD \
   || (int)otype == OP_AELEM \
   || (int)otype == OP_AELEMFAST \

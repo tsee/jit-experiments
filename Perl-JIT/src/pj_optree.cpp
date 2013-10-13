@@ -821,6 +821,13 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       break;
     }
 
+  case OP_AASSIGN: {
+      MAKE_DEFAULT_KID_VECTOR
+      assert(kid_terms.size() == 2);
+      retval = new AST::Binop(o, pj_binop_aassign, kid_terms[1], kid_terms[0]);
+      break;
+    }
+
   case OP_SCOPE: {
       if (!cLOOPo->op_first->op_sibling) {
         retval = new AST::Empty();

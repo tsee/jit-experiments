@@ -130,6 +130,7 @@ typedef enum {
   pj_binop_definedor,
   pj_binop_concat,
   pj_binop_sassign,
+  pj_binop_aassign,
   pj_binop_list_slice,
   pj_binop_array_slice,
   pj_binop_aelem,
