@@ -689,12 +689,12 @@ sub _emit_numeric_test {
     my $fun = $self->_fun;
 
     my ($vn1, $tn1) = $ast->is_integer_variant
-                      ? $self->_to_numeric($v1, $t1)
-                      : ($self->_to_iv_value($v1, $t1), INT);
+                      ? ($self->_to_iv_value($v1, $t1), INT)
+                      : $self->_to_numeric($v1, $t1);
 
     my ($vn2, $tn2) = $ast->is_integer_variant
-                      ? $self->_to_numeric($v2, $t2)
-                      : ($self->_to_iv_value($v2, $t2), INT);
+                      ? ($self->_to_iv_value($v2, $t2), INT)
+                      : $self->_to_numeric($v2, $t2);
 
     my $res;
     if ($optype == pj_binop_num_eq) {
