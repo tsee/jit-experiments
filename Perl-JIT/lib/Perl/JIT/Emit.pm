@@ -316,7 +316,7 @@ sub _jit_emit {
         when (pj_ttype_statement) {
             B::Replace::detach_tree($self->current_cv, $ast->get_perl_op, 1);
             push @{$self->subtrees}, $ast->get_perl_op;
-            pa_pp_nextstate($self->_fun, $ast->get_perl_op);
+            pa_pp_op($self->_fun, $ast->get_perl_op);
             return $self->_jit_emit($ast->get_kid, $type);
         }
         when (pj_ttype_statementsequence) {
