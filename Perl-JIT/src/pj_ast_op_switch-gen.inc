@@ -123,6 +123,7 @@
   || (int)otype == OP_NEXT \
   || (int)otype == OP_NOT \
   || (int)otype == OP_OCT \
+  || (int)otype == OP_ONCE \
   || (int)otype == OP_ORASSIGN \
   || (int)otype == OP_ORD \
   || (int)otype == OP_PADAV \
@@ -324,6 +325,7 @@
   || (int)otype == OP_NOT \
   || (int)otype == OP_NULL \
   || (int)otype == OP_OCT \
+  || (int)otype == OP_ONCE \
   || (int)otype == OP_OR \
   || (int)otype == OP_ORASSIGN \
   || (int)otype == OP_ORD \

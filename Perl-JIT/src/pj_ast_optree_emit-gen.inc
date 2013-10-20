@@ -162,6 +162,7 @@ EMIT_LISTOP_CODE(OP_MATCH, pj_listop_match)
 EMIT_LISTOP_CODE(OP_SUBST, pj_listop_subst)
 EMIT_LISTOP_CODE(OP_INDEX, pj_listop_index)
 EMIT_LISTOP_CODE(OP_RINDEX, pj_listop_rindex)
+EMIT_LISTOP_CODE(OP_ONCE, pj_listop_once)
 
 
 #endif

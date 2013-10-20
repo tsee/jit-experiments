@@ -205,5 +205,6 @@ pj_listop_subst,	pj_opc_listop,	regexp subst,	OP_SUBST,	0,	emit,	Scalar=Any List
 pj_listop_index,	pj_opc_listop,	index(),	OP_INDEX,	0,	emit,	Integer
 pj_listop_rindex,	pj_opc_listop,	rindex(),	OP_RINDEX,	0,	emit,	Integer
 pj_listop_repeat,	pj_opc_listop,	x operator,	OP_REPEAT,	0,	,	Scalar=Any List=List[Any]
+pj_listop_once,		pj_opc_listop,	execute-once,	OP_ONCE,	0,	emit,	Any # should this be abstracted further into a state var declaration OP? I guess not since this is pretty close to the desired semantics already.
 
 pj_op_scope,		pj_opc_block,	scope,		OP_SCOPE,	0,	,	Scalar=Any List=List[Any]

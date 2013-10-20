@@ -171,6 +171,7 @@
   INT_CONST(pj_listop_index);
   INT_CONST(pj_listop_rindex);
   INT_CONST(pj_listop_repeat);
+  INT_CONST(pj_listop_once);
   INT_CONST(pj_op_scope);
 
 

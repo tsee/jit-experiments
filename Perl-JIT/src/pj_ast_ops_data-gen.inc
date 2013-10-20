@@ -172,6 +172,7 @@ static const char *pj_ast_op_names[] = {
   "index()",        // pj_listop_index       (pj_opc_listop)
   "rindex()",       // pj_listop_rindex      (pj_opc_listop)
   "x operator",     // pj_listop_repeat      (pj_opc_listop)
+  "execute-once",   // pj_listop_once        (pj_opc_listop)
   "scope",          // pj_op_scope           (pj_opc_block)
 };
 
@@ -343,6 +344,7 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_listop_index       (pj_opc_listop)
   0,                                                    // pj_listop_rindex      (pj_opc_listop)
   0,                                                    // pj_listop_repeat      (pj_opc_listop)
+  0,                                                    // pj_listop_once        (pj_opc_listop)
   0,                                                    // pj_op_scope           (pj_opc_block)
 };
 
