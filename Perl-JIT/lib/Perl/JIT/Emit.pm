@@ -184,6 +184,13 @@ sub is_jittable {
         when (pj_ttype_optree) { return 0 }
         when (pj_ttype_nulloptree) { return 1 }
         when (pj_ttype_statement) { return $self->is_jittable($ast->get_kid) }
+        when (pj_ttype_for) {
+            # TODO it's going to fail for loops containing last/next/redo
+            return $self->is_jittable($ast->get_init) &&
+                   $self->is_jittable($ast->get_condition) &&
+                   $self->is_jittable($ast->get_step) &&
+                   $self->is_jittable($ast->get_body);
+        }
         when (pj_ttype_op) {
             my $known = $Jittable_Ops{$ast->get_optype};
 
@@ -321,6 +328,9 @@ sub _jit_emit {
         }
         when (pj_ttype_statementsequence) {
             die "Sequences can only appear at top level";
+        }
+        when (pj_ttype_for) {
+            return $self->_jit_emit_for($ast);
         }
         default {
             return $self->_jit_emit_optree_jit_kids($ast, $type);
@@ -871,6 +881,50 @@ sub _jit_emit_listop {
     }
 
     return ($res, $restype);
+}
+
+sub _jit_emit_for {
+    my ($self, $ast) = @_;
+    my $fun = $self->_fun;
+    my ($end, $loop) = (jit_label_undefined, jit_label_undefined);
+
+    # TODO move to AST node
+    if ($ast->get_init->get_type != pj_ttype_empty) {
+        # initialization
+        $self->_jit_emit($ast->get_init, ANY);
+
+        # unstack after init
+        my $unstack = $ast->get_init->get_perl_op->sibling;
+        die unless $unstack->name eq 'unstack';
+        B::Replace::detach_tree($self->current_cv, $unstack, 1);
+        push @{$self->subtrees}, $unstack;
+        pa_pp_op($fun, $unstack);
+    }
+
+    # enterloop
+    pa_pp_enterloop($fun);
+    jit_insn_label($fun, $loop);
+
+    # evaluate condition
+    my ($cond, $type) = $self->_jit_emit($ast->get_condition, INT);
+    jit_insn_branch_if_not($fun, $self->_to_bool_value($cond, $type), $end);
+
+    $self->_jit_emit($ast->get_body, ANY);
+    $self->_jit_emit($ast->get_step, ANY);
+
+    # unstack
+    my $unstack = $ast->get_step->get_perl_op->sibling;
+    die unless $unstack->name eq 'unstack';
+    B::Replace::detach_tree($self->current_cv, $unstack, 1);
+    push @{$self->subtrees}, $unstack;
+    pa_pp_op($fun, $unstack);
+    jit_insn_branch($fun, $loop);
+
+    # leaveloop
+    jit_insn_label($fun, $end);
+    pa_pp_leaveloop($fun);
+
+    return (undef, undef);
 }
 
 sub _jit_emit_op {
