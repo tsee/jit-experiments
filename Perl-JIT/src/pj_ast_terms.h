@@ -78,6 +78,8 @@ namespace PerlJIT {
       OP *perl_op;
 
       OP *start_op();
+      virtual OP *first_op();
+      virtual OP *last_op();
 
       pj_op_context context();
 
@@ -343,6 +345,8 @@ namespace PerlJIT {
       Term *condition;
       Term *step;
       Term *body;
+
+      virtual OP *last_op();
 
       std::vector<PerlJIT::AST::Term *> get_kids();
 

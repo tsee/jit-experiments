@@ -102,7 +102,7 @@ sub jit_tree {
     my ($self, $ast) = @_;
     my $op = $self->_jit_trees([$ast]);
 
-    B::Replace::replace_tree($self->current_cv, $ast->get_perl_op, $op, 1);
+    B::Replace::replace_sequence($self->current_cv, $ast->first_op, $ast->last_op, $op, 1);
 }
 
 sub jit_statement_sequence {
@@ -111,7 +111,7 @@ sub jit_statement_sequence {
 
     # this assumes all the ASTs are statements, and that all nextstate
     # OPs have been detached
-    B::Replace::replace_sequence($self->current_cv, $asts->[0]->get_kid->get_perl_op, $asts->[-1]->get_kid->get_perl_op, $op);
+    B::Replace::replace_sequence($self->current_cv, $asts->[0]->get_kid->first_op, $asts->[-1]->get_kid->last_op, $op);
 }
 
 sub _add_kid {

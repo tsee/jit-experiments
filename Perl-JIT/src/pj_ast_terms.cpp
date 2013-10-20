@@ -492,6 +492,16 @@ OP *Term::start_op()
   }
 }
 
+OP *Term::first_op()
+{
+  return perl_op;
+}
+
+OP *Term::last_op()
+{
+  return perl_op;
+}
+
 void Term::set_value_type(Type *t)
 {
   delete _value_type;
@@ -581,6 +591,15 @@ std::vector<PerlJIT::AST::Term *> While::get_kids()
     kids.push_back(continuation);
 
   return kids;
+}
+
+OP *For::last_op()
+{
+  if (init->type == pj_ttype_empty)
+    return perl_op;
+
+  assert(init->perl_op->op_sibling->op_sibling->op_type == OP_LEAVELOOP);
+  return init->perl_op->op_sibling->op_sibling;
 }
 
 std::vector<PerlJIT::AST::Term *> For::get_kids()

@@ -10,6 +10,8 @@ class Perl::JIT::AST::Term {
   pj_term_type type %get %set;
   OP *perl_op %get %set;
   OP *start_op();
+  OP *first_op();
+  OP *last_op();
   Perl::JIT::AST::Type *get_value_type();
   std::vector<Perl::JIT::AST::Term *> get_kids()
     %code{% PERL_UNUSED_VAR(THIS); %};
