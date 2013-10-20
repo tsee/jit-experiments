@@ -598,8 +598,13 @@ OP *For::last_op()
   if (init->type == pj_ttype_empty)
     return perl_op;
 
-  assert(init->perl_op->op_sibling->op_sibling->op_type == OP_LEAVELOOP);
-  return init->perl_op->op_sibling->op_sibling;
+  // handle the case when the unstack op has been detached from the tree
+  OP *leave = init->perl_op->op_sibling;
+  if (leave->op_type == OP_UNSTACK)
+    leave = leave->op_sibling;
+
+  assert(leave->op_type == OP_LEAVELOOP);
+  return leave;
 }
 
 std::vector<PerlJIT::AST::Term *> For::get_kids()
