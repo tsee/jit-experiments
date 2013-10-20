@@ -97,6 +97,12 @@ typedef enum {
   pj_unop_pos,
   pj_unop_ref,
   pj_unop_prototype,
+  pj_unop_hash_keys,
+  pj_unop_ary_keys,
+  pj_unop_ref_keys,
+  pj_unop_hash_values,
+  pj_unop_ary_values,
+  pj_unop_ref_values,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -184,7 +190,7 @@ typedef enum {
   pj_baseop_LAST  = pj_baseop_empty,
 
   pj_unop_FIRST = pj_unop_localtime,
-  pj_unop_LAST  = pj_unop_prototype,
+  pj_unop_LAST  = pj_unop_ref_values,
 
   pj_binop_FIRST = pj_binop_add,
   pj_binop_LAST  = pj_binop_range,

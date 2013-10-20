@@ -121,6 +121,12 @@ pj_unop_backtick,	pj_opc_unop,	backticks,	OP_BACKTICK,	0,	emit,	Scalar
 pj_unop_pos,		pj_opc_unop,	pos(),		OP_POS,		0,	emit,	Scalar
 pj_unop_ref,		pj_opc_unop,	ref(),		OP_REF,		KIDS_OPTIONAL,	emit,	String
 pj_unop_prototype,	pj_opc_unop,	prototype(),	OP_PROTOTYPE,	0,	emit,	Scalar # String or undef
+pj_unop_hash_keys,	pj_opc_unop,	keys(%),	OP_KEYS,	0,	emit,	List[Any]
+pj_unop_ary_keys,	pj_opc_unop,	keys(@),	OP_AKEYS,	0,	emit,	List[Any]
+pj_unop_ref_keys,	pj_opc_unop,	keys(ref),	OP_RKEYS,	0,	emit,	List[Any]
+pj_unop_hash_values,	pj_opc_unop,	values(%),	OP_VALUES,	0,	emit,	List[Any]
+pj_unop_ary_values,	pj_opc_unop,	values(@),	OP_AVALUES,	0,	emit,	List[Any]
+pj_unop_ref_values,	pj_opc_unop,	values(ref),	OP_RVALUES,	0,	emit,	List[Any]
 
 
 # binops

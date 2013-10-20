@@ -92,6 +92,12 @@
   INT_CONST(pj_unop_pos);
   INT_CONST(pj_unop_ref);
   INT_CONST(pj_unop_prototype);
+  INT_CONST(pj_unop_hash_keys);
+  INT_CONST(pj_unop_ary_keys);
+  INT_CONST(pj_unop_ref_keys);
+  INT_CONST(pj_unop_hash_values);
+  INT_CONST(pj_unop_ary_values);
+  INT_CONST(pj_unop_ref_values);
   INT_CONST(pj_binop_add);
   INT_CONST(pj_binop_subtract);
   INT_CONST(pj_binop_multiply);

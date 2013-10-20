@@ -11,6 +11,7 @@
   || (int)otype == OP_ABS \
   || (int)otype == OP_ADD \
   || (int)otype == OP_AELEM \
+  || (int)otype == OP_AKEYS \
   || (int)otype == OP_ALARM \
   || (int)otype == OP_ANDASSIGN \
   || (int)otype == OP_ANONHASH \
@@ -18,6 +19,7 @@
   || (int)otype == OP_ASLICE \
   || (int)otype == OP_ATAN2 \
   || (int)otype == OP_AV2ARYLEN \
+  || (int)otype == OP_AVALUES \
   || (int)otype == OP_BACKTICK \
   || (int)otype == OP_BIT_AND \
   || (int)otype == OP_BIT_OR \
@@ -95,6 +97,7 @@
   || (int)otype == OP_I_PREINC \
   || (int)otype == OP_I_SUBTRACT \
   || (int)otype == OP_JOIN \
+  || (int)otype == OP_KEYS \
   || (int)otype == OP_LAST \
   || (int)otype == OP_LC \
   || (int)otype == OP_LCFIRST \
@@ -148,11 +151,13 @@
   || (int)otype == OP_REVERSE \
   || (int)otype == OP_RIGHT_SHIFT \
   || (int)otype == OP_RINDEX \
+  || (int)otype == OP_RKEYS \
   || (int)otype == OP_RMDIR \
   || (int)otype == OP_RV2AV \
   || (int)otype == OP_RV2GV \
   || (int)otype == OP_RV2HV \
   || (int)otype == OP_RV2SV \
+  || (int)otype == OP_RVALUES \
   || (int)otype == OP_SASSIGN \
   || (int)otype == OP_SAY \
   || (int)otype == OP_SCHOMP \
@@ -189,6 +194,7 @@
   || (int)otype == OP_UNLINK \
   || (int)otype == OP_UNSHIFT \
   || (int)otype == OP_UTIME \
+  || (int)otype == OP_VALUES \
   || (int)otype == OP_VEC \
   || (int)otype == OP_WANTARRAY \
   || (int)otype == OP_WARN)
@@ -201,6 +207,7 @@
   || (int)otype == OP_AELEM \
   || (int)otype == OP_AELEMFAST \
   || (int)otype == OP_AELEMFAST_LEX \
+  || (int)otype == OP_AKEYS \
   || (int)otype == OP_ALARM \
   || (int)otype == OP_AND \
   || (int)otype == OP_ANDASSIGN \
@@ -209,6 +216,7 @@
   || (int)otype == OP_ASLICE \
   || (int)otype == OP_ATAN2 \
   || (int)otype == OP_AV2ARYLEN \
+  || (int)otype == OP_AVALUES \
   || (int)otype == OP_BACKTICK \
   || (int)otype == OP_BIT_AND \
   || (int)otype == OP_BIT_OR \
@@ -289,6 +297,7 @@
   || (int)otype == OP_I_PREINC \
   || (int)otype == OP_I_SUBTRACT \
   || (int)otype == OP_JOIN \
+  || (int)otype == OP_KEYS \
   || (int)otype == OP_LAST \
   || (int)otype == OP_LC \
   || (int)otype == OP_LCFIRST \
@@ -344,11 +353,13 @@
   || (int)otype == OP_REVERSE \
   || (int)otype == OP_RIGHT_SHIFT \
   || (int)otype == OP_RINDEX \
+  || (int)otype == OP_RKEYS \
   || (int)otype == OP_RMDIR \
   || (int)otype == OP_RV2AV \
   || (int)otype == OP_RV2GV \
   || (int)otype == OP_RV2HV \
   || (int)otype == OP_RV2SV \
+  || (int)otype == OP_RVALUES \
   || (int)otype == OP_SASSIGN \
   || (int)otype == OP_SAY \
   || (int)otype == OP_SCHOMP \
@@ -385,6 +396,7 @@
   || (int)otype == OP_UNLINK \
   || (int)otype == OP_UNSHIFT \
   || (int)otype == OP_UTIME \
+  || (int)otype == OP_VALUES \
   || (int)otype == OP_VEC \
   || (int)otype == OP_WANTARRAY \
   || (int)otype == OP_WARN)
