@@ -17,10 +17,13 @@ use constant {
     ANY            => Perl::JIT::AST::Scalar->new(pj_any_type),
     SCALAR         => Perl::JIT::AST::Scalar->new(pj_scalar_type),
     GV             => Perl::JIT::AST::Scalar->new(pj_gv_type),
+
+    ARRAY_SCALAR   => Perl::JIT::AST::Array->new(Perl::JIT::AST::Scalar->new(pj_scalar_type)),
 };
 
 our @EXPORT_OK = qw(
     OPAQUE DOUBLE INT UNSIGNED_INT UNSPECIFIED ANY SCALAR GV
+    ARRAY_SCALAR
     minimal_covering_type
 );
 our %EXPORT_TAGS = (
