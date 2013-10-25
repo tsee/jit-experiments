@@ -496,7 +496,7 @@ sub _jit_get_lexical_declaration_xv {
     pa_save_clearsv($fun, $svp);
 
     # TODO this value can be cached
-    return ($sv, SCALAR);
+    return ($sv, SCALAR); # FIXME is SCALAR correct in the face of other Perl types? (@,%,etc.)? Or is this a ref to @,%,etc?
 }
 
 sub _jit_get_lexical_xv {
