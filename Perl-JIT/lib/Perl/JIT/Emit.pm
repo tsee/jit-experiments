@@ -12,7 +12,7 @@ use warnings 'redefine';
 
 use B::Generate;
 use B::Replace;
-use B qw(OPf_KIDS);
+use B qw(OPf_KIDS OPf_MOD OPf_SPECIAL);
 
 use Config;
 
@@ -166,6 +166,7 @@ my %Jittable_Ops = map { $_ => 1 } (
     pj_binop_bool_and, pj_binop_bool_or, pj_binop_sassign,
     pj_binop_num_eq, pj_binop_num_ne, pj_binop_num_lt, pj_binop_num_le,
     pj_binop_num_gt, pj_binop_num_ge,
+    pj_binop_aelem,
 
     pj_listop_ternary,
 
@@ -524,6 +525,7 @@ sub _jit_get_global_xv {
 
     given ($ast->get_sigil) {
         when (pj_sigil_scalar) { return (pa_gv_svn($fun, $gv), SCALAR) }
+        when (pj_sigil_array) { return (pa_gv_avn($fun, $gv), ARRAY_SCALAR) }
         default { die; }
     }
 }
@@ -557,6 +559,61 @@ sub _jit_emit_sassign {
     $self->_jit_assign_sv($lv, $rv, $rt);
 
     return ($lv, $lt);
+}
+
+# FIXME only works for aelemfast(_lex)!
+# FIXME doesn't work as "return $x[0]" => Bizarre copy of ARRAY in return
+sub _jit_emit_aelem {
+    my ($self, $ast, $type) = @_;
+    my $fun = $self->_fun;
+
+    my $aelem = $ast->get_perl_op;
+    # FIXME: local $x[1]... *sigh*
+    # FIXME: MAGIC?
+    # FIXME: OPpLVAL_DEFER on aelem (not fast)? No idea what that does
+
+    my $is_lexical = $aelem->name eq 'aelemfast_lex' # 5.15 and up only
+                     || ($] < 5.015 && $aelem->flags & OPf_SPECIAL); # 5.14 and below
+    my $is_lval = $aelem->flags & OPf_MOD;
+
+    # Figure out index, forcing to an integer
+    # FIXME doesn't seem to work for aelem?
+    my $index_v = $self->_to_iv_value( $self->_jit_emit($ast->get_right_kid, INT) );
+
+    my $array_v;
+    if ($is_lexical) {
+        # MUTABLE_AV(PAD_SV(PL_op->op_targ))
+        my $padix = $aelem->targ;
+        my $padix_v = jit_value_create_nint_constant($fun, jit_type_nint, $padix);
+        $array_v = pa_get_pad_sv($fun, $padix_v);
+    } else {
+        # Get global array at run time
+
+        # aelem(fast) code: GvAVn(cGVOP_gv)
+        #                         ^^^^^^^^ Depends on ithreads or not
+
+        my $gv_v;
+        if ($Config{usethreads}) {
+            # Indirection via PAD thanks to ithreads
+            my $padix = $aelem->padix;
+            my $padix_v = jit_value_create_nint_constant($fun, jit_type_nint, $padix);
+            $gv_v = pa_get_pad_sv($fun, $padix_v);
+        }
+        else {
+            $gv_v = $aelem->op_sv;
+        }
+
+        $array_v = pa_gv_avn($fun, $gv_v);
+    }
+
+    # TODO typed arrays...
+    # FIXME: Magic check? This is in pp_aelemfast:
+    #         if (!lval && SvRMAGICAL(av) && SvGMAGICAL(sv)) /* see note in pp_helem() */
+    #             mg_get(sv);
+
+    my $res = $is_lval ? pa_av_fetch_lvalue($fun, $array_v, $index_v)
+                       : pa_av_fetch($fun, $array_v, $index_v);
+    return ($res, SCALAR);
 }
 
 sub _is_numeric_comparison {
@@ -675,6 +732,16 @@ sub _jit_emit_binop {
         }
         when (pj_binop_sassign) {
             ($res, $restype) = $self->_jit_emit_sassign($ast, $type);
+        }
+        when (pj_binop_aelem) {
+            # TODO, right now, we can only compile OP_AELEMFAST.
+            #       Not clear why aelem is broken, but let's get this working at all.
+            if ($ast->get_perl_op->name =~ /^aelemfast(?:_lex)?$/) {
+                ($res, $restype) = $self->_jit_emit_aelem($ast, $type);
+            }
+            else {
+                return $self->_jit_emit_optree_jit_kids($ast, $type);
+            }
         }
         default {
             return $self->_jit_emit_optree_jit_kids($ast, $type);
