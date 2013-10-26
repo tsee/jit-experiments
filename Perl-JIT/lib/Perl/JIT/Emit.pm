@@ -894,11 +894,7 @@ sub _jit_emit_for {
         $self->_jit_emit($ast->get_init, ANY);
 
         # unstack after init
-        my $unstack = $ast->get_init->get_perl_op->sibling;
-        die unless $unstack->name eq 'unstack';
-        B::Replace::detach_tree($self->current_cv, $unstack, 1);
-        push @{$self->subtrees}, $unstack;
-        pa_pp_op($fun, $unstack);
+        pa_pp_unstack($fun, 0);
     }
 
     # enterloop
@@ -913,11 +909,7 @@ sub _jit_emit_for {
     $self->_jit_emit($ast->get_step, ANY);
 
     # unstack
-    my $unstack = $ast->get_step->get_perl_op->sibling;
-    die unless $unstack->name eq 'unstack';
-    B::Replace::detach_tree($self->current_cv, $unstack, 1);
-    push @{$self->subtrees}, $unstack;
-    pa_pp_op($fun, $unstack);
+    pa_pp_unstack($fun, 1);
     jit_insn_branch($fun, $loop);
 
     # leaveloop
