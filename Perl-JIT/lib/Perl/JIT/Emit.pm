@@ -184,11 +184,24 @@ sub is_jittable {
         when (pj_ttype_optree) { return 0 }
         when (pj_ttype_nulloptree) { return 1 }
         when (pj_ttype_statement) { return $self->is_jittable($ast->get_kid) }
+        when (pj_ttype_statementsequence) {
+            my @all = $ast->get_kids;
+            my @jittable = grep $self->is_jittable($_), @all;
+
+            # TODO arbitrary threshold, it's probably better to look for
+            #      long stretches of JITtable ops
+            return @jittable / @all >= .5;
+        }
         when (pj_ttype_for) {
             # TODO it's going to fail for loops containing last/next/redo
             return $self->is_jittable($ast->get_init) &&
                    $self->is_jittable($ast->get_condition) &&
                    $self->is_jittable($ast->get_step) &&
+                   $self->is_jittable($ast->get_body);
+        }
+        when (pj_ttype_while) {
+            # TODO it's going to fail for loops containing last/next/redo
+            return $self->is_jittable($ast->get_condition) &&
                    $self->is_jittable($ast->get_body);
         }
         when (pj_ttype_op) {
@@ -327,10 +340,21 @@ sub _jit_emit {
             return $self->_jit_emit($ast->get_kid, $type);
         }
         when (pj_ttype_statementsequence) {
-            die "Sequences can only appear at top level";
+            my @kids = $ast->get_kids;
+
+            for my $stmt (@kids) {
+                if ($stmt == $kids[-1]) {
+                    $self->_jit_emit($stmt, $type);
+                } else {
+                    $self->_jit_emit($stmt, ANY);
+                }
+            }
         }
         when (pj_ttype_for) {
             return $self->_jit_emit_for($ast);
+        }
+        when (pj_ttype_while) {
+            return $self->_jit_emit_while($ast);
         }
         default {
             return $self->_jit_emit_optree_jit_kids($ast, $type);
@@ -907,6 +931,44 @@ sub _jit_emit_for {
 
     $self->_jit_emit($ast->get_body, ANY);
     $self->_jit_emit($ast->get_step, ANY);
+
+    # unstack
+    pa_pp_unstack($fun, 1);
+    jit_insn_branch($fun, $loop);
+
+    # leaveloop
+    jit_insn_label($fun, $end);
+    pa_pp_leaveloop($fun);
+
+    return (undef, undef);
+}
+
+sub _jit_emit_while {
+    my ($self, $ast) = @_;
+    my $fun = $self->_fun;
+    my ($end, $loop, $after_cond) = map jit_label_undefined, 1..3;
+
+    # enterloop
+    pa_pp_enterloop($fun);
+
+    if ($ast->get_evaluate_after) {
+        jit_insn_branch($fun, $after_cond);
+    }
+
+    jit_insn_label($fun, $loop);
+
+    # evaluate condition
+    my ($cond, $type) = $self->_jit_emit($ast->get_condition, INT);
+    my $bool = $self->_to_bool_value($cond, $type);
+
+    if ($ast->get_negated) {
+        jit_insn_branch_if($fun, $bool, $end);
+    } else {
+        jit_insn_branch_if_not($fun, $bool, $end);
+    }
+    jit_insn_label($fun, $after_cond);
+
+    $self->_jit_emit($ast->get_body, ANY);
 
     # unstack
     pa_pp_unstack($fun, 1);
