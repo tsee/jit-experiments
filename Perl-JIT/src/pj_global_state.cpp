@@ -86,6 +86,7 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_ttype_while);
   INT_CONST(pj_ttype_for);
   INT_CONST(pj_ttype_foreach);
+  INT_CONST(pj_ttype_map);
   INT_CONST(pj_ttype_empty);
 
   INT_CONST(pj_sigil_scalar);

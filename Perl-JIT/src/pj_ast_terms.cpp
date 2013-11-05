@@ -194,6 +194,9 @@ Foreach::Foreach(OP *p_op, Term *_iterator, Term *_expression, Term *_body, Term
     body(_body), continuation(_continuation)
 {}
 
+Map::Map(OP *p_op, Term *_body, List *_parameters)
+  : Term(p_op, pj_ttype_map), body(_body), parameters(_parameters)
+{}
 
 Statement::Statement(OP *p_nextstate, Term *term)
   : Term(p_nextstate, pj_ttype_statement)
@@ -432,6 +435,16 @@ void Foreach::dump(int indent_lvl)
   printf(")\n");
 }
 
+void Map::dump(int indent_lvl)
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("Map (\n");
+  body->dump(indent_lvl+1);
+  parameters->dump(indent_lvl+1);
+  S_dump_tree_indent(indent_lvl);
+  printf(")\n");
+}
+
 void Empty::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
@@ -622,6 +635,16 @@ std::vector<PerlJIT::AST::Term *> Foreach::get_kids()
   kids.push_back(expression);
   kids.push_back(body);
   kids.push_back(continuation);
+
+  return kids;
+}
+
+std::vector<PerlJIT::AST::Term *> Map::get_kids()
+{
+  std::vector<PerlJIT::AST::Term *> kids;
+
+  kids.push_back(body);
+  kids.push_back(parameters);
 
   return kids;
 }

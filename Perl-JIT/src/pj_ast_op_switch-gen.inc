@@ -113,6 +113,7 @@
   || (int)otype == OP_LSLICE \
   || (int)otype == OP_LSTAT \
   || (int)otype == OP_LT \
+  || (int)otype == OP_MAPWHILE \
   || (int)otype == OP_MATCH \
   || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \
@@ -314,6 +315,7 @@
   || (int)otype == OP_LSLICE \
   || (int)otype == OP_LSTAT \
   || (int)otype == OP_LT \
+  || (int)otype == OP_MAPWHILE \
   || (int)otype == OP_MATCH \
   || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \

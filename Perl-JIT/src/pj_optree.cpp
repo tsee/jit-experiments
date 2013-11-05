@@ -546,6 +546,39 @@ pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinde
     return pj_build_block(aTHX_ start, body, cont, visitor);
 }
 
+static PerlJIT::AST::Term *
+pj_build_map(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
+{
+  LOGOP *mapwhile = cLOGOPx(start);
+  LISTOP *mapstart = cLISTOPx(mapwhile->op_first);
+
+  OP *pushmark = mapstart->op_first;
+  assert(pushmark->op_type == OP_PUSHMARK);
+
+  OP *impl = pushmark->op_sibling;
+  OP *first_arg = impl->op_sibling; // May be NULL: map $_, ()
+
+  // Convert map body
+  AST::Term *map_body_term = pj_build_ast(aTHX_ impl, visitor);
+  if (map_body_term == NULL)
+    map_body_term = new AST::Optree(impl);
+
+  // Convert the map input list
+  vector<AST::Term *> param_vec;
+  OP *arg = first_arg;
+  while (arg != NULL) {
+    PerlJIT::AST::Term *term = pj_build_ast(aTHX_ arg, visitor);
+    if (term == NULL)
+      term = new AST::Optree(arg);
+
+    param_vec.push_back(term);
+
+    arg = arg->op_sibling;
+  }
+
+  return new AST::Map(start, map_body_term, new AST::List(param_vec));
+}
+
 /* Walk OP tree recursively, build ASTs, build subtrees */
 static PerlJIT::AST::Term *
 pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
@@ -870,6 +903,10 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 
   case OP_LEAVELOOP:
     retval = pj_build_loop(aTHX_ o, NULL, visitor);
+    break;
+
+  case OP_MAPWHILE:
+    retval = pj_build_map(aTHX_ o, visitor);
     break;
 
   case OP_ANDASSIGN:

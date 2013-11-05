@@ -26,6 +26,7 @@ our @EXPORT = (qw(
   ast_until
   ast_for
   ast_foreach
+  ast_map
   ast_baseop
   ast_unop
   ast_binop
@@ -120,6 +121,11 @@ sub _matches {
              _matches($ast->get_body, $pattern->{body}) &&
              (!defined $pattern->{continuation} ||
               _matches($ast->get_continuation, $pattern->{continuation}));
+    }
+    when ('map') {
+      return 0 unless $ast->get_type == pj_ttype_map;
+      return _matches($ast->get_body, $pattern->{body}) &&
+             _matches($ast->get_parameters, $pattern->{parameters});
     }
     when ('baseop') {
       return 0 unless $ast->get_type == pj_ttype_op;
@@ -291,6 +297,13 @@ sub ast_foreach {
 
   return {type => 'foreach', iterator => $iterator, expression => $expression,
           body => $body, continuation => $continuation};
+}
+
+sub ast_map {
+  my ($body, $params) = @_;
+
+  return {type => 'map',
+          body => $body, parameters => $params};
 }
 
 sub ast_baseop {

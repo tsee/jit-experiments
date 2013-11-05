@@ -27,6 +27,7 @@ typedef enum {
   pj_ttype_while,
   pj_ttype_for,
   pj_ttype_foreach,
+  pj_ttype_map,
   pj_ttype_empty
 } pj_term_type;
 
@@ -369,6 +370,20 @@ namespace PerlJIT {
       virtual void dump(int indent_lvl = 0);
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Foreach"; }
+    };
+
+    class Map : public Term {
+    public:
+      Map (OP *p_op, Term *body, List *parameters);
+
+      Term *body;
+      List *parameters;
+
+      std::vector<PerlJIT::AST::Term *> get_kids();
+
+      virtual void dump(int indent_lvl = 0);
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Map"; }
     };
 
     class Optree : public Term {
