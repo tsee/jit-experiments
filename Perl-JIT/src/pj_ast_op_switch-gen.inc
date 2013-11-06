@@ -52,6 +52,7 @@
   || (int)otype == OP_EXISTS \
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
+  || (int)otype == OP_FCNTL \
   || (int)otype == OP_FILENO \
   || (int)otype == OP_FLOCK \
   || (int)otype == OP_FTATIME \
@@ -90,6 +91,7 @@
   || (int)otype == OP_HEX \
   || (int)otype == OP_INDEX \
   || (int)otype == OP_INT \
+  || (int)otype == OP_IOCTL \
   || (int)otype == OP_I_ADD \
   || (int)otype == OP_I_DIVIDE \
   || (int)otype == OP_I_EQ \
@@ -278,6 +280,7 @@
   || (int)otype == OP_EXISTS \
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
+  || (int)otype == OP_FCNTL \
   || (int)otype == OP_FILENO \
   || (int)otype == OP_FLOCK \
   || (int)otype == OP_FTATIME \
@@ -317,6 +320,7 @@
   || (int)otype == OP_HEX \
   || (int)otype == OP_INDEX \
   || (int)otype == OP_INT \
+  || (int)otype == OP_IOCTL \
   || (int)otype == OP_I_ADD \
   || (int)otype == OP_I_DIVIDE \
   || (int)otype == OP_I_EQ \

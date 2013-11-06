@@ -82,9 +82,6 @@ select		select			ck_select	st@	F?
 enterwrite	write			ck_fun		dis%	F?
 leavewrite	write exit		ck_null		1	
 
-fcntl		fcntl			ck_fun		st@	F S S
-ioctl		ioctl			ck_fun		st@	F S S
-
 send		send			ck_fun		imst@	Fs S S S?
 recv		recv			ck_fun		imst@	Fs R S S
 

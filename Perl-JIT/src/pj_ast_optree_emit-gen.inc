@@ -185,6 +185,8 @@ EMIT_LISTOP_CODE(OP_SYSSEEK, pj_listop_sysseek)
 EMIT_LISTOP_CODE(OP_SYSWRITE, pj_listop_syswrite)
 EMIT_LISTOP_CODE(OP_SYSREAD, pj_listop_sysread)
 EMIT_LISTOP_CODE(OP_DIE, pj_listop_die)
+EMIT_LISTOP_CODE(OP_IOCTL, pj_listop_ioctl)
+EMIT_LISTOP_CODE(OP_FCNTL, pj_listop_fcntl)
 
 
 #endif
