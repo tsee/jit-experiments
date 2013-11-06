@@ -939,6 +939,23 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       break;
     }
 
+  case OP_DELETE:
+  case OP_EXISTS: {
+      OP *child = cUNOPo->op_first;
+      assert(OP_CLASS(child) == OA_BINOP);
+      assert(child->op_type == OP_NULL);
+      // Apparently replacement of the aelem happens before aelemfast optimization
+      assert(child->op_targ == OP_HELEM || child->op_targ == OP_AELEM);
+
+      AST::Term *hash_or_array = pj_build_ast(aTHX_ cBINOPx(child)->op_first, visitor);
+      AST::Term *key  = pj_build_ast(aTHX_ cBINOPx(child)->op_last, visitor);
+      pj_op_type ttype = otype == OP_DELETE
+                         ? pj_binop_delete
+                         : pj_binop_exists;
+      retval = new AST::Binop(o, ttype, hash_or_array, key);
+      break;
+    }
+
   case OP_STUB: {
       const int gimme = OP_GIMME(o, 0);
       if (gimme) {
