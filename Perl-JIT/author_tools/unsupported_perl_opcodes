@@ -33,10 +33,6 @@ trans		transliteration (tr///)	ck_match	is"	S
 # y///r
 transr		transliteration (tr///)	ck_match	is"	S
 
-aassign		list assignment		ck_null		t2	L L
-
-repeat		repeat (x)		ck_repeat	mt2	L S
-
 stringify	string			ck_fun		fsT@	S
 
 smartmatch	smart match		ck_smartmatch	s2
