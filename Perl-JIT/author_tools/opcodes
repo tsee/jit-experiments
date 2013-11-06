@@ -229,5 +229,6 @@ pj_listop_sysopen,	pj_opc_listop,	sysopen(),	OP_SYSOPEN,	0,	emit,	Any
 pj_listop_sysseek,	pj_opc_listop,	sysseek(),	OP_SYSSEEK,	0,	emit,	Any
 pj_listop_syswrite,	pj_opc_listop,	syswrite(),	OP_SYSWRITE,	0,	emit,	Any
 pj_listop_sysread,	pj_opc_listop,	sysread(),	OP_SYSREAD,	0,	emit,	Any
+pj_listop_die,		pj_opc_listop,	die(),		OP_DIE,		0,	emit,	Any # umm, returns... nothing?
 
 pj_op_scope,		pj_opc_block,	scope,		OP_SCOPE,	0,	,	Scalar=Any List=List[Any]

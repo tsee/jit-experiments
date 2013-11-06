@@ -203,6 +203,7 @@ typedef enum {
   pj_listop_sysseek,
   pj_listop_syswrite,
   pj_listop_sysread,
+  pj_listop_die,
 
   // Op class: pj_opc_block
   pj_op_scope,
@@ -219,7 +220,7 @@ typedef enum {
   pj_binop_LAST  = pj_binop_truncate,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_sysread,
+  pj_listop_LAST  = pj_listop_die,
 
   pj_block_FIRST = pj_op_scope,
   pj_block_LAST  = pj_op_scope,

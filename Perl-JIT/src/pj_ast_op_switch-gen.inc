@@ -43,6 +43,7 @@
   || (int)otype == OP_CRYPT \
   || (int)otype == OP_DEFINED \
   || (int)otype == OP_DELETE \
+  || (int)otype == OP_DIE \
   || (int)otype == OP_DIVIDE \
   || (int)otype == OP_DORASSIGN \
   || (int)otype == OP_EACH \
@@ -266,6 +267,7 @@
   || (int)otype == OP_CRYPT \
   || (int)otype == OP_DEFINED \
   || (int)otype == OP_DELETE \
+  || (int)otype == OP_DIE \
   || (int)otype == OP_DIVIDE \
   || (int)otype == OP_DOR \
   || (int)otype == OP_DORASSIGN \

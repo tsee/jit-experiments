@@ -57,7 +57,6 @@ method		method lookup		ck_method	d1
 entersub	subroutine entry	ck_subr		dmt1	L
 leavesub	subroutine exit		ck_null		1	
 leavesublv	lvalue subroutine return	ck_null		1	
-die		die			ck_die		dimst@	L
 reset		symbol reset		ck_fun		is%	S?
 
 dbstate		debug next statement	ck_null		s;	

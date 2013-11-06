@@ -195,6 +195,7 @@ static const char *pj_ast_op_names[] = {
   "sysseek()",      // pj_listop_sysseek     (pj_opc_listop)
   "syswrite()",     // pj_listop_syswrite    (pj_opc_listop)
   "sysread()",      // pj_listop_sysread     (pj_opc_listop)
+  "die()",          // pj_listop_die         (pj_opc_listop)
   "scope",          // pj_op_scope           (pj_opc_block)
 };
 
@@ -389,6 +390,7 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_listop_sysseek     (pj_opc_listop)
   0,                                                    // pj_listop_syswrite    (pj_opc_listop)
   0,                                                    // pj_listop_sysread     (pj_opc_listop)
+  0,                                                    // pj_listop_die         (pj_opc_listop)
   0,                                                    // pj_op_scope           (pj_opc_block)
 };
 

@@ -194,6 +194,7 @@
   INT_CONST(pj_listop_sysseek);
   INT_CONST(pj_listop_syswrite);
   INT_CONST(pj_listop_sysread);
+  INT_CONST(pj_listop_die);
   INT_CONST(pj_op_scope);
 
 
