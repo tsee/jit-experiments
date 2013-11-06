@@ -159,6 +159,7 @@ sub _matches {
       return 0 unless $ast->op_class == pj_opc_listop;
       return 0 unless $ast->get_optype == $pattern->{op};
       my @kids = $ast->get_kids;
+      return 0 unless ref($pattern->{terms}) eq "ARRAY";
       return 0 unless @kids == @{$pattern->{terms}};
 
       for my $i (0 .. $#kids) {
