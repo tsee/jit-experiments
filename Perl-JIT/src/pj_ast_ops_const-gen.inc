@@ -155,6 +155,7 @@
   INT_CONST(pj_binop_delete);
   INT_CONST(pj_binop_binmode);
   INT_CONST(pj_binop_truncate);
+  INT_CONST(pj_binop_flock);
   INT_CONST(pj_listop_ternary);
   INT_CONST(pj_listop_substr);
   INT_CONST(pj_listop_chop);

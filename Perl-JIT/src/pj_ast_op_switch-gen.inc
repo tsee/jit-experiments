@@ -53,6 +53,7 @@
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
   || (int)otype == OP_FILENO \
+  || (int)otype == OP_FLOCK \
   || (int)otype == OP_FTATIME \
   || (int)otype == OP_FTBINARY \
   || (int)otype == OP_FTBLK \
@@ -278,6 +279,7 @@
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
   || (int)otype == OP_FILENO \
+  || (int)otype == OP_FLOCK \
   || (int)otype == OP_FTATIME \
   || (int)otype == OP_FTBINARY \
   || (int)otype == OP_FTBLK \

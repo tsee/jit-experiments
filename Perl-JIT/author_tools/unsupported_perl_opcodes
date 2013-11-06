@@ -84,7 +84,6 @@ leavewrite	write exit		ck_null		1
 
 fcntl		fcntl			ck_fun		st@	F S S
 ioctl		ioctl			ck_fun		st@	F S S
-flock		flock			ck_fun		isT@	F S
 
 send		send			ck_fun		imst@	Fs S S S?
 recv		recv			ck_fun		imst@	Fs R S S

@@ -188,6 +188,7 @@ pj_binop_exists,	pj_opc_binop,	exists(),	OP_EXISTS,	0,	,	UnsignedInteger # Boole
 pj_binop_delete,	pj_opc_binop,	delete(),	OP_DELETE,	0,	,	Scalar=Any List=List[Any]
 pj_binop_binmode,	pj_opc_binop,	binmode(),	OP_BINMODE,	KIDS_OPTIONAL,	emit,	Scalar
 pj_binop_truncate,	pj_opc_binop,	truncate(),	OP_TRUNCATE,	0,	emit,	Any # true or undef
+pj_binop_flock,		pj_opc_binop,	flock(),	OP_FLOCK,	0,	emit,	Any # true or false
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any
