@@ -106,6 +106,7 @@ EMIT_UNOP_CODE(OP_TIED, pj_unop_tied)
 EMIT_UNOP_CODE(OP_UNTIE, pj_unop_untie)
 EMIT_UNOP_CODE_OPTIONAL(OP_EOF, pj_unop_eof)
 EMIT_UNOP_CODE_OPTIONAL(OP_TELL, pj_unop_tell)
+EMIT_UNOP_CODE_OPTIONAL(OP_SELECT, pj_unop_fh_select)
 EMIT_BINOP_CODE(OP_ADD, pj_binop_add)
 EMIT_BINOP_CODE(OP_SUBTRACT, pj_binop_subtract)
 EMIT_BINOP_CODE(OP_MULTIPLY, pj_binop_multiply)
@@ -187,6 +188,7 @@ EMIT_LISTOP_CODE(OP_SYSREAD, pj_listop_sysread)
 EMIT_LISTOP_CODE(OP_DIE, pj_listop_die)
 EMIT_LISTOP_CODE(OP_IOCTL, pj_listop_ioctl)
 EMIT_LISTOP_CODE(OP_FCNTL, pj_listop_fcntl)
+EMIT_LISTOP_CODE(OP_SSELECT, pj_listop_sysselect)
 
 
 #endif

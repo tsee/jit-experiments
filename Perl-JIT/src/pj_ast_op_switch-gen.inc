@@ -183,6 +183,7 @@
   || (int)otype == OP_SCMP \
   || (int)otype == OP_SCOPE \
   || (int)otype == OP_SEEK \
+  || (int)otype == OP_SELECT \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGT \
@@ -198,6 +199,7 @@
   || (int)otype == OP_SQRT \
   || (int)otype == OP_SRAND \
   || (int)otype == OP_SREFGEN \
+  || (int)otype == OP_SSELECT \
   || (int)otype == OP_STAT \
   || (int)otype == OP_STUB \
   || (int)otype == OP_STUDY \
@@ -414,6 +416,7 @@
   || (int)otype == OP_SCMP \
   || (int)otype == OP_SCOPE \
   || (int)otype == OP_SEEK \
+  || (int)otype == OP_SELECT \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGT \
@@ -429,6 +432,7 @@
   || (int)otype == OP_SQRT \
   || (int)otype == OP_SRAND \
   || (int)otype == OP_SREFGEN \
+  || (int)otype == OP_SSELECT \
   || (int)otype == OP_STAT \
   || (int)otype == OP_STUB \
   || (int)otype == OP_STUDY \

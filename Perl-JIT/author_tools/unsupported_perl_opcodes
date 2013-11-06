@@ -76,9 +76,6 @@ pipe_op		pipe			ck_fun		is@	F F
 dbmopen		dbmopen			ck_fun		is@	H S S
 dbmclose	dbmclose		ck_fun		is%	H
 
-sselect		select system call	ck_select	t@	S S S S
-select		select			ck_select	st@	F?
-
 enterwrite	write			ck_fun		dis%	F?
 leavewrite	write exit		ck_null		1	
 

@@ -108,6 +108,7 @@
   INT_CONST(pj_unop_untie);
   INT_CONST(pj_unop_eof);
   INT_CONST(pj_unop_tell);
+  INT_CONST(pj_unop_fh_select);
   INT_CONST(pj_binop_add);
   INT_CONST(pj_binop_subtract);
   INT_CONST(pj_binop_multiply);
@@ -198,6 +199,7 @@
   INT_CONST(pj_listop_die);
   INT_CONST(pj_listop_ioctl);
   INT_CONST(pj_listop_fcntl);
+  INT_CONST(pj_listop_sysselect);
   INT_CONST(pj_op_scope);
 
 

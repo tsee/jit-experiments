@@ -109,6 +109,7 @@ static const char *pj_ast_op_names[] = {
   "untie()",        // pj_unop_untie         (pj_opc_unop)
   "eof()",          // pj_unop_eof           (pj_opc_unop)
   "tell()",         // pj_unop_tell          (pj_opc_unop)
+  "select(FH)",     // pj_unop_fh_select     (pj_opc_unop)
   "+",              // pj_binop_add          (pj_opc_binop)
   "-",              // pj_binop_subtract     (pj_opc_binop)
   "*",              // pj_binop_multiply     (pj_opc_binop)
@@ -199,6 +200,7 @@ static const char *pj_ast_op_names[] = {
   "die()",          // pj_listop_die         (pj_opc_listop)
   "ioctl()",        // pj_listop_ioctl       (pj_opc_listop)
   "fcntl()",        // pj_listop_fcntl       (pj_opc_listop)
+  "select syscall", // pj_listop_sysselect   (pj_opc_listop)
   "scope",          // pj_op_scope           (pj_opc_block)
 };
 
@@ -307,6 +309,7 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_unop_untie         (pj_opc_unop)
   PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_eof           (pj_opc_unop)
   PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_tell          (pj_opc_unop)
+  PJ_ASTf_KIDS_OPTIONAL,                                // pj_unop_fh_select     (pj_opc_unop)
   PJ_ASTf_HAS_ASSIGNMENT_FORM|PJ_ASTf_OVERLOAD,         // pj_binop_add          (pj_opc_binop)
   PJ_ASTf_HAS_ASSIGNMENT_FORM|PJ_ASTf_OVERLOAD,         // pj_binop_subtract     (pj_opc_binop)
   PJ_ASTf_HAS_ASSIGNMENT_FORM|PJ_ASTf_OVERLOAD,         // pj_binop_multiply     (pj_opc_binop)
@@ -397,6 +400,7 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_listop_die         (pj_opc_listop)
   0,                                                    // pj_listop_ioctl       (pj_opc_listop)
   0,                                                    // pj_listop_fcntl       (pj_opc_listop)
+  0,                                                    // pj_listop_sysselect   (pj_opc_listop)
   0,                                                    // pj_op_scope           (pj_opc_block)
 };
 
