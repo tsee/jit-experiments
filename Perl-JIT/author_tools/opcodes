@@ -128,6 +128,16 @@ pj_unop_ref_keys,	pj_opc_unop,	keys(ref),	OP_RKEYS,	0,	emit,	List[Any]
 pj_unop_hash_values,	pj_opc_unop,	values(%),	OP_VALUES,	0,	emit,	List[Any]
 pj_unop_ary_values,	pj_opc_unop,	values(@),	OP_AVALUES,	0,	emit,	List[Any]
 pj_unop_ref_values,	pj_opc_unop,	values(ref),	OP_RVALUES,	0,	emit,	List[Any]
+pj_unop_hash_each,	pj_opc_unop,	each(%),	OP_EACH,	0,	emit,	List[Any]
+pj_unop_ary_each,	pj_opc_unop,	each(@),	OP_AEACH,	0,	emit,	List[Any]
+pj_unop_ref_each,	pj_opc_unop,	each(ref),	OP_REACH,	0,	emit,	List[Any]
+pj_unop_fileno,		pj_opc_unop,	fileno(),	OP_FILENO,	0,	emit,	Scalar
+pj_unop_umask,		pj_opc_unop,	umask(),	OP_UMASK,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_close,		pj_opc_unop,	close(),	OP_CLOSE,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_tied,		pj_opc_unop,	tied(),		OP_TIED,	0,	emit,	Scalar
+pj_unop_untie,		pj_opc_unop,	untie(),	OP_UNTIE,	0,	emit,	Scalar
+pj_unop_eof,		pj_opc_unop,	eof(),		OP_EOF,		KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_tell,		pj_opc_unop,	tell(),		OP_TELL,	KIDS_OPTIONAL,	emit,	Scalar
 
 
 # binops
@@ -174,6 +184,10 @@ pj_binop_link,		pj_opc_binop,	link(),		OP_LINK,	0,	emit,	UnsignedInteger # Boole
 pj_binop_symlink,	pj_opc_binop,	symlink(),	OP_SYMLINK,	0,	emit,	UnsignedInteger # Boolean
 pj_binop_mkdir,		pj_opc_binop,	mkdir(),	OP_MKDIR,	KIDS_OPTIONAL,	emit,	UnsignedInteger # Boolean
 pj_binop_range,		pj_opc_binop,	range(),	OP_RANGE,	KIDS_OPTIONAL,	declareonly,	Scalar=UnsignedInteger List=List[Any]
+pj_binop_exists,	pj_opc_binop,	exists(),	OP_EXISTS,	0,	,	UnsignedInteger # Boolean
+pj_binop_delete,	pj_opc_binop,	delete(),	OP_DELETE,	0,	,	Scalar=Any List=List[Any]
+pj_binop_binmode,	pj_opc_binop,	binmode(),	OP_BINMODE,	KIDS_OPTIONAL,	emit,	Scalar
+pj_binop_truncate,	pj_opc_binop,	truncate(),	OP_TRUNCATE,	0,	emit,	Any # true or undef
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any
@@ -207,5 +221,13 @@ pj_listop_index,	pj_opc_listop,	index(),	OP_INDEX,	0,	emit,	Integer
 pj_listop_rindex,	pj_opc_listop,	rindex(),	OP_RINDEX,	0,	emit,	Integer
 pj_listop_repeat,	pj_opc_listop,	x operator,	OP_REPEAT,	0,	,	Scalar=Any List=List[Any]
 pj_listop_once,		pj_opc_listop,	execute-once,	OP_ONCE,	0,	emit,	Any # should this be abstracted further into a state var declaration OP? I guess not since this is pretty close to the desired semantics already.
+pj_listop_pack,		pj_opc_listop,	pack(),		OP_PACK,	0,	emit,	String
+pj_listop_unpack,	pj_opc_listop,	unpack(),	OP_UNPACK,	0,	emit,	List[Any]
+pj_listop_open,		pj_opc_listop,	open(),		OP_OPEN,	0,	emit,	Scalar
+pj_listop_seek,		pj_opc_listop,	seek(),		OP_SEEK,	0,	emit,	Any # 1 on success, "false" otherwise
+pj_listop_sysopen,	pj_opc_listop,	sysopen(),	OP_SYSOPEN,	0,	emit,	Any
+pj_listop_sysseek,	pj_opc_listop,	sysseek(),	OP_SYSSEEK,	0,	emit,	Any
+pj_listop_syswrite,	pj_opc_listop,	syswrite(),	OP_SYSWRITE,	0,	emit,	Any
+pj_listop_sysread,	pj_opc_listop,	sysread(),	OP_SYSREAD,	0,	emit,	Any
 
 pj_op_scope,		pj_opc_block,	scope,		OP_SCOPE,	0,	,	Scalar=Any List=List[Any]

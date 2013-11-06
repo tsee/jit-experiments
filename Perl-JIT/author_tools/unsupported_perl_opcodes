@@ -43,17 +43,8 @@ smartmatch	smart match		ck_smartmatch	s2
 
 formline	formline		ck_fun		ms@	S L
 
-aeach		each on array		ck_each		%	A
-
-each		each			ck_each		%	H
-delete		delete			ck_delete	%	S
-exists		exists			ck_exists	is%	S
 hslice		hash slice		ck_null		m@	H L
 boolkeys	boolkeys		ck_fun		%	H
-
-
-unpack		unpack			ck_fun		u@	S S?
-pack		pack			ck_fun		mst@	S L
 
 # requires thinking?
 list		list			ck_null		m@	L
@@ -85,38 +76,16 @@ leavewhen	leave when block	ck_null		1
 break		break			ck_null		0
 continue	continue		ck_null		0
 
-open		open			ck_open		ismt@	F S? L
-close		close			ck_fun		is%	F?
 pipe_op		pipe			ck_fun		is@	F F
 
-fileno		fileno			ck_fun		ist%	F
-umask		umask			ck_fun		ist%	S?
-binmode		binmode			ck_fun		s@	F S?
-
-tie		tie			ck_fun		idms@	R S L
-untie		untie			ck_fun		is%	R
-tied		tied			ck_fun		s%	R
 dbmopen		dbmopen			ck_fun		is@	H S S
 dbmclose	dbmclose		ck_fun		is%	H
 
 sselect		select system call	ck_select	t@	S S S S
 select		select			ck_select	st@	F?
 
-getc		getc			ck_eof		st%	F?
-read		read			ck_fun		imst@	F R S S?
 enterwrite	write			ck_fun		dis%	F?
 leavewrite	write exit		ck_null		1	
-
-sysopen		sysopen			ck_fun		s@	F S S S?
-sysseek		sysseek			ck_fun		s@	F S S
-sysread		sysread			ck_fun		imst@	F R S S?
-syswrite	syswrite		ck_fun		imst@	F S S? S?
-
-eof		eof			ck_eof		is%	F?
-tell		tell			ck_tell		st%	F?
-seek		seek			ck_tell		s@	F S S
-# truncate really behaves as if it had both "S S" and "F S"
-truncate	truncate		ck_trunc	is@	S S
 
 fcntl		fcntl			ck_fun		st@	F S S
 ioctl		ioctl			ck_fun		st@	F S S
@@ -220,9 +189,6 @@ syscall		syscall			ck_fun		imst@	S L
 lock		lock			ck_rfun		s%	R
 
 custom		unknown custom operator		ck_null		0
-
-# For smart dereference for each/keys/values
-reach		each on reference			ck_each		%	S
 
 # For CORE:: subs
 coreargs	CORE:: subroutine	ck_null		$	

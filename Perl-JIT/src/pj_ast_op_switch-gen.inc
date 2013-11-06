@@ -10,6 +10,7 @@
      (int)otype == OP_AASSIGN \
   || (int)otype == OP_ABS \
   || (int)otype == OP_ADD \
+  || (int)otype == OP_AEACH \
   || (int)otype == OP_AELEM \
   || (int)otype == OP_AKEYS \
   || (int)otype == OP_ALARM \
@@ -21,6 +22,7 @@
   || (int)otype == OP_AV2ARYLEN \
   || (int)otype == OP_AVALUES \
   || (int)otype == OP_BACKTICK \
+  || (int)otype == OP_BINMODE \
   || (int)otype == OP_BIT_AND \
   || (int)otype == OP_BIT_OR \
   || (int)otype == OP_BIT_XOR \
@@ -33,17 +35,23 @@
   || (int)otype == OP_CHOWN \
   || (int)otype == OP_CHR \
   || (int)otype == OP_CHROOT \
+  || (int)otype == OP_CLOSE \
   || (int)otype == OP_COMPLEMENT \
   || (int)otype == OP_CONCAT \
   || (int)otype == OP_COND_EXPR \
   || (int)otype == OP_COS \
   || (int)otype == OP_CRYPT \
   || (int)otype == OP_DEFINED \
+  || (int)otype == OP_DELETE \
   || (int)otype == OP_DIVIDE \
   || (int)otype == OP_DORASSIGN \
+  || (int)otype == OP_EACH \
+  || (int)otype == OP_EOF \
   || (int)otype == OP_EQ \
+  || (int)otype == OP_EXISTS \
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
+  || (int)otype == OP_FILENO \
   || (int)otype == OP_FTATIME \
   || (int)otype == OP_FTBINARY \
   || (int)otype == OP_FTBLK \
@@ -126,8 +134,10 @@
   || (int)otype == OP_NOT \
   || (int)otype == OP_OCT \
   || (int)otype == OP_ONCE \
+  || (int)otype == OP_OPEN \
   || (int)otype == OP_ORASSIGN \
   || (int)otype == OP_ORD \
+  || (int)otype == OP_PACK \
   || (int)otype == OP_PADAV \
   || (int)otype == OP_PADHV \
   || (int)otype == OP_PADSV \
@@ -144,6 +154,7 @@
   || (int)otype == OP_PUSH \
   || (int)otype == OP_QUOTEMETA \
   || (int)otype == OP_RAND \
+  || (int)otype == OP_REACH \
   || (int)otype == OP_READ \
   || (int)otype == OP_READLINK \
   || (int)otype == OP_REDO \
@@ -167,6 +178,7 @@
   || (int)otype == OP_SCHOP \
   || (int)otype == OP_SCMP \
   || (int)otype == OP_SCOPE \
+  || (int)otype == OP_SEEK \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGT \
@@ -189,13 +201,23 @@
   || (int)otype == OP_SUBSTR \
   || (int)otype == OP_SUBTRACT \
   || (int)otype == OP_SYMLINK \
+  || (int)otype == OP_SYSOPEN \
+  || (int)otype == OP_SYSREAD \
+  || (int)otype == OP_SYSSEEK \
+  || (int)otype == OP_SYSWRITE \
+  || (int)otype == OP_TELL \
+  || (int)otype == OP_TIED \
   || (int)otype == OP_TIME \
   || (int)otype == OP_TMS \
+  || (int)otype == OP_TRUNCATE \
   || (int)otype == OP_UC \
   || (int)otype == OP_UCFIRST \
+  || (int)otype == OP_UMASK \
   || (int)otype == OP_UNDEF \
   || (int)otype == OP_UNLINK \
+  || (int)otype == OP_UNPACK \
   || (int)otype == OP_UNSHIFT \
+  || (int)otype == OP_UNTIE \
   || (int)otype == OP_UTIME \
   || (int)otype == OP_VALUES \
   || (int)otype == OP_VEC \
@@ -207,6 +229,7 @@
      (int)otype == OP_AASSIGN \
   || (int)otype == OP_ABS \
   || (int)otype == OP_ADD \
+  || (int)otype == OP_AEACH \
   || (int)otype == OP_AELEM \
   || (int)otype == OP_AELEMFAST \
   || (int)otype == OP_AELEMFAST_LEX \
@@ -221,6 +244,7 @@
   || (int)otype == OP_AV2ARYLEN \
   || (int)otype == OP_AVALUES \
   || (int)otype == OP_BACKTICK \
+  || (int)otype == OP_BINMODE \
   || (int)otype == OP_BIT_AND \
   || (int)otype == OP_BIT_OR \
   || (int)otype == OP_BIT_XOR \
@@ -233,6 +257,7 @@
   || (int)otype == OP_CHOWN \
   || (int)otype == OP_CHR \
   || (int)otype == OP_CHROOT \
+  || (int)otype == OP_CLOSE \
   || (int)otype == OP_COMPLEMENT \
   || (int)otype == OP_CONCAT \
   || (int)otype == OP_COND_EXPR \
@@ -240,12 +265,17 @@
   || (int)otype == OP_COS \
   || (int)otype == OP_CRYPT \
   || (int)otype == OP_DEFINED \
+  || (int)otype == OP_DELETE \
   || (int)otype == OP_DIVIDE \
   || (int)otype == OP_DOR \
   || (int)otype == OP_DORASSIGN \
+  || (int)otype == OP_EACH \
+  || (int)otype == OP_EOF \
   || (int)otype == OP_EQ \
+  || (int)otype == OP_EXISTS \
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
+  || (int)otype == OP_FILENO \
   || (int)otype == OP_FTATIME \
   || (int)otype == OP_FTBINARY \
   || (int)otype == OP_FTBLK \
@@ -330,9 +360,11 @@
   || (int)otype == OP_NULL \
   || (int)otype == OP_OCT \
   || (int)otype == OP_ONCE \
+  || (int)otype == OP_OPEN \
   || (int)otype == OP_OR \
   || (int)otype == OP_ORASSIGN \
   || (int)otype == OP_ORD \
+  || (int)otype == OP_PACK \
   || (int)otype == OP_PADAV \
   || (int)otype == OP_PADHV \
   || (int)otype == OP_PADSV \
@@ -349,6 +381,7 @@
   || (int)otype == OP_PUSH \
   || (int)otype == OP_QUOTEMETA \
   || (int)otype == OP_RAND \
+  || (int)otype == OP_REACH \
   || (int)otype == OP_READ \
   || (int)otype == OP_READLINK \
   || (int)otype == OP_REDO \
@@ -372,6 +405,7 @@
   || (int)otype == OP_SCHOP \
   || (int)otype == OP_SCMP \
   || (int)otype == OP_SCOPE \
+  || (int)otype == OP_SEEK \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGT \
@@ -394,13 +428,23 @@
   || (int)otype == OP_SUBSTR \
   || (int)otype == OP_SUBTRACT \
   || (int)otype == OP_SYMLINK \
+  || (int)otype == OP_SYSOPEN \
+  || (int)otype == OP_SYSREAD \
+  || (int)otype == OP_SYSSEEK \
+  || (int)otype == OP_SYSWRITE \
+  || (int)otype == OP_TELL \
+  || (int)otype == OP_TIED \
   || (int)otype == OP_TIME \
   || (int)otype == OP_TMS \
+  || (int)otype == OP_TRUNCATE \
   || (int)otype == OP_UC \
   || (int)otype == OP_UCFIRST \
+  || (int)otype == OP_UMASK \
   || (int)otype == OP_UNDEF \
   || (int)otype == OP_UNLINK \
+  || (int)otype == OP_UNPACK \
   || (int)otype == OP_UNSHIFT \
+  || (int)otype == OP_UNTIE \
   || (int)otype == OP_UTIME \
   || (int)otype == OP_VALUES \
   || (int)otype == OP_VEC \

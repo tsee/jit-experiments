@@ -103,6 +103,16 @@ typedef enum {
   pj_unop_hash_values,
   pj_unop_ary_values,
   pj_unop_ref_values,
+  pj_unop_hash_each,
+  pj_unop_ary_each,
+  pj_unop_ref_each,
+  pj_unop_fileno,
+  pj_unop_umask,
+  pj_unop_close,
+  pj_unop_tied,
+  pj_unop_untie,
+  pj_unop_eof,
+  pj_unop_tell,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -148,6 +158,10 @@ typedef enum {
   pj_binop_symlink,
   pj_binop_mkdir,
   pj_binop_range,
+  pj_binop_exists,
+  pj_binop_delete,
+  pj_binop_binmode,
+  pj_binop_truncate,
 
   // Op class: pj_opc_listop
   pj_listop_ternary,
@@ -181,6 +195,14 @@ typedef enum {
   pj_listop_rindex,
   pj_listop_repeat,
   pj_listop_once,
+  pj_listop_pack,
+  pj_listop_unpack,
+  pj_listop_open,
+  pj_listop_seek,
+  pj_listop_sysopen,
+  pj_listop_sysseek,
+  pj_listop_syswrite,
+  pj_listop_sysread,
 
   // Op class: pj_opc_block
   pj_op_scope,
@@ -191,13 +213,13 @@ typedef enum {
   pj_baseop_LAST  = pj_baseop_empty,
 
   pj_unop_FIRST = pj_unop_localtime,
-  pj_unop_LAST  = pj_unop_ref_values,
+  pj_unop_LAST  = pj_unop_tell,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_range,
+  pj_binop_LAST  = pj_binop_truncate,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_once,
+  pj_listop_LAST  = pj_listop_sysread,
 
   pj_block_FIRST = pj_op_scope,
   pj_block_LAST  = pj_op_scope,

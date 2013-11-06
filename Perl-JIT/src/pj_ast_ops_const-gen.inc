@@ -98,6 +98,16 @@
   INT_CONST(pj_unop_hash_values);
   INT_CONST(pj_unop_ary_values);
   INT_CONST(pj_unop_ref_values);
+  INT_CONST(pj_unop_hash_each);
+  INT_CONST(pj_unop_ary_each);
+  INT_CONST(pj_unop_ref_each);
+  INT_CONST(pj_unop_fileno);
+  INT_CONST(pj_unop_umask);
+  INT_CONST(pj_unop_close);
+  INT_CONST(pj_unop_tied);
+  INT_CONST(pj_unop_untie);
+  INT_CONST(pj_unop_eof);
+  INT_CONST(pj_unop_tell);
   INT_CONST(pj_binop_add);
   INT_CONST(pj_binop_subtract);
   INT_CONST(pj_binop_multiply);
@@ -141,6 +151,10 @@
   INT_CONST(pj_binop_symlink);
   INT_CONST(pj_binop_mkdir);
   INT_CONST(pj_binop_range);
+  INT_CONST(pj_binop_exists);
+  INT_CONST(pj_binop_delete);
+  INT_CONST(pj_binop_binmode);
+  INT_CONST(pj_binop_truncate);
   INT_CONST(pj_listop_ternary);
   INT_CONST(pj_listop_substr);
   INT_CONST(pj_listop_chop);
@@ -172,6 +186,14 @@
   INT_CONST(pj_listop_rindex);
   INT_CONST(pj_listop_repeat);
   INT_CONST(pj_listop_once);
+  INT_CONST(pj_listop_pack);
+  INT_CONST(pj_listop_unpack);
+  INT_CONST(pj_listop_open);
+  INT_CONST(pj_listop_seek);
+  INT_CONST(pj_listop_sysopen);
+  INT_CONST(pj_listop_sysseek);
+  INT_CONST(pj_listop_syswrite);
+  INT_CONST(pj_listop_sysread);
   INT_CONST(pj_op_scope);
 
 
