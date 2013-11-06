@@ -114,12 +114,20 @@ class Perl::JIT::AST::Foreach : public Perl::JIT::AST::Term
   std::vector<Perl::JIT::AST::Term *> get_kids();
 };
 
-class Perl::JIT::AST::Map : public Perl::JIT::AST::Term
+class Perl::JIT::AST::ListTransformation : public Perl::JIT::AST::Term
 {
   Perl::JIT::AST::Term *body %get;
   Perl::JIT::AST::List *parameters %get;
 
   std::vector<Perl::JIT::AST::Term *> get_kids();
+};
+
+class Perl::JIT::AST::Grep : public Perl::JIT::AST::ListTransformation
+{
+};
+
+class Perl::JIT::AST::Map : public Perl::JIT::AST::ListTransformation
+{
 };
 
 class Perl::JIT::AST::Constant : public Perl::JIT::AST::Term

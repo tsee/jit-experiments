@@ -194,9 +194,18 @@ Foreach::Foreach(OP *p_op, Term *_iterator, Term *_expression, Term *_body, Term
     body(_body), continuation(_continuation)
 {}
 
-Map::Map(OP *p_op, Term *_body, List *_parameters)
-  : Term(p_op, pj_ttype_map), body(_body), parameters(_parameters)
+ListTransformation::ListTransformation(OP *p_op, pj_term_type type, Term *_body, List *_parameters)
+  : Term(p_op, type), body(_body), parameters(_parameters)
 {}
+
+Map::Map(OP *p_op, Term *_body, List *_parameters)
+  : ListTransformation(p_op, pj_ttype_map, _body, _parameters)
+{}
+
+Grep::Grep(OP *p_op, Term *_body, List *_parameters)
+  : ListTransformation(p_op, pj_ttype_grep, _body, _parameters)
+{}
+
 
 Statement::Statement(OP *p_nextstate, Term *term)
   : Term(p_nextstate, pj_ttype_statement)
@@ -435,10 +444,15 @@ void Foreach::dump(int indent_lvl)
   printf(")\n");
 }
 
-void Map::dump(int indent_lvl)
+void ListTransformation::dump(int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
-  printf("Map (\n");
+  if (type == pj_ttype_map)
+    printf("Map (\n");
+  else if (type == pj_ttype_grep)
+    printf("Grep (\n");
+  else
+    abort();
   body->dump(indent_lvl+1);
   parameters->dump(indent_lvl+1);
   S_dump_tree_indent(indent_lvl);
@@ -639,7 +653,7 @@ std::vector<PerlJIT::AST::Term *> Foreach::get_kids()
   return kids;
 }
 
-std::vector<PerlJIT::AST::Term *> Map::get_kids()
+std::vector<PerlJIT::AST::Term *> ListTransformation::get_kids()
 {
   std::vector<PerlJIT::AST::Term *> kids;
 

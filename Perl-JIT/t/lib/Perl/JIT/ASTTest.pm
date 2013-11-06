@@ -27,6 +27,7 @@ our @EXPORT = (qw(
   ast_for
   ast_foreach
   ast_map
+  ast_grep
   ast_baseop
   ast_unop
   ast_binop
@@ -124,6 +125,11 @@ sub _matches {
     }
     when ('map') {
       return 0 unless $ast->get_type == pj_ttype_map;
+      return _matches($ast->get_body, $pattern->{body}) &&
+             _matches($ast->get_parameters, $pattern->{parameters});
+    }
+    when ('grep') {
+      return 0 unless $ast->get_type == pj_ttype_grep;
       return _matches($ast->get_body, $pattern->{body}) &&
              _matches($ast->get_parameters, $pattern->{parameters});
     }
@@ -303,6 +309,13 @@ sub ast_map {
   my ($body, $params) = @_;
 
   return {type => 'map',
+          body => $body, parameters => $params};
+}
+
+sub ast_grep {
+  my ($body, $params) = @_;
+
+  return {type => 'grep',
           body => $body, parameters => $params};
 }
 

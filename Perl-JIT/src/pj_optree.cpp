@@ -547,8 +547,11 @@ pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinde
 }
 
 static PerlJIT::AST::Term *
-pj_build_map(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
+pj_build_grep_or_map(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
 {
+  assert(start->op_type == OP_MAPWHILE || start->op_type == OP_GREPWHILE);
+
+  // grep and map used almost interchangably here
   LOGOP *mapwhile = cLOGOPx(start);
   LISTOP *mapstart = cLISTOPx(mapwhile->op_first);
 
@@ -576,7 +579,9 @@ pj_build_map(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
     arg = arg->op_sibling;
   }
 
-  return new AST::Map(start, map_body_term, new AST::List(param_vec));
+  return start->op_type == OP_MAPWHILE
+         ? (AST::Term *)new AST::Map(start, map_body_term, new AST::List(param_vec))
+         : (AST::Term *)new AST::Grep(start, map_body_term, new AST::List(param_vec));
 }
 
 /* Walk OP tree recursively, build ASTs, build subtrees */
@@ -905,8 +910,9 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     retval = pj_build_loop(aTHX_ o, NULL, visitor);
     break;
 
+  case OP_GREPWHILE:
   case OP_MAPWHILE:
-    retval = pj_build_map(aTHX_ o, visitor);
+    retval = pj_build_grep_or_map(aTHX_ o, visitor);
     break;
 
   case OP_ANDASSIGN:

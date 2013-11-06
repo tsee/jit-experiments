@@ -28,6 +28,7 @@ typedef enum {
   pj_ttype_for,
   pj_ttype_foreach,
   pj_ttype_map,
+  pj_ttype_grep,
   pj_ttype_empty
 } pj_term_type;
 
@@ -372,10 +373,9 @@ namespace PerlJIT {
         { return "Perl::JIT::AST::Foreach"; }
     };
 
-    class Map : public Term {
+    class ListTransformation : public Term {
     public:
-      Map (OP *p_op, Term *body, List *parameters);
-
+      ListTransformation(OP *p_op, pj_term_type _type, Term *body, List *parameters);
       Term *body;
       List *parameters;
 
@@ -383,7 +383,23 @@ namespace PerlJIT {
 
       virtual void dump(int indent_lvl = 0);
       virtual const char *perl_class() const
+        { return "Perl::JIT::AST::ListTransformation"; }
+    };
+
+    class Map : public ListTransformation {
+    public:
+      Map(OP *p_op, Term *body, List *parameters);
+
+      virtual const char *perl_class() const
         { return "Perl::JIT::AST::Map"; }
+    };
+
+    class Grep : public ListTransformation {
+    public:
+      Grep(OP *p_op, Term *body, List *parameters);
+
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Grep"; }
     };
 
     class Optree : public Term {
