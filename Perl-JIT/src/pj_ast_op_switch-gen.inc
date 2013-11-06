@@ -207,6 +207,7 @@
   || (int)otype == OP_SUBSTR \
   || (int)otype == OP_SUBTRACT \
   || (int)otype == OP_SYMLINK \
+  || (int)otype == OP_SYSCALL \
   || (int)otype == OP_SYSOPEN \
   || (int)otype == OP_SYSREAD \
   || (int)otype == OP_SYSSEEK \
@@ -440,6 +441,7 @@
   || (int)otype == OP_SUBSTR \
   || (int)otype == OP_SUBTRACT \
   || (int)otype == OP_SYMLINK \
+  || (int)otype == OP_SYSCALL \
   || (int)otype == OP_SYSOPEN \
   || (int)otype == OP_SYSREAD \
   || (int)otype == OP_SYSSEEK \

@@ -209,6 +209,7 @@ typedef enum {
   pj_listop_ioctl,
   pj_listop_fcntl,
   pj_listop_sysselect,
+  pj_listop_syscall,
 
   // Op class: pj_opc_block
   pj_op_scope,
@@ -225,7 +226,7 @@ typedef enum {
   pj_binop_LAST  = pj_binop_flock,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_sysselect,
+  pj_listop_LAST  = pj_listop_syscall,
 
   pj_block_FIRST = pj_op_scope,
   pj_block_LAST  = pj_op_scope,

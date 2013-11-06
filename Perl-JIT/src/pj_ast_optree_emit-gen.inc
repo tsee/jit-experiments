@@ -189,6 +189,7 @@ EMIT_LISTOP_CODE(OP_DIE, pj_listop_die)
 EMIT_LISTOP_CODE(OP_IOCTL, pj_listop_ioctl)
 EMIT_LISTOP_CODE(OP_FCNTL, pj_listop_fcntl)
 EMIT_LISTOP_CODE(OP_SSELECT, pj_listop_sysselect)
+EMIT_LISTOP_CODE(OP_SYSCALL, pj_listop_syscall)
 
 
 #endif

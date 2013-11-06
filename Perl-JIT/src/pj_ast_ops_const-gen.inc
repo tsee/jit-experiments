@@ -200,6 +200,7 @@
   INT_CONST(pj_listop_ioctl);
   INT_CONST(pj_listop_fcntl);
   INT_CONST(pj_listop_sysselect);
+  INT_CONST(pj_listop_syscall);
   INT_CONST(pj_op_scope);
 
 

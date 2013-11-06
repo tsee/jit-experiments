@@ -235,5 +235,6 @@ pj_listop_die,		pj_opc_listop,	die(),		OP_DIE,		0,	emit,	Any # umm, returns... n
 pj_listop_ioctl,	pj_opc_listop,	ioctl(),	OP_IOCTL,	0,	emit,	Any # undef or "0 but true" or a number
 pj_listop_fcntl,	pj_opc_listop,	fcntl(),	OP_FCNTL,	0,	emit,	Any # "0 but true" or a number?
 pj_listop_sysselect,	pj_opc_listop,	select syscall,	OP_SSELECT,	0,	emit,	Integer # according to docs
+pj_listop_syscall,	pj_opc_listop,	gen. syscall,	OP_SYSCALL,	0,	emit,	Any # docs unclear on retval
 
 pj_op_scope,		pj_opc_block,	scope,		OP_SCOPE,	0,	,	Scalar=Any List=List[Any]

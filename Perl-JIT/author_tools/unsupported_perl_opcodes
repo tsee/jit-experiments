@@ -171,8 +171,6 @@ sgrent		setgrent		ck_null		is0
 egrent		endgrent		ck_null		is0	
 getlogin	getlogin		ck_null		st0	
 
-syscall		syscall			ck_fun		imst@	S L
-
 # For multi-threading
 lock		lock			ck_rfun		s%	R
 
