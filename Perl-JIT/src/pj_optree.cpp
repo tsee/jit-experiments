@@ -931,10 +931,10 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       }
       AST::Term *left = pj_build_ast(aTHX_ bo->op_first, visitor);
       AST::Term *right = pj_build_ast(aTHX_ cBINOPx(bo->op_first->op_sibling)->op_first, visitor);
-      pj_op_type t =   otype == OP_ANDASSIGN ? pj_binop_bool_and
-                     : otype == OP_ORASSIGN  ? pj_binop_bool_or
-                     :                         pj_binop_definedor;
-      retval = new AST::Binop(o, t, left, right);
+      pj_op_type ttype =   otype == OP_ANDASSIGN ? pj_binop_bool_and
+                         : otype == OP_ORASSIGN  ? pj_binop_bool_or
+                         :                         pj_binop_definedor;
+      retval = new AST::Binop(o, ttype, left, right);
       ((AST::Binop *)retval)->set_assignment_form(true);
       break;
     }
