@@ -38,6 +38,22 @@ pj_baseop_next,		pj_opc_baseop,	next,		OP_NEXT,	0,	emit,	Any # really never retu
 pj_baseop_last,		pj_opc_baseop,	last,		OP_LAST,	0,	emit,	Any # really never returns...
 pj_baseop_redo,		pj_opc_baseop,	redo,		OP_REDO,	0,	emit,	Any # really never returns...
 pj_baseop_empty,	pj_opc_baseop,	(),		OP_STUB, 	0,	,	Any # really: empty list in list/void or undef in scalar context
+pj_baseop_gethostent,	pj_opc_baseop,  gethostent(),	OP_GHOSTENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_getnetent,	pj_opc_baseop,  getnetent(),	OP_GNETENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_getservent,	pj_opc_baseop,  getservent(),	OP_GSERVENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_endhostent,	pj_opc_baseop,  endhostent(),	OP_EHOSTENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_endnetent,	pj_opc_baseop,  endnetent(),	OP_ENETENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_getpwent,	pj_opc_baseop,  getpwent(),	OP_GPWENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_setpwent,	pj_opc_baseop,  setpwent(),	OP_SPWENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_getgrent,	pj_opc_baseop,  getgrent(),	OP_GGRENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_setgrent,	pj_opc_baseop,  setgrent(),	OP_SGRENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_endgrent,	pj_opc_baseop,  endgrent(),	OP_EGRENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_getlogin,	pj_opc_baseop,  getlogin(),	OP_GETLOGIN,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_endpwent,	pj_opc_baseop,  endpwent(),	OP_EPWENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_endprotoend,	pj_opc_baseop,  endprotoent(),	OP_EPROTOENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_endservend,	pj_opc_baseop,  endservent(),	OP_ESERVENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_getprotoend,	pj_opc_baseop,  getprotoent(),	OP_GPROTOENT,	0,	emit,	Scalar=Any List=List[Any]
+
 
 # unops (but some OP_STUB are really null-ary... => baseop)
 pj_unop_localtime,	pj_opc_unop,	localtime(),	OP_LOCALTIME, 	KIDS_OPTIONAL,	emit,	Scalar=String List=Integer Integer Integer Integer Integer Double Integer Integer Integer
@@ -139,6 +155,18 @@ pj_unop_untie,		pj_opc_unop,	untie(),	OP_UNTIE,	0,	emit,	Scalar
 pj_unop_eof,		pj_opc_unop,	eof(),		OP_EOF,		KIDS_OPTIONAL,	emit,	Scalar
 pj_unop_tell,		pj_opc_unop,	tell(),		OP_TELL,	KIDS_OPTIONAL,	emit,	Scalar
 pj_unop_fh_select,	pj_opc_unop,	select(FH),	OP_SELECT,	KIDS_OPTIONAL,	emit,	Scalar
+pj_unop_gethostbyname,	pj_opc_unop,	gethostbyname,	OP_GHBYNAME,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_sethostent,	pj_opc_unop,	sethostent(),	OP_SHOSTENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_setnetent,	pj_opc_unop,	setnetent(),	OP_SNETENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_getpwnam,	pj_opc_unop,	getpwnam(),	OP_GPWNAM,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_getpwuid,	pj_opc_unop,	getpwuid(),	OP_GPWUID,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_setprotoent,	pj_opc_unop,	setprotoent(),	OP_SPROTOENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_getgrnam,	pj_opc_unop,	getgrnam(),	OP_GGRNAM,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_getgrgid,	pj_opc_unop,	getgrgid(),	OP_GGRGID,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_setservent,	pj_opc_unop,	setservent(),	OP_SSERVENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_getnetbyname,	pj_opc_unop,	getnetbyname(),	OP_GNBYNAME,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_getprotobyname,	pj_opc_unop,	getprotobyname,	OP_GPBYNAME,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_getprotobynum,	pj_opc_unop,	getprotobynum,	OP_GPBYNUMBER,	0,	emit,	Scalar=Any List=List[Any]
 
 
 # binops
@@ -190,6 +218,11 @@ pj_binop_delete,	pj_opc_binop,	delete(),	OP_DELETE,	0,	,	Scalar=Any List=List[An
 pj_binop_binmode,	pj_opc_binop,	binmode(),	OP_BINMODE,	KIDS_OPTIONAL,	emit,	Scalar
 pj_binop_truncate,	pj_opc_binop,	truncate(),	OP_TRUNCATE,	0,	emit,	Any # true or undef
 pj_binop_flock,		pj_opc_binop,	flock(),	OP_FLOCK,	0,	emit,	Any # true or false
+pj_binop_gethostbyaddr,	pj_opc_binop,	gethostbyaddr,	OP_GHBYADDR,	0,	emit,	Scalar=Any List=List[Any]
+pj_binop_getnetbyaddr,	pj_opc_binop,	getnetbyaddr(),	OP_GNBYADDR,	0,	emit,	Scalar=Any List=List[Any]
+pj_binop_getservbyname,	pj_opc_binop,	getservbyname,	OP_GSBYNAME,	0,	emit,	Scalar=Any List=List[Any]
+pj_binop_getservbyport,	pj_opc_binop,	getservbyport,	OP_GSBYPORT,	0,	emit,	Scalar=Any List=List[Any]
+
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any

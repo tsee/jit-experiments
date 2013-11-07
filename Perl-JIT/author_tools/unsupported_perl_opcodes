@@ -139,38 +139,6 @@ leaveeval	eval "string" exit	ck_null		1	S
 entertry	eval {block}		ck_eval		d|	
 leavetry	eval {block} exit	ck_null		@	
 
-ghbyname	gethostbyname		ck_fun		%	S
-ghbyaddr	gethostbyaddr		ck_fun		@	S S
-ghostent	gethostent		ck_null		0	
-gnbyname	getnetbyname		ck_fun		%	S
-gnbyaddr	getnetbyaddr		ck_fun		@	S S
-gnetent		getnetent		ck_null		0	
-gpbyname	getprotobyname		ck_fun		%	S
-gpbynumber	getprotobynumber	ck_fun		@	S
-gprotoent	getprotoent		ck_null		0	
-gsbyname	getservbyname		ck_fun		@	S S
-gsbyport	getservbyport		ck_fun		@	S S
-gservent	getservent		ck_null		0	
-shostent	sethostent		ck_fun		is%	S
-snetent		setnetent		ck_fun		is%	S
-sprotoent	setprotoent		ck_fun		is%	S
-sservent	setservent		ck_fun		is%	S
-ehostent	endhostent		ck_null		is0	
-enetent		endnetent		ck_null		is0	
-eprotoent	endprotoent		ck_null		is0	
-eservent	endservent		ck_null		is0	
-gpwnam		getpwnam		ck_fun		%	S
-gpwuid		getpwuid		ck_fun		%	S
-gpwent		getpwent		ck_null		0	
-spwent		setpwent		ck_null		is0	
-epwent		endpwent		ck_null		is0	
-ggrnam		getgrnam		ck_fun		%	S
-ggrgid		getgrgid		ck_fun		%	S
-ggrent		getgrent		ck_null		0	
-sgrent		setgrent		ck_null		is0	
-egrent		endgrent		ck_null		is0	
-getlogin	getlogin		ck_null		st0	
-
 # For multi-threading
 lock		lock			ck_rfun		s%	R
 

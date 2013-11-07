@@ -47,8 +47,14 @@
   || (int)otype == OP_DIVIDE \
   || (int)otype == OP_DORASSIGN \
   || (int)otype == OP_EACH \
+  || (int)otype == OP_EGRENT \
+  || (int)otype == OP_EHOSTENT \
+  || (int)otype == OP_ENETENT \
   || (int)otype == OP_EOF \
+  || (int)otype == OP_EPROTOENT \
+  || (int)otype == OP_EPWENT \
   || (int)otype == OP_EQ \
+  || (int)otype == OP_ESERVENT \
   || (int)otype == OP_EXISTS \
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
@@ -84,8 +90,27 @@
   || (int)otype == OP_FTZERO \
   || (int)otype == OP_GE \
   || (int)otype == OP_GETC \
+  || (int)otype == OP_GETLOGIN \
+  || (int)otype == OP_GGRENT \
+  || (int)otype == OP_GGRGID \
+  || (int)otype == OP_GGRNAM \
+  || (int)otype == OP_GHBYADDR \
+  || (int)otype == OP_GHBYNAME \
+  || (int)otype == OP_GHOSTENT \
   || (int)otype == OP_GMTIME \
+  || (int)otype == OP_GNBYADDR \
+  || (int)otype == OP_GNBYNAME \
+  || (int)otype == OP_GNETENT \
+  || (int)otype == OP_GPBYNAME \
+  || (int)otype == OP_GPBYNUMBER \
+  || (int)otype == OP_GPROTOENT \
+  || (int)otype == OP_GPWENT \
+  || (int)otype == OP_GPWNAM \
+  || (int)otype == OP_GPWUID \
   || (int)otype == OP_GREPWHILE \
+  || (int)otype == OP_GSBYNAME \
+  || (int)otype == OP_GSBYPORT \
+  || (int)otype == OP_GSERVENT \
   || (int)otype == OP_GT \
   || (int)otype == OP_HELEM \
   || (int)otype == OP_HEX \
@@ -186,20 +211,26 @@
   || (int)otype == OP_SELECT \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
+  || (int)otype == OP_SGRENT \
   || (int)otype == OP_SGT \
   || (int)otype == OP_SHIFT \
+  || (int)otype == OP_SHOSTENT \
   || (int)otype == OP_SIN \
   || (int)otype == OP_SLE \
   || (int)otype == OP_SLEEP \
   || (int)otype == OP_SLT \
   || (int)otype == OP_SNE \
+  || (int)otype == OP_SNETENT \
   || (int)otype == OP_SPLICE \
   || (int)otype == OP_SPLIT \
   || (int)otype == OP_SPRINTF \
+  || (int)otype == OP_SPROTOENT \
+  || (int)otype == OP_SPWENT \
   || (int)otype == OP_SQRT \
   || (int)otype == OP_SRAND \
   || (int)otype == OP_SREFGEN \
   || (int)otype == OP_SSELECT \
+  || (int)otype == OP_SSERVENT \
   || (int)otype == OP_STAT \
   || (int)otype == OP_STUB \
   || (int)otype == OP_STUDY \
@@ -278,8 +309,14 @@
   || (int)otype == OP_DOR \
   || (int)otype == OP_DORASSIGN \
   || (int)otype == OP_EACH \
+  || (int)otype == OP_EGRENT \
+  || (int)otype == OP_EHOSTENT \
+  || (int)otype == OP_ENETENT \
   || (int)otype == OP_EOF \
+  || (int)otype == OP_EPROTOENT \
+  || (int)otype == OP_EPWENT \
   || (int)otype == OP_EQ \
+  || (int)otype == OP_ESERVENT \
   || (int)otype == OP_EXISTS \
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
@@ -315,8 +352,27 @@
   || (int)otype == OP_FTZERO \
   || (int)otype == OP_GE \
   || (int)otype == OP_GETC \
+  || (int)otype == OP_GETLOGIN \
+  || (int)otype == OP_GGRENT \
+  || (int)otype == OP_GGRGID \
+  || (int)otype == OP_GGRNAM \
+  || (int)otype == OP_GHBYADDR \
+  || (int)otype == OP_GHBYNAME \
+  || (int)otype == OP_GHOSTENT \
   || (int)otype == OP_GMTIME \
+  || (int)otype == OP_GNBYADDR \
+  || (int)otype == OP_GNBYNAME \
+  || (int)otype == OP_GNETENT \
+  || (int)otype == OP_GPBYNAME \
+  || (int)otype == OP_GPBYNUMBER \
+  || (int)otype == OP_GPROTOENT \
+  || (int)otype == OP_GPWENT \
+  || (int)otype == OP_GPWNAM \
+  || (int)otype == OP_GPWUID \
   || (int)otype == OP_GREPWHILE \
+  || (int)otype == OP_GSBYNAME \
+  || (int)otype == OP_GSBYPORT \
+  || (int)otype == OP_GSERVENT \
   || (int)otype == OP_GT \
   || (int)otype == OP_GVSV \
   || (int)otype == OP_HELEM \
@@ -420,20 +476,26 @@
   || (int)otype == OP_SELECT \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
+  || (int)otype == OP_SGRENT \
   || (int)otype == OP_SGT \
   || (int)otype == OP_SHIFT \
+  || (int)otype == OP_SHOSTENT \
   || (int)otype == OP_SIN \
   || (int)otype == OP_SLE \
   || (int)otype == OP_SLEEP \
   || (int)otype == OP_SLT \
   || (int)otype == OP_SNE \
+  || (int)otype == OP_SNETENT \
   || (int)otype == OP_SPLICE \
   || (int)otype == OP_SPLIT \
   || (int)otype == OP_SPRINTF \
+  || (int)otype == OP_SPROTOENT \
+  || (int)otype == OP_SPWENT \
   || (int)otype == OP_SQRT \
   || (int)otype == OP_SRAND \
   || (int)otype == OP_SREFGEN \
   || (int)otype == OP_SSELECT \
+  || (int)otype == OP_SSERVENT \
   || (int)otype == OP_STAT \
   || (int)otype == OP_STUB \
   || (int)otype == OP_STUDY \

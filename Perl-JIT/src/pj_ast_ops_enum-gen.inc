@@ -13,6 +13,21 @@ typedef enum {
   pj_baseop_last,
   pj_baseop_redo,
   pj_baseop_empty,
+  pj_baseop_gethostent,
+  pj_baseop_getnetent,
+  pj_baseop_getservent,
+  pj_baseop_endhostent,
+  pj_baseop_endnetent,
+  pj_baseop_getpwent,
+  pj_baseop_setpwent,
+  pj_baseop_getgrent,
+  pj_baseop_setgrent,
+  pj_baseop_endgrent,
+  pj_baseop_getlogin,
+  pj_baseop_endpwent,
+  pj_baseop_endprotoend,
+  pj_baseop_endservend,
+  pj_baseop_getprotoend,
 
   // Op class: pj_opc_unop
   pj_unop_localtime,
@@ -114,6 +129,18 @@ typedef enum {
   pj_unop_eof,
   pj_unop_tell,
   pj_unop_fh_select,
+  pj_unop_gethostbyname,
+  pj_unop_sethostent,
+  pj_unop_setnetent,
+  pj_unop_getpwnam,
+  pj_unop_getpwuid,
+  pj_unop_setprotoent,
+  pj_unop_getgrnam,
+  pj_unop_getgrgid,
+  pj_unop_setservent,
+  pj_unop_getnetbyname,
+  pj_unop_getprotobyname,
+  pj_unop_getprotobynum,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -164,6 +191,10 @@ typedef enum {
   pj_binop_binmode,
   pj_binop_truncate,
   pj_binop_flock,
+  pj_binop_gethostbyaddr,
+  pj_binop_getnetbyaddr,
+  pj_binop_getservbyname,
+  pj_binop_getservbyport,
 
   // Op class: pj_opc_listop
   pj_listop_ternary,
@@ -217,13 +248,13 @@ typedef enum {
   // Op class ranges
 
   pj_baseop_FIRST = pj_baseop_time,
-  pj_baseop_LAST  = pj_baseop_empty,
+  pj_baseop_LAST  = pj_baseop_getprotoend,
 
   pj_unop_FIRST = pj_unop_localtime,
-  pj_unop_LAST  = pj_unop_fh_select,
+  pj_unop_LAST  = pj_unop_getprotobynum,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_flock,
+  pj_binop_LAST  = pj_binop_getservbyport,
 
   pj_listop_FIRST = pj_listop_ternary,
   pj_listop_LAST  = pj_listop_syscall,
