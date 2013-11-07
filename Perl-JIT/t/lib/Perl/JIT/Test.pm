@@ -27,6 +27,7 @@ our @EXPORT = qw(
   build_jit_test_sub
   build_jit_types_test_sub
   concise_dump
+  compile_and_test
 );
 
 SCOPE: {
@@ -314,6 +315,45 @@ EOT
     die "Failed to compile test function code:\n$subcode";
   }
   return $sub;
+}
+
+sub compile_and_test {
+  my %args = @_;
+  my $code = $args{code} // die;
+  my @args = @{ $args{args} || [] };
+  my $cmp_fun = $args{cmp_fun} // \&is_approx;
+  my $name = $args{name} // "Unnamed test";
+  my $repeat = $args{repeat} // 1e6;
+
+  $code = "use Perl::JIT; $code";
+  my $perl_sub = eval $code
+  or die "Failed to eval code: $@";
+  my $jit_sub = eval $code
+    or die "Failed to eval code: $@";
+
+  $emit->jit_sub($jit_sub);
+
+  my $exp = $perl_sub->(@args);
+  my $res = $jit_sub->(@args);
+  $cmp_fun->($exp, $res, $name);
+
+  if ($ENV{BENCHMARK}) {
+    require Dumbbench;
+    my $bench = Dumbbench->new(
+      verbosity => ($ENV{BENCHMARK}||1)-1,
+      target_rel_precision => 0.01,
+      initial_runs         => 20,
+    );
+    $bench->add_instances(
+      Dumbbench::Instance::PerlSub->new(name => "perl", code => sub {$perl_sub->(@args) for 1..$repeat;}),
+      Dumbbench::Instance::PerlSub->new(name => "jit",  code => sub {$jit_sub->(@args)  for 1..$repeat;}),
+    );
+
+    $bench->run;
+    print "\n=======================================\nBenchmarking $name:\n";
+    $bench->report;
+    print "\n";
+  }
 }
 
 package t::lib::Perl::JIT::Test;
