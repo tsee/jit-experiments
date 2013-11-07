@@ -126,9 +126,10 @@ sub approx_eq {
   $delta ||= 1e-9;
   return($t + $delta > $ref && $t - $delta < $ref)
 }
+
 sub is_approx {
   my ($t, $ref, $name, $delta) = @_;
-  ok(is_approx($t, $ref, $delta), $name)
+  ok(approx_eq($t, $ref, $delta), $name)
     or diag("$t appears to be different from $ref");
 }
 
