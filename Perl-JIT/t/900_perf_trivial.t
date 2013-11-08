@@ -43,4 +43,23 @@ compile_and_test(
   },
 );
 
+compile_and_test(
+  code => q{
+    sub {
+      use Perl::JIT;
+      typed String $input = $_[0];
+      my %h;
+      typed String $s;
+      foreach $s ("aaa" .. "zzz") {
+        $h{$s} = 1;
+      }
+      return exists $h{$input};
+    }
+  },
+  args => ["bza"],
+  name => "silly hash/string usage",
+  repeat => 3e1,
+  cmp_fun => sub { is($_[0], $_[1], $_[2]) },
+);
+
 done_testing();
