@@ -71,9 +71,14 @@
     EXTEND(SP, n);
     for (unsigned int i = 0; i < n; ++i) {
       PerlJIT::AST::Term *t = $CVar[i];
-      SV *retval = sv_newmortal();
-      sv_setref_pv( retval, xsp_constructor_class(t->perl_class()), (void*)t );
-      PUSHs(retval);
+      if (t != NULL) {
+        SV *retval = sv_newmortal();
+        sv_setref_pv( retval, xsp_constructor_class(t->perl_class()), (void*)t );
+        PUSHs(retval);
+      }
+      //else {
+      //  PUSHs(&PL_sv_undef);
+      //}
     }
   %};
 };
