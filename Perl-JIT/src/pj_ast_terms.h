@@ -82,13 +82,13 @@ namespace PerlJIT {
 
       pj_op_context context();
 
-      pj_term_type get_type() const {return type;}
-      void set_type(const pj_term_type t) {type = t;}
+      pj_term_type get_type() const;
+      void set_type(const pj_term_type t);
 
-      OP *get_perl_op() const {return perl_op;}
-      void set_perl_op(OP *p_op) {perl_op = p_op;}
+      OP *get_perl_op() const;
+      void set_perl_op(OP *p_op);
 
-      virtual Type *get_value_type();
+      virtual Type *get_value_type() const;
       virtual void set_value_type(Type *t);
 
       virtual void dump(int indent_lvl = 0) = 0;
@@ -205,8 +205,8 @@ namespace PerlJIT {
 
       int get_pad_index() const;
 
-      virtual Type *get_value_type() { return declaration->get_value_type(); }
-      virtual void set_value_type(Type *t) { declaration->set_value_type(t); }
+      virtual Type *get_value_type() const;
+      virtual void set_value_type(Type *t);
 
       virtual void dump(int indent_lvl);
       virtual const char *perl_class() const
@@ -436,7 +436,7 @@ namespace PerlJIT {
         { return "Perl::JIT::AST::Statement"; }
     };
 
-    // This class is anomalous in multiple ways: it does not rellay map to
+    // This class is anomalous in multiple ways: it does not really map to
     // a complete syntactic construct, its perl_op member is NULL and
     // it's created outside normal op traversal
     // It's an unfortunate necessity until we can recognize (and have AST

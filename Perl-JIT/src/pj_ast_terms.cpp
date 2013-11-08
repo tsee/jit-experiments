@@ -290,6 +290,12 @@ VariableDeclaration::dump(int indent_lvl)
   printf("\n");
 }
 
+Type *Lexical::get_value_type() const
+{ return declaration->get_value_type(); }
+
+void Lexical::set_value_type(Type *t)
+{ declaration->set_value_type(t); }
+
 
 void
 Lexical::dump(int indent_lvl)
@@ -503,7 +509,19 @@ List::~List()
     delete k[i];
 }
 
-Type *Term::get_value_type()
+pj_term_type Term::get_type() const
+{ return type; }
+
+void Term::set_type(const pj_term_type t)
+{ type = t; }
+
+OP * Term::get_perl_op() const
+{ return perl_op; }
+
+void Term::set_perl_op(OP *p_op)
+{ perl_op = p_op; }
+
+Type *Term::get_value_type() const
 {
   return _value_type;
 }
