@@ -80,7 +80,7 @@ namespace PerlJIT {
       virtual OP *first_op();
       virtual OP *last_op();
 
-      pj_op_context context();
+      pj_op_context context() const;
 
       pj_term_type get_type() const;
       void set_type(const pj_term_type t);
@@ -91,7 +91,7 @@ namespace PerlJIT {
       virtual Type *get_value_type() const;
       virtual void set_value_type(Type *t);
 
-      virtual void dump(int indent_lvl = 0) = 0;
+      virtual void dump(int indent_lvl = 0) const = 0;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Term"; }
       virtual ~Term();
@@ -106,7 +106,7 @@ namespace PerlJIT {
     public:
       Empty();
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Empty"; }
     };
@@ -121,7 +121,7 @@ namespace PerlJIT {
 
       std::vector<PerlJIT::AST::Term *> kids;
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::List"; }
       virtual ~List();
@@ -131,7 +131,7 @@ namespace PerlJIT {
     public:
       Constant(OP *p_op, Type *v_type);
 
-      virtual void dump(int indent_lvl = 0) = 0;
+      virtual void dump(int indent_lvl = 0) const = 0;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Constant"; }
     };
@@ -148,7 +148,7 @@ namespace PerlJIT {
         unsigned int uint_value;
       };
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::NumericConstant"; }
     };
@@ -161,7 +161,7 @@ namespace PerlJIT {
       std::string string_value;
       bool is_utf8;
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::StringConstant"; }
     };
@@ -170,7 +170,7 @@ namespace PerlJIT {
     public:
       UndefConstant();
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::UndefConstant"; }
     };
@@ -189,7 +189,7 @@ namespace PerlJIT {
 
       int ivar;
 
-      virtual void dump(int indent_lvl);
+      virtual void dump(int indent_lvl) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::VariableDeclaration"; }
     };
@@ -208,7 +208,7 @@ namespace PerlJIT {
       virtual Type *get_value_type() const;
       virtual void set_value_type(Type *t);
 
-      virtual void dump(int indent_lvl);
+      virtual void dump(int indent_lvl) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Lexical"; }
     };
@@ -223,7 +223,7 @@ namespace PerlJIT {
       GV *get_gv() const;
 #endif
 
-      virtual void dump(int indent_lvl);
+      virtual void dump(int indent_lvl) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Global"; }
     };
@@ -232,16 +232,16 @@ namespace PerlJIT {
     public:
       Op(OP *p_op, pj_op_type t);
 
-      virtual const char *name();
-      unsigned int flags();
-      virtual pj_op_class op_class() = 0;
+      virtual const char *name() const;
+      unsigned int flags() const;
+      virtual pj_op_class op_class() const = 0;
 
       pj_op_type optype;
       std::vector<PerlJIT::AST::Term *> kids;
       bool is_integer_variant() const { return _is_integer_variant; }
       void set_integer_variant(bool is_integer_variant) { _is_integer_variant = is_integer_variant; }
 
-      virtual void dump(int indent_lvl = 0) = 0;
+      virtual void dump(int indent_lvl = 0) const = 0;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Op"; }
       virtual ~Op();
@@ -254,10 +254,10 @@ namespace PerlJIT {
     public:
       Baseop(OP *p_op, pj_op_type t);
 
-      pj_op_class op_class()
+      pj_op_class op_class() const
         { return pj_opc_baseop; }
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Baseop"; }
     };
@@ -266,10 +266,10 @@ namespace PerlJIT {
     public:
       Unop(OP *p_op, pj_op_type t, Term *kid);
 
-      pj_op_class op_class()
+      pj_op_class op_class() const
         { return pj_opc_unop; }
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Unop"; }
     };
@@ -278,12 +278,12 @@ namespace PerlJIT {
     public:
       Binop(OP *p_op, pj_op_type t, Term *kid1, Term *kid2);
 
-      bool is_assignment_form();
+      bool is_assignment_form() const;
       void set_assignment_form(bool is_assignment);
       bool is_synthesized_assignment() const;
 
-      virtual void dump(int indent_lvl = 0);
-      pj_op_class op_class()
+      virtual void dump(int indent_lvl = 0) const;
+      pj_op_class op_class() const
         { return pj_opc_binop; }
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Binop"; }
@@ -296,8 +296,8 @@ namespace PerlJIT {
     public:
       Listop(OP *p_op, pj_op_type t, const std::vector<Term *> &children);
 
-      virtual void dump(int indent_lvl = 0);
-      pj_op_class op_class()
+      virtual void dump(int indent_lvl = 0) const;
+      pj_op_class op_class() const
         { return pj_opc_listop; }
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Listop"; }
@@ -307,8 +307,8 @@ namespace PerlJIT {
     public:
       Block(OP *p_op, Term *statements);
 
-      virtual void dump(int indent_lvl = 0);
-      pj_op_class op_class()
+      virtual void dump(int indent_lvl = 0) const;
+      pj_op_class op_class() const
         { return pj_opc_block; }
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Block"; }
@@ -323,7 +323,7 @@ namespace PerlJIT {
 
       std::vector<PerlJIT::AST::Term *> get_kids();
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::BareBlock"; }
     };
@@ -339,7 +339,7 @@ namespace PerlJIT {
 
       std::vector<PerlJIT::AST::Term *> get_kids();
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::While"; }
     };
@@ -357,7 +357,7 @@ namespace PerlJIT {
 
       std::vector<PerlJIT::AST::Term *> get_kids();
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::For"; }
     };
@@ -373,7 +373,7 @@ namespace PerlJIT {
 
       std::vector<PerlJIT::AST::Term *> get_kids();
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Foreach"; }
     };
@@ -386,7 +386,7 @@ namespace PerlJIT {
 
       std::vector<PerlJIT::AST::Term *> get_kids();
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::ListTransformation"; }
     };
@@ -411,7 +411,7 @@ namespace PerlJIT {
     public:
       Optree(OP *p_op);
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Optree"; }
     };
@@ -420,7 +420,7 @@ namespace PerlJIT {
     public:
       NullOptree(OP *p_op);
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::NullOptree"; }
     };
@@ -431,7 +431,7 @@ namespace PerlJIT {
 
       std::vector<PerlJIT::AST::Term *> kids;
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Statement"; }
     };
@@ -447,7 +447,7 @@ namespace PerlJIT {
 
       std::vector<PerlJIT::AST::Term *> kids;
 
-      virtual void dump(int indent_lvl = 0);
+      virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::StatementSequence"; }
     };

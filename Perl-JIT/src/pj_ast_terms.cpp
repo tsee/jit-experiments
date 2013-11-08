@@ -230,7 +230,7 @@ S_dump_tree_indent(int lvl)
 
 
 void
-NumericConstant::dump(int indent_lvl)
+NumericConstant::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   if (this->_value_type->tag() == pj_double_type)
@@ -245,7 +245,7 @@ NumericConstant::dump(int indent_lvl)
 
 
 void
-StringConstant::dump(int indent_lvl)
+StringConstant::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("C = (string, %s)\"%*s\"\n",
@@ -256,7 +256,7 @@ StringConstant::dump(int indent_lvl)
 
 
 void
-UndefConstant::dump(int indent_lvl)
+UndefConstant::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("<undef>\n");
@@ -281,7 +281,7 @@ S_sigil_character(pj_variable_sigil sigil)
 }
 
 void
-VariableDeclaration::dump(int indent_lvl)
+VariableDeclaration::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("VD (%c) = %i", S_sigil_character(sigil), this->ivar);
@@ -298,7 +298,7 @@ void Lexical::set_value_type(Type *t)
 
 
 void
-Lexical::dump(int indent_lvl)
+Lexical::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("V (%c) = %i", S_sigil_character(declaration->sigil), declaration->ivar);
@@ -309,7 +309,7 @@ Lexical::dump(int indent_lvl)
 
 
 void
-Global::dump(int indent_lvl)
+Global::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("G = (%c)\n", S_sigil_character(sigil));
@@ -317,7 +317,7 @@ Global::dump(int indent_lvl)
 
 
 void
-Optree::dump(int indent_lvl)
+Optree::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("'UnJITable subtree'\n");
@@ -325,13 +325,13 @@ Optree::dump(int indent_lvl)
 
 
 void
-NullOptree::dump(int indent_lvl)
+NullOptree::dump(int indent_lvl) const
 {
   printf("'UnJITable nulled subtree'\n");
 }
 
 void
-Statement::dump(int indent_lvl)
+Statement::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("Statement %s:%d\n", CopFILE(cCOPx(perl_op)), CopLINE(cCOPx(perl_op)));
@@ -339,7 +339,7 @@ Statement::dump(int indent_lvl)
 }
 
 void
-StatementSequence::dump(int indent_lvl)
+StatementSequence::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("StatementSequence\n");
@@ -348,7 +348,7 @@ StatementSequence::dump(int indent_lvl)
 }
 
 static void
-S_dump_op(PerlJIT::AST::Op *o, const char *op_str, bool is_assignment_form, int indent_lvl)
+S_dump_op(const PerlJIT::AST::Op *o, const char *op_str, bool is_assignment_form, int indent_lvl)
 {
   S_dump_tree_indent(indent_lvl);
   printf(
@@ -378,22 +378,22 @@ S_dump_op(PerlJIT::AST::Op *o, const char *op_str, bool is_assignment_form, int 
 }
 
 
-void Baseop::dump(int indent_lvl)
+void Baseop::dump(int indent_lvl) const
 { S_dump_op(this, "Baseop", false, indent_lvl); }
 
-void Unop::dump(int indent_lvl)
+void Unop::dump(int indent_lvl) const
 { S_dump_op(this, "Unop", false, indent_lvl); }
 
-void Binop::dump(int indent_lvl)
+void Binop::dump(int indent_lvl) const
 { S_dump_op(this, "Binop", is_assignment_form(), indent_lvl); }
 
-void Listop::dump(int indent_lvl)
+void Listop::dump(int indent_lvl) const
 { S_dump_op(this, "Listop", false, indent_lvl); }
 
-void Block::dump(int indent_lvl)
+void Block::dump(int indent_lvl) const
 { S_dump_op(this, "Block", false, indent_lvl); }
 
-void BareBlock::dump(int indent_lvl)
+void BareBlock::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("BareBlock (\n");
@@ -407,7 +407,7 @@ void BareBlock::dump(int indent_lvl)
   printf(")\n");
 }
 
-void While::dump(int indent_lvl)
+void While::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("%s%s (\n", evaluate_after ? "Do" : "", negated ? "Until": "While");
@@ -422,7 +422,7 @@ void While::dump(int indent_lvl)
   printf(")\n");
 }
 
-void For::dump(int indent_lvl)
+void For::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("For (\n");
@@ -434,7 +434,7 @@ void For::dump(int indent_lvl)
   printf(")\n");
 }
 
-void Foreach::dump(int indent_lvl)
+void Foreach::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("Foreach (\n");
@@ -450,7 +450,7 @@ void Foreach::dump(int indent_lvl)
   printf(")\n");
 }
 
-void ListTransformation::dump(int indent_lvl)
+void ListTransformation::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   if (type == pj_ttype_map)
@@ -465,13 +465,13 @@ void ListTransformation::dump(int indent_lvl)
   printf(")\n");
 }
 
-void Empty::dump(int indent_lvl)
+void Empty::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("Empty\n");
 }
 
-void List::dump(int indent_lvl)
+void List::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
   printf("List(\n");
@@ -553,25 +553,25 @@ void Term::set_value_type(Type *t)
   _value_type = t;
 }
 
-pj_op_context Term::context()
+pj_op_context Term::context() const
 {
   return pj_op_context(OP_GIMME(perl_op, pj_context_caller));
 }
 
 const char *
-Op::name()
+Op::name() const
 {
   return pj_ast_op_names[this->optype];
 }
 
 unsigned int
-Op::flags()
+Op::flags() const
 {
   return pj_ast_op_flags[this->optype];
 }
 
 bool
-Binop::is_assignment_form()
+Binop::is_assignment_form() const
 {
   return (
     is_assign_form
