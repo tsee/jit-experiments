@@ -120,7 +120,7 @@ namespace PerlJIT {
             create_statement(ast);
           else
             candidates.push_back(ast);
-          if (otype != OP_LEAVELOOP && ast->type == pj_ttype_for)
+          if (otype != OP_LEAVELOOP && ast->get_type() == pj_ttype_for)
             skip_next_leaveloop = true;
           last_nextstate = NULL;
         }
@@ -278,7 +278,7 @@ pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::T
         pj_free_term_vector(aTHX_ kid_terms);
         return 1;
       }
-      else if (kid_term->type == pj_ttype_op && ((AST::Op *)kid_term)->optype == pj_baseop_empty) {
+      else if (kid_term->get_type() == pj_ttype_op && ((AST::Op *)kid_term)->optype == pj_baseop_empty) {
         // empty list is not really a kid, don't include in child list
         delete kid_term;
         kid_term = NULL;
@@ -342,7 +342,7 @@ pj_build_block_or_term(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
     if (!start)
       break;
     AST::Term *expression = pj_build_ast(aTHX_ start, visitor);
-    if (expression->type == pj_ttype_empty)
+    if (expression->get_type() == pj_ttype_empty)
       continue;
     AST::Statement *stmt = new AST::Statement(nextstate, expression);
 
@@ -769,7 +769,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       MAKE_DEFAULT_KID_VECTOR
       if (kid_terms.size() == 1) {
         // One list. Weird edge case in Perl (IMO). Move repetition out.
-        assert(kid_terms[0]->type == pj_ttype_list);
+        assert(kid_terms[0]->get_type() == pj_ttype_list);
         AST::List *l = (AST::List *)kid_terms[0];
         assert(l->kids.size() >= 2);
         AST::Term *rep = l->kids.back();
@@ -872,7 +872,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       }
       else {
         retval = pj_build_ast(aTHX_ cLOOPo->op_first->op_sibling, visitor);
-        if (retval->type != pj_ttype_empty)
+        if (retval->get_type() != pj_ttype_empty)
           retval = new AST::Block(o, retval);
       }
       break;
@@ -1034,7 +1034,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       // slice list; may be a real list op or just a single thing
       OP *kid = ((UNOP *)o)->op_first->op_sibling;
       AST::Term *kid_term = pj_build_ast(aTHX_ kid, visitor);
-      if (kid_term->type == pj_ttype_op
+      if (kid_term->get_type() == pj_ttype_op
           && ((AST::Op *)kid_term)->optype == pj_listop_list2scalar)
       {
         AST::Listop *listop = (AST::Listop *)kid_term;

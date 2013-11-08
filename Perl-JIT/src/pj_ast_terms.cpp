@@ -33,7 +33,7 @@ List::List(const std::vector<Term *> &kid_terms)
   // flattening since they all flattened on construction (hopefully).
   const unsigned int n = kid_terms.size();
   for (unsigned int i = 0; i < n; ++i) {
-    if (kid_terms[i]->type == pj_ttype_list) {
+    if (kid_terms[i]->get_type() == pj_ttype_list) {
       List *l = (List *)kid_terms[i];
       // transfer ownership if sub-elements
       std::vector<Term *> &nested_kids = l->kids;
@@ -392,7 +392,7 @@ void BareBlock::dump(int indent_lvl)
   S_dump_tree_indent(indent_lvl);
   printf("BareBlock (\n");
   body->dump(indent_lvl + 1);
-  if (continuation->type != pj_ttype_empty) {
+  if (continuation->get_type() != pj_ttype_empty) {
     S_dump_tree_indent(indent_lvl);
     printf(") Continue (\n");
     continuation->dump(indent_lvl + 1);
@@ -407,7 +407,7 @@ void While::dump(int indent_lvl)
   printf("%s%s (\n", evaluate_after ? "Do" : "", negated ? "Until": "While");
   condition->dump(indent_lvl + 2);
   body->dump(indent_lvl + 1);
-  if (continuation->type != pj_ttype_empty) {
+  if (continuation->get_type() != pj_ttype_empty) {
     S_dump_tree_indent(indent_lvl);
     printf(") Continue (\n");
     continuation->dump(indent_lvl + 1);
@@ -435,7 +435,7 @@ void Foreach::dump(int indent_lvl)
   iterator->dump(indent_lvl + 2);
   expression->dump(indent_lvl + 2);
   body->dump(indent_lvl + 1);
-  if (continuation->type != pj_ttype_empty) {
+  if (continuation->get_type() != pj_ttype_empty) {
     S_dump_tree_indent(indent_lvl);
     printf(") Continue (\n");
     continuation->dump(indent_lvl + 1);
@@ -602,7 +602,7 @@ std::vector<PerlJIT::AST::Term *> BareBlock::get_kids()
   std::vector<PerlJIT::AST::Term *> kids;
 
   kids.push_back(body);
-  if (continuation->type != pj_ttype_empty)
+  if (continuation->get_type() != pj_ttype_empty)
     kids.push_back(continuation);
 
   return kids;
@@ -614,7 +614,7 @@ std::vector<PerlJIT::AST::Term *> While::get_kids()
 
   kids.push_back(condition);
   kids.push_back(body);
-  if (continuation->type != pj_ttype_empty)
+  if (continuation->get_type() != pj_ttype_empty)
     kids.push_back(continuation);
 
   return kids;
@@ -622,7 +622,7 @@ std::vector<PerlJIT::AST::Term *> While::get_kids()
 
 OP *For::last_op()
 {
-  if (init->type == pj_ttype_empty)
+  if (init->get_type() == pj_ttype_empty)
     return perl_op;
 
   assert(init->get_perl_op()->op_sibling->op_sibling->op_type == OP_LEAVELOOP);
