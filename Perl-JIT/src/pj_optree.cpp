@@ -135,8 +135,8 @@ namespace PerlJIT {
       AST::Statement *stmt = new AST::Statement(last_nextstate, expression);
 
       if (!current_sequence ||
-          !current_sequence->kids.back()->perl_op->op_sibling ||
-          current_sequence->kids.back()->perl_op->op_sibling->op_sibling != last_nextstate) {
+          !current_sequence->kids.back()->get_perl_op()->op_sibling ||
+          current_sequence->kids.back()->get_perl_op()->op_sibling->op_sibling != last_nextstate) {
         current_sequence = new AST::StatementSequence();
         candidates.push_back(current_sequence);
       }
@@ -298,7 +298,7 @@ pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::T
 static PerlJIT::AST::Term *
 pj_build_targmy_assignment(PerlJIT::AST::Term *term, OPTreeJITCandidateFinder &visitor)
 {
-  OP *o = term->perl_op;
+  OP *o = term->get_perl_op();
 
   if (!(PL_opargs[o->op_type] & OA_TARGLEX))
     return term;
@@ -384,7 +384,7 @@ static PerlJIT::AST::For *
 pj_build_for(pTHX_ OP *start, PerlJIT::AST::Term *init, LOGOP *condition, OP *step, OP *body, OPTreeJITCandidateFinder &visitor)
 {
   PerlJIT::AST::Term *ast_condition = NULL, *ast_step = NULL, *ast_body = NULL;
-  OP *start_op = init ? init->perl_op : start;
+  OP *start_op = init ? init->get_perl_op() : start;
   if (!init)
     init = new PerlJIT::AST::Empty();
 
@@ -980,7 +980,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       else if (pj_op_context(OP_GIMME(o, pj_context_caller)) == pj_context_list) {
         // FIXME this can often be flattened into the parent list!?
         retval = new AST::List(kid_terms);
-        retval->perl_op = 0; // likely unnecessary, but just in case
+        retval->set_perl_op(NULL); // likely unnecessary, but just in case
       }
       else
         retval = new AST::Listop(o, pj_listop_list2scalar, kid_terms);

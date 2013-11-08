@@ -77,13 +77,15 @@ namespace PerlJIT {
       Term(OP *p_op, pj_term_type t, Type *v_type = 0);
 
       pj_term_type type;
-      OP *perl_op;
 
       OP *start_op();
       virtual OP *first_op();
       virtual OP *last_op();
 
       pj_op_context context();
+
+      OP *get_perl_op() const {return perl_op;}
+      void set_perl_op(OP *p_op) {perl_op = p_op;}
 
       virtual Type *get_value_type();
       virtual void set_value_type(Type *t);
@@ -94,6 +96,7 @@ namespace PerlJIT {
       virtual ~Term();
 
     protected:
+      OP *perl_op;
       Type *_value_type;
     };
 

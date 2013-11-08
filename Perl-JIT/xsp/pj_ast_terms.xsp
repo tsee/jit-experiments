@@ -8,7 +8,8 @@
 
 class Perl::JIT::AST::Term {
   pj_term_type type %get %set;
-  OP *perl_op %get %set;
+  OP *get_perl_op() const;
+  void set_perl_op(OP *p_op);
   OP *start_op();
   OP *first_op();
   OP *last_op();
@@ -160,7 +161,7 @@ class Perl::JIT::AST::VariableDeclaration : public Perl::JIT::AST::Identifier
 {
   int ivar %get %set;
   pj_variable_sigil sigil %get;
-  int get_pad_index() %code{% RETVAL = THIS->perl_op->op_targ; %};
+  int get_pad_index() %code{% RETVAL = THIS->get_perl_op()->op_targ; %};
 };
 
 class Perl::JIT::AST::Lexical : public Perl::JIT::AST::Identifier

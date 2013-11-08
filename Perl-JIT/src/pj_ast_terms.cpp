@@ -571,7 +571,7 @@ Binop::set_assignment_form(bool is_assignment)
 bool
 Binop::is_synthesized_assignment() const
 {
-  return optype == pj_binop_sassign && kids[1]->perl_op == perl_op;
+  return optype == pj_binop_sassign && kids[1]->get_perl_op() == perl_op;
 }
 
 int Lexical::get_pad_index() const
@@ -625,8 +625,8 @@ OP *For::last_op()
   if (init->type == pj_ttype_empty)
     return perl_op;
 
-  assert(init->perl_op->op_sibling->op_sibling->op_type == OP_LEAVELOOP);
-  return init->perl_op->op_sibling->op_sibling;
+  assert(init->get_perl_op()->op_sibling->op_sibling->op_type == OP_LEAVELOOP);
+  return init->get_perl_op()->op_sibling->op_sibling;
 }
 
 std::vector<PerlJIT::AST::Term *> For::get_kids()
