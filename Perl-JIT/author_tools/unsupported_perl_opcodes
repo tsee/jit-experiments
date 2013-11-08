@@ -57,11 +57,8 @@ method		method lookup		ck_method	d1
 entersub	subroutine entry	ck_subr		dmt1	L
 leavesub	subroutine exit		ck_null		1	
 leavesublv	lvalue subroutine return	ck_null		1	
-reset		symbol reset		ck_fun		is%	S?
 
 dbstate		debug next statement	ck_null		s;	
-dump		dump			ck_null		ds}	
-goto		goto			ck_null		ds}	
 method_named	method with known name	ck_null		d$
 
 entergiven	given()			ck_null		d|
@@ -72,9 +69,6 @@ break		break			ck_null		0
 continue	continue		ck_null		0
 
 pipe_op		pipe			ck_fun		is@	F F
-
-dbmopen		dbmopen			ck_fun		is@	H S S
-dbmclose	dbmclose		ck_fun		is%	H
 
 enterwrite	write			ck_fun		dis%	F?
 leavewrite	write exit		ck_null		1	
@@ -96,13 +90,6 @@ ssockopt	setsockopt		ck_fun		is@	Fs S S S
 
 getsockname	getsockname		ck_fun		is%	Fs
 getpeername	getpeername		ck_fun		is%	Fs
-
-open_dir	opendir			ck_fun		is@	F S
-readdir		readdir			ck_fun		%	DF
-telldir		telldir			ck_fun		st%	DF
-seekdir		seekdir			ck_fun		s@	DF S
-rewinddir	rewinddir		ck_fun		s%	DF
-closedir	closedir		ck_fun		is%	DF
 
 fork		fork			ck_null		ist0	
 wait		wait			ck_null		isT0	

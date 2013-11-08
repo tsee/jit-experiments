@@ -36,16 +36,20 @@
   || (int)otype == OP_CHR \
   || (int)otype == OP_CHROOT \
   || (int)otype == OP_CLOSE \
+  || (int)otype == OP_CLOSEDIR \
   || (int)otype == OP_COMPLEMENT \
   || (int)otype == OP_CONCAT \
   || (int)otype == OP_COND_EXPR \
   || (int)otype == OP_COS \
   || (int)otype == OP_CRYPT \
+  || (int)otype == OP_DBMCLOSE \
+  || (int)otype == OP_DBMOPEN \
   || (int)otype == OP_DEFINED \
   || (int)otype == OP_DELETE \
   || (int)otype == OP_DIE \
   || (int)otype == OP_DIVIDE \
   || (int)otype == OP_DORASSIGN \
+  || (int)otype == OP_DUMP \
   || (int)otype == OP_EACH \
   || (int)otype == OP_EGRENT \
   || (int)otype == OP_EHOSTENT \
@@ -101,6 +105,7 @@
   || (int)otype == OP_GNBYADDR \
   || (int)otype == OP_GNBYNAME \
   || (int)otype == OP_GNETENT \
+  || (int)otype == OP_GOTO \
   || (int)otype == OP_GPBYNAME \
   || (int)otype == OP_GPBYNUMBER \
   || (int)otype == OP_GPROTOENT \
@@ -164,6 +169,7 @@
   || (int)otype == OP_OCT \
   || (int)otype == OP_ONCE \
   || (int)otype == OP_OPEN \
+  || (int)otype == OP_OPEN_DIR \
   || (int)otype == OP_ORASSIGN \
   || (int)otype == OP_ORD \
   || (int)otype == OP_PACK \
@@ -185,13 +191,16 @@
   || (int)otype == OP_RAND \
   || (int)otype == OP_REACH \
   || (int)otype == OP_READ \
+  || (int)otype == OP_READDIR \
   || (int)otype == OP_READLINK \
   || (int)otype == OP_REDO \
   || (int)otype == OP_REF \
   || (int)otype == OP_RENAME \
   || (int)otype == OP_REPEAT \
+  || (int)otype == OP_RESET \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
+  || (int)otype == OP_REWINDDIR \
   || (int)otype == OP_RIGHT_SHIFT \
   || (int)otype == OP_RINDEX \
   || (int)otype == OP_RKEYS \
@@ -208,6 +217,7 @@
   || (int)otype == OP_SCMP \
   || (int)otype == OP_SCOPE \
   || (int)otype == OP_SEEK \
+  || (int)otype == OP_SEEKDIR \
   || (int)otype == OP_SELECT \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
@@ -244,6 +254,7 @@
   || (int)otype == OP_SYSSEEK \
   || (int)otype == OP_SYSWRITE \
   || (int)otype == OP_TELL \
+  || (int)otype == OP_TELLDIR \
   || (int)otype == OP_TIED \
   || (int)otype == OP_TIME \
   || (int)otype == OP_TMS \
@@ -296,18 +307,22 @@
   || (int)otype == OP_CHR \
   || (int)otype == OP_CHROOT \
   || (int)otype == OP_CLOSE \
+  || (int)otype == OP_CLOSEDIR \
   || (int)otype == OP_COMPLEMENT \
   || (int)otype == OP_CONCAT \
   || (int)otype == OP_COND_EXPR \
   || (int)otype == OP_CONST \
   || (int)otype == OP_COS \
   || (int)otype == OP_CRYPT \
+  || (int)otype == OP_DBMCLOSE \
+  || (int)otype == OP_DBMOPEN \
   || (int)otype == OP_DEFINED \
   || (int)otype == OP_DELETE \
   || (int)otype == OP_DIE \
   || (int)otype == OP_DIVIDE \
   || (int)otype == OP_DOR \
   || (int)otype == OP_DORASSIGN \
+  || (int)otype == OP_DUMP \
   || (int)otype == OP_EACH \
   || (int)otype == OP_EGRENT \
   || (int)otype == OP_EHOSTENT \
@@ -363,6 +378,7 @@
   || (int)otype == OP_GNBYADDR \
   || (int)otype == OP_GNBYNAME \
   || (int)otype == OP_GNETENT \
+  || (int)otype == OP_GOTO \
   || (int)otype == OP_GPBYNAME \
   || (int)otype == OP_GPBYNUMBER \
   || (int)otype == OP_GPROTOENT \
@@ -428,6 +444,7 @@
   || (int)otype == OP_OCT \
   || (int)otype == OP_ONCE \
   || (int)otype == OP_OPEN \
+  || (int)otype == OP_OPEN_DIR \
   || (int)otype == OP_OR \
   || (int)otype == OP_ORASSIGN \
   || (int)otype == OP_ORD \
@@ -450,13 +467,16 @@
   || (int)otype == OP_RAND \
   || (int)otype == OP_REACH \
   || (int)otype == OP_READ \
+  || (int)otype == OP_READDIR \
   || (int)otype == OP_READLINK \
   || (int)otype == OP_REDO \
   || (int)otype == OP_REF \
   || (int)otype == OP_RENAME \
   || (int)otype == OP_REPEAT \
+  || (int)otype == OP_RESET \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
+  || (int)otype == OP_REWINDDIR \
   || (int)otype == OP_RIGHT_SHIFT \
   || (int)otype == OP_RINDEX \
   || (int)otype == OP_RKEYS \
@@ -473,6 +493,7 @@
   || (int)otype == OP_SCMP \
   || (int)otype == OP_SCOPE \
   || (int)otype == OP_SEEK \
+  || (int)otype == OP_SEEKDIR \
   || (int)otype == OP_SELECT \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
@@ -509,6 +530,7 @@
   || (int)otype == OP_SYSSEEK \
   || (int)otype == OP_SYSWRITE \
   || (int)otype == OP_TELL \
+  || (int)otype == OP_TELLDIR \
   || (int)otype == OP_TIED \
   || (int)otype == OP_TIME \
   || (int)otype == OP_TMS \

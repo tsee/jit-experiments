@@ -167,6 +167,14 @@ pj_unop_setservent,	pj_opc_unop,	setservent(),	OP_SSERVENT,	0,	emit,	Scalar=Any 
 pj_unop_getnetbyname,	pj_opc_unop,	getnetbyname(),	OP_GNBYNAME,	0,	emit,	Scalar=Any List=List[Any]
 pj_unop_getprotobyname,	pj_opc_unop,	getprotobyname,	OP_GPBYNAME,	0,	emit,	Scalar=Any List=List[Any]
 pj_unop_getprotobynum,	pj_opc_unop,	getprotobynum,	OP_GPBYNUMBER,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_reset,		pj_opc_unop,	reset(),	OP_RESET,	KIDS_OPTIONAL,	emit,	Integer # actually, always returns 1
+pj_unop_dump,		pj_opc_unop,	dump(),		OP_DUMP,	KIDS_OPTIONAL,	emit,	Any # dump(LAVEL) is the dumbest function ever devised
+pj_unop_goto,		pj_opc_unop,	goto(),		OP_GOTO,	0,	emit,	Any # never returns
+pj_unop_dbmclose,	pj_opc_unop,	dbmclose(),	OP_DBMCLOSE,	0,	emit,	Any # docs unclear about retval
+pj_unop_readdir,	pj_opc_unop,	readdir(),	OP_READDIR,	0,	emit,	Scalar=Any List=List[Any]
+pj_unop_telldir,	pj_opc_unop,	telldir(),	OP_TELLDIR,	0,	emit,	Any
+pj_unop_rewinddir,	pj_opc_unop,	rewinddir(),	OP_REWINDDIR,	0,	emit,	Any # retval unclear in docs
+pj_unop_closedir,	pj_opc_unop,	closedir(),	OP_CLOSEDIR,	0,	emit,	Any # returns success of syscall
 
 
 # binops
@@ -222,6 +230,8 @@ pj_binop_gethostbyaddr,	pj_opc_binop,	gethostbyaddr,	OP_GHBYADDR,	0,	emit,	Scala
 pj_binop_getnetbyaddr,	pj_opc_binop,	getnetbyaddr(),	OP_GNBYADDR,	0,	emit,	Scalar=Any List=List[Any]
 pj_binop_getservbyname,	pj_opc_binop,	getservbyname,	OP_GSBYNAME,	0,	emit,	Scalar=Any List=List[Any]
 pj_binop_getservbyport,	pj_opc_binop,	getservbyport,	OP_GSBYPORT,	0,	emit,	Scalar=Any List=List[Any]
+pj_binop_opendir,	pj_opc_binop,	opendir(),	OP_OPEN_DIR,	0,	emit,	Any # returns true if successful
+pj_binop_seekdir,	pj_opc_binop,	seekdir(),	OP_SEEKDIR,	0,	emit,	Any # retval unclear in docs
 
 
 # listops
@@ -269,5 +279,6 @@ pj_listop_ioctl,	pj_opc_listop,	ioctl(),	OP_IOCTL,	0,	emit,	Any # undef or "0 bu
 pj_listop_fcntl,	pj_opc_listop,	fcntl(),	OP_FCNTL,	0,	emit,	Any # "0 but true" or a number?
 pj_listop_sysselect,	pj_opc_listop,	select syscall,	OP_SSELECT,	0,	emit,	Integer # according to docs
 pj_listop_syscall,	pj_opc_listop,	gen. syscall,	OP_SYSCALL,	0,	emit,	Any # docs unclear on retval
+pj_listop_dbmopen,	pj_opc_listop,	dbmopen,	OP_DBMOPEN,	0,	emit,	Any # docs unclear on retval
 
 pj_op_scope,		pj_opc_block,	scope,		OP_SCOPE,	0,	,	Scalar=Any List=List[Any]

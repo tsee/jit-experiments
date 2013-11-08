@@ -136,6 +136,14 @@
   INT_CONST(pj_unop_getnetbyname);
   INT_CONST(pj_unop_getprotobyname);
   INT_CONST(pj_unop_getprotobynum);
+  INT_CONST(pj_unop_reset);
+  INT_CONST(pj_unop_dump);
+  INT_CONST(pj_unop_goto);
+  INT_CONST(pj_unop_dbmclose);
+  INT_CONST(pj_unop_readdir);
+  INT_CONST(pj_unop_telldir);
+  INT_CONST(pj_unop_rewinddir);
+  INT_CONST(pj_unop_closedir);
   INT_CONST(pj_binop_add);
   INT_CONST(pj_binop_subtract);
   INT_CONST(pj_binop_multiply);
@@ -188,6 +196,8 @@
   INT_CONST(pj_binop_getnetbyaddr);
   INT_CONST(pj_binop_getservbyname);
   INT_CONST(pj_binop_getservbyport);
+  INT_CONST(pj_binop_opendir);
+  INT_CONST(pj_binop_seekdir);
   INT_CONST(pj_listop_ternary);
   INT_CONST(pj_listop_substr);
   INT_CONST(pj_listop_chop);
@@ -232,6 +242,7 @@
   INT_CONST(pj_listop_fcntl);
   INT_CONST(pj_listop_sysselect);
   INT_CONST(pj_listop_syscall);
+  INT_CONST(pj_listop_dbmopen);
   INT_CONST(pj_op_scope);
 
 

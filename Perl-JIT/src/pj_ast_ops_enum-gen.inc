@@ -141,6 +141,14 @@ typedef enum {
   pj_unop_getnetbyname,
   pj_unop_getprotobyname,
   pj_unop_getprotobynum,
+  pj_unop_reset,
+  pj_unop_dump,
+  pj_unop_goto,
+  pj_unop_dbmclose,
+  pj_unop_readdir,
+  pj_unop_telldir,
+  pj_unop_rewinddir,
+  pj_unop_closedir,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -195,6 +203,8 @@ typedef enum {
   pj_binop_getnetbyaddr,
   pj_binop_getservbyname,
   pj_binop_getservbyport,
+  pj_binop_opendir,
+  pj_binop_seekdir,
 
   // Op class: pj_opc_listop
   pj_listop_ternary,
@@ -241,6 +251,7 @@ typedef enum {
   pj_listop_fcntl,
   pj_listop_sysselect,
   pj_listop_syscall,
+  pj_listop_dbmopen,
 
   // Op class: pj_opc_block
   pj_op_scope,
@@ -251,13 +262,13 @@ typedef enum {
   pj_baseop_LAST  = pj_baseop_getprotoend,
 
   pj_unop_FIRST = pj_unop_localtime,
-  pj_unop_LAST  = pj_unop_getprotobynum,
+  pj_unop_LAST  = pj_unop_closedir,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_getservbyport,
+  pj_binop_LAST  = pj_binop_seekdir,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_syscall,
+  pj_listop_LAST  = pj_listop_dbmopen,
 
   pj_block_FIRST = pj_op_scope,
   pj_block_LAST  = pj_op_scope,
