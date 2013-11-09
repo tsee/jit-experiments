@@ -278,7 +278,7 @@ pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::T
         pj_free_term_vector(aTHX_ kid_terms);
         return 1;
       }
-      else if (kid_term->get_type() == pj_ttype_op && ((AST::Op *)kid_term)->optype == pj_baseop_empty) {
+      else if (kid_term->get_type() == pj_ttype_op && ((AST::Op *)kid_term)->get_op_type() == pj_baseop_empty) {
         // empty list is not really a kid, don't include in child list
         delete kid_term;
         kid_term = NULL;
@@ -1035,7 +1035,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       OP *kid = ((UNOP *)o)->op_first->op_sibling;
       AST::Term *kid_term = pj_build_ast(aTHX_ kid, visitor);
       if (kid_term->get_type() == pj_ttype_op
-          && ((AST::Op *)kid_term)->optype == pj_listop_list2scalar)
+          && ((AST::Op *)kid_term)->get_op_type() == pj_listop_list2scalar)
       {
         AST::Listop *listop = (AST::Listop *)kid_term;
         AST::List *tmp = new AST::List(listop->kids);

@@ -120,7 +120,7 @@ NullOptree::NullOptree(OP *p_op)
 
 
 Op::Op(OP *p_op, pj_op_type t)
-  : Term(p_op, pj_ttype_op), optype(t), _is_integer_variant(false)
+  : Term(p_op, pj_ttype_op), op_type(t), _is_integer_variant(false)
 {}
 
 Unop::Unop(OP *p_op, pj_op_type t, Term *kid)
@@ -561,14 +561,17 @@ pj_op_context Term::context() const
 const char *
 Op::name() const
 {
-  return pj_ast_op_names[this->optype];
+  return pj_ast_op_names[op_type];
 }
 
-unsigned int
-Op::flags() const
-{
-  return pj_ast_op_flags[this->optype];
-}
+unsigned int Op::flags() const
+{ return pj_ast_op_flags[op_type]; }
+
+pj_op_type Op::get_op_type() const
+{ return op_type; }
+
+void Op::set_op_type(pj_op_type t)
+{ op_type = t; }
 
 bool Op::is_integer_variant() const
 { return _is_integer_variant; }
@@ -595,7 +598,7 @@ Binop::set_assignment_form(bool is_assignment)
 bool
 Binop::is_synthesized_assignment() const
 {
-  return optype == pj_binop_sassign && kids[1]->get_perl_op() == perl_op;
+  return op_type == pj_binop_sassign && kids[1]->get_perl_op() == perl_op;
 }
 
 int Lexical::get_pad_index() const

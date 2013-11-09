@@ -185,7 +185,7 @@ sub is_jittable {
         when (pj_ttype_nulloptree) { return 1 }
         when (pj_ttype_statement) { return $self->is_jittable($ast->get_kid) }
         when (pj_ttype_op) {
-            my $known = $Jittable_Ops{$ast->get_optype};
+            my $known = $Jittable_Ops{$ast->get_op_type};
 
             return 0 unless $known;
             return 1 unless $ast->may_have_explicit_overload;
@@ -209,7 +209,7 @@ sub needs_excessive_magic {
                     $node->get_value_type->is_opaque;
         next unless $node->get_type == pj_ttype_op;
 
-        my $known = $Jittable_Ops{$node->get_optype};
+        my $known = $Jittable_Ops{$node->get_op_type};
 
         next if !$known || !$node->may_have_explicit_overload;
         push @nodes, $node->get_kids;
@@ -244,7 +244,7 @@ sub _jit_emit_return {
             # the assumption here is that the OPf_STACKED assignment
             # has been handled by _jit_emit below, and here we only need
             # to handle cases like '$x = $y += 7'
-            if ($ast->get_optype == pj_binop_sassign) {
+            if ($ast->get_op_type == pj_binop_sassign) {
                 if ($type->equals(SCALAR)) {
                     $res = $val;
                 } else {
@@ -578,7 +578,7 @@ sub _jit_emit_binop {
     my ($v1, $v2, $t1, $t2);
 
     if (not($ast->evaluates_kids_conditionally) &&
-        $ast->get_optype != pj_binop_sassign) {
+        $ast->get_op_type != pj_binop_sassign) {
         ($v1, $t1) = $self->_jit_emit($ast->get_left_kid, DOUBLE);
         ($v2, $t2) = $self->_jit_emit($ast->get_right_kid, DOUBLE);
         $restype = DOUBLE;
@@ -588,7 +588,7 @@ sub _jit_emit_binop {
                          ? "_to_iv_value"
                          : "_to_nv_value";
 
-    given ($ast->get_optype) {
+    given ($ast->get_op_type) {
         when (pj_binop_add) {
             $res = jit_insn_add($fun, $self->$num_conversion($v1, $t1), $self->$num_conversion($v2, $t2));
         }
@@ -695,7 +695,7 @@ sub _jit_emit_binop {
 sub _emit_numeric_test {
     my ($self, $ast, $type, $v1, $t1, $v2, $t2) = @_;
 
-    my $optype = $ast->get_optype;
+    my $optype = $ast->get_op_type;
     my $fun = $self->_fun;
 
     my ($vn1, $tn1) = $ast->is_integer_variant
@@ -756,7 +756,7 @@ sub _jit_emit_unop {
     my $flex_num_conversion = $ast->is_integer_variant
                               ? "_to_iv_value"
                               : "_to_nv_value";
-    given ($ast->get_optype) {
+    given ($ast->get_op_type) {
         when (pj_unop_negate) {
             $res = jit_insn_neg($fun, $self->$flex_num_conversion($v1, $t1));
         }
@@ -828,7 +828,7 @@ sub _jit_emit_listop {
 
     $restype = UNSPECIFIED;
 
-    given ($ast->get_optype) {
+    given ($ast->get_op_type) {
         when (pj_listop_ternary) {
             my ($endlabel, $leftlabel, $set_right) = map jit_label_undefined, 1..3;
 

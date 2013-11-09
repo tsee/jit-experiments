@@ -236,8 +236,10 @@ namespace PerlJIT {
       unsigned int flags() const;
       virtual pj_op_class op_class() const = 0;
 
-      pj_op_type optype;
       std::vector<PerlJIT::AST::Term *> kids;
+
+      pj_op_type get_op_type() const;
+      void set_op_type(pj_op_type t);
 
       bool is_integer_variant() const;
       void set_integer_variant(bool is_integer_variant);
@@ -247,7 +249,8 @@ namespace PerlJIT {
         { return "Perl::JIT::AST::Op"; }
       virtual ~Op();
 
-    private:
+    protected:
+      pj_op_type op_type;
       bool _is_integer_variant;
     };
 

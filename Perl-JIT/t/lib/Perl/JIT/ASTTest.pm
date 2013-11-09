@@ -136,20 +136,20 @@ sub _matches {
     when ('baseop') {
       return 0 unless $ast->get_type == pj_ttype_op;
       return 0 unless $ast->op_class == pj_opc_baseop;
-      return 0 unless $ast->get_optype == $pattern->{op};
+      return 0 unless $ast->get_op_type == $pattern->{op};
       return 1;
     }
     when ('unop') {
       return 0 unless $ast->get_type == pj_ttype_op;
       return 0 unless $ast->op_class == pj_opc_unop;
-      return 0 unless $ast->get_optype == $pattern->{op};
+      return 0 unless $ast->get_op_type == $pattern->{op};
 
       return _matches($ast->get_kid, $pattern->{term});
     }
     when ('binop') {
       return 0 unless $ast->get_type == pj_ttype_op;
       return 0 unless $ast->op_class == pj_opc_binop;
-      return 0 unless $ast->get_optype == $pattern->{op};
+      return 0 unless $ast->get_op_type == $pattern->{op};
 
       return _matches($ast->get_left_kid, $pattern->{left}) &&
              _matches($ast->get_right_kid, $pattern->{right});
@@ -157,7 +157,7 @@ sub _matches {
     when ('listop') {
       return 0 unless $ast->get_type == pj_ttype_op;
       return 0 unless $ast->op_class == pj_opc_listop;
-      return 0 unless $ast->get_optype == $pattern->{op};
+      return 0 unless $ast->get_op_type == $pattern->{op};
       my @kids = $ast->get_kids;
       return 0 unless ref($pattern->{terms}) eq "ARRAY";
       return 0 unless @kids == @{$pattern->{terms}};

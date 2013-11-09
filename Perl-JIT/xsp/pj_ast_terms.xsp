@@ -33,9 +33,9 @@ class Perl::JIT::AST::List : public Perl::JIT::AST::Term
 
 class Perl::JIT::AST::Op : public Perl::JIT::AST::Term
 {
-  pj_op_type optype %get %set;
   std::vector<Perl::JIT::AST::Term *> kids %get;
 
+  pj_op_type get_op_type() const;
   const char * name() const;
   pj_op_class op_class() const;
   bool is_integer_variant() const;
