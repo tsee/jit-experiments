@@ -238,8 +238,9 @@ namespace PerlJIT {
 
       pj_op_type optype;
       std::vector<PerlJIT::AST::Term *> kids;
-      bool is_integer_variant() const { return _is_integer_variant; }
-      void set_integer_variant(bool is_integer_variant) { _is_integer_variant = is_integer_variant; }
+
+      bool is_integer_variant() const;
+      void set_integer_variant(bool is_integer_variant);
 
       virtual void dump(int indent_lvl = 0) const = 0;
       virtual const char *perl_class() const

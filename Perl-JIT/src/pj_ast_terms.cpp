@@ -570,6 +570,12 @@ Op::flags() const
   return pj_ast_op_flags[this->optype];
 }
 
+bool Op::is_integer_variant() const
+{ return _is_integer_variant; }
+
+void Op::set_integer_variant(bool is_integer_variant)
+{ _is_integer_variant = is_integer_variant; }
+
 bool
 Binop::is_assignment_form() const
 {
