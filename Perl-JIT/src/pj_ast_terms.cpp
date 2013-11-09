@@ -174,6 +174,12 @@ BareBlock::BareBlock(OP *p_op, Term *_body, Term *_continuation)
   : Term(p_op, pj_ttype_bareblock), body(_body), continuation(_continuation)
 {}
 
+Term *BareBlock::get_body() const
+{ return body; }
+
+Term *BareBlock::get_continuation() const
+{ return continuation; }
+
 
 While::While(OP *p_op, Term *_condition, bool _negated, bool _evaluate_after,
              Term *_body, Term *_continuation)

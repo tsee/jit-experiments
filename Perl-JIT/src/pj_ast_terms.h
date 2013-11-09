@@ -322,14 +322,18 @@ namespace PerlJIT {
     public:
       BareBlock(OP *p_op, Term *body, Term *continuation);
 
-      Term *body;
-      Term *continuation;
+      Term *get_body() const;
+      Term *get_continuation() const;
 
       std::vector<PerlJIT::AST::Term *> get_kids();
 
       virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::BareBlock"; }
+
+    protected:
+      Term *body;
+      Term *continuation;
     };
 
     class While : public Term {
