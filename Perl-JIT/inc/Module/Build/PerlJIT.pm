@@ -3,45 +3,46 @@ use 5.14.2;
 use warnings;
 use strict;
 
-use Alien::LibJIT;
 use Module::Build;
 use parent 'Module::Build::WithXSpp';
 
-__PACKAGE__->add_property('libjit');
-
-use FindBin('$Bin');
-use File::Spec;
-use Config;
-
 sub new {
-    my ($class, @args) = @_;
+    my ($class, %args) = @_;
 
-    my $alien = Alien::LibJIT->new;
+    my ($cppflags, $libs) = $class->_llvm_config;
     my $self = $class->SUPER::new(
-        libjit              => $alien,
-        include_dirs        => ['.', $alien->include_dir],
-        #extra_linker_flags  => [$alien->static_library, '-lpthread'],
-        extra_linker_flags  => ['-lpthread'],
+        include_dirs => ['.'],
+        extra_compiler_flags => [@{delete $args{extra_compiler_flags} || []}, $cppflags],
+        extra_linker_flags  => [@{delete $args{extra_linker_flags} || []}, $libs],
+        extra_xspp_flags    => [qw(--no-exceptions)],
         extra_typemap_modules => {
           'ExtUtils::Typemaps::STL::String' => '0',
         },
-        @args,
+        %args,
     );
     return $self;
 }
 
+sub _llvm_config {
+    my ($class) = @_;
 
-sub ACTION_code {
-    my ($self) = @_;
-    
-    my $rv = $self->SUPER::ACTION_code(@_);
+    my $llvmc = $ENV{LLVM_CONFIG} || 'llvm-config';
 
-    return $rv;
-}
+    my $vers = `$llvmc --version`; chomp $vers;
+    die "Error running '$llvmc --version'" if $?;
 
-sub ACTION_realclean {
-    my ($self) = @_;
-    return $self->SUPER::ACTION_realclean(@_);
+    unless ($vers >= 3.1) {
+        print "Wrong LLVM version $vers: needed 3.1\n";
+        exit 1;
+    }
+
+    my $cppflags = `$llvmc --cxxflags`; chomp $cppflags;
+    die "Error running '$llvmc --cxxflags'" if $?;
+    $cppflags =~ s{(?:^|\s)-W[\w\-]+(?=\s|$)}{ }g;
+
+    my $libs = "-lLLVM-$vers";
+
+    return ($cppflags, $libs);
 }
 
 1;

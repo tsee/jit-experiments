@@ -34,7 +34,7 @@ namespace PerlJIT {
 
       virtual pj_type_id tag() const = 0;
 
-      virtual bool equals(Type *other) const = 0;
+      virtual bool equals(const Type *other) const = 0;
 
       virtual bool is_scalar() const { return false; }
       virtual bool is_array() const { return false; }
@@ -59,7 +59,7 @@ namespace PerlJIT {
 
       virtual pj_type_id tag() const;
 
-      virtual bool equals(Type *other) const;
+      virtual bool equals(const Type *other) const;
 
       virtual bool is_scalar() const { return true; }
       virtual bool is_unspecified() const;
@@ -85,7 +85,7 @@ namespace PerlJIT {
       virtual pj_type_id tag() const;
       Type *element() const;
 
-      virtual bool equals(Type *other) const;
+      virtual bool equals(const Type *other) const;
 
       virtual bool is_array() const { return true; }
       virtual bool is_composite() const { return true; }
@@ -105,7 +105,7 @@ namespace PerlJIT {
       virtual pj_type_id tag() const;
       Type *element() const;
 
-      virtual bool equals(Type *other) const;
+      virtual bool equals(const Type *other) const;
 
       virtual bool is_hash() const { return true; }
       virtual bool is_composite() const { return true; }
@@ -118,6 +118,14 @@ namespace PerlJIT {
     };
 
     Type *parse_type(const std::string &str);
+
+    extern const Scalar OPAQUE_T;
+    extern const Scalar DOUBLE_T;
+    extern const Scalar INT_T;
+    extern const Scalar UNSIGNED_INT_T;
+    extern const Scalar UNSPECIFIED_T;
+    extern const Scalar ANY_T; // used in code generation
+    extern const Scalar SCALAR_T;
   }
 }
 

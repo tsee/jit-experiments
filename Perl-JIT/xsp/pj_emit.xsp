@@ -1,0 +1,11 @@
+%module{Perl::JIT};
+
+#include "pj_emit.h"
+#include "xsp_typedefs.h"
+
+class Perl::JIT::Emit {
+   Emitter();
+   ~Emitter();
+
+   %name{_jit_sub} SV *jit_sub(SV *coderef);
+};

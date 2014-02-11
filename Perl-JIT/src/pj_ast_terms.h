@@ -1,7 +1,7 @@
 #ifndef PJ_TERMS_H_
 #define PJ_TERMS_H_
 
-#include "types.h"
+#include "pj_types.h"
 
 #include <vector>
 #include <string>
@@ -93,6 +93,8 @@ namespace PerlJIT {
       virtual Type *get_value_type() const;
       virtual void set_value_type(Type *t);
 
+      virtual std::vector<Term *> get_kids() const { return empty; }
+
       virtual void dump(int indent_lvl = 0) const = 0;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Term"; }
@@ -102,6 +104,8 @@ namespace PerlJIT {
       pj_term_type type;
       OP *perl_op;
       Type *_value_type;
+
+      static const std::vector<Term *> empty;
     };
 
     class Empty : public Term {
@@ -121,6 +125,7 @@ namespace PerlJIT {
       List();
       List(const std::vector<Term *> &kid_terms);
 
+      std::vector<Term *> get_kids() const { return kids; }
       std::vector<PerlJIT::AST::Term *> kids;
 
       virtual void dump(int indent_lvl = 0) const;
@@ -191,6 +196,8 @@ namespace PerlJIT {
 
       int ivar;
 
+      int get_pad_index() const { return perl_op->op_targ; }
+
       virtual void dump(int indent_lvl) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::VariableDeclaration"; }
@@ -237,6 +244,17 @@ namespace PerlJIT {
       virtual const char *name() const;
       unsigned int flags() const;
       virtual pj_op_class op_class() const = 0;
+
+      std::vector<Term *> get_kids() const { return kids; }
+
+      bool evaluates_kids_conditionally() const
+        { return flags() & PJ_ASTf_KIDS_CONDITIONAL; }
+
+      bool kids_are_optional() const
+        { return flags() & PJ_ASTf_KIDS_OPTIONAL; }
+
+      bool may_have_explicit_overload() const
+        { return flags() & PJ_ASTf_OVERLOAD; }
 
       std::vector<PerlJIT::AST::Term *> kids;
 
@@ -327,7 +345,7 @@ namespace PerlJIT {
       Term *get_body() const;
       Term *get_continuation() const;
 
-      std::vector<PerlJIT::AST::Term *> get_kids();
+      std::vector<PerlJIT::AST::Term *> get_kids() const;
 
       virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
@@ -347,7 +365,7 @@ namespace PerlJIT {
       Term *body;
       Term *continuation;
 
-      std::vector<PerlJIT::AST::Term *> get_kids();
+      std::vector<PerlJIT::AST::Term *> get_kids() const;
 
       virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
@@ -365,7 +383,7 @@ namespace PerlJIT {
 
       virtual OP *last_op();
 
-      std::vector<PerlJIT::AST::Term *> get_kids();
+      std::vector<PerlJIT::AST::Term *> get_kids() const;
 
       virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
@@ -381,7 +399,7 @@ namespace PerlJIT {
       Term *body;
       Term *continuation;
 
-      std::vector<PerlJIT::AST::Term *> get_kids();
+      std::vector<PerlJIT::AST::Term *> get_kids() const;
 
       virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
@@ -476,6 +494,8 @@ namespace PerlJIT {
 
       std::vector<PerlJIT::AST::Term *> kids;
 
+      std::vector<Term *> get_kids() const { return kids; }
+
       virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Statement"; }
@@ -491,6 +511,8 @@ namespace PerlJIT {
       StatementSequence();
 
       std::vector<PerlJIT::AST::Term *> kids;
+
+      std::vector<Term *> get_kids() const { return kids; }
 
       virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const

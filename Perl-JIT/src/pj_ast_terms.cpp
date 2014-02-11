@@ -14,6 +14,8 @@ using namespace PerlJIT::AST;
 // human-readable names and their flags.
 #include "pj_ast_ops_data-gen.inc"
 
+const std::vector<Term *> Term::empty;
+
 Term::Term(OP *p_op, pj_term_type t, Type *v_type)
   : type(t), perl_op(p_op), _value_type(v_type)
 {}
@@ -706,7 +708,7 @@ GV *Global::get_gv() const
 }
 #endif
 
-std::vector<PerlJIT::AST::Term *> BareBlock::get_kids()
+std::vector<PerlJIT::AST::Term *> BareBlock::get_kids() const
 {
   std::vector<PerlJIT::AST::Term *> kids;
 
@@ -717,7 +719,7 @@ std::vector<PerlJIT::AST::Term *> BareBlock::get_kids()
   return kids;
 }
 
-std::vector<PerlJIT::AST::Term *> While::get_kids()
+std::vector<PerlJIT::AST::Term *> While::get_kids() const
 {
   std::vector<PerlJIT::AST::Term *> kids;
 
@@ -735,7 +737,7 @@ OP *For::last_op()
     return perl_op;
 
   // handle the case when the unstack op has been detached from the tree
-  OP *leave = init->perl_op->op_sibling;
+  OP *leave = init->get_perl_op()->op_sibling;
   if (leave->op_type == OP_UNSTACK)
     leave = leave->op_sibling;
 
@@ -743,7 +745,7 @@ OP *For::last_op()
   return leave;
 }
 
-std::vector<PerlJIT::AST::Term *> For::get_kids()
+std::vector<PerlJIT::AST::Term *> For::get_kids() const
 {
   std::vector<PerlJIT::AST::Term *> kids;
 
@@ -755,7 +757,7 @@ std::vector<PerlJIT::AST::Term *> For::get_kids()
   return kids;
 }
 
-std::vector<PerlJIT::AST::Term *> Foreach::get_kids()
+std::vector<PerlJIT::AST::Term *> Foreach::get_kids() const
 {
   std::vector<PerlJIT::AST::Term *> kids;
 

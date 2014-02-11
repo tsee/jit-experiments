@@ -1,6 +1,5 @@
 #include "pj_keyword_plugin.h"
 #include "pj_global_state.h"
-#include "types.h"
 #include "OPTreeVisitor.h"
 
 #include <iostream>
