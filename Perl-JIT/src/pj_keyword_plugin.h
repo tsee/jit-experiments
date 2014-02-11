@@ -1,7 +1,7 @@
 #ifndef PJ_KEYWORD_PLUGIN_H_
 #define PJ_KEYWORD_PLUGIN_H_
 
-#include "types.h"
+#include "pj_types.h"
 
 #include <tr1/unordered_map>
 #include <EXTERN.h>

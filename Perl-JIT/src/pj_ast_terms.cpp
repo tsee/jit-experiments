@@ -14,6 +14,8 @@ using namespace PerlJIT::AST;
 // human-readable names and their flags.
 #include "pj_ast_ops_data-gen.inc"
 
+const std::vector<Term *> Term::empty;
+
 Term::Term(OP *p_op, pj_term_type t, Type *v_type)
   : type(t), perl_op(p_op), _value_type(v_type)
 {}
@@ -520,7 +522,7 @@ Op::name()
 }
 
 unsigned int
-Op::flags()
+Op::flags() const
 {
   return pj_ast_op_flags[this->optype];
 }
@@ -570,7 +572,7 @@ GV *Global::get_gv() const
 }
 #endif
 
-std::vector<PerlJIT::AST::Term *> BareBlock::get_kids()
+std::vector<PerlJIT::AST::Term *> BareBlock::get_kids() const
 {
   std::vector<PerlJIT::AST::Term *> kids;
 
@@ -581,7 +583,7 @@ std::vector<PerlJIT::AST::Term *> BareBlock::get_kids()
   return kids;
 }
 
-std::vector<PerlJIT::AST::Term *> While::get_kids()
+std::vector<PerlJIT::AST::Term *> While::get_kids() const
 {
   std::vector<PerlJIT::AST::Term *> kids;
 
@@ -607,7 +609,7 @@ OP *For::last_op()
   return leave;
 }
 
-std::vector<PerlJIT::AST::Term *> For::get_kids()
+std::vector<PerlJIT::AST::Term *> For::get_kids() const
 {
   std::vector<PerlJIT::AST::Term *> kids;
 
@@ -619,7 +621,7 @@ std::vector<PerlJIT::AST::Term *> For::get_kids()
   return kids;
 }
 
-std::vector<PerlJIT::AST::Term *> Foreach::get_kids()
+std::vector<PerlJIT::AST::Term *> Foreach::get_kids() const
 {
   std::vector<PerlJIT::AST::Term *> kids;
 

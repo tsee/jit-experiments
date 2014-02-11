@@ -1,6 +1,6 @@
 %module{Perl::JIT};
 
-#include "types.h"
+#include "pj_types.h"
 #include "xsp_typedefs.h"
 
 

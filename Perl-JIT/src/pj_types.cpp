@@ -1,4 +1,4 @@
-#include "types.h"
+#include "pj_types.h"
 
 #include <stdio.h>
 #include <cstdlib>
@@ -10,6 +10,14 @@ using namespace std;
 using namespace std::tr1;
 using namespace PerlJIT;
 using namespace PerlJIT::AST;
+
+const Scalar PerlJIT::AST::OPAQUE_T(pj_opaque_type);
+const Scalar PerlJIT::AST::DOUBLE_T(pj_double_type);
+const Scalar PerlJIT::AST::INT_T(pj_int_type);
+const Scalar PerlJIT::AST::UNSIGNED_INT_T(pj_uint_type);
+const Scalar PerlJIT::AST::UNSPECIFIED_T(pj_unspecified_type);
+const Scalar PerlJIT::AST::ANY_T(pj_any_type);
+const Scalar PerlJIT::AST::SCALAR_T(pj_scalar_type);
 
 #define ANY         "Any"
 #define OPAQUE      "Opaque"
@@ -39,34 +47,34 @@ minimal_covering_type_internal(const Type &left, const Type &right)
   if (left_tag == right_tag) {
     if (!left.is_composite())
       return left.clone();
+
+    // Array or Hash
+    Type *left_elem;
+    Type *right_elem;
+
+    if (left_tag == pj_array_type) {
+      const Array &left_comp = dynamic_cast<const Array &>(left);
+      const Array &right_comp = dynamic_cast<const Array &>(right);
+      left_elem = left_comp.element();
+      right_elem = right_comp.element();
+    }
     else {
-      // Array or Hash
-      Type *left_elem;
-      Type *right_elem;
-      try {
-        const Array &left_comp = dynamic_cast<const Array &>(left);
-        const Array &right_comp = dynamic_cast<const Array &>(right);
-        left_elem = left_comp.element();
-        right_elem = right_comp.element();
-      }
-      catch (const std::bad_cast& e) {
-        const Hash &left_comp = dynamic_cast<const Hash &>(left);
-        const Hash &right_comp = dynamic_cast<const Hash &>(right);
-        left_elem = left_comp.element();
-        right_elem = right_comp.element();
-      }
-      //printf("# Recursing for %s and %s\n", left_elem->to_string().c_str(), right_elem->to_string().c_str());
-      Type *res = minimal_covering_type_internal(*left_elem, *right_elem);
-      if (res == NULL)
-        return res;
-      if (res->equals(left_elem)) {
-        delete res;
-        return left.clone();
-      }
-      else {
-        delete res;
-        return right.clone();
-      }
+      const Hash &left_comp = dynamic_cast<const Hash &>(left);
+      const Hash &right_comp = dynamic_cast<const Hash &>(right);
+      left_elem = left_comp.element();
+      right_elem = right_comp.element();
+    }
+    //printf("# Recursing for %s and %s\n", left_elem->to_string().c_str(), right_elem->to_string().c_str());
+    Type *res = minimal_covering_type_internal(*left_elem, *right_elem);
+    if (res == NULL)
+      return res;
+    if (res->equals(left_elem)) {
+      delete res;
+      return left.clone();
+    }
+    else {
+      delete res;
+      return right.clone();
     }
   }
 
@@ -217,9 +225,9 @@ bool Scalar::is_numeric() const
           || _tag == pj_double_type);
 }
 
-bool Scalar::equals(Type *other) const
+bool Scalar::equals(const Type *other) const
 {
-  Scalar *o = dynamic_cast<Scalar *>(other);
+  const Scalar *o = dynamic_cast<const Scalar *>(other);
 
   return o && o->_tag == _tag;
 }
@@ -267,9 +275,9 @@ Type *Array::element() const
   return _element;
 }
 
-bool Array::equals(Type *other) const
+bool Array::equals(const Type *other) const
 {
-  Array *o = dynamic_cast<Array *>(other);
+  const Array *o = dynamic_cast<const Array *>(other);
 
   return o && o->_element->equals(_element);
 }
@@ -300,9 +308,9 @@ Type *Hash::element() const
   return _element;
 }
 
-bool Hash::equals(Type *other) const
+bool Hash::equals(const Type *other) const
 {
-  Hash *o = dynamic_cast<Hash *>(other);
+  const Hash *o = dynamic_cast<const Hash *>(other);
 
   return o && o->_element->equals(_element);
 }

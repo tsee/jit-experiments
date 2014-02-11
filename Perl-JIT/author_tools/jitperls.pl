@@ -12,8 +12,6 @@ use File::Copy qw(cp);
 
 our @Dependencies = (
   'File::ShareDir',
-  'B::Generate',
-  'Moo',
   'ExtUtils::XSpp',
   'Module::Build::WithXSpp',
   'Capture::Tiny',
