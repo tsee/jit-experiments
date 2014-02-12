@@ -155,6 +155,11 @@ foreach my $op (@op_defs) {
 print $xs_const_fh "\n\n#endif\n";
 close $xs_const_fh;
 
+# Now try to touch all C files to force the stupid build system
+# to rebuild by default. I know... :(
+system("touch src/*.cpp xsp/*.xsp");
+
+
 sub generic_header {
   my $fh = shift;
   my $name = shift;
