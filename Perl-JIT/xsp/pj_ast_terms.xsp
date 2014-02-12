@@ -79,8 +79,8 @@ class Perl::JIT::AST::Block : public Perl::JIT::AST::Op
 
 class Perl::JIT::AST::BareBlock : public Perl::JIT::AST::Term
 {
-  Perl::JIT::AST::Term *body %get;
-  Perl::JIT::AST::Term *continuation %get;
+  Perl::JIT::AST::Term *get_body() const;
+  Perl::JIT::AST::Term *get_continuation() const;
 
   std::vector<Perl::JIT::AST::Term *> get_kids();
 };
