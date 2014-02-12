@@ -53,6 +53,8 @@ pj_baseop_endpwent,	pj_opc_baseop,  endpwent(),	OP_EPWENT,	0,	emit,	Scalar=Any L
 pj_baseop_endprotoend,	pj_opc_baseop,  endprotoent(),	OP_EPROTOENT,	0,	emit,	Scalar=Any List=List[Any]
 pj_baseop_endservend,	pj_opc_baseop,  endservent(),	OP_ESERVENT,	0,	emit,	Scalar=Any List=List[Any]
 pj_baseop_getprotoend,	pj_opc_baseop,  getprotoent(),	OP_GPROTOENT,	0,	emit,	Scalar=Any List=List[Any]
+pj_baseop_wait,		pj_opc_baseop,  wait(),		OP_WAIT,	0,	emit,	Integer
+pj_baseop_getppid,	pj_opc_baseop,  getppid(),	OP_GETPPID,	0,	emit,	Integer
 
 
 # unops (but some OP_STUB are really null-ary... => baseop)
@@ -175,6 +177,11 @@ pj_unop_readdir,	pj_opc_unop,	readdir(),	OP_READDIR,	0,	emit,	Scalar=Any List=Li
 pj_unop_telldir,	pj_opc_unop,	telldir(),	OP_TELLDIR,	0,	emit,	Any
 pj_unop_rewinddir,	pj_opc_unop,	rewinddir(),	OP_REWINDDIR,	0,	emit,	Any # retval unclear in docs
 pj_unop_closedir,	pj_opc_unop,	closedir(),	OP_CLOSEDIR,	0,	emit,	Any # returns success of syscall
+pj_unop_getsockname,	pj_opc_unop,	getsockname(),	OP_GETSOCKNAME,	0,	emit,	Any
+pj_unop_getpeername,	pj_opc_unop,	getpeername(),	OP_GETPEERNAME,	0,	emit,	Any
+pj_unop_getpgrp,	pj_opc_unop,	getpgrp(),	OP_GETPGRP,	KIDS_OPTIONAL,	emit,	Integer
+pj_unop_lock,		pj_opc_unop,	lock(),		OP_LOCK,	0,	emit,	Any
+pj_unop_readline,	pj_opc_unop,	readlone(),	OP_READLINE,	KIDS_OPTIONAL,	emit,	Any
 
 
 # binops
@@ -237,6 +244,13 @@ pj_binop_connect,	pj_opc_binop,	connect(),	OP_CONNECT,	0,	emit,	Any # (yes or un
 pj_binop_listen,	pj_opc_binop,	listen(),	OP_LISTEN,	0,	emit,	Any # (yes or undef: Boolean)
 pj_binop_accept,	pj_opc_binop,	accept(),	OP_ACCEPT,	0,	emit,	Any
 pj_binop_shutdown,	pj_opc_binop,	shutdown(),	OP_SHUTDOWN,	0,	emit,	Any # (1,0,undef)
+pj_binop_msgget,	pj_opc_binop,	msgget(),	OP_MSGGET,	0,	emit,	Any # TODO didn't look up return values
+pj_binop_semop,		pj_opc_binop,	semop(),	OP_SEMOP,	0,	emit,	Any # TODO didn't look up return values
+pj_binop_pipe,		pj_opc_binop,	pipe(),		OP_PIPE_OP,	0,	emit,	Any # (yes or undef: Boolean)
+pj_binop_waitpid,	pj_opc_binop,	waitpid(),	OP_WAITPID,	0,	emit,	Integer
+pj_binop_setpgrp,	pj_opc_binop,	setpgrp(),	OP_SETPGRP,	KIDS_OPTIONAL,	emit,	Integer
+pj_binop_getpriority,	pj_opc_binop,	getpriority(),	OP_GETPRIORITY,	0,	emit,	Integer
+pj_binop_formline,	pj_opc_binop,	formline(),	OP_FORMLINE,	0,	emit,	Integer
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any
@@ -288,5 +302,17 @@ pj_listop_send,		pj_opc_listop,	send(),		OP_SEND,	0,	emit,	Any # count of bytes 
 pj_listop_recv,		pj_opc_listop,	recv(),		OP_RECV,	0,	emit,	Any
 pj_listop_socket,	pj_opc_listop,	socket(),	OP_SOCKET,	0,	emit,	Any # (yes or undef: Boolean)
 pj_listop_socketpair,	pj_opc_listop,	socketpair(),	OP_SOCKPAIR,	0,	emit,	Any # (yes or undef: Boolean)
+pj_listop_getsockopt,	pj_opc_listop,	getsockopt(),	OP_GSOCKOPT,	0,	emit,	Any
+pj_listop_setsockopt,	pj_opc_listop,	setsockopt(),	OP_SSOCKOPT,	0,	emit,	Any
+pj_listop_shmget,	pj_opc_listop,	shmget(),	OP_SHMGET,	0,	emit,	Any # TODO didn't look up return values
+pj_listop_shmctl,	pj_opc_listop,	shmctl(),	OP_SHMCTL,	0,	emit,	Any # TODO didn't look up return values
+pj_listop_shmread,	pj_opc_listop,	shmread(),	OP_SHMREAD,	0,	emit,	Any # TODO didn't look up return values
+pj_listop_shmwrite,	pj_opc_listop,	shmwrite(),	OP_SHMWRITE,	0,	emit,	Any # TODO didn't look up return values
+pj_listop_msgctl,	pj_opc_listop,	msgctl(),	OP_MSGCTL,	0,	emit,	Any # TODO didn't look up return values
+pj_listop_msgsnd,	pj_opc_listop,	msgsnd(),	OP_MSGSND,	0,	emit,	Any # TODO didn't look up return values
+pj_listop_msgrcv,	pj_opc_listop,	msgrcv(),	OP_MSGRCV,	0,	emit,	Any # TODO didn't look up return values
+pj_listop_semget,	pj_opc_listop,	semget(),	OP_SEMGET,	0,	emit,	Any # TODO didn't look up return values
+pj_listop_semctl,	pj_opc_listop,	semctl(),	OP_SEMCTL,	0,	emit,	Any # TODO didn't look up return values
+pj_listop_setpriority,	pj_opc_listop,	setpriority(),	OP_SETPRIORITY,	0,	emit,	Integer
 
 pj_op_scope,		pj_opc_block,	scope,		OP_SCOPE,	0,	,	Scalar=Any List=List[Any]

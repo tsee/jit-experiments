@@ -68,6 +68,7 @@
   || (int)otype == OP_FCNTL \
   || (int)otype == OP_FILENO \
   || (int)otype == OP_FLOCK \
+  || (int)otype == OP_FORMLINE \
   || (int)otype == OP_FTATIME \
   || (int)otype == OP_FTBINARY \
   || (int)otype == OP_FTBLK \
@@ -98,6 +99,11 @@
   || (int)otype == OP_GE \
   || (int)otype == OP_GETC \
   || (int)otype == OP_GETLOGIN \
+  || (int)otype == OP_GETPEERNAME \
+  || (int)otype == OP_GETPGRP \
+  || (int)otype == OP_GETPPID \
+  || (int)otype == OP_GETPRIORITY \
+  || (int)otype == OP_GETSOCKNAME \
   || (int)otype == OP_GGRENT \
   || (int)otype == OP_GGRGID \
   || (int)otype == OP_GGRNAM \
@@ -119,6 +125,7 @@
   || (int)otype == OP_GSBYNAME \
   || (int)otype == OP_GSBYPORT \
   || (int)otype == OP_GSERVENT \
+  || (int)otype == OP_GSOCKOPT \
   || (int)otype == OP_GT \
   || (int)otype == OP_HELEM \
   || (int)otype == OP_HEX \
@@ -156,6 +163,7 @@
   || (int)otype == OP_LIST \
   || (int)otype == OP_LISTEN \
   || (int)otype == OP_LOCALTIME \
+  || (int)otype == OP_LOCK \
   || (int)otype == OP_LOG \
   || (int)otype == OP_LSLICE \
   || (int)otype == OP_LSTAT \
@@ -164,6 +172,10 @@
   || (int)otype == OP_MATCH \
   || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \
+  || (int)otype == OP_MSGCTL \
+  || (int)otype == OP_MSGGET \
+  || (int)otype == OP_MSGRCV \
+  || (int)otype == OP_MSGSND \
   || (int)otype == OP_MULTIPLY \
   || (int)otype == OP_NCMP \
   || (int)otype == OP_NE \
@@ -180,6 +192,7 @@
   || (int)otype == OP_PADAV \
   || (int)otype == OP_PADHV \
   || (int)otype == OP_PADSV \
+  || (int)otype == OP_PIPE_OP \
   || (int)otype == OP_POP \
   || (int)otype == OP_POS \
   || (int)otype == OP_POSTDEC \
@@ -196,6 +209,7 @@
   || (int)otype == OP_REACH \
   || (int)otype == OP_READ \
   || (int)otype == OP_READDIR \
+  || (int)otype == OP_READLINE \
   || (int)otype == OP_READLINK \
   || (int)otype == OP_RECV \
   || (int)otype == OP_REDO \
@@ -224,12 +238,21 @@
   || (int)otype == OP_SEEK \
   || (int)otype == OP_SEEKDIR \
   || (int)otype == OP_SELECT \
+  || (int)otype == OP_SEMCTL \
+  || (int)otype == OP_SEMGET \
+  || (int)otype == OP_SEMOP \
   || (int)otype == OP_SEND \
   || (int)otype == OP_SEQ \
+  || (int)otype == OP_SETPGRP \
+  || (int)otype == OP_SETPRIORITY \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGRENT \
   || (int)otype == OP_SGT \
   || (int)otype == OP_SHIFT \
+  || (int)otype == OP_SHMCTL \
+  || (int)otype == OP_SHMGET \
+  || (int)otype == OP_SHMREAD \
+  || (int)otype == OP_SHMWRITE \
   || (int)otype == OP_SHOSTENT \
   || (int)otype == OP_SHUTDOWN \
   || (int)otype == OP_SIN \
@@ -250,6 +273,7 @@
   || (int)otype == OP_SREFGEN \
   || (int)otype == OP_SSELECT \
   || (int)otype == OP_SSERVENT \
+  || (int)otype == OP_SSOCKOPT \
   || (int)otype == OP_STAT \
   || (int)otype == OP_STUB \
   || (int)otype == OP_STUDY \
@@ -279,6 +303,8 @@
   || (int)otype == OP_UTIME \
   || (int)otype == OP_VALUES \
   || (int)otype == OP_VEC \
+  || (int)otype == OP_WAIT \
+  || (int)otype == OP_WAITPID \
   || (int)otype == OP_WANTARRAY \
   || (int)otype == OP_WARN)
 
@@ -350,6 +376,7 @@
   || (int)otype == OP_FCNTL \
   || (int)otype == OP_FILENO \
   || (int)otype == OP_FLOCK \
+  || (int)otype == OP_FORMLINE \
   || (int)otype == OP_FTATIME \
   || (int)otype == OP_FTBINARY \
   || (int)otype == OP_FTBLK \
@@ -380,6 +407,11 @@
   || (int)otype == OP_GE \
   || (int)otype == OP_GETC \
   || (int)otype == OP_GETLOGIN \
+  || (int)otype == OP_GETPEERNAME \
+  || (int)otype == OP_GETPGRP \
+  || (int)otype == OP_GETPPID \
+  || (int)otype == OP_GETPRIORITY \
+  || (int)otype == OP_GETSOCKNAME \
   || (int)otype == OP_GGRENT \
   || (int)otype == OP_GGRGID \
   || (int)otype == OP_GGRNAM \
@@ -401,6 +433,7 @@
   || (int)otype == OP_GSBYNAME \
   || (int)otype == OP_GSBYPORT \
   || (int)otype == OP_GSERVENT \
+  || (int)otype == OP_GSOCKOPT \
   || (int)otype == OP_GT \
   || (int)otype == OP_GVSV \
   || (int)otype == OP_HELEM \
@@ -439,6 +472,7 @@
   || (int)otype == OP_LIST \
   || (int)otype == OP_LISTEN \
   || (int)otype == OP_LOCALTIME \
+  || (int)otype == OP_LOCK \
   || (int)otype == OP_LOG \
   || (int)otype == OP_LSLICE \
   || (int)otype == OP_LSTAT \
@@ -447,6 +481,10 @@
   || (int)otype == OP_MATCH \
   || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \
+  || (int)otype == OP_MSGCTL \
+  || (int)otype == OP_MSGGET \
+  || (int)otype == OP_MSGRCV \
+  || (int)otype == OP_MSGSND \
   || (int)otype == OP_MULTIPLY \
   || (int)otype == OP_NCMP \
   || (int)otype == OP_NE \
@@ -465,6 +503,7 @@
   || (int)otype == OP_PADAV \
   || (int)otype == OP_PADHV \
   || (int)otype == OP_PADSV \
+  || (int)otype == OP_PIPE_OP \
   || (int)otype == OP_POP \
   || (int)otype == OP_POS \
   || (int)otype == OP_POSTDEC \
@@ -481,6 +520,7 @@
   || (int)otype == OP_REACH \
   || (int)otype == OP_READ \
   || (int)otype == OP_READDIR \
+  || (int)otype == OP_READLINE \
   || (int)otype == OP_READLINK \
   || (int)otype == OP_RECV \
   || (int)otype == OP_REDO \
@@ -509,12 +549,21 @@
   || (int)otype == OP_SEEK \
   || (int)otype == OP_SEEKDIR \
   || (int)otype == OP_SELECT \
+  || (int)otype == OP_SEMCTL \
+  || (int)otype == OP_SEMGET \
+  || (int)otype == OP_SEMOP \
   || (int)otype == OP_SEND \
   || (int)otype == OP_SEQ \
+  || (int)otype == OP_SETPGRP \
+  || (int)otype == OP_SETPRIORITY \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGRENT \
   || (int)otype == OP_SGT \
   || (int)otype == OP_SHIFT \
+  || (int)otype == OP_SHMCTL \
+  || (int)otype == OP_SHMGET \
+  || (int)otype == OP_SHMREAD \
+  || (int)otype == OP_SHMWRITE \
   || (int)otype == OP_SHOSTENT \
   || (int)otype == OP_SHUTDOWN \
   || (int)otype == OP_SIN \
@@ -535,6 +584,7 @@
   || (int)otype == OP_SREFGEN \
   || (int)otype == OP_SSELECT \
   || (int)otype == OP_SSERVENT \
+  || (int)otype == OP_SSOCKOPT \
   || (int)otype == OP_STAT \
   || (int)otype == OP_STUB \
   || (int)otype == OP_STUDY \
@@ -564,6 +614,8 @@
   || (int)otype == OP_UTIME \
   || (int)otype == OP_VALUES \
   || (int)otype == OP_VEC \
+  || (int)otype == OP_WAIT \
+  || (int)otype == OP_WAITPID \
   || (int)otype == OP_WANTARRAY \
   || (int)otype == OP_WARN)
 

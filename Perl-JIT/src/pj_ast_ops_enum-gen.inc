@@ -28,6 +28,8 @@ typedef enum {
   pj_baseop_endprotoend,
   pj_baseop_endservend,
   pj_baseop_getprotoend,
+  pj_baseop_wait,
+  pj_baseop_getppid,
 
   // Op class: pj_opc_unop
   pj_unop_localtime,
@@ -149,6 +151,11 @@ typedef enum {
   pj_unop_telldir,
   pj_unop_rewinddir,
   pj_unop_closedir,
+  pj_unop_getsockname,
+  pj_unop_getpeername,
+  pj_unop_getpgrp,
+  pj_unop_lock,
+  pj_unop_readline,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -210,6 +217,13 @@ typedef enum {
   pj_binop_listen,
   pj_binop_accept,
   pj_binop_shutdown,
+  pj_binop_msgget,
+  pj_binop_semop,
+  pj_binop_pipe,
+  pj_binop_waitpid,
+  pj_binop_setpgrp,
+  pj_binop_getpriority,
+  pj_binop_formline,
 
   // Op class: pj_opc_listop
   pj_listop_ternary,
@@ -261,6 +275,18 @@ typedef enum {
   pj_listop_recv,
   pj_listop_socket,
   pj_listop_socketpair,
+  pj_listop_getsockopt,
+  pj_listop_setsockopt,
+  pj_listop_shmget,
+  pj_listop_shmctl,
+  pj_listop_shmread,
+  pj_listop_shmwrite,
+  pj_listop_msgctl,
+  pj_listop_msgsnd,
+  pj_listop_msgrcv,
+  pj_listop_semget,
+  pj_listop_semctl,
+  pj_listop_setpriority,
 
   // Op class: pj_opc_block
   pj_op_scope,
@@ -268,16 +294,16 @@ typedef enum {
   // Op class ranges
 
   pj_baseop_FIRST = pj_baseop_time,
-  pj_baseop_LAST  = pj_baseop_getprotoend,
+  pj_baseop_LAST  = pj_baseop_getppid,
 
   pj_unop_FIRST = pj_unop_localtime,
-  pj_unop_LAST  = pj_unop_closedir,
+  pj_unop_LAST  = pj_unop_readline,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_shutdown,
+  pj_binop_LAST  = pj_binop_formline,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_socketpair,
+  pj_listop_LAST  = pj_listop_setpriority,
 
   pj_block_FIRST = pj_op_scope,
   pj_block_LAST  = pj_op_scope,
