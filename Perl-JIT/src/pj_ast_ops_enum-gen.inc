@@ -205,6 +205,11 @@ typedef enum {
   pj_binop_getservbyport,
   pj_binop_opendir,
   pj_binop_seekdir,
+  pj_binop_bind,
+  pj_binop_connect,
+  pj_binop_listen,
+  pj_binop_accept,
+  pj_binop_shutdown,
 
   // Op class: pj_opc_listop
   pj_listop_ternary,
@@ -252,6 +257,10 @@ typedef enum {
   pj_listop_sysselect,
   pj_listop_syscall,
   pj_listop_dbmopen,
+  pj_listop_send,
+  pj_listop_recv,
+  pj_listop_socket,
+  pj_listop_socketpair,
 
   // Op class: pj_opc_block
   pj_op_scope,
@@ -265,10 +274,10 @@ typedef enum {
   pj_unop_LAST  = pj_unop_closedir,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_seekdir,
+  pj_binop_LAST  = pj_binop_shutdown,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_dbmopen,
+  pj_listop_LAST  = pj_listop_socketpair,
 
   pj_block_FIRST = pj_op_scope,
   pj_block_LAST  = pj_op_scope,

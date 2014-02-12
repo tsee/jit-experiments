@@ -73,18 +73,6 @@ pipe_op		pipe			ck_fun		is@	F F
 enterwrite	write			ck_fun		dis%	F?
 leavewrite	write exit		ck_null		1	
 
-send		send			ck_fun		imst@	Fs S S S?
-recv		recv			ck_fun		imst@	Fs R S S
-
-socket		socket			ck_fun		is@	Fs S S S
-sockpair	socketpair		ck_fun		is@	Fs Fs S S S
-
-bind		bind			ck_fun		is@	Fs S
-connect		connect			ck_fun		is@	Fs S
-listen		listen			ck_fun		is@	Fs S
-accept		accept			ck_fun		ist@	Fs Fs
-shutdown	shutdown		ck_fun		ist@	Fs S
-
 gsockopt	getsockopt		ck_fun		is@	Fs S S
 ssockopt	setsockopt		ck_fun		is@	Fs S S S
 

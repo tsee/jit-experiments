@@ -232,7 +232,11 @@ pj_binop_getservbyname,	pj_opc_binop,	getservbyname,	OP_GSBYNAME,	0,	emit,	Scala
 pj_binop_getservbyport,	pj_opc_binop,	getservbyport,	OP_GSBYPORT,	0,	emit,	Scalar=Any List=List[Any]
 pj_binop_opendir,	pj_opc_binop,	opendir(),	OP_OPEN_DIR,	0,	emit,	Any # returns true if successful
 pj_binop_seekdir,	pj_opc_binop,	seekdir(),	OP_SEEKDIR,	0,	emit,	Any # retval unclear in docs
-
+pj_binop_bind,		pj_opc_binop,	bind(),		OP_BIND,	0,	emit,	Any # (yes or undef: Boolean)
+pj_binop_connect,	pj_opc_binop,	connect(),	OP_CONNECT,	0,	emit,	Any # (yes or undef: Boolean)
+pj_binop_listen,	pj_opc_binop,	listen(),	OP_LISTEN,	0,	emit,	Any # (yes or undef: Boolean)
+pj_binop_accept,	pj_opc_binop,	accept(),	OP_ACCEPT,	0,	emit,	Any
+pj_binop_shutdown,	pj_opc_binop,	shutdown(),	OP_SHUTDOWN,	0,	emit,	Any # (1,0,undef)
 
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any
@@ -280,5 +284,9 @@ pj_listop_fcntl,	pj_opc_listop,	fcntl(),	OP_FCNTL,	0,	emit,	Any # "0 but true" o
 pj_listop_sysselect,	pj_opc_listop,	select syscall,	OP_SSELECT,	0,	emit,	Integer # according to docs
 pj_listop_syscall,	pj_opc_listop,	gen. syscall,	OP_SYSCALL,	0,	emit,	Any # docs unclear on retval
 pj_listop_dbmopen,	pj_opc_listop,	dbmopen,	OP_DBMOPEN,	0,	emit,	Any # docs unclear on retval
+pj_listop_send,		pj_opc_listop,	send(),		OP_SEND,	0,	emit,	Any # count of bytes or undef
+pj_listop_recv,		pj_opc_listop,	recv(),		OP_RECV,	0,	emit,	Any
+pj_listop_socket,	pj_opc_listop,	socket(),	OP_SOCKET,	0,	emit,	Any # (yes or undef: Boolean)
+pj_listop_socketpair,	pj_opc_listop,	socketpair(),	OP_SOCKPAIR,	0,	emit,	Any # (yes or undef: Boolean)
 
 pj_op_scope,		pj_opc_block,	scope,		OP_SCOPE,	0,	,	Scalar=Any List=List[Any]

@@ -9,6 +9,7 @@
 #define IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) ( \
      (int)otype == OP_AASSIGN \
   || (int)otype == OP_ABS \
+  || (int)otype == OP_ACCEPT \
   || (int)otype == OP_ADD \
   || (int)otype == OP_AEACH \
   || (int)otype == OP_AELEM \
@@ -22,6 +23,7 @@
   || (int)otype == OP_AV2ARYLEN \
   || (int)otype == OP_AVALUES \
   || (int)otype == OP_BACKTICK \
+  || (int)otype == OP_BIND \
   || (int)otype == OP_BINMODE \
   || (int)otype == OP_BIT_AND \
   || (int)otype == OP_BIT_OR \
@@ -40,6 +42,7 @@
   || (int)otype == OP_COMPLEMENT \
   || (int)otype == OP_CONCAT \
   || (int)otype == OP_COND_EXPR \
+  || (int)otype == OP_CONNECT \
   || (int)otype == OP_COS \
   || (int)otype == OP_CRYPT \
   || (int)otype == OP_DBMCLOSE \
@@ -151,6 +154,7 @@
   || (int)otype == OP_LENGTH \
   || (int)otype == OP_LINK \
   || (int)otype == OP_LIST \
+  || (int)otype == OP_LISTEN \
   || (int)otype == OP_LOCALTIME \
   || (int)otype == OP_LOG \
   || (int)otype == OP_LSLICE \
@@ -193,6 +197,7 @@
   || (int)otype == OP_READ \
   || (int)otype == OP_READDIR \
   || (int)otype == OP_READLINK \
+  || (int)otype == OP_RECV \
   || (int)otype == OP_REDO \
   || (int)otype == OP_REF \
   || (int)otype == OP_RENAME \
@@ -219,18 +224,22 @@
   || (int)otype == OP_SEEK \
   || (int)otype == OP_SEEKDIR \
   || (int)otype == OP_SELECT \
+  || (int)otype == OP_SEND \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGRENT \
   || (int)otype == OP_SGT \
   || (int)otype == OP_SHIFT \
   || (int)otype == OP_SHOSTENT \
+  || (int)otype == OP_SHUTDOWN \
   || (int)otype == OP_SIN \
   || (int)otype == OP_SLE \
   || (int)otype == OP_SLEEP \
   || (int)otype == OP_SLT \
   || (int)otype == OP_SNE \
   || (int)otype == OP_SNETENT \
+  || (int)otype == OP_SOCKET \
+  || (int)otype == OP_SOCKPAIR \
   || (int)otype == OP_SPLICE \
   || (int)otype == OP_SPLIT \
   || (int)otype == OP_SPRINTF \
@@ -277,6 +286,7 @@
 #define IS_AST_COMPATIBLE_OP_TYPE(otype) ( \
      (int)otype == OP_AASSIGN \
   || (int)otype == OP_ABS \
+  || (int)otype == OP_ACCEPT \
   || (int)otype == OP_ADD \
   || (int)otype == OP_AEACH \
   || (int)otype == OP_AELEM \
@@ -293,6 +303,7 @@
   || (int)otype == OP_AV2ARYLEN \
   || (int)otype == OP_AVALUES \
   || (int)otype == OP_BACKTICK \
+  || (int)otype == OP_BIND \
   || (int)otype == OP_BINMODE \
   || (int)otype == OP_BIT_AND \
   || (int)otype == OP_BIT_OR \
@@ -311,6 +322,7 @@
   || (int)otype == OP_COMPLEMENT \
   || (int)otype == OP_CONCAT \
   || (int)otype == OP_COND_EXPR \
+  || (int)otype == OP_CONNECT \
   || (int)otype == OP_CONST \
   || (int)otype == OP_COS \
   || (int)otype == OP_CRYPT \
@@ -425,6 +437,7 @@
   || (int)otype == OP_LENGTH \
   || (int)otype == OP_LINK \
   || (int)otype == OP_LIST \
+  || (int)otype == OP_LISTEN \
   || (int)otype == OP_LOCALTIME \
   || (int)otype == OP_LOG \
   || (int)otype == OP_LSLICE \
@@ -469,6 +482,7 @@
   || (int)otype == OP_READ \
   || (int)otype == OP_READDIR \
   || (int)otype == OP_READLINK \
+  || (int)otype == OP_RECV \
   || (int)otype == OP_REDO \
   || (int)otype == OP_REF \
   || (int)otype == OP_RENAME \
@@ -495,18 +509,22 @@
   || (int)otype == OP_SEEK \
   || (int)otype == OP_SEEKDIR \
   || (int)otype == OP_SELECT \
+  || (int)otype == OP_SEND \
   || (int)otype == OP_SEQ \
   || (int)otype == OP_SGE \
   || (int)otype == OP_SGRENT \
   || (int)otype == OP_SGT \
   || (int)otype == OP_SHIFT \
   || (int)otype == OP_SHOSTENT \
+  || (int)otype == OP_SHUTDOWN \
   || (int)otype == OP_SIN \
   || (int)otype == OP_SLE \
   || (int)otype == OP_SLEEP \
   || (int)otype == OP_SLT \
   || (int)otype == OP_SNE \
   || (int)otype == OP_SNETENT \
+  || (int)otype == OP_SOCKET \
+  || (int)otype == OP_SOCKPAIR \
   || (int)otype == OP_SPLICE \
   || (int)otype == OP_SPLIT \
   || (int)otype == OP_SPRINTF \

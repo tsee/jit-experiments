@@ -198,6 +198,11 @@
   INT_CONST(pj_binop_getservbyport);
   INT_CONST(pj_binop_opendir);
   INT_CONST(pj_binop_seekdir);
+  INT_CONST(pj_binop_bind);
+  INT_CONST(pj_binop_connect);
+  INT_CONST(pj_binop_listen);
+  INT_CONST(pj_binop_accept);
+  INT_CONST(pj_binop_shutdown);
   INT_CONST(pj_listop_ternary);
   INT_CONST(pj_listop_substr);
   INT_CONST(pj_listop_chop);
@@ -243,6 +248,10 @@
   INT_CONST(pj_listop_sysselect);
   INT_CONST(pj_listop_syscall);
   INT_CONST(pj_listop_dbmopen);
+  INT_CONST(pj_listop_send);
+  INT_CONST(pj_listop_recv);
+  INT_CONST(pj_listop_socket);
+  INT_CONST(pj_listop_socketpair);
   INT_CONST(pj_op_scope);
 
 
