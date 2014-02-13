@@ -16,6 +16,7 @@
   || (int)otype == OP_AKEYS \
   || (int)otype == OP_ALARM \
   || (int)otype == OP_ANDASSIGN \
+  || (int)otype == OP_ANONCODE \
   || (int)otype == OP_ANONHASH \
   || (int)otype == OP_ANONLIST \
   || (int)otype == OP_ASLICE \
@@ -51,6 +52,7 @@
   || (int)otype == OP_DELETE \
   || (int)otype == OP_DIE \
   || (int)otype == OP_DIVIDE \
+  || (int)otype == OP_DOFILE \
   || (int)otype == OP_DORASSIGN \
   || (int)otype == OP_DUMP \
   || (int)otype == OP_EACH \
@@ -62,12 +64,14 @@
   || (int)otype == OP_EPWENT \
   || (int)otype == OP_EQ \
   || (int)otype == OP_ESERVENT \
+  || (int)otype == OP_EXEC \
   || (int)otype == OP_EXISTS \
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
   || (int)otype == OP_FCNTL \
   || (int)otype == OP_FILENO \
   || (int)otype == OP_FLOCK \
+  || (int)otype == OP_FORK \
   || (int)otype == OP_FORMLINE \
   || (int)otype == OP_FTATIME \
   || (int)otype == OP_FTBINARY \
@@ -151,6 +155,7 @@
   || (int)otype == OP_I_SUBTRACT \
   || (int)otype == OP_JOIN \
   || (int)otype == OP_KEYS \
+  || (int)otype == OP_KILL \
   || (int)otype == OP_LAST \
   || (int)otype == OP_LC \
   || (int)otype == OP_LCFIRST \
@@ -216,6 +221,7 @@
   || (int)otype == OP_REF \
   || (int)otype == OP_RENAME \
   || (int)otype == OP_REPEAT \
+  || (int)otype == OP_REQUIRE \
   || (int)otype == OP_RESET \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
@@ -285,6 +291,7 @@
   || (int)otype == OP_SYSOPEN \
   || (int)otype == OP_SYSREAD \
   || (int)otype == OP_SYSSEEK \
+  || (int)otype == OP_SYSTEM \
   || (int)otype == OP_SYSWRITE \
   || (int)otype == OP_TELL \
   || (int)otype == OP_TELLDIR \
@@ -322,6 +329,7 @@
   || (int)otype == OP_ALARM \
   || (int)otype == OP_AND \
   || (int)otype == OP_ANDASSIGN \
+  || (int)otype == OP_ANONCODE \
   || (int)otype == OP_ANONHASH \
   || (int)otype == OP_ANONLIST \
   || (int)otype == OP_ASLICE \
@@ -358,6 +366,7 @@
   || (int)otype == OP_DELETE \
   || (int)otype == OP_DIE \
   || (int)otype == OP_DIVIDE \
+  || (int)otype == OP_DOFILE \
   || (int)otype == OP_DOR \
   || (int)otype == OP_DORASSIGN \
   || (int)otype == OP_DUMP \
@@ -370,12 +379,14 @@
   || (int)otype == OP_EPWENT \
   || (int)otype == OP_EQ \
   || (int)otype == OP_ESERVENT \
+  || (int)otype == OP_EXEC \
   || (int)otype == OP_EXISTS \
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
   || (int)otype == OP_FCNTL \
   || (int)otype == OP_FILENO \
   || (int)otype == OP_FLOCK \
+  || (int)otype == OP_FORK \
   || (int)otype == OP_FORMLINE \
   || (int)otype == OP_FTATIME \
   || (int)otype == OP_FTBINARY \
@@ -460,6 +471,7 @@
   || (int)otype == OP_I_SUBTRACT \
   || (int)otype == OP_JOIN \
   || (int)otype == OP_KEYS \
+  || (int)otype == OP_KILL \
   || (int)otype == OP_LAST \
   || (int)otype == OP_LC \
   || (int)otype == OP_LCFIRST \
@@ -527,6 +539,7 @@
   || (int)otype == OP_REF \
   || (int)otype == OP_RENAME \
   || (int)otype == OP_REPEAT \
+  || (int)otype == OP_REQUIRE \
   || (int)otype == OP_RESET \
   || (int)otype == OP_RETURN \
   || (int)otype == OP_REVERSE \
@@ -596,6 +609,7 @@
   || (int)otype == OP_SYSOPEN \
   || (int)otype == OP_SYSREAD \
   || (int)otype == OP_SYSSEEK \
+  || (int)otype == OP_SYSTEM \
   || (int)otype == OP_SYSWRITE \
   || (int)otype == OP_TELL \
   || (int)otype == OP_TELLDIR \

@@ -68,13 +68,6 @@ continue	continue		ck_null		0
 enterwrite	write			ck_fun		dis%	F?
 leavewrite	write exit		ck_null		1	
 
-fork		fork			ck_null		ist0	
-system		system			ck_exec		imsT@	S? L
-exec		exec			ck_exec		dimsT@	S? L
-kill		kill			ck_fun		dimsT@	L
-
-require		require			ck_require	du%	S?
-dofile		do "file"		ck_fun		d1	S
 hintseval	eval hints		ck_svconst	s$
 entereval	eval "string"		ck_eval		du%	S?
 leaveeval	eval "string" exit	ck_null		1	S

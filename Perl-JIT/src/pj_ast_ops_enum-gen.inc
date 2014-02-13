@@ -30,6 +30,8 @@ typedef enum {
   pj_baseop_getprotoend,
   pj_baseop_wait,
   pj_baseop_getppid,
+  pj_baseop_anoncode,
+  pj_baseop_fork,
 
   // Op class: pj_opc_unop
   pj_unop_localtime,
@@ -156,6 +158,8 @@ typedef enum {
   pj_unop_getpgrp,
   pj_unop_lock,
   pj_unop_readline,
+  pj_unop_require,
+  pj_unop_dofile,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -287,6 +291,9 @@ typedef enum {
   pj_listop_semget,
   pj_listop_semctl,
   pj_listop_setpriority,
+  pj_listop_kill,
+  pj_listop_system,
+  pj_listop_exec,
 
   // Op class: pj_opc_block
   pj_op_scope,
@@ -294,16 +301,16 @@ typedef enum {
   // Op class ranges
 
   pj_baseop_FIRST = pj_baseop_time,
-  pj_baseop_LAST  = pj_baseop_getppid,
+  pj_baseop_LAST  = pj_baseop_fork,
 
   pj_unop_FIRST = pj_unop_localtime,
-  pj_unop_LAST  = pj_unop_readline,
+  pj_unop_LAST  = pj_unop_dofile,
 
   pj_binop_FIRST = pj_binop_add,
   pj_binop_LAST  = pj_binop_formline,
 
   pj_listop_FIRST = pj_listop_ternary,
-  pj_listop_LAST  = pj_listop_setpriority,
+  pj_listop_LAST  = pj_listop_exec,
 
   pj_block_FIRST = pj_op_scope,
   pj_block_LAST  = pj_op_scope,

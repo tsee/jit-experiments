@@ -27,6 +27,8 @@
   INT_CONST(pj_baseop_getprotoend);
   INT_CONST(pj_baseop_wait);
   INT_CONST(pj_baseop_getppid);
+  INT_CONST(pj_baseop_anoncode);
+  INT_CONST(pj_baseop_fork);
   INT_CONST(pj_unop_localtime);
   INT_CONST(pj_unop_gmtime);
   INT_CONST(pj_unop_alarm);
@@ -151,6 +153,8 @@
   INT_CONST(pj_unop_getpgrp);
   INT_CONST(pj_unop_lock);
   INT_CONST(pj_unop_readline);
+  INT_CONST(pj_unop_require);
+  INT_CONST(pj_unop_dofile);
   INT_CONST(pj_binop_add);
   INT_CONST(pj_binop_subtract);
   INT_CONST(pj_binop_multiply);
@@ -278,6 +282,9 @@
   INT_CONST(pj_listop_semget);
   INT_CONST(pj_listop_semctl);
   INT_CONST(pj_listop_setpriority);
+  INT_CONST(pj_listop_kill);
+  INT_CONST(pj_listop_system);
+  INT_CONST(pj_listop_exec);
   INT_CONST(pj_op_scope);
 
 

@@ -55,6 +55,8 @@ pj_baseop_endservend,	pj_opc_baseop,  endservent(),	OP_ESERVENT,	0,	emit,	Scalar
 pj_baseop_getprotoend,	pj_opc_baseop,  getprotoent(),	OP_GPROTOENT,	0,	emit,	Scalar=Any List=List[Any]
 pj_baseop_wait,		pj_opc_baseop,  wait(),		OP_WAIT,	0,	emit,	Integer
 pj_baseop_getppid,	pj_opc_baseop,  getppid(),	OP_GETPPID,	0,	emit,	Integer
+pj_baseop_anoncode,	pj_opc_baseop,  anon CV constr,	OP_ANONCODE,	0,	emit,	Any
+pj_baseop_fork,		pj_opc_baseop,  fork(),		OP_FORK,	0,	emit,	Any # (integer or undef)
 
 
 # unops (but some OP_STUB are really null-ary... => baseop)
@@ -182,6 +184,8 @@ pj_unop_getpeername,	pj_opc_unop,	getpeername(),	OP_GETPEERNAME,	0,	emit,	Any
 pj_unop_getpgrp,	pj_opc_unop,	getpgrp(),	OP_GETPGRP,	KIDS_OPTIONAL,	emit,	Integer
 pj_unop_lock,		pj_opc_unop,	lock(),		OP_LOCK,	0,	emit,	Any
 pj_unop_readline,	pj_opc_unop,	readlone(),	OP_READLINE,	KIDS_OPTIONAL,	emit,	Any
+pj_unop_require,	pj_opc_unop,	require(),	OP_REQUIRE,	KIDS_OPTIONAL,	emit,	Any
+pj_unop_dofile,		pj_opc_unop,	do 'file',	OP_DOFILE,	0,	emit,	Any
 
 
 # binops
@@ -252,6 +256,7 @@ pj_binop_setpgrp,	pj_opc_binop,	setpgrp(),	OP_SETPGRP,	KIDS_OPTIONAL,	emit,	Inte
 pj_binop_getpriority,	pj_opc_binop,	getpriority(),	OP_GETPRIORITY,	0,	emit,	Integer
 pj_binop_formline,	pj_opc_binop,	formline(),	OP_FORMLINE,	0,	emit,	Integer
 
+
 # listops
 pj_listop_ternary,	pj_opc_listop,	?:,		OP_COND_EXPR,	KIDS_CONDITIONAL,	emit,	Any
 pj_listop_substr,	pj_opc_listop,	substr,		OP_SUBSTR,	0,	emit,	Any # can return undef, FIXME lvalue
@@ -314,5 +319,9 @@ pj_listop_msgrcv,	pj_opc_listop,	msgrcv(),	OP_MSGRCV,	0,	emit,	Any # TODO didn't
 pj_listop_semget,	pj_opc_listop,	semget(),	OP_SEMGET,	0,	emit,	Any # TODO didn't look up return values
 pj_listop_semctl,	pj_opc_listop,	semctl(),	OP_SEMCTL,	0,	emit,	Any # TODO didn't look up return values
 pj_listop_setpriority,	pj_opc_listop,	setpriority(),	OP_SETPRIORITY,	0,	emit,	Integer
+pj_listop_kill,		pj_opc_listop,	kill(),		OP_KILL,	0,	emit,	Integer
+pj_listop_system,	pj_opc_listop,	system(),	OP_SYSTEM,	0,	emit,	Integer
+pj_listop_exec,		pj_opc_listop,	exec(),		OP_EXEC,	0,	emit,	Integer
+
 
 pj_op_scope,		pj_opc_block,	scope,		OP_SCOPE,	0,	,	Scalar=Any List=List[Any]
