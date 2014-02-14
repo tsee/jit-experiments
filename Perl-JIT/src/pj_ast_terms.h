@@ -29,6 +29,7 @@ typedef enum {
   pj_ttype_foreach,
   pj_ttype_map,
   pj_ttype_grep,
+  pj_ttype_function_call,
   pj_ttype_empty
 } pj_term_type;
 
@@ -413,6 +414,41 @@ namespace PerlJIT {
 
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::Grep"; }
+    };
+
+    class SubCall : public Term {
+    public:
+      SubCall(OP *entersub_op,
+              PerlJIT::AST::Term *cv_src,
+              const std::vector<PerlJIT::AST::Term *> &args);
+
+      virtual void dump(int indent_lvl = 0) const;
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::SubCall"; }
+
+      std::vector<PerlJIT::AST::Term *> get_arguments() const;
+      PerlJIT::AST::Term *get_cv_source() const;
+
+    private:
+      PerlJIT::AST::Term *_cv_source;
+      std::vector<PerlJIT::AST::Term *> _arguments;
+    };
+
+    class MethodCall : public SubCall {
+    public:
+      MethodCall(OP *entersub_op,
+                 PerlJIT::AST::Term *cv_src,
+                 PerlJIT::AST::Term *invocant,
+                 const std::vector<PerlJIT::AST::Term *> &args);
+
+      virtual void dump(int indent_lvl = 0) const;
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::MethodCall"; }
+
+      PerlJIT::AST::Term *get_invocant() const;
+
+    private:
+      PerlJIT::AST::Term *_invocant;
     };
 
     class Optree : public Term {

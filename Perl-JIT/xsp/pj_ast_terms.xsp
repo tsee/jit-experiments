@@ -183,6 +183,17 @@ class Perl::JIT::AST::Global : public Perl::JIT::AST::Identifier
 #endif
 };
 
+class Perl::JIT::AST::SubCall : public Perl::JIT::AST::Term
+{
+  Perl::JIT::AST::Term *get_cv_source();
+  std::vector<Perl::JIT::AST::Term *> get_arguments();
+};
+
+class Perl::JIT::AST::MethodCall : public Perl::JIT::AST::SubCall
+{
+  Perl::JIT::AST::Term *get_invocant();
+};
+
 class Perl::JIT::AST::Optree : public Perl::JIT::AST::Term
 {
 };

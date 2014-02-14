@@ -213,6 +213,39 @@ Grep::Grep(OP *p_op, Term *_body, List *_parameters)
 {}
 
 
+SubCall::SubCall(OP *entersub_op,
+                 PerlJIT::AST::Term *cv_src,
+                 const std::vector<PerlJIT::AST::Term *> &args)
+  : Term(entersub_op, pj_ttype_function_call), _cv_source(cv_src), _arguments(args)
+{}
+
+std::vector<PerlJIT::AST::Term *>
+SubCall::get_arguments() const
+{
+  return _arguments;
+}
+
+PerlJIT::AST::Term *
+SubCall::get_cv_source() const
+{
+  return _cv_source;
+}
+
+
+MethodCall::MethodCall(OP *entersub_op,
+                       PerlJIT::AST::Term *cv_src,
+                       PerlJIT::AST::Term *invocant,
+                       const std::vector<PerlJIT::AST::Term *> &args)
+  : SubCall(entersub_op, cv_src, args), _invocant(invocant)
+{}
+
+PerlJIT::AST::Term *
+MethodCall::get_invocant() const
+{
+  return _invocant;
+}
+
+
 Statement::Statement(OP *p_nextstate, Term *term)
   : Term(p_nextstate, pj_ttype_statement)
 {
@@ -493,6 +526,45 @@ void List::dump(int indent_lvl) const
   S_dump_tree_indent(indent_lvl);
   printf(")\n");
 }
+
+void
+SubCall::dump(int indent_lvl) const
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("SubCall(\n");
+  S_dump_tree_indent(indent_lvl+1);
+  printf("CV: ");
+  this->_cv_source->dump(indent_lvl+3);
+
+  const unsigned int n = this->_arguments.size();
+  for (unsigned int i = 0; i < n; ++i)
+    this->_arguments[i]->dump(indent_lvl+1);
+
+  S_dump_tree_indent(indent_lvl);
+  printf(")\n");
+}
+
+void
+MethodCall::dump(int indent_lvl) const
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("MethodCall(\n");
+  S_dump_tree_indent(indent_lvl+1);
+  printf("CV: ");
+  this->get_cv_source()->dump(indent_lvl+3);
+
+  S_dump_tree_indent(indent_lvl+1);
+  printf("Invocant:\n");
+  this->_invocant->dump(indent_lvl+3);
+
+  const unsigned int n = this->get_arguments().size();
+  for (unsigned int i = 0; i < n; ++i)
+    this->get_arguments()[i]->dump(indent_lvl+1);
+
+  S_dump_tree_indent(indent_lvl);
+  printf(")\n");
+}
+
 
 Term::~Term()
 {
