@@ -584,6 +584,86 @@ pj_build_grep_or_map(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
          : (AST::Term *)new AST::Grep(start, map_body_term, new AST::List(param_vec));
 }
 
+// This handles building SubCall and MethodCall AST nodes
+static PerlJIT::AST::Term *
+pj_build_sub_call(pTHX_ LISTOP *entersub, OPTreeJITCandidateFinder &visitor)
+{
+  PerlJIT::AST::Term *retval;
+
+  // Fill args array with all entersub kids at first, disassemble later.
+  // vector<> is easier to work with than the singly linked OP list.
+  // PUSHMARK is skipped by pj_build_kid_terms.
+  vector<PerlJIT::AST::Term *> args;
+  OP *parent = (OP *)entersub;
+  if (entersub->op_first->op_type == OP_NULL
+      && entersub->op_first->op_sibling == NULL
+      && entersub->op_first->op_targ == OP_LIST)
+  {
+    parent = entersub->op_first;
+  }
+
+  if (pj_build_kid_terms(aTHX_ parent, visitor, args)) {
+    pj_free_term_vector(aTHX_ args);
+    return NULL;
+  }
+
+  assert(args.size() > 0);
+
+  // SubCall vs. MethodCall: MethodCall has an OP_METHOD(_NAMED) at end
+  PerlJIT::AST::Term *cv_source = args.back();
+  args.pop_back();
+
+  if (cv_source->get_type() == pj_ttype_op
+      && (((PerlJIT::AST::Op *)cv_source)->get_op_type() == pj_unop_method
+          || ((PerlJIT::AST::Op *)cv_source)->get_op_type() == pj_baseop_method_named))
+  {
+    assert(args.size() > 0);
+
+    PerlJIT::AST::Term *invocant = args.front();
+    args.erase(args.begin());
+    retval = (PerlJIT::AST::Term *)new PerlJIT::AST::MethodCall((OP *)entersub, cv_source, invocant, args);
+  }
+  else {
+    retval = (PerlJIT::AST::Term *)new PerlJIT::AST::SubCall((OP *)entersub, cv_source, args);
+  }
+
+  // Supported construct example dumps following (abbreviated).
+  // foo(1,2)
+  // 3              <$> const[IV 1] sM ->4
+  // 4              <$> const[IV 2] sM ->5
+  // -              <1> ex-rv2cv sK ->-
+  // 5                 <#> gv[*foo] s/EARLYCV ->6
+  //
+  // $foo->(1,2)
+  // 9              <$> const[IV 1] sM ->a
+  // a              <$> const[IV 2] sM ->b
+  // -              <1> ex-rv2cv K ->-
+  // -                 <1> ex-rv2sv sK/1 ->-
+  // b                    <#> gvsv[*foo] s ->c
+  //
+  // $foo->foo(1,2)
+  // -           <1> ex-rv2sv sKM/1 ->g
+  // f              <#> gvsv[*foo] s ->g
+  // g           <$> const[IV 1] sM ->h
+  // h           <$> const[IV 2] sM ->i
+  // i           <$> method_named[PV "foo"] ->j
+  //
+  // $foo->$bar(1,2)
+  // -           <1> ex-rv2sv sKM/1 ->n
+  // m              <#> gvsv[*foo] s ->n
+  // n           <$> const[IV 1] sM ->o
+  // o           <$> const[IV 2] sM ->p
+  // q           <1> method K/1 ->r
+  // -              <1> ex-rv2sv sK/1 ->q
+  // p                 <#> gvsv[*bar] s ->q
+  //
+  // Foo->bar()
+  // u           <$> const[PV "Foo"] sM/BARE ->v
+  // v           <$> method_named[PV "bar"] ->w
+
+  return retval;
+}
+
 /* Walk OP tree recursively, build ASTs, build subtrees */
 static PerlJIT::AST::Term *
 pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
@@ -1015,12 +1095,15 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       break;
     }
 
+  case OP_ENTERSUB:
+    retval = pj_build_sub_call(aTHX_ cLISTOPo, visitor);
+    break;
+
   case OP_ASLICE: {
 #ifndef NDEBUG
       {
         assert(o->op_flags & OPf_KIDS);
         // Paranoid: Assert three children: pushmark, list, array
-        unsigned int nkids = 0;
         OP *kid = ((UNOP*)o)->op_first;
         assert(kid && kid->op_type == OP_PUSHMARK);
         kid = kid->op_sibling;

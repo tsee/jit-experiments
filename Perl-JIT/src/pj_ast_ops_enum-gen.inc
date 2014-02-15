@@ -32,6 +32,7 @@ typedef enum {
   pj_baseop_getppid,
   pj_baseop_anoncode,
   pj_baseop_fork,
+  pj_baseop_method_named,
 
   // Op class: pj_opc_unop
   pj_unop_localtime,
@@ -160,6 +161,7 @@ typedef enum {
   pj_unop_readline,
   pj_unop_require,
   pj_unop_dofile,
+  pj_unop_method,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -301,10 +303,10 @@ typedef enum {
   // Op class ranges
 
   pj_baseop_FIRST = pj_baseop_time,
-  pj_baseop_LAST  = pj_baseop_fork,
+  pj_baseop_LAST  = pj_baseop_method_named,
 
   pj_unop_FIRST = pj_unop_localtime,
-  pj_unop_LAST  = pj_unop_dofile,
+  pj_unop_LAST  = pj_unop_method,
 
   pj_binop_FIRST = pj_binop_add,
   pj_binop_LAST  = pj_binop_formline,

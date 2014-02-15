@@ -34,6 +34,8 @@ our @EXPORT = (qw(
   ast_listop
   ast_block
   ast_list
+  ast_subcall
+  ast_methodcall
 
   ast_contains
 ), @Perl::JIT::EXPORT_OK);
@@ -182,6 +184,30 @@ sub _matches {
 
       for my $i (0 .. $#kids) {
         return 0 if !_matches($kids[$i], $pattern->{terms}[$i]);
+      }
+
+      return 1;
+    }
+    when ('call') {
+      return 0 unless $ast->get_type == pj_ttype_function_call;
+
+      my $invocant = $pattern->{invocant};
+      if ($invocant) {
+        return 0 if not $ast->isa("Perl::JIT::AST::MethodCall");
+        return 0 if !_matches($ast->get_invocant(), $invocant);
+      }
+      else {
+        return 0 if not $ast->isa("Perl::JIT::AST::SubCall");
+      }
+
+      return 0 if !_matches($ast->get_cv_source(), $pattern->{cv_source});
+
+      my @args = $ast->get_arguments;
+      return 0 if @args != @{$pattern->{args}};
+
+
+      for my $i (0 .. $#args) {
+        return 0 if !_matches($args[$i], $pattern->{args}[$i]);
       }
 
       return 1;
@@ -360,6 +386,19 @@ sub ast_block {
   my ($body) = @_;
 
   return {type => 'block', body => $body};
+}
+
+sub ast_subcall {
+  my ($cv_src, @args) = @_;
+
+  return {type => 'call', cv_source => $cv_src, args => \@args};
+}
+
+sub ast_methodcall {
+  my ($invocant, $cv_src, @args) = @_;
+
+  return {type => 'call', cv_source => $cv_src,
+          invocant => $invocant, args => \@args};
 }
 
 package t::lib::Perl::JIT::ASTTest;

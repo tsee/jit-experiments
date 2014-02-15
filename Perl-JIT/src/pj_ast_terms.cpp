@@ -533,12 +533,14 @@ SubCall::dump(int indent_lvl) const
   S_dump_tree_indent(indent_lvl);
   printf("SubCall(\n");
   S_dump_tree_indent(indent_lvl+1);
-  printf("CV: ");
-  this->_cv_source->dump(indent_lvl+3);
+  printf("CV source:\n");
+  this->_cv_source->dump(indent_lvl+2);
 
+  S_dump_tree_indent(indent_lvl+1);
+  printf("Args:\n");
   const unsigned int n = this->_arguments.size();
   for (unsigned int i = 0; i < n; ++i)
-    this->_arguments[i]->dump(indent_lvl+1);
+    this->_arguments[i]->dump(indent_lvl+2);
 
   S_dump_tree_indent(indent_lvl);
   printf(")\n");
@@ -550,16 +552,18 @@ MethodCall::dump(int indent_lvl) const
   S_dump_tree_indent(indent_lvl);
   printf("MethodCall(\n");
   S_dump_tree_indent(indent_lvl+1);
-  printf("CV: ");
-  this->get_cv_source()->dump(indent_lvl+3);
+  printf("CV source:\n");
+  this->get_cv_source()->dump(indent_lvl+2);
 
   S_dump_tree_indent(indent_lvl+1);
   printf("Invocant:\n");
-  this->_invocant->dump(indent_lvl+3);
+  this->_invocant->dump(indent_lvl+2);
 
+  S_dump_tree_indent(indent_lvl+1);
+  printf("Args:\n");
   const unsigned int n = this->get_arguments().size();
   for (unsigned int i = 0; i < n; ++i)
-    this->get_arguments()[i]->dump(indent_lvl+1);
+    this->get_arguments()[i]->dump(indent_lvl+2);
 
   S_dump_tree_indent(indent_lvl);
   printf(")\n");

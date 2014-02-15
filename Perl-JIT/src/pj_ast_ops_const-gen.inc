@@ -29,6 +29,7 @@
   INT_CONST(pj_baseop_getppid);
   INT_CONST(pj_baseop_anoncode);
   INT_CONST(pj_baseop_fork);
+  INT_CONST(pj_baseop_method_named);
   INT_CONST(pj_unop_localtime);
   INT_CONST(pj_unop_gmtime);
   INT_CONST(pj_unop_alarm);
@@ -155,6 +156,7 @@
   INT_CONST(pj_unop_readline);
   INT_CONST(pj_unop_require);
   INT_CONST(pj_unop_dofile);
+  INT_CONST(pj_unop_method);
   INT_CONST(pj_binop_add);
   INT_CONST(pj_binop_subtract);
   INT_CONST(pj_binop_multiply);

@@ -59,6 +59,7 @@
   || (int)otype == OP_EGRENT \
   || (int)otype == OP_EHOSTENT \
   || (int)otype == OP_ENETENT \
+  || (int)otype == OP_ENTERSUB \
   || (int)otype == OP_EOF \
   || (int)otype == OP_EPROTOENT \
   || (int)otype == OP_EPWENT \
@@ -175,6 +176,8 @@
   || (int)otype == OP_LT \
   || (int)otype == OP_MAPWHILE \
   || (int)otype == OP_MATCH \
+  || (int)otype == OP_METHOD \
+  || (int)otype == OP_METHOD_NAMED \
   || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \
   || (int)otype == OP_MSGCTL \
@@ -374,6 +377,7 @@
   || (int)otype == OP_EGRENT \
   || (int)otype == OP_EHOSTENT \
   || (int)otype == OP_ENETENT \
+  || (int)otype == OP_ENTERSUB \
   || (int)otype == OP_EOF \
   || (int)otype == OP_EPROTOENT \
   || (int)otype == OP_EPWENT \
@@ -491,6 +495,8 @@
   || (int)otype == OP_LT \
   || (int)otype == OP_MAPWHILE \
   || (int)otype == OP_MATCH \
+  || (int)otype == OP_METHOD \
+  || (int)otype == OP_METHOD_NAMED \
   || (int)otype == OP_MKDIR \
   || (int)otype == OP_MODULO \
   || (int)otype == OP_MSGCTL \
