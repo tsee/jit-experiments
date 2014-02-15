@@ -11,6 +11,8 @@ gv		glob value		ck_null		ds$
 gelem		glob elem		ck_null		d2	S S
 padany		private value		ck_null		d0
 
+OP_PADRANGE!
+
 pushre		push regexp		ck_null		d/
 
 rv2cv		subroutine dereference	ck_rvconst	d1
