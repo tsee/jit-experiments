@@ -55,7 +55,8 @@ typedef enum {
   pj_sigil_scalar,
   pj_sigil_array,
   pj_sigil_hash,
-  pj_sigil_glob
+  pj_sigil_glob,
+  pj_sigil_code
 } pj_variable_sigil;
 
 // This file has the actual AST op enum declaration.

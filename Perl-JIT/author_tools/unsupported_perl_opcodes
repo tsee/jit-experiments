@@ -6,16 +6,12 @@ pushmark	pushmark		ck_null		s0
 # What else can a const be? Likely done
 const		constant item		ck_svconst	s$	
 
-gvsv		scalar variable		ck_null		ds$	
-gv		glob value		ck_null		ds$	
 gelem		glob elem		ck_null		d2	S S
 padany		private value		ck_null		d0
 
 OP_PADRANGE!
 
 pushre		push regexp		ck_null		d/
-
-rv2cv		subroutine dereference	ck_rvconst	d1
 
 #done?
 refgen		reference constructor	ck_spair	m1	L

@@ -818,6 +818,20 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     pj_free_term_vector(aTHX_ kid_terms);
     break;
 
+  case OP_GV:
+    retval = new AST::Global(o, pj_sigil_glob);
+    pj_free_term_vector(aTHX_ kid_terms);
+    break;
+
+  case OP_RV2CV: {
+      if (cUNOPo->op_first->op_type == OP_GV)
+        retval = new AST::Global(o, pj_sigil_code);
+      else
+        retval = new AST::Unop(o, pj_unop_cv_deref, pj_build_ast(aTHX_ cUNOPo->op_first, visitor));
+
+      break;
+    }
+
   case OP_RV2AV: {
       if (cUNOPo->op_first->op_type == OP_GV)
         retval = new AST::Global(o, pj_sigil_array);
@@ -882,9 +896,10 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         else {
           switch (targ_otype) {
           case OP_RV2AV:
+          case OP_RV2CV:
           case OP_RV2SV:
             // Skip into ex-rv2sv for optimized global scalar/array access
-            PJ_DEBUG("Passing through kid of ex-rv2sv or ex-rv2av\n");
+            PJ_DEBUG("Passing through kid of ex-rv2sv or ex-rv2av or ex-rv2cv\n");
             retval = kid_terms[0];
             break;
           default:

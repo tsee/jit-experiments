@@ -222,6 +222,7 @@
   || (int)otype == OP_RECV \
   || (int)otype == OP_REDO \
   || (int)otype == OP_REF \
+  || (int)otype == OP_REFGEN \
   || (int)otype == OP_RENAME \
   || (int)otype == OP_REPEAT \
   || (int)otype == OP_REQUIRE \
@@ -234,6 +235,7 @@
   || (int)otype == OP_RKEYS \
   || (int)otype == OP_RMDIR \
   || (int)otype == OP_RV2AV \
+  || (int)otype == OP_RV2CV \
   || (int)otype == OP_RV2GV \
   || (int)otype == OP_RV2HV \
   || (int)otype == OP_RV2SV \
@@ -450,6 +452,7 @@
   || (int)otype == OP_GSERVENT \
   || (int)otype == OP_GSOCKOPT \
   || (int)otype == OP_GT \
+  || (int)otype == OP_GV \
   || (int)otype == OP_GVSV \
   || (int)otype == OP_HELEM \
   || (int)otype == OP_HEX \
@@ -543,6 +546,7 @@
   || (int)otype == OP_RECV \
   || (int)otype == OP_REDO \
   || (int)otype == OP_REF \
+  || (int)otype == OP_REFGEN \
   || (int)otype == OP_RENAME \
   || (int)otype == OP_REPEAT \
   || (int)otype == OP_REQUIRE \
@@ -555,6 +559,7 @@
   || (int)otype == OP_RKEYS \
   || (int)otype == OP_RMDIR \
   || (int)otype == OP_RV2AV \
+  || (int)otype == OP_RV2CV \
   || (int)otype == OP_RV2GV \
   || (int)otype == OP_RV2HV \
   || (int)otype == OP_RV2SV \

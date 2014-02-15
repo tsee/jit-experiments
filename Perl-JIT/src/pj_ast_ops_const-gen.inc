@@ -64,9 +64,11 @@
   INT_CONST(pj_unop_undef);
   INT_CONST(pj_unop_sv_deref);
   INT_CONST(pj_unop_sv_ref);
+  INT_CONST(pj_unop_refgen);
   INT_CONST(pj_unop_av_deref);
   INT_CONST(pj_unop_hv_deref);
   INT_CONST(pj_unop_gv_deref);
+  INT_CONST(pj_unop_cv_deref);
   INT_CONST(pj_unop_getc);
   INT_CONST(pj_unop_array_len);
   INT_CONST(pj_unop_array_shift);

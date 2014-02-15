@@ -2,18 +2,16 @@
 
 use t::lib::Perl::JIT::ASTTest;
 
-diag("Still TODO: rv2cv, pass-through ex-rv2cv, then fix subcall tests");
-
 my ($x, $y, $foo, $bar);
 
 ast_contains(sub { foo($x, $y) },
              ast_subcall(
-               ast_anything(),
+               ast_global('*foo'),
                ast_lexical('$x'), ast_lexical('$y')
              ));
 
 ast_contains(sub { foo() },
-             ast_subcall(ast_anything()));
+             ast_subcall(ast_global('*foo')));
 
 ast_contains(sub { $foo->($x, $y) },
              ast_subcall(

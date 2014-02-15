@@ -19,7 +19,7 @@
 #! jittable_root_ops=OP_I_LT OP_I_GT OP_I_LE OP_I_GE OP_I_EQ OP_I_NE OP_I_NCMP
 #! jittable_root_ops=OP_MAPWHILE OP_GREPWHILE OP_ENTERSUB
 #
-#! jittable_ops=OP_CONST OP_NULL OP_GVSV OP_AELEMFAST OP_AELEMFAST_LEX
+#! jittable_ops=OP_CONST OP_NULL OP_GVSV OP_AELEMFAST OP_AELEMFAST_LEX OP_GV
 
 # Return types below are separated between Scalar and List context (Context=Type)
 # and in the absence of an =, the type goes for both contexts. The Numeric type
@@ -94,9 +94,11 @@ pj_unop_postdec,	pj_opc_unop,	()--,		OP_POSTDEC,	OVERLOAD,	emit,	Any
 pj_unop_undef,		pj_opc_unop,	undef(),	OP_UNDEF,	KIDS_OPTIONAL,	emit,	Scalar
 pj_unop_sv_deref,	pj_opc_unop,	sv_deref,	OP_RV2SV,	OVERLOAD,	emit,	Any
 pj_unop_sv_ref,		pj_opc_unop,	sv_ref,		OP_SREFGEN,	0,	emit,	Scalar
+pj_unop_refgen,		pj_opc_unop,	refgen,		OP_REFGEN,	0,	emit,	Scalar # TODO is this necessary? How does it relate to OP_SREFGEN? Seems like it's the more general case of OP_SREFGEN? TODO: can this be merged with srefgen or is there even a generally better way to express the semantics of both?
 pj_unop_av_deref,	pj_opc_unop,	av_deref,	OP_RV2AV,	OVERLOAD,	,	Any
 pj_unop_hv_deref,	pj_opc_unop,	hv_deref,	OP_RV2HV,	OVERLOAD,	,	Any
 pj_unop_gv_deref,	pj_opc_unop,	gv_deref,	OP_RV2GV,	OVERLOAD,	,	Any
+pj_unop_cv_deref,	pj_opc_unop,	cv_deref,	OP_RV2CV,	OVERLOAD,	,	Any
 pj_unop_getc,		pj_opc_unop,	getc,		OP_GETC,	KIDS_OPTIONAL,	emit,	Any
 pj_unop_array_len,	pj_opc_unop,	array_len,	OP_AV2ARYLEN,	0,	emit,	Integer # FIXME lvalue?
 pj_unop_array_shift,	pj_opc_unop,	shift(),	OP_SHIFT,	KIDS_OPTIONAL,	emit,	Any
