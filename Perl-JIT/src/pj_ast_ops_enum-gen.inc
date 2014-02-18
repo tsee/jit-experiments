@@ -232,6 +232,7 @@ typedef enum {
   pj_binop_setpgrp,
   pj_binop_getpriority,
   pj_binop_formline,
+  pj_binop_glob_element,
 
   // Op class: pj_opc_listop
   pj_listop_ternary,
@@ -311,7 +312,7 @@ typedef enum {
   pj_unop_LAST  = pj_unop_method,
 
   pj_binop_FIRST = pj_binop_add,
-  pj_binop_LAST  = pj_binop_formline,
+  pj_binop_LAST  = pj_binop_glob_element,
 
   pj_listop_FIRST = pj_listop_ternary,
   pj_listop_LAST  = pj_listop_exec,

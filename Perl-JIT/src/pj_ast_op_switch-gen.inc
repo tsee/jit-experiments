@@ -102,6 +102,7 @@
   || (int)otype == OP_FTTTY \
   || (int)otype == OP_FTZERO \
   || (int)otype == OP_GE \
+  || (int)otype == OP_GELEM \
   || (int)otype == OP_GETC \
   || (int)otype == OP_GETLOGIN \
   || (int)otype == OP_GETPEERNAME \
@@ -422,6 +423,7 @@
   || (int)otype == OP_FTTTY \
   || (int)otype == OP_FTZERO \
   || (int)otype == OP_GE \
+  || (int)otype == OP_GELEM \
   || (int)otype == OP_GETC \
   || (int)otype == OP_GETLOGIN \
   || (int)otype == OP_GETPEERNAME \
