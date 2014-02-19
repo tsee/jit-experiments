@@ -213,12 +213,15 @@ namespace PerlJIT {
       }
     }
 
+    const std::vector<PerlJIT::AST::Term *> get_candidates() const
+    { return candidates; }
+
+  private:
     vector<PerlJIT::AST::Term *> candidates;
-    unordered_map<PADOFFSET, AST::VariableDeclaration *> variables;
     CV *containing_cv;
     pj_declaration_map_t *typed_declarations;
     OP *last_nextstate;
-  private:
+    unordered_map<PADOFFSET, AST::VariableDeclaration *> variables;
     AST::StatementSequence *current_sequence;
     bool skip_next_leaveloop;
   }; // end class OPTreeJITCandidateFinder
@@ -1241,7 +1244,7 @@ static vector<PerlJIT::AST::Term *>
 pj_find_jit_candidates_internal(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 {
   visitor.visit(aTHX_ o, NULL);
-  return visitor.candidates;
+  return visitor.get_candidates();
 }
 
 vector<PerlJIT::AST::Term *>
