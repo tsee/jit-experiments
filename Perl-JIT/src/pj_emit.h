@@ -15,19 +15,14 @@
 #include <llvm/PassManager.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 
+#include <tr1/memory>
+
 namespace PerlJIT {
-  class Emit {
-  public:
-    Emit();
-    ~Emit();
+  void pj_init_emitter(pTHX);
 
-    SV *jit_sub(SV *coderef);
+  SV *pj_jit_sub(SV *coderef);
 
-  private:
-    llvm::Module *module;
-    llvm::FunctionPassManager *fpm;
-    llvm::ExecutionEngine *execution_engine;
-  };
+  class Cxt;
 
   struct EmitValue {
     llvm::Value *value;
@@ -42,8 +37,8 @@ namespace PerlJIT {
 
   class Emitter {
   public:
-    Emitter(pTHX_ CV *cv, AV *ops, llvm::Module *module, llvm::FunctionPassManager *fpm, llvm::ExecutionEngine *execution_engine, PerlJIT::PerlAPI *pa);
-    Emitter(pTHX_ const Emitter &other);
+    Emitter(pTHX_ CXT_ARG_(Cxt) CV *cv, AV *ops);
+    Emitter(pTHX_ CXT_ARG_(Cxt) const Emitter &other);
     ~Emitter();
 
     bool process_jit_candidates(const std::vector<PerlJIT::AST::Term *> &asts);
@@ -80,9 +75,10 @@ namespace PerlJIT {
     std::vector<OP *> subtrees;
     llvm::Module *module;
     llvm::FunctionPassManager *fpm;
-    llvm::ExecutionEngine *execution_engine;
+    std::tr1::shared_ptr<llvm::ExecutionEngine> execution_engine;
     PerlJIT::PerlAPI &pa;
     std::string error_message;
+    DECL_CXT_MEMBER(Cxt)
     DECL_THX_MEMBER
   };
 }

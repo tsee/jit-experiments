@@ -18,9 +18,28 @@ using namespace llvm;
 using namespace std;
 using namespace std::tr1;
 
-#define ITEM_COUNT(A) (sizeof(A) / sizeof((A)[0]))
+#define JIT_SCALAR_OP OP_STUB
+#define JIT_LIST_OP   OP_LIST
 
-static IRBuilder<> builder(getGlobalContext());
+#define ITEM_COUNT(A) (sizeof(A) / sizeof((A)[0]))
+#define MY_CXT_KEY "Perl::JIT::_guts" XS_VERSION
+
+static Perl_ophook_t previous_free_hook = NULL;
+
+namespace {
+  struct PerlMutex {
+    PerlMutex() { MUTEX_INIT(&mutex); }
+    ~PerlMutex() { MUTEX_DESTROY(&mutex); }
+
+    operator perl_mutex *() { return &mutex; }
+
+  private:
+    perl_mutex mutex;
+  };
+
+  PerlMutex jit_ops_mutex;
+  unordered_set<OP *> jit_ops;
+}
 
 static pj_op_type JITTABLE_OPS[] = {
   pj_binop_add
@@ -30,25 +49,79 @@ static unordered_set<int> Jittable_Ops(
   JITTABLE_OPS + ITEM_COUNT(JITTABLE_OPS)
 );
 
-Emit::Emit()
+struct ScalarOP : public OP {
+  shared_ptr<ExecutionEngine> execution_engine;
+};
+
+struct ListOP : public LISTOP {
+  shared_ptr<ExecutionEngine> execution_engine;
+};
+
+static
+void free_execution_engine(pTHX_ OP *op)
 {
+  if (op->op_type == JIT_SCALAR_OP || op->op_type == JIT_LIST_OP) {
+    MUTEX_LOCK(jit_ops_mutex);
+    if (jit_ops.find(op) != jit_ops.end()) {
+      if (op->op_type == JIT_SCALAR_OP)
+          ((ScalarOP *) op)->~ScalarOP();
+      else
+          ((ListOP *) op)->~ListOP();
+    }
+    MUTEX_UNLOCK(jit_ops_mutex);
+  }
+
+  if (previous_free_hook)
+    previous_free_hook(aTHX_ op);
+}
+
+namespace PerlJIT {
+  struct Cxt {
+    IRBuilder<> builder;
+    shared_ptr<ExecutionEngine> engine;
+    Module *module;
+    FunctionPassManager *fpm;
+    PerlAPI *pa;
+
+    void create_module();
+
+    Cxt();
+    ~Cxt();
+  };
+}
+typedef Cxt my_cxt_t;
+START_MY_CXT;
+
+Cxt::Cxt() :
+  builder(getGlobalContext()), module(NULL), fpm(NULL), pa(NULL)
+{
+}
+
+Cxt::~Cxt()
+{
+  delete pa;
+  delete fpm;
+}
+
+void
+Cxt::create_module()
+{
+  if (module)
+    return;
+
   string errstr;
 
-  InitializeNativeTarget(); // XXX only once
-  // TODO modules/execution engines must be owned by the ops compiled
-  //      inside them (also, in MCJIT modules are closed and need explicit
-  //      finalization)
   module = new Module("PerlJIT", getGlobalContext());
-  execution_engine = EngineBuilder(module).setErrorStr(&errstr).create();
+  engine = shared_ptr<ExecutionEngine>(EngineBuilder(module).setErrorStr(&errstr).create());
 
-  if (!execution_engine) {
-    fprintf(stderr, "Could not create ExecutionEngine: %s\n", errstr.c_str());
-    exit(1);
+  if (!engine) {
+    delete module;
+    croak("Could not create ExecutionEngine: %s", errstr.c_str());
   }
 
   fpm = new FunctionPassManager(module);
 
-  module->setDataLayout(execution_engine->getDataLayout()->getStringRepresentation());
+  module->setDataLayout(engine->getDataLayout()->getStringRepresentation());
   fpm->add(createBasicAliasAnalysisPass());
   fpm->add(createInstructionCombiningPass());
   fpm->add(createReassociatePass());
@@ -56,25 +129,44 @@ Emit::Emit()
   fpm->add(createCFGSimplificationPass());
 
   fpm->doInitialization();
+
+  pa = new PerlAPI(module, &builder, engine.get());
 }
 
-Emit::~Emit()
+static void
+cleanup_emitter(pTHX_ void *ptr)
 {
-  delete execution_engine;
-  delete fpm;
+  dMY_CXT;
+  MY_CXT.~Cxt();
+}
+
+void
+PerlJIT::pj_init_emitter(pTHX)
+{
+  InitializeNativeTarget();
+
+  previous_free_hook = PL_opfreehook;
+  PL_opfreehook = free_execution_engine;
+
+  MY_CXT_INIT;
+  new (&MY_CXT) Cxt();
+
+  Perl_call_atexit(aTHX_ cleanup_emitter, NULL);
 }
 
 SV *
-Emit::jit_sub(SV *coderef)
+PerlJIT::pj_jit_sub(SV *coderef)
 {
   dTHX;
+  dMY_CXT;
   SV *error = NULL;
 
+  MY_CXT.create_module();
+
   {
-    PerlAPI pa(module, &builder, execution_engine);
     std::vector<Term *> asts = pj_find_jit_candidates(aTHX_ coderef);
     AV *ops = newAV();
-    Emitter emitter(aTHX_ (CV *)SvRV(coderef), ops, module, fpm, execution_engine, &pa);
+    Emitter emitter(aTHX_ aMY_CXT_ (CV *)SvRV(coderef), ops);
 
     if (emitter.process_jit_candidates(asts))
       return newRV_noinc((SV *) ops);
@@ -90,15 +182,23 @@ Emit::jit_sub(SV *coderef)
 }
 
 
-Emitter::Emitter(pTHX_ CV *_cv, AV *_ops, Module *_module, FunctionPassManager *_fpm, ExecutionEngine *_execution_engine, PerlAPI *_pa) :
-  cv(_cv), ops(_ops), module(_module), fpm(_fpm), execution_engine(_execution_engine), pa(*_pa)
+Emitter::Emitter(pTHX_ pMY_CXT_ CV *_cv, AV *_ops) :
+  cv(_cv), ops(_ops),
+  module(MY_CXT.module), fpm(MY_CXT.fpm),
+  execution_engine(MY_CXT.engine),
+  pa(*MY_CXT.pa)
 {
+  SET_CXT_MEMBER;
   SET_THX_MEMBER;
 }
 
-Emitter::Emitter(pTHX_ const Emitter &other) :
-  cv(other.cv), ops(other.ops), module(other.module), fpm(other.fpm), execution_engine(other.execution_engine), pa(other.pa)
+Emitter::Emitter(pTHX_ pMY_CXT_ const Emitter &other) :
+  cv(other.cv), ops(other.ops),
+  module(other.module), fpm(other.fpm),
+  execution_engine(other.execution_engine),
+  pa(other.pa)
 {
+  SET_CXT_MEMBER;
   SET_THX_MEMBER;
 }
 
@@ -201,13 +301,13 @@ Emitter::_jit_trees(const std::vector<Term *> &asts)
   BasicBlock *bb = BasicBlock::Create(module->getContext(), "entry", f);
 
   pa.set_thx(f->arg_begin());
-  builder.SetInsertPoint(bb);
+  MY_CXT.builder.SetInsertPoint(bb);
 
   bool valid = true;
   for (size_t i = 0, max = asts.size(); i < max && valid; ++i)
     valid = valid && _jit_emit_root(asts[i]);
 
-  builder.CreateRet(pa.get_op_next());
+  MY_CXT.builder.CreateRet(pa.get_op_next());
 
   if (!valid) {
     subtrees.clear();
@@ -225,7 +325,15 @@ Emitter::_jit_trees(const std::vector<Term *> &asts)
   OP *op;
 
   if (subtrees.size()) {
-    LISTOP *listop = (LISTOP *)(op = newLISTOP(OP_LIST, OPf_KIDS, subtrees[0], subtrees[0]));
+    ListOP *listop;
+    NewOp(4242, listop, 1, ListOP);
+    new (listop) ListOP();
+
+    listop->op_type = JIT_LIST_OP;
+    listop->op_flags = OPf_KIDS;
+    listop->op_first = listop->op_last = subtrees[0];
+    listop->execution_engine = execution_engine;
+
     for (size_t i = 1, max = subtrees.size(); i < max; ++i) {
       OP *sibling = subtrees[i];
 
@@ -233,9 +341,22 @@ Emitter::_jit_trees(const std::vector<Term *> &asts)
       listop->op_last = sibling;
       sibling->op_sibling = NULL;
     }
+
+    op = (OP *) listop;
   } else {
-    op = newOP(OP_STUB, 0);
+      ScalarOP *scalarop;
+      NewOp(4242, scalarop, 1, ScalarOP);
+      new (scalarop) ScalarOP();
+
+      scalarop->op_type = JIT_SCALAR_OP;
+      scalarop->execution_engine = execution_engine;
+
+      op = (OP *) scalarop;
   }
+
+  MUTEX_LOCK(jit_ops_mutex);
+  jit_ops.insert(op);
+  MUTEX_UNLOCK(jit_ops_mutex);
 
   op->op_ppaddr = (OP *(*)(pTHX)) execution_engine->getPointerToFunction(f);
   op->op_targ = asts.back()->get_perl_op()->op_targ;
@@ -290,7 +411,7 @@ Emitter::_jit_emit_op(Op *ast, const PerlJIT::AST::Type *type)
 EmitValue
 Emitter::_jit_emit_optree_jit_kids(Term *ast, const PerlJIT::AST::Type *type)
 {
-  Emitter emitter(aTHX_ *this);
+  Emitter emitter(aTHX_ aMY_CXT_ *this);
 
   if (!emitter.process_jit_candidates(ast->get_kids()))
     return EmitValue::invalid();
@@ -494,7 +615,7 @@ Emitter::_jit_emit_binop(Binop *ast, const PerlJIT::AST::Type *type)
   if (!lvv || !rvv)
     return EmitValue::invalid();
 
-  Value *res = builder.CreateFAdd(lvv, rvv);
+  Value *res = MY_CXT.builder.CreateFAdd(lvv, rvv);
 
   if (ast->is_assignment_form()) {
     // TODO proper LVALUE treatment
@@ -518,7 +639,7 @@ Emitter::_jit_get_lexical_declaration_sv(PerlJIT::AST::VariableDeclaration *ast)
 
     // TODO this value can be cached
     // FIXME is SCALAR correct in the face of other Perl types? (@,%,etc.)? Or is this a ref to @,%,etc?
-    return EmitValue(builder.CreateLoad(svp), &SCALAR_T);
+    return EmitValue(MY_CXT.builder.CreateLoad(svp), &SCALAR_T);
 }
 
 EmitValue
@@ -576,7 +697,7 @@ Emitter::_to_nv_value(Value *value, const PerlJIT::AST::Type *type)
     return value;
   if (type->is_integer())
     // TODO cache type
-    return builder.CreateFPCast(value, llvm::Type::getDoubleTy(module->getContext()));
+    return MY_CXT.builder.CreateFPCast(value, llvm::Type::getDoubleTy(module->getContext()));
   if (type->equals(&SCALAR_T) || type->equals(&UNSPECIFIED_T))
     return pa.sv_nv(value);
 

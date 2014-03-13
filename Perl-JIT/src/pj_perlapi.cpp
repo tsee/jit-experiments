@@ -70,7 +70,6 @@ PerlAPI::PerlAPI(Module *_module, IRBuilder<> *_builder, ExecutionEngine *ee) :
   ptr_nv_type = nv_type->getPointerTo();
   pp_type = function_type(ptr_type, jit_tTHX, NULL);
 
-  // XXX only once per module
   // TODO autogenerate
   pa_sv_setnv = Function::Create(
       function_type(void_type, jit_tTHX_ ptr_type, nv_type, NULL),
@@ -100,7 +99,6 @@ PerlAPI::PerlAPI(Module *_module, IRBuilder<> *_builder, ExecutionEngine *ee) :
       function_type(ptr_type, jit_tTHX_ ptr_ptr_type, NULL),
       GlobalValue::ExternalLinkage, "Perl_save_clearsv", module);
 
-  // XXX only once
   ee->addGlobalMapping(pa_sv_nv, (void *) _pa_sv_nv);
   ee->addGlobalMapping(pa_sv_setsv_nosteal, (void *) _pa_sv_setsv_nosteal);
   ee->addGlobalMapping(pa_push_sv, (void *) _pa_push_sv);
