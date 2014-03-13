@@ -40,7 +40,9 @@ sub _llvm_config {
     die "Error running '$llvmc --cxxflags'" if $?;
     $cppflags =~ s{(?:^|\s)-W[\w\-]+(?=\s|$)}{ }g;
 
-    my $libs = "-lLLVM-$vers";
+    my $libs = `$llvmc --ldflags --libs`;
+    die "Error running '$llvmc --ldflags --libs'" if $?;
+    $libs =~ s/\n/ /gs;
 
     return ($cppflags, $libs);
 }
