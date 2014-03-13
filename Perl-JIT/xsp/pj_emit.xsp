@@ -1,11 +1,14 @@
 %module{Perl::JIT};
+%package{Perl::JIT::Emit};
 
 #include "pj_emit.h"
 #include "xsp_typedefs.h"
 
-class Perl::JIT::Emit {
-   Emitter();
-   ~Emitter();
+%name{_jit_sub} SV *Perl::JIT::pj_jit_sub(SV *coderef);
 
-   %name{_jit_sub} SV *jit_sub(SV *coderef);
-};
+%{
+
+BOOT:
+    Perl::JIT::pj_init_emitter(aTHX);
+
+%}

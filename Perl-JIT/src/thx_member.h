@@ -28,4 +28,16 @@
 #   define SET_THX_MEMBER
 #endif
 
+#ifdef PERL_IMPLICIT_CONTEXT
+#   define DECL_CXT_MEMBER(type) type *my_cxtp;
+#   define CXT_ARG(type) type *my_cxtp
+#   define CXT_ARG_(type) type *my_cxtp,
+#   define SET_CXT_MEMBER this->my_cxtp = aMY_CXT;
+#else
+#   define DECL_CXT_MEMBER(type)
+#   define CXT_ARG(type)
+#   define CXT_ARG_(type)
+#   define SET_CXT_MEMBER
+#endif
+
 #endif

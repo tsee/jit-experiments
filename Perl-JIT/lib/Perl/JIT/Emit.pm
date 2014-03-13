@@ -7,9 +7,9 @@ use Perl::JIT qw(:all);
 use B::Replace;
 
 sub jit_sub {
-    my ($self, $sub) = @_;
+    my ($sub) = @_;
 
-    my $ops = $self->_jit_sub($sub);
+    my $ops = _jit_sub($sub);
 
     # TODO add C API for B::Replace and remove this horror
     for my $op (@$ops) {
