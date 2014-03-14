@@ -291,6 +291,7 @@ static const char *pj_ast_op_names[] = {
   "kill()",          // pj_listop_kill         (pj_opc_listop)
   "system()",        // pj_listop_system       (pj_opc_listop)
   "exec()",          // pj_listop_exec         (pj_opc_listop)
+  "hash slice",      // pj_listop_hash_slice   (pj_opc_listop)
   "scope",           // pj_op_scope            (pj_opc_block)
 };
 
@@ -581,6 +582,7 @@ static unsigned int pj_ast_op_flags[] = {
   0,                                                    // pj_listop_kill         (pj_opc_listop)
   0,                                                    // pj_listop_system       (pj_opc_listop)
   0,                                                    // pj_listop_exec         (pj_opc_listop)
+  0,                                                    // pj_listop_hash_slice   (pj_opc_listop)
   0,                                                    // pj_op_scope            (pj_opc_block)
 };
 

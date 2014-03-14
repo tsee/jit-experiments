@@ -290,6 +290,7 @@
   INT_CONST(pj_listop_kill);
   INT_CONST(pj_listop_system);
   INT_CONST(pj_listop_exec);
+  INT_CONST(pj_listop_hash_slice);
   INT_CONST(pj_op_scope);
 
 

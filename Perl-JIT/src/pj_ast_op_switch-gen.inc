@@ -135,6 +135,7 @@
   || (int)otype == OP_GT \
   || (int)otype == OP_HELEM \
   || (int)otype == OP_HEX \
+  || (int)otype == OP_HSLICE \
   || (int)otype == OP_INDEX \
   || (int)otype == OP_INT \
   || (int)otype == OP_IOCTL \
@@ -458,6 +459,7 @@
   || (int)otype == OP_GVSV \
   || (int)otype == OP_HELEM \
   || (int)otype == OP_HEX \
+  || (int)otype == OP_HSLICE \
   || (int)otype == OP_INDEX \
   || (int)otype == OP_INT \
   || (int)otype == OP_IOCTL \

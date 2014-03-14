@@ -278,6 +278,7 @@ EMIT_LISTOP_CODE(OP_SETPRIORITY, pj_listop_setpriority)
 EMIT_LISTOP_CODE(OP_KILL, pj_listop_kill)
 EMIT_LISTOP_CODE(OP_SYSTEM, pj_listop_system)
 EMIT_LISTOP_CODE(OP_EXEC, pj_listop_exec)
+EMIT_LISTOP_CODE(OP_HSLICE, pj_listop_hash_slice)
 
 
 #endif

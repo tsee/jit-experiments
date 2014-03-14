@@ -325,6 +325,7 @@ pj_listop_setpriority,	pj_opc_listop,	setpriority(),	OP_SETPRIORITY,	0,	emit,	In
 pj_listop_kill,		pj_opc_listop,	kill(),		OP_KILL,	0,	emit,	Integer
 pj_listop_system,	pj_opc_listop,	system(),	OP_SYSTEM,	0,	emit,	Integer
 pj_listop_exec,		pj_opc_listop,	exec(),		OP_EXEC,	0,	emit,	Integer
+pj_listop_hash_slice,	pj_opc_listop,	hash slice,	OP_HSLICE,	0,	emit,	Scalar=Any List=List[Any]
 
 
 pj_op_scope,		pj_opc_block,	scope,		OP_SCOPE,	0,	,	Scalar=Any List=List[Any]
