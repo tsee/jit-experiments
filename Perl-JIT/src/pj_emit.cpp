@@ -123,6 +123,7 @@ Cxt::create_module()
 
   module->setDataLayout(engine->getDataLayout()->getStringRepresentation());
   fpm->add(createBasicAliasAnalysisPass());
+  fpm->add(createPromoteMemoryToRegisterPass());
   fpm->add(createInstructionCombiningPass());
   fpm->add(createReassociatePass());
   fpm->add(createGVNPass());
@@ -300,20 +301,21 @@ Emitter::_jit_trees(const std::vector<Term *> &asts)
   Function *f = Function::Create(pa.ppaddr_type(), GlobalValue::ExternalLinkage, "", module);
   BasicBlock *bb = BasicBlock::Create(module->getContext(), "entry", f);
 
-  pa.set_thx(f->arg_begin());
+  pa.set_current_function(f);
   MY_CXT.builder.SetInsertPoint(bb);
 
   bool valid = true;
   for (size_t i = 0, max = asts.size(); i < max && valid; ++i)
     valid = valid && _jit_emit_root(asts[i]);
 
-  MY_CXT.builder.CreateRet(pa.get_op_next());
+  MY_CXT.builder.CreateRet(pa.emit_OP_op_next());
 
   if (!valid) {
     subtrees.clear();
     return NULL;
   }
 
+  // f->dump();
   verifyFunction(*f);
   fpm->run(*f);
   // f->dump();
@@ -530,7 +532,7 @@ Emitter::_jit_emit_optree(Term *ast)
   _jit_clear_op_next(ast->get_perl_op());
   subtrees.push_back(ast->get_perl_op());
 
-  pa.call_runloop(ast->start_op());
+  pa.emit_call_runloop(ast->start_op());
 
   if (ast->context() == pj_context_caller) {
     set_error("Caller-determined context not implemented");
@@ -539,7 +541,11 @@ Emitter::_jit_emit_optree(Term *ast)
   if (ast->context() != pj_context_scalar)
     return EmitValue(NULL, NULL);
 
-  return EmitValue(pa.pop_sv(), &SCALAR_T);
+  pa.alloc_sp();
+  llvm::Value *res = pa.emit_POPs();
+  pa.emit_PUTBACK();
+
+  return EmitValue(res, &SCALAR_T);
 }
 
 bool
@@ -571,7 +577,7 @@ Emitter::_jit_emit_return(Term *ast, pj_op_context context, Value *value, const 
       } else {
         // TODO suboptimal, but correct, need to ask for SCALAR
         // in the call to _jit_emit() above
-        res = pa.new_mortal_sv();
+        res = pa.emit_sv_newmortal();
       }
     } else {
       if (!op->get_perl_op()->op_targ && type->equals(&SCALAR_T)) {
@@ -581,7 +587,7 @@ Emitter::_jit_emit_return(Term *ast, pj_op_context context, Value *value, const 
           set_error("Binary OP without target");
           return false;
         }
-        res = pa.get_targ();
+        res = pa.emit_OP_targ();
       }
     }
   }
@@ -590,16 +596,20 @@ Emitter::_jit_emit_return(Term *ast, pj_op_context context, Value *value, const 
       set_error("Unary OP without target");
       return false;
     }
-    res = pa.get_targ();
+    res = pa.emit_OP_targ();
   default:
-    res = pa.new_mortal_sv();
+    res = pa.emit_sv_newmortal();
     break;
   }
 
   if (res != value)
     if (!_jit_assign_sv(res, value, type))
       return false;
-  pa.push_sv(res);
+
+  pa.alloc_sp();
+  pa.emit_SPAGAIN();
+  pa.emit_XPUSHs(res);
+  pa.emit_PUTBACK();
 
   return true;
 }
@@ -633,33 +643,33 @@ Emitter::_jit_emit_binop(Binop *ast, const PerlJIT::AST::Type *type)
 EmitValue
 Emitter::_jit_get_lexical_declaration_sv(PerlJIT::AST::VariableDeclaration *ast)
 {
-    Value *svp = pa.get_pad_sv_address(ast->get_pad_index());
+  Value *svp = pa.emit_pad_sv_address(ast->get_pad_index());
 
-    pa.save_clearsv(svp);
+  pa.emit_save_clearsv(svp);
 
-    // TODO this value can be cached
-    // FIXME is SCALAR correct in the face of other Perl types? (@,%,etc.)? Or is this a ref to @,%,etc?
-    return EmitValue(MY_CXT.builder.CreateLoad(svp), &SCALAR_T);
+  // TODO this value can be cached
+  // FIXME is SCALAR correct in the face of other Perl types? (@,%,etc.)? Or is this a ref to @,%,etc?
+  return EmitValue(MY_CXT.builder.CreateLoad(svp), &SCALAR_T);
 }
 
 EmitValue
 Emitter::_jit_get_lexical_sv(Lexical *ast)
 {
   // TODO this value can be cached
-  return EmitValue(pa.get_pad_sv(ast->get_pad_index()), &SCALAR_T);
+  return EmitValue(pa.emit_pad_sv(ast->get_pad_index()), &SCALAR_T);
 }
 
 bool
 Emitter::_jit_assign_sv(Value *sv, Value *value, const PerlJIT::AST::Type *type)
 {
   if (type->equals(&DOUBLE_T))
-    pa.sv_set_nv(sv, value);
+    pa.emit_sv_setnv(sv, value);
   else if (type->equals(&INT_T))
-    pa.sv_set_iv(sv, value);
+    pa.emit_sv_setiv(sv, value);
   else if (type->equals(&SCALAR_T))
-    pa.sv_set_sv_nosteal(sv, value);
+    pa.emit_SvSetSV_nosteal(sv, value);
   else if (type->equals(&UNSPECIFIED_T))
-    pa.sv_set_sv_nosteal(sv, value);
+    pa.emit_SvSetSV_nosteal(sv, value);
   else {
     set_error("Unable to assign " + type->to_string() + " to an SV");
     return false;
@@ -699,7 +709,7 @@ Emitter::_to_nv_value(Value *value, const PerlJIT::AST::Type *type)
     // TODO cache type
     return MY_CXT.builder.CreateFPCast(value, llvm::Type::getDoubleTy(module->getContext()));
   if (type->equals(&SCALAR_T) || type->equals(&UNSPECIFIED_T))
-    return pa.sv_nv(value);
+    return pa.emit_SvNV(value);
 
   set_error("Handle more NV coercion cases");
   return NULL;

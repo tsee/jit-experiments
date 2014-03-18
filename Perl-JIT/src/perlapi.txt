@@ -1,0 +1,55 @@
+void emit_sv_setnv(SV *sv, NV value) (thx) {
+  sv_setnv(sv, value);
+}
+
+void emit_sv_setiv(SV *sv, IV value) (thx) {
+  sv_setiv(sv, value);
+}
+
+NV emit_SvNV(SV *sv) (thx) {
+  return SvNV(sv);
+}
+
+void emit_SvSetSV_nosteal(SV *dsv, SV *ssv) (thx) {
+  SvSetSV_nosteal(dsv, ssv);
+}
+
+SV *emit_sv_newmortal() (thx) {
+  return sv_newmortal();
+}
+
+void emit_PUTBACK() (thx sp) {
+  PUTBACK;
+}
+
+void emit_SPAGAIN() (thx sp) {
+  SPAGAIN;
+}
+
+void emit_XPUSHs(SV *sv) (thx sp) {
+  XPUSHs(sv);
+}
+
+SV *emit_POPs() (thx sp) {
+  return POPs;
+}
+
+OP *emit_OP_op_next() (thx) {
+  return PL_op->op_next;
+}
+
+SV *emit_OP_targ() (thx) {
+  return PAD_SV(PL_op->op_targ);
+}
+
+SV *emit_PAD_SV(PADOFFSET index) (thx) {
+  return PAD_SV(index);
+}
+
+SV **emit_PAD_SV_address(PADOFFSET index) (thx) {
+  return &PAD_SV(index);
+}
+
+void emit_save_clearsv(SV **svp) (thx) {
+    save_clearsv(svp);
+}

@@ -2,9 +2,12 @@ package Module::Build::PerlJIT;
 use 5.14.2;
 use warnings;
 use strict;
+use autodie qw(open);
 
 use Module::Build;
 use parent 'Module::Build::WithXSpp';
+
+use Module::Build::LLVM qw(create_function_declaration create_emitter_class);
 
 sub new {
     my ($class, %args) = @_;
@@ -45,6 +48,43 @@ sub _llvm_config {
     $libs =~ s/\n/ /gs;
 
     return ($cppflags, $libs);
+}
+
+sub ACTION_code {
+    my ($self) = shift;
+
+    $self->depends_on('perlapi');
+    $self->SUPER::ACTION_code(@_);
+}
+
+sub ACTION_perlapi {
+    my ($self) = shift;
+    my $source = do {
+        local $/;
+        open my $fh, '<', 'src/perlapi.txt';
+        readline $fh;
+    };
+    my @prototypes;
+
+    $source =~ s/^ \s+ //x;
+    while ($source) {
+        $source =~ s[
+            ^ (.*?) \s+ \( ([^)]+) \) \s+ {
+            (.*?)
+            ^ } \s+
+        ][]xms or die "Unable to parse '$source'";
+        my $fun = create_function_declaration($1);
+        $fun->{extra} = { map { $_ => 1 } split /\s+/, $2 };
+        $fun->{code} = $3;
+        push @prototypes, $fun;
+    }
+
+    $self->add_to_cleanup('src/pj_perlapibase.h', 'src/pj_perlapibase.cpp');
+
+    create_emitter_class(
+        \@prototypes, ['PerlJIT'], 'PerlAPIBase',
+        'src/pj_perlapibase.h', 'src/pj_perlapibase.cpp',
+    );
 }
 
 1;
