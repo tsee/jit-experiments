@@ -132,8 +132,6 @@ sub is_approx {
     or diag("$t appears to be different from $ref");
 }
 
-my $emit = Perl::JIT::Emit->new; # keep it around for now
-
 sub _maybe_concise_dump {
   my ($sub, $name) = @_;
   if ($ENV{CONCISE_DUMP}) {
@@ -184,7 +182,7 @@ sub is_jitting {
     }
   }
 
-  $emit->jit_sub($sub);
+  Perl::JIT::Emit::jit_sub($sub);
 
   my @after = _count_matches($sub, $opgrep_patterns);
   for my $i (0..$#$opgrep_patterns) {
@@ -214,7 +212,7 @@ sub is_not_jitting {
     }
   }
 
-  $emit->jit_sub($sub);
+  Perl::JIT::Emit->jit_sub($sub);
 
   my @after = _count_matches($sub, $opgrep_patterns);
   for my $i (0..$#$opgrep_patterns) {
