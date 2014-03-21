@@ -34,8 +34,8 @@ sub _llvm_config {
     my $vers = `$llvmc --version`; chomp $vers;
     die "Error running '$llvmc --version'" if $?;
 
-    unless ($vers >= 3.1) {
-        print "Wrong LLVM version $vers: needed 3.1\n";
+    unless ($vers =~ /^(\d+\.\d+)/ and $1 >= 3.1) {
+        print "Wrong LLVM version '$vers': needed 3.1 or better\n";
         exit 1;
     }
 
