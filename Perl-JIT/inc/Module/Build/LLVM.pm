@@ -17,12 +17,14 @@ our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
 my $prefix = "pj_extracted_llvm_function";
 my $ccopts;
+my $ccopts_no_dashg;
 my $clang = $ENV{CLANG} || 'clang';
 my $llc = $ENV{LLVM_LLC} || 'llc';
 
 {
     local $0 = "perl"; # allows testing with one-liners
     $ccopts = $Config{optimize} . ' ' . ExtUtils::Embed::ccopts();
+    ($ccopts_no_dashg = $ccopts) =~ s/(^|\s)-g\S*(\s|$)/$1$2/g;
 }
 
 sub create_function_declaration {
@@ -324,7 +326,7 @@ sub _run_clang {
 
     my $rc;
     my ($stdout, $stderr) = capture {
-        $rc = system("$clang $ccopts -S -emit-llvm -o - -x c $tmp");
+        $rc = system("$clang $ccopts_no_dashg -S -emit-llvm -o - -x c $tmp");
     };
     die "Error running clang on source: '$stderr'" if $rc;
 
