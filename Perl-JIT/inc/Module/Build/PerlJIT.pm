@@ -4,6 +4,7 @@ use warnings;
 use strict;
 use autodie qw(open);
 
+use Config;
 use Module::Build;
 use parent 'Module::Build::WithXSpp';
 
@@ -42,6 +43,15 @@ sub _llvm_config {
     my $cppflags = `$llvmc --cxxflags`; chomp $cppflags;
     die "Error running '$llvmc --cxxflags'" if $?;
     $cppflags =~ s{(?:^|\s)-W[\w\-]+(?=\s|$)}{ }g;
+
+    if ($Config::Config{ccname} =~ /^(?:gcc|clang)$/) {
+      # LLVM likely comes with "-W -fpedantic". Let's silence a few
+      # noisy warnings LLVM vs. Perl compile flag and code interactions.
+      # For example, Perl may, on this platform, choose to rely on
+      # variadic macros because it knew that they're supported. No point
+      # being fussy about it.
+      $cppflags .= ' -Wno-variadic-macros -Wno-long-long';
+    }
 
     my $libs = `$llvmc --ldflags --libs`;
     die "Error running '$llvmc --ldflags --libs'" if $?;
