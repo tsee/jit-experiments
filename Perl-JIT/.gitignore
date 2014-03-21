@@ -11,3 +11,5 @@ _build
 src/pj_perlapibase.*
 dev_Build.PL
 buildtmp/
+bytecode-*
+c-*
