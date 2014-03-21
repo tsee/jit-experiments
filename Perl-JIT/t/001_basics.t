@@ -10,6 +10,5 @@ ok(defined(PJ_KEYWORD_PLUGIN_HINT));
 ok(defined(pj_double_type));
 ok(defined(pj_listop_LAST));
 ok(defined(pj_unop_log));
-my $jit = new_ok("Perl::JIT::Emit");
 
 done_testing();
