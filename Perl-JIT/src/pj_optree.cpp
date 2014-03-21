@@ -291,7 +291,7 @@ pj_build_kid_terms(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor, vector<AST::T
       }
 
       if (PJ_DEBUGGING && kid_term)
-        printf("pj_build_kid_terms got kid (%u, %p) of type %s in return\n", ikid, kid_term, kid_term->perl_class());
+        printf("pj_build_kid_terms got kid (%u, %p) of type %s in return\n", ikid, (void*)kid_term, kid_term->perl_class());
       ++ikid;
     } // end for kids
   } // end if have kids
@@ -1229,7 +1229,7 @@ pj_attempt_jit(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   PerlJIT::AST::Term *ast;
 
   if (PJ_DEBUGGING)
-    printf("Attempting JIT on %s (%p, %p)\n", OP_NAME(o), o, o->op_next);
+    printf("Attempting JIT on %s (%p, %p)\n", OP_NAME(o), (void*)o, (void*)o->op_next);
 
   ast = pj_build_ast(aTHX_ o, visitor);
 

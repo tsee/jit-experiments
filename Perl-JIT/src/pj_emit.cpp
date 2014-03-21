@@ -434,7 +434,7 @@ Emitter::is_jittable(PerlJIT::AST::Term *ast)
     return is_jittable(static_cast<PerlJIT::AST::Statement *>(ast)->kids[0]);
   case pj_ttype_statementsequence: {
     std::vector<Term *> all = ast->get_kids();
-    int jittable = 0;
+    unsigned int jittable = 0;
 
     for (size_t i = 0, max = all.size(); i < max; ++i)
       jittable += is_jittable(all[i]);
