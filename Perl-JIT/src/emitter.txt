@@ -1,0 +1,104 @@
+match: *
+type: SV
+emit_llvm: {
+    // nothing to do
+}
+
+match: Binop(_, $A, $B : DOUBLE) @ $OP
+match: Binop(_, $A : DOUBLE, $B) @ $OP
+type: DOUBLE
+emit_operands: $A : DOUBLE, $B: DOUBLE
+emit_llvm: binop_double {
+    return emit_binop(op_map($OP->op), _($A), _($B));
+}
+
+match: Binop(_, $A, $B : INT) @ $OP
+match: Binop(_, $A : INT, $B) @ $OP
+type: INT
+emit_operands: $A : INT, $B: INT
+emit_llvm: binop_double {
+    return emit_binop(op_map($OP->op), _($A), _($B));
+}
+
+match: Binop(&&, $A, $B)
+type: mct(TYPE($A), TYPE($B))
+emit_llvm: logical_and {
+    BasicBlock *rhs, *end;
+    Value *result = CreateValue($TYPE);
+    EmitValue lhs = _($A);
+
+    Copy(lhs, result);
+    Branch(emit_to_bool(lhs), rhs, end);
+
+    set_current(rhs);
+    EmitValue rhs = _($B);
+    Copy(rhs, result);
+    Branch(end);
+
+    set_current(end);
+}
+
+match: Unop(!, $A : SV)
+type: BOOL
+emit_operands: $A
+emit_c: (SV *$A) {
+    return !SvTRUE(_($A));
+}
+
+match: Unop(!, $A : SV)
+type: SV
+emit_operands: $A
+emit_c: (SV *$A) {
+    return SvTRUE(_($A)) ? &PL_sv_no : &PL_sv_yes;
+}
+
+match: For($I, $C, $S, $B)
+emit_c: c_for {
+    _($I);
+    emit_pp_unstack(0);
+    emit_pp_enterloop();
+    while (emit_to_bool(_($C))) {
+        _($B);
+        _($S);
+        emit_pp_unstack(1);
+    }
+    emit_pp_leaveloop();
+}
+
+match: For(Empty, $C, $S, $B)
+emit_c: c_for {
+    emit_pp_enterloop();
+    while (_($C)) {
+        _($B);
+        _($S);
+        emit_pp_unstack(1);
+    }
+    emit_pp_leaveloop();
+}
+
+# matches a typed lexical and emits it with the same type
+match: Lexical(_) @ $A
+type: TYPE($A)
+emit_llvm: {
+    return emit_PAD_SV($A->pad_offset());
+}
+
+# matches an untyped lexical and emits it with any type
+match: Lexical(_) @ $A : UNSPECIFIED
+type: ANY
+emit_llvm: {
+    return emit_PAD_SV($A->pad_offset());
+}
+
+# matches a lexical array in scalar context
+match: Lexical[scalar](sigil_array) @ $A
+type: INT
+emit_c: {
+    return AvFill(PAD_AV($A->pad_offset())) + 1;
+    // return CreateAdd(emit_AvFILL(emit_PAD_AV($A->pad_offset())), 1);
+}
+
+# see also
+# BURS Automata Generation
+# TODD A. PROEBSTING
+# University of Arizona
