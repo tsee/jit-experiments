@@ -34,7 +34,6 @@ stringify	string			ck_fun		fsT@	S
 
 smartmatch	smart match		ck_smartmatch	s2
 
-hslice		hash slice		ck_null		m@	H L
 boolkeys	boolkeys		ck_fun		%	H
 
 # requires thinking?
