@@ -89,6 +89,11 @@ UndefConstant::UndefConstant()
 {
 }
 
+ArrayConstant::ArrayConstant(OP *p_op, AV *array)
+  : Constant(p_op, new Array(new Scalar(pj_unspecified_type))),
+    const_array(array)
+{}
+
 
 Identifier::Identifier(OP *p_op, pj_term_type t, pj_variable_sigil s, Type *v_type)
   : Term(p_op, t, v_type), sigil(s)
@@ -295,6 +300,13 @@ StringConstant::dump(int indent_lvl) const
          string_value.c_str());
 }
 
+void
+ArrayConstant::dump(int indent_lvl) const
+{
+  std::string t = get_value_type()->to_string();
+  S_dump_tree_indent(indent_lvl);
+  printf("C = (array, %s)\n", t.c_str());
+}
 
 void
 UndefConstant::dump(int indent_lvl) const

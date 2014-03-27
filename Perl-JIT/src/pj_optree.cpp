@@ -836,10 +836,19 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     }
 
   case OP_RV2AV: {
-      if (cUNOPo->op_first->op_type == OP_GV)
+      OP *kid = cUNOPo->op_first;
+      if (kid->op_type == OP_GV)
         retval = new AST::Global(o, pj_sigil_array);
+      else if (kid->op_type == OP_CONST) {
+        // It's a constant array such as in: $x = [1..3]
+        // TODO consider whether we want to represent this differently in the AST
+        SV *rv = cSVOPx_sv(kid);
+        assert(SvROK(rv));
+        assert(SvTYPE(SvRV(rv)) == SVt_PVAV);
+        retval = new AST::ArrayConstant(kid, (AV *)SvRV(rv));
+      }
       else
-        retval = new AST::Unop(o, pj_unop_av_deref, pj_build_ast(aTHX_ cUNOPo->op_first, visitor));
+        retval = new AST::Unop(o, pj_unop_av_deref, pj_build_ast(aTHX_ kid, visitor));
 
       break;
     }

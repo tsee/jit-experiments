@@ -182,6 +182,20 @@ namespace PerlJIT {
         { return "Perl::JIT::AST::UndefConstant"; }
     };
 
+    class ArrayConstant : public Constant {
+    public:
+      ArrayConstant(OP *p_op, AV *array);
+
+      AV *get_const_array() const;
+
+      virtual void dump(int indent_lvl = 0) const;
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::ArrayConstant"; }
+
+    private:
+      AV *const_array;
+    };
+
     // abstract
     class Identifier : public Term {
     public:
