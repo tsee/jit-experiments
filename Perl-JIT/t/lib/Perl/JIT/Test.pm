@@ -329,7 +329,7 @@ sub compile_and_test {
   my $jit_sub = eval $code
     or die "Failed to eval code: $@";
 
-  $emit->jit_sub($jit_sub);
+  Perl::JIT::Emit->jit_sub($jit_sub);
 
   my $exp = $perl_sub->(@args);
   my $res = $jit_sub->(@args);
