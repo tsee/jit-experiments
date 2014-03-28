@@ -117,6 +117,7 @@
   || (int)otype == OP_GHBYADDR \
   || (int)otype == OP_GHBYNAME \
   || (int)otype == OP_GHOSTENT \
+  || (int)otype == OP_GLOB \
   || (int)otype == OP_GMTIME \
   || (int)otype == OP_GNBYADDR \
   || (int)otype == OP_GNBYNAME \
@@ -441,6 +442,7 @@
   || (int)otype == OP_GHBYADDR \
   || (int)otype == OP_GHBYNAME \
   || (int)otype == OP_GHOSTENT \
+  || (int)otype == OP_GLOB \
   || (int)otype == OP_GMTIME \
   || (int)otype == OP_GNBYADDR \
   || (int)otype == OP_GNBYNAME \

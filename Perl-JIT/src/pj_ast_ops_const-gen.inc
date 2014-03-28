@@ -228,6 +228,7 @@
   INT_CONST(pj_binop_formline);
   INT_CONST(pj_binop_glob_element);
   INT_CONST(pj_binop_smartmatch);
+  INT_CONST(pj_binop_glob);
   INT_CONST(pj_listop_ternary);
   INT_CONST(pj_listop_substr);
   INT_CONST(pj_listop_chop);
