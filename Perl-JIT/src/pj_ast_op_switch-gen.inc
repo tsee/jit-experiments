@@ -69,6 +69,7 @@
   || (int)otype == OP_EXISTS \
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
+  || (int)otype == OP_FC \
   || (int)otype == OP_FCNTL \
   || (int)otype == OP_FILENO \
   || (int)otype == OP_FLOCK \
@@ -392,6 +393,7 @@
   || (int)otype == OP_EXISTS \
   || (int)otype == OP_EXIT \
   || (int)otype == OP_EXP \
+  || (int)otype == OP_FC \
   || (int)otype == OP_FCNTL \
   || (int)otype == OP_FILENO \
   || (int)otype == OP_FLOCK \

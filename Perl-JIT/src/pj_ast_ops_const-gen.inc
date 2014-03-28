@@ -54,6 +54,7 @@
   INT_CONST(pj_unop_chr);
   INT_CONST(pj_unop_lc);
   INT_CONST(pj_unop_uc);
+  INT_CONST(pj_unop_fc);
   INT_CONST(pj_unop_lcfirst);
   INT_CONST(pj_unop_ucfirst);
   INT_CONST(pj_unop_quotemeta);

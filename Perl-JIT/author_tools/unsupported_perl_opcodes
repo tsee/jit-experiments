@@ -72,6 +72,3 @@ custom		unknown custom operator		ck_null		0
 coreargs	CORE:: subroutine	ck_null		$	
 
 runcv		__SUB__			ck_null		s0
-
-# fc and \F
-fc		fc			ck_fun		fstu%	S?

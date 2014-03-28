@@ -36,6 +36,9 @@ typedef AV PAD;
 #if PERL_VERSION <= 14
 # define OP_AELEMFAST_LEX -1
 #endif
+#if PERL_VERSION <= 16
+# define OP_FC -1
+#endif
 
 namespace PerlJIT {
   class OPTreeJITCandidateFinder;

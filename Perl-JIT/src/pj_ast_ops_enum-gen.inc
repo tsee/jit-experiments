@@ -59,6 +59,7 @@ typedef enum {
   pj_unop_chr,
   pj_unop_lc,
   pj_unop_uc,
+  pj_unop_fc,
   pj_unop_lcfirst,
   pj_unop_ucfirst,
   pj_unop_quotemeta,

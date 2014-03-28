@@ -84,6 +84,7 @@ pj_unop_ord,		pj_opc_unop,	ord,		OP_ORD,		KIDS_OPTIONAL,	emit,	UnsignedInteger
 pj_unop_chr,		pj_opc_unop,	chr,		OP_CHR,		KIDS_OPTIONAL,	emit,	String
 pj_unop_lc,		pj_opc_unop,	lc,		OP_LC,		KIDS_OPTIONAL,	emit,	String
 pj_unop_uc,		pj_opc_unop,	uc,		OP_UC,		KIDS_OPTIONAL,	emit,	String
+pj_unop_fc,		pj_opc_unop,	fc,		OP_FC,		KIDS_OPTIONAL,	emit,	String
 pj_unop_lcfirst,	pj_opc_unop,	lcfirst,	OP_LCFIRST,	KIDS_OPTIONAL,	emit,	String
 pj_unop_ucfirst,	pj_opc_unop,	ucfirst,	OP_UCFIRST,	KIDS_OPTIONAL,	emit,	String
 pj_unop_quotemeta,	pj_opc_unop,	quotemeta,	OP_QUOTEMETA,	KIDS_OPTIONAL,	emit,	String
