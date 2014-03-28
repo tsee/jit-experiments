@@ -272,6 +272,7 @@
   || (int)otype == OP_SLE \
   || (int)otype == OP_SLEEP \
   || (int)otype == OP_SLT \
+  || (int)otype == OP_SMARTMATCH \
   || (int)otype == OP_SNE \
   || (int)otype == OP_SNETENT \
   || (int)otype == OP_SOCKET \
@@ -598,6 +599,7 @@
   || (int)otype == OP_SLE \
   || (int)otype == OP_SLEEP \
   || (int)otype == OP_SLT \
+  || (int)otype == OP_SMARTMATCH \
   || (int)otype == OP_SNE \
   || (int)otype == OP_SNETENT \
   || (int)otype == OP_SOCKET \

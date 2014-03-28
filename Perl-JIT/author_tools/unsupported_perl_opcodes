@@ -32,8 +32,6 @@ transr		transliteration (tr///)	ck_match	is"	S
 
 stringify	string			ck_fun		fsT@	S
 
-smartmatch	smart match		ck_smartmatch	s2
-
 boolkeys	boolkeys		ck_fun		%	H
 
 # requires thinking?
