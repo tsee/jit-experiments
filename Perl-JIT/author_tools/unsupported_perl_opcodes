@@ -14,8 +14,6 @@ pushre		push regexp		ck_null		d/
 refgen		reference constructor	ck_spair	m1	L
 srefgen		single ref constructor	ck_null		fs1	S
 
-# glob defaults its first arg to $_
-glob		glob			ck_glob		t@	S?
 rcatline	append I/O operator	ck_null		t$
 
 regcmaybe	regexp internal guard	ck_fun		s1	S
