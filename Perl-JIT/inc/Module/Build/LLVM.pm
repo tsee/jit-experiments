@@ -54,6 +54,8 @@ sub create_emitter_class {
 #ifndef $h_guard
 #define $h_guard
 
+// THIS FILE WAS GENERATED. DO NOT EDIT. SEE Perl::JIT's Module::Build::LLVM.
+
 #include <EXTERN.h>
 #include <perl.h>
 
@@ -110,6 +112,8 @@ EOT
     {
         $c_code .= <<EOT;
 #include "$h_basename"
+
+// THIS FILE WAS GENERATED. DO NOT EDIT. SEE Perl::JIT's Module::Build::LLVM.
 
 #undef _ // defined by Perl headers
 
