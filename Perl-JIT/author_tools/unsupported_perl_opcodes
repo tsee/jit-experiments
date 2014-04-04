@@ -27,8 +27,6 @@ transr		transliteration (tr///)	ck_match	is"	S
 
 stringify	string			ck_fun		fsT@	S
 
-boolkeys	boolkeys		ck_fun		%	H
-
 # requires thinking?
 list		list			ck_null		m@	L
 

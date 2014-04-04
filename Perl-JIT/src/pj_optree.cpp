@@ -31,18 +31,7 @@ typedef AV PAD;
 # define PadARRAY		AvARRAY
 #endif
 
-// Should never matter, just to get the "permissible OPs" list to be
-// insensitive to not knowing OP_AELEMFAST_LEX on older perls.
-#if PERL_VERSION <= 14
-# define OP_AELEMFAST_LEX -1
-#endif
-#if PERL_VERSION <= 16
-# define OP_FC -1
-# define OP_LEAVEGIVEN -1
-# define OP_ENTERGIVEN -1
-# define OP_LEAVEWHEN -1
-# define OP_ENTERWHEN -1
-#endif
+#include "pj_opcode_ppport.h"
 
 // Some utility macros that were introduced in 5.19.x or so
 #ifndef OP_TYPE_IS
@@ -1290,6 +1279,12 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     EMIT_UNOP_INTEGER_CODE(OP_I_POSTINC, pj_unop_postinc)
     EMIT_UNOP_INTEGER_CODE(OP_I_POSTDEC, pj_unop_postdec)
     EMIT_UNOP_INTEGER_CODE(OP_I_NEGATE, pj_unop_negate)
+
+  // OP_BOOLKEYS gone in 5.18
+#if PERL_VERSION < 17
+    EMIT_UNOP_CODE(OP_BOOLKEYS, pj_unop_hash_keys)
+#endif
+
 
 // Include auto-generated OP case list using the EMIT_*_CODE* macros
 #include "pj_ast_optree_emit-gen.inc"
