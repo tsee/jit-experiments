@@ -594,6 +594,32 @@ pj_build_grep_or_map(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
          : (AST::Term *)new AST::Grep(start, map_body_term, new AST::List(param_vec));
 }
 
+static PerlJIT::AST::Term *
+pj_build_logical_assign(pTHX_ BINOP *bo, OPTreeJITCandidateFinder &visitor)
+{
+  //  6        <|> orassign(other->7) vK/1 ->9
+  //  5           <0> padsv[$x:1,2] sRM ->6
+  //  8           <1> sassign sK/BKWARD,1 ->9
+  //  7              <$> const[IV 123] s ->8
+  // Patch out the sassign!
+  assert(bo->op_first->op_sibling);
+  assert(bo->op_first->op_sibling->op_type == OP_SASSIGN);
+  assert(bo->op_first->op_sibling->op_private & OPpASSIGN_BACKWARDS);
+
+  AST::Term *left = pj_build_ast(aTHX_ bo->op_first, visitor);
+  AST::Term *right = pj_build_ast(aTHX_ cBINOPx(bo->op_first->op_sibling)->op_first, visitor);
+
+  const unsigned int otype = bo->op_type;
+  pj_op_type ttype =   otype == OP_ANDASSIGN ? pj_binop_bool_and
+                     : otype == OP_ORASSIGN  ? pj_binop_bool_or
+                     :                         pj_binop_definedor;
+
+  PerlJIT::AST::Binop *retval = new AST::Binop((OP *)bo, ttype, left, right);
+  retval->set_assignment_form(true);
+
+  return (PerlJIT::AST::Term *)retval;
+}
+
 // This handles building SubCall and MethodCall AST nodes
 static PerlJIT::AST::Term *
 pj_build_sub_call(pTHX_ LISTOP *entersub, OPTreeJITCandidateFinder &visitor)
@@ -1031,27 +1057,9 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
 
   case OP_ANDASSIGN:
   case OP_ORASSIGN:
-  case OP_DORASSIGN: {
-      //  6        <|> orassign(other->7) vK/1 ->9
-      //  5           <0> padsv[$x:1,2] sRM ->6
-      //  8           <1> sassign sK/BKWARD,1 ->9
-      //  7              <$> const[IV 123] s ->8
-      // Patch out the sassign!
-      BINOP *bo = cBINOPo;
-      if (!bo->op_first->op_sibling ||
-          bo->op_first->op_sibling->op_type != OP_SASSIGN ||
-          !(bo->op_first->op_sibling->op_private & OPpASSIGN_BACKWARDS)) {
-        abort();
-      }
-      AST::Term *left = pj_build_ast(aTHX_ bo->op_first, visitor);
-      AST::Term *right = pj_build_ast(aTHX_ cBINOPx(bo->op_first->op_sibling)->op_first, visitor);
-      pj_op_type ttype =   otype == OP_ANDASSIGN ? pj_binop_bool_and
-                         : otype == OP_ORASSIGN  ? pj_binop_bool_or
-                         :                         pj_binop_definedor;
-      retval = new AST::Binop(o, ttype, left, right);
-      ((AST::Binop *)retval)->set_assignment_form(true);
-      break;
-    }
+  case OP_DORASSIGN:
+    retval = pj_build_logical_assign(aTHX_ cBINOPo, visitor);
+    break;
 
   case OP_DELETE:
   case OP_EXISTS: {
