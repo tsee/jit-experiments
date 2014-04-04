@@ -44,6 +44,37 @@ typedef AV PAD;
 # define OP_ENTERWHEN -1
 #endif
 
+// Some utility macros that were introduced in 5.19.x or so
+#ifndef OP_TYPE_IS
+# define OP_TYPE_IS(o, type) ((o) && (o)->op_type == (type))
+#endif
+// The rest of these were introduced together, so just one ifndef
+#ifndef OP_TYPE_IS_NN
+# define OP_TYPE_IS_NN(o, type) ((o)->op_type == (type))
+# define OP_TYPE_ISNT(o, type) ((o) && (o)->op_type != (type))
+# define OP_TYPE_ISNT_NN(o, type) ((o)->op_type != (type))
+
+# define OP_TYPE_IS_OR_WAS_NN(o, type) \
+    ( ((o)->op_type == OP_NULL \
+       ? (o)->op_targ \
+       : (o)->op_type) \
+      == (type) )
+
+# define OP_TYPE_IS_OR_WAS(o, type) \
+    ( (o) && OP_TYPE_IS_OR_WAS_NN(o, type) )
+
+# define OP_TYPE_ISNT_AND_WASNT_NN(o, type) \
+    ( ((o)->op_type == OP_NULL \
+       ? (o)->op_targ \
+       : (o)->op_type) \
+      != (type) )
+
+# define OP_TYPE_ISNT_AND_WASNT(o, type) \
+    ( (o) && OP_TYPE_ISNT_AND_WASNT_NN(o, type) )
+#endif
+
+
+
 namespace PerlJIT {
   class OPTreeJITCandidateFinder;
 }
@@ -554,6 +585,40 @@ pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinde
     return pj_build_while(aTHX_ start, cond, body, cont, visitor);
   else
     return pj_build_block(aTHX_ start, body, cont, visitor);
+}
+
+static PerlJIT::AST::Term *
+pj_build_given_when_default(pTHX_ UNOP *leaveop, OPTreeJITCandidateFinder &visitor)
+{
+  // These Binop types could some day become their own Term subclasses instead.
+  // A default block is just a given block without condition.
+  // Consider: should this make the default block a separate Op type?
+
+  assert(OP_CLASS(leaveop) == OA_UNOP);
+  bool is_given = leaveop->op_type == OP_LEAVEGIVEN;
+
+  LOGOP *enterop = (LOGOP *)leaveop->op_first;
+  assert(OP_CLASS(enterop) == OA_LOGOP);
+
+  // valueop is rather a conditionop for "when"
+  OP *valueop = enterop->op_first;
+  assert(valueop);
+
+  OP *blockop = valueop->op_sibling;
+  if (blockop == NULL) {
+    // This is a default{} block
+    blockop = valueop;
+    return new AST::Unop((OP *)leaveop,
+                         pj_unop_default,
+                         pj_build_ast(aTHX_ blockop, visitor));
+  }
+  else {
+    assert(OP_CLASS(blockop) == OA_LISTOP);
+    return new AST::Binop((OP *)leaveop,
+                          (is_given ? pj_binop_given : pj_binop_when),
+                          pj_build_ast(aTHX_ valueop, visitor),
+                          pj_build_ast(aTHX_ blockop, visitor));
+  }
 }
 
 static PerlJIT::AST::Term *
@@ -1073,6 +1138,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     }
 
   case OP_SCOPE: {
+      assert(cLOOPo->op_first);
       if (!cLOOPo->op_first->op_sibling) {
         retval = new AST::Empty();
       }
@@ -1115,6 +1181,15 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   case OP_LEAVELOOP:
     retval = pj_build_loop(aTHX_ o, NULL, visitor);
     break;
+
+#if PERL_VERSION >= 17
+  // This covers all of given, when, and
+  // default (which is just a funny when in the OP tree)
+  case OP_LEAVEGIVEN:
+  case OP_LEAVEWHEN:
+    retval = pj_build_given_when_default(aTHX_ (UNOP *)o, visitor);
+    break;
+#endif
 
   case OP_GREPWHILE:
   case OP_MAPWHILE:

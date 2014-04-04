@@ -232,6 +232,7 @@ sub _contains {
 sub ast_contains {
   my ($sub, $pattern, $diag) = @_;
   local $Test::Builder::Level = $Test::Builder::Level + 1;
+
   my @asts = Perl::JIT::find_jit_candidates($sub);
   for my $ast (@asts) {
     return ok(1, $diag) if _contains($ast, $pattern);

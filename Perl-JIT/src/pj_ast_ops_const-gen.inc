@@ -160,6 +160,7 @@
   INT_CONST(pj_unop_require);
   INT_CONST(pj_unop_dofile);
   INT_CONST(pj_unop_method);
+  INT_CONST(pj_unop_default);
   INT_CONST(pj_binop_add);
   INT_CONST(pj_binop_subtract);
   INT_CONST(pj_binop_multiply);
@@ -229,6 +230,8 @@
   INT_CONST(pj_binop_glob_element);
   INT_CONST(pj_binop_smartmatch);
   INT_CONST(pj_binop_glob);
+  INT_CONST(pj_binop_given);
+  INT_CONST(pj_binop_when);
   INT_CONST(pj_listop_ternary);
   INT_CONST(pj_listop_substr);
   INT_CONST(pj_listop_chop);

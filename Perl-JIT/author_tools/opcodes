@@ -190,6 +190,7 @@ pj_unop_readline,	pj_opc_unop,	readlone(),	OP_READLINE,	KIDS_OPTIONAL,	emit,	Any
 pj_unop_require,	pj_opc_unop,	require(),	OP_REQUIRE,	KIDS_OPTIONAL,	emit,	Any
 pj_unop_dofile,		pj_opc_unop,	do 'file',	OP_DOFILE,	0,	emit,	Any
 pj_unop_method,		pj_opc_unop,	dyn meth lkup,	OP_METHOD,	0,	emit,	Any # always CV?
+pj_unop_default,	pj_opc_unop,	default{},	OP_LEAVEWHEN,	0,	,	Scalar=Any List=List[Any] # OP_LEAVEWHEN assigned to when(){} also
 
 # binops
 pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric
@@ -261,6 +262,8 @@ pj_binop_formline,	pj_opc_binop,	formline(),	OP_FORMLINE,	0,	emit,	Integer
 pj_binop_glob_element,	pj_opc_binop,	*FOO{THING},	OP_GELEM,	0,	emit,	Any
 pj_binop_smartmatch,	pj_opc_binop,	~~,		OP_SMARTMATCH,	0,	emit,	Scalar=Any List=List[Any]
 pj_binop_glob,		pj_opc_binop,	glob(),		OP_GLOB,	0,	emit,	Scalar=Any List=List[Any]
+pj_binop_given,		pj_opc_binop,	given(){},	OP_LEAVEGIVEN,	0,	,	Scalar=Any List=List[Any]
+pj_binop_when,		pj_opc_binop,	when(){},	OP_LEAVEWHEN,	0,	,	Scalar=Any List=List[Any]
 
 
 # listops

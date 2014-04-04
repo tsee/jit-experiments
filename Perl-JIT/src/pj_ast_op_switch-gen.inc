@@ -166,7 +166,9 @@
   || (int)otype == OP_LCFIRST \
   || (int)otype == OP_LE \
   || (int)otype == OP_LEAVE \
+  || (int)otype == OP_LEAVEGIVEN \
   || (int)otype == OP_LEAVELOOP \
+  || (int)otype == OP_LEAVEWHEN \
   || (int)otype == OP_LEFT_SHIFT \
   || (int)otype == OP_LENGTH \
   || (int)otype == OP_LINK \
@@ -493,7 +495,9 @@
   || (int)otype == OP_LCFIRST \
   || (int)otype == OP_LE \
   || (int)otype == OP_LEAVE \
+  || (int)otype == OP_LEAVEGIVEN \
   || (int)otype == OP_LEAVELOOP \
+  || (int)otype == OP_LEAVEWHEN \
   || (int)otype == OP_LEFT_SHIFT \
   || (int)otype == OP_LENGTH \
   || (int)otype == OP_LINK \
