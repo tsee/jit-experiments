@@ -38,6 +38,10 @@ typedef AV PAD;
 #endif
 #if PERL_VERSION <= 16
 # define OP_FC -1
+# define OP_LEAVEGIVEN -1
+# define OP_ENTERGIVEN -1
+# define OP_LEAVEWHEN -1
+# define OP_ENTERWHEN -1
 #endif
 
 namespace PerlJIT {
