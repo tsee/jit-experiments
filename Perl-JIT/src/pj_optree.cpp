@@ -1138,12 +1138,19 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     }
 
   case OP_SCOPE: {
-      assert(cLOOPo->op_first);
-      if (!cLOOPo->op_first->op_sibling) {
+      LOOP *lo = cLOOPo;
+      OP *kid = lo->op_first;
+      assert(kid);
+      OP *sibling = kid->op_sibling;
+
+      // Truly empty block
+      if (!sibling && OP_TYPE_IS_NN(kid, OP_STUB)) {
         retval = new AST::Empty();
       }
       else {
-        retval = pj_build_ast(aTHX_ cLOOPo->op_first->op_sibling, visitor);
+        // Else build a Block/Scope node around the result of recursing
+        // Some OP_SCOPEs ("foo when 2") don't even have a nextstate.
+        retval = pj_build_ast(aTHX_ sibling ? sibling : kid, visitor);
         if (retval->get_type() != pj_ttype_empty)
           retval = new AST::Block(o, retval);
       }
