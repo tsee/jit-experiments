@@ -46,9 +46,6 @@ leavesublv	lvalue subroutine return	ck_null		1
 dbstate		debug next statement	ck_null		s;	
 method_named	method with known name	ck_null		d$
 
-break		break			ck_null		0
-continue	continue		ck_null		0
-
 enterwrite	write			ck_fun		dis%	F?
 leavewrite	write exit		ck_null		1	
 

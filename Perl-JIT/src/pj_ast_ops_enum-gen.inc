@@ -33,6 +33,8 @@ typedef enum {
   pj_baseop_anoncode,
   pj_baseop_fork,
   pj_baseop_method_named,
+  pj_baseop_continue,
+  pj_baseop_break,
 
   // Op class: pj_opc_unop
   pj_unop_localtime,
@@ -313,7 +315,7 @@ typedef enum {
   // Op class ranges
 
   pj_baseop_FIRST = pj_baseop_time,
-  pj_baseop_LAST  = pj_baseop_method_named,
+  pj_baseop_LAST  = pj_baseop_break,
 
   pj_unop_FIRST = pj_unop_localtime,
   pj_unop_LAST  = pj_unop_default,

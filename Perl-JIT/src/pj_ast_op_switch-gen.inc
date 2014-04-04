@@ -30,6 +30,7 @@
   || (int)otype == OP_BIT_OR \
   || (int)otype == OP_BIT_XOR \
   || (int)otype == OP_BLESS \
+  || (int)otype == OP_BREAK \
   || (int)otype == OP_CALLER \
   || (int)otype == OP_CHDIR \
   || (int)otype == OP_CHMOD \
@@ -44,6 +45,7 @@
   || (int)otype == OP_CONCAT \
   || (int)otype == OP_COND_EXPR \
   || (int)otype == OP_CONNECT \
+  || (int)otype == OP_CONTINUE \
   || (int)otype == OP_COS \
   || (int)otype == OP_CRYPT \
   || (int)otype == OP_DBMCLOSE \
@@ -355,6 +357,7 @@
   || (int)otype == OP_BIT_OR \
   || (int)otype == OP_BIT_XOR \
   || (int)otype == OP_BLESS \
+  || (int)otype == OP_BREAK \
   || (int)otype == OP_CALLER \
   || (int)otype == OP_CHDIR \
   || (int)otype == OP_CHMOD \
@@ -370,6 +373,7 @@
   || (int)otype == OP_COND_EXPR \
   || (int)otype == OP_CONNECT \
   || (int)otype == OP_CONST \
+  || (int)otype == OP_CONTINUE \
   || (int)otype == OP_COS \
   || (int)otype == OP_CRYPT \
   || (int)otype == OP_DBMCLOSE \

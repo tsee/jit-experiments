@@ -18,6 +18,7 @@ my $y;
 no warnings; # no warnings 'experimental' doesn't work?
 
 my $postinc = ast_unop(pj_unop_postinc, ast_lexical('$y'));
+my $y_assign = ast_binop(pj_binop_sassign, ast_lexical('$y'), ast_constant(1));
 my $const_smartmatch = ast_binop(pj_binop_smartmatch, ast_global('$_'), ast_constant(2));
 
 ast_contains(sub { given ($x) {$y++} },
@@ -80,7 +81,35 @@ ast_contains(sub { given ($x) {when(2) {$y++} default {$y++}} },
                 )
               ));
 
-# TODO break
-# TODO continue
+ast_contains(sub { given ($x) {when(2) {$y=1; continue} } },
+              ast_binop(
+                pj_binop_given,
+                ast_lexical('$x'),
+                ast_block(
+                  ast_statementsequence([
+                    ast_binop(
+                      pj_binop_when,
+                      $const_smartmatch,
+                      ast_block(ast_statementsequence([
+                        $y_assign,
+                        ast_baseop(pj_baseop_continue),
+                      ]))
+                    ),
+                  ])
+                )
+              ));
+
+ast_contains(sub { given ($x) {when(2) { break; } } },
+              ast_binop(
+                pj_binop_given,
+                ast_lexical('$x'),
+                ast_block(
+                  ast_binop(
+                    pj_binop_when,
+                    $const_smartmatch,
+                    ast_block(ast_baseop(pj_baseop_break))
+                  ),
+                )
+              ));
 
 done_testing();

@@ -30,6 +30,8 @@
   INT_CONST(pj_baseop_anoncode);
   INT_CONST(pj_baseop_fork);
   INT_CONST(pj_baseop_method_named);
+  INT_CONST(pj_baseop_continue);
+  INT_CONST(pj_baseop_break);
   INT_CONST(pj_unop_localtime);
   INT_CONST(pj_unop_gmtime);
   INT_CONST(pj_unop_alarm);
