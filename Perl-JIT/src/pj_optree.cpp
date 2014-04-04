@@ -620,6 +620,72 @@ pj_build_logical_assign(pTHX_ BINOP *bo, OPTreeJITCandidateFinder &visitor)
   return (PerlJIT::AST::Term *)retval;
 }
 
+static PerlJIT::AST::Term *
+pj_build_array_slice(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
+{
+#ifndef NDEBUG
+  {
+    assert(o->op_flags & OPf_KIDS);
+    // Paranoid: Assert three children: pushmark, list, array
+    OP *kid = ((UNOP*)o)->op_first;
+    assert(kid && kid->op_type == OP_PUSHMARK);
+    kid = kid->op_sibling;
+    assert(kid);
+    kid = kid->op_sibling;
+    assert(kid);
+    assert(!kid->op_sibling);
+  }
+#endif
+
+  // slice list; may be a real list op or just a single thing
+  OP *kid = ((UNOP *)o)->op_first->op_sibling;
+  AST::Term *kid_term = pj_build_ast(aTHX_ kid, visitor);
+  if (kid_term->get_type() == pj_ttype_op
+      && ((AST::Op *)kid_term)->get_op_type() == pj_listop_list2scalar)
+  {
+    AST::Listop *listop = (AST::Listop *)kid_term;
+    AST::List *tmp = new AST::List(listop->kids);
+    listop->kids.clear();
+    delete kid_term;
+    kid_term = (AST::Term *)tmp;
+  }
+
+  // array
+  AST::Term *kid_term2 = pj_build_ast(aTHX_ kid->op_sibling, visitor);
+  return new AST::Binop(o, pj_binop_array_slice, kid_term, kid_term2);
+}
+
+static PerlJIT::AST::Term *
+pj_build_list_slice(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
+{
+#ifndef NDEBUG
+  assert(o->op_flags & OPf_KIDS);
+  // Paranoid: Assert two children
+  unsigned int nkids = 0;
+  for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
+    ++nkids;
+    assert(kid->op_type == OP_LIST || (kid->op_type == OP_NULL && kid->op_targ == OP_LIST));
+  }
+  assert(nkids == 2);
+#endif
+
+  vector<AST::Term *> tmp;
+  if (pj_build_kid_terms(aTHX_ ((BINOP *)o)->op_first, visitor, tmp)) {
+    pj_free_term_vector(aTHX_ tmp);
+    return NULL;
+  }
+  AST::Term *kid1 = new AST::List(tmp);
+
+  tmp.clear();
+  if (pj_build_kid_terms(aTHX_ ((BINOP *)o)->op_last, visitor, tmp)) {
+    pj_free_term_vector(aTHX_ tmp);
+    delete kid1;
+    return NULL;
+  }
+
+  return new AST::Binop(o, pj_binop_list_slice, kid1, new AST::List(tmp));
+}
+
 // This handles building SubCall and MethodCall AST nodes
 static PerlJIT::AST::Term *
 pj_build_sub_call(pTHX_ LISTOP *entersub, OPTreeJITCandidateFinder &visitor)
@@ -1109,71 +1175,17 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       break;
     }
 
-  case OP_LSLICE: {
-#ifndef NDEBUG
-      assert(o->op_flags & OPf_KIDS);
-      // Paranoid: Assert two children
-      unsigned int nkids = 0;
-      for (OP *kid = ((UNOP*)o)->op_first; kid; kid = kid->op_sibling) {
-        ++nkids;
-        assert(kid->op_type == OP_LIST || (kid->op_type == OP_NULL && kid->op_targ == OP_LIST));
-      }
-      assert(nkids == 2);
-#endif
-      vector<AST::Term *> tmp;
-      if (pj_build_kid_terms(aTHX_ ((BINOP *)o)->op_first, visitor, tmp)) {
-        pj_free_term_vector(aTHX_ tmp);
-        return NULL;
-      }
-      AST::Term *kid1 = new AST::List(tmp);
-
-      tmp.clear();
-      if (pj_build_kid_terms(aTHX_ ((BINOP *)o)->op_last, visitor, tmp)) {
-        pj_free_term_vector(aTHX_ tmp);
-        delete kid1;
-        return NULL;
-      }
-      retval = new AST::Binop(o, pj_binop_list_slice, kid1, new AST::List(tmp));
-      break;
-    }
-
   case OP_ENTERSUB:
     retval = pj_build_sub_call(aTHX_ cLISTOPo, visitor);
     break;
 
-  case OP_ASLICE: {
-#ifndef NDEBUG
-      {
-        assert(o->op_flags & OPf_KIDS);
-        // Paranoid: Assert three children: pushmark, list, array
-        OP *kid = ((UNOP*)o)->op_first;
-        assert(kid && kid->op_type == OP_PUSHMARK);
-        kid = kid->op_sibling;
-        assert(kid);
-        kid = kid->op_sibling;
-        assert(kid);
-        assert(!kid->op_sibling);
-      }
-#endif
+  case OP_ASLICE:
+    retval = pj_build_array_slice(aTHX_ o, visitor);
+    break;
 
-      // slice list; may be a real list op or just a single thing
-      OP *kid = ((UNOP *)o)->op_first->op_sibling;
-      AST::Term *kid_term = pj_build_ast(aTHX_ kid, visitor);
-      if (kid_term->get_type() == pj_ttype_op
-          && ((AST::Op *)kid_term)->get_op_type() == pj_listop_list2scalar)
-      {
-        AST::Listop *listop = (AST::Listop *)kid_term;
-        AST::List *tmp = new AST::List(listop->kids);
-        listop->kids.clear();
-        delete kid_term;
-        kid_term = (AST::Term *)tmp;
-      }
-
-      // array
-      AST::Term *kid_term2 = pj_build_ast(aTHX_ kid->op_sibling, visitor);
-      retval = new AST::Binop(o, pj_binop_array_slice, kid_term, kid_term2);
-      break;
-    }
+  case OP_LSLICE:
+    retval = pj_build_list_slice(aTHX_ o, visitor);
+    break;
 
   // Special cases, not auto-generated
     EMIT_LISTOP_CODE(OP_SCHOP, pj_listop_chop)
@@ -1222,7 +1234,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   */
 
   // special-case for C-style for, see also skip_next_leaveloop
-  if (o->op_sibling &&
+  if (retval != NULL &&
+      o->op_sibling &&
       o->op_sibling->op_type == OP_UNSTACK &&
       o->op_sibling->op_sibling &&
       o->op_sibling->op_sibling->op_type == OP_LEAVELOOP)
