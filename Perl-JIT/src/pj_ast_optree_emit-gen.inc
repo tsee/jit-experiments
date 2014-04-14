@@ -8,9 +8,6 @@
 
 EMIT_BASEOP_CODE(OP_TIME, pj_baseop_time)
 EMIT_BASEOP_CODE(OP_TMS, pj_baseop_times)
-EMIT_BASEOP_CODE(OP_NEXT, pj_baseop_next)
-EMIT_BASEOP_CODE(OP_LAST, pj_baseop_last)
-EMIT_BASEOP_CODE(OP_REDO, pj_baseop_redo)
 EMIT_BASEOP_CODE(OP_GHOSTENT, pj_baseop_gethostent)
 EMIT_BASEOP_CODE(OP_GNETENT, pj_baseop_getnetent)
 EMIT_BASEOP_CODE(OP_GSERVENT, pj_baseop_getservent)

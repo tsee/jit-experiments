@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include <OPTreeVisitor.h>
+#include <LoopCtlTracker.h>
 
 #include "ppport.h"
 #include "pj_inline.h"
@@ -13,6 +14,7 @@
 #include "pj_keyword_plugin.h"
 
 #include <vector>
+#include <list>
 #include <string>
 #include <tr1/unordered_map>
 
@@ -93,6 +95,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor);
  * no sense trying to JIT them if they're free-standing. */
 
 namespace PerlJIT {
+
   class OPTreeJITCandidateFinder : public OPTreeVisitor
   {
   public:
@@ -144,7 +147,7 @@ namespace PerlJIT {
         PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ source, *this);
         if (ast) {
           if (last_nextstate && last_nextstate->op_sibling == o)
-            create_statement(ast);
+            create_statement(aTHX_ ast);
           else
             candidates.push_back(ast);
           if (otype != OP_LEAVELOOP && ast->get_type() == pj_ttype_for)
@@ -157,9 +160,10 @@ namespace PerlJIT {
     } // end 'visit_op'
 
     void
-    create_statement(AST::Term *expression)
+    create_statement(pTHX_ AST::Term *expression)
     {
       AST::Statement *stmt = new AST::Statement(last_nextstate, expression);
+      loop_control_tracker.add_jump_target_to_loop_control_nodes(aTHX_ stmt);
 
       if (!current_sequence ||
           !current_sequence->kids.back()->get_perl_op()->op_sibling ||
@@ -243,6 +247,12 @@ namespace PerlJIT {
     const std::vector<PerlJIT::AST::Term *> get_candidates() const
     { return candidates; }
 
+    const LoopCtlTracker &get_loop_control_tracker() const
+    { return loop_control_tracker; }
+
+    LoopCtlTracker &get_loop_control_tracker()
+    { return loop_control_tracker; }
+
   private:
     vector<PerlJIT::AST::Term *> candidates;
     CV *containing_cv;
@@ -251,6 +261,8 @@ namespace PerlJIT {
     unordered_map<PADOFFSET, AST::VariableDeclaration *> variables;
     AST::StatementSequence *current_sequence;
     bool skip_next_leaveloop;
+
+    LoopCtlTracker loop_control_tracker;
   }; // end class OPTreeJITCandidateFinder
 }
 
@@ -1258,6 +1270,22 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     retval = pj_build_list_slice(aTHX_ o, visitor);
     break;
 
+  case OP_NEXT:
+  case OP_LAST:
+  case OP_REDO: {
+      MAKE_DEFAULT_KID_VECTOR
+      assert(kid_terms.size() == 1 || kid_terms.size() == 0);
+      pj_op_type t =   otype == OP_NEXT ? pj_unop_next
+                     : otype == OP_LAST ? pj_unop_last
+                     :                    pj_unop_redo;
+      AST::LoopControlStatement *lcs
+        = new AST::LoopControlStatement(aTHX_ o, t, kid_terms.empty() ? NULL : kid_terms[0]);
+      retval = lcs;
+      if (!lcs->label_is_dynamic())
+        visitor.get_loop_control_tracker().add_loop_control_node(lcs);
+      break;
+    }
+
   // Special cases, not auto-generated
     EMIT_LISTOP_CODE(OP_SCHOP, pj_listop_chop)
     EMIT_LISTOP_CODE(OP_SCHOMP, pj_listop_chomp)
@@ -1374,8 +1402,8 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
   PL_comppad = PadlistARRAY(CvPADLIST(cv))[1];
   PL_curpad = AvARRAY(PL_comppad);
 
-  OPTreeJITCandidateFinder f(aTHX_ cv);
-  vector<PerlJIT::AST::Term *> tmp = pj_find_jit_candidates_internal(aTHX_ CvROOT(cv), f);
+  OPTreeJITCandidateFinder visitor(aTHX_ cv);
+  vector<PerlJIT::AST::Term *> tmp = pj_find_jit_candidates_internal(aTHX_ CvROOT(cv), visitor);
   if (PJ_DEBUGGING) {
     printf("%i JIT candidate ASTs:\n", (int)tmp.size());
     for (unsigned int i = 0; i < (unsigned int)tmp.size(); ++i) {
@@ -1383,6 +1411,10 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
       tmp[i]->dump();
     }
     printf("===========================\n");
+  }
+
+  if (!visitor.get_loop_control_tracker().get_loop_control_index().empty()) {
+    warn("Some loop control statements' jump targets could not be statically resolved");
   }
 
   LEAVE;
