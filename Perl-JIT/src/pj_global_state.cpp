@@ -33,6 +33,9 @@ pj_init_global_state(pTHX)
 #define INT_CONST(name) \
   pj_define_int(aTHX_ name, #name)
 
+#define INT_CONST_NAMED(value, name) \
+  pj_define_int(aTHX_ value, #name)
+
 #define STRING_CONST(name) \
   pj_define_string(aTHX_ name, strlen(name), #name)
 
@@ -90,6 +93,7 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_ttype_grep);
   INT_CONST(pj_ttype_function_call);
   INT_CONST(pj_ttype_empty);
+  INT_CONST(pj_ttype_loop_control);
 
   INT_CONST(pj_sigil_scalar);
   INT_CONST(pj_sigil_array);
@@ -117,6 +121,13 @@ void pj_define_constants(pTHX)
 
   INT_CONST(pj_listop_FIRST);
   INT_CONST(pj_listop_LAST);
+
+  {
+    using namespace PerlJIT::AST;
+    INT_CONST_NAMED(LoopControlStatement::pj_lctl_next, pj_lctl_next);
+    INT_CONST_NAMED(LoopControlStatement::pj_lctl_redo, pj_lctl_redo);
+    INT_CONST_NAMED(LoopControlStatement::pj_lctl_last, pj_lctl_last);
+  }
 
   INT_CONST(pj_unspecified_type);
   INT_CONST(pj_any_type);

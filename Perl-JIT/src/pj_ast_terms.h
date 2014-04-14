@@ -30,7 +30,8 @@ typedef enum {
   pj_ttype_map,
   pj_ttype_grep,
   pj_ttype_function_call,
-  pj_ttype_empty
+  pj_ttype_empty,
+  pj_ttype_loop_control
 } pj_term_type;
 
 typedef enum {
@@ -482,6 +483,45 @@ namespace PerlJIT {
 
     private:
       PerlJIT::AST::Term *_invocant;
+    };
+
+    class LoopControlStatement : public Term {
+    public:
+      enum pj_loop_ctl_type {
+        pj_lctl_next,
+        pj_lctl_redo,
+        pj_lctl_last
+      };
+
+      LoopControlStatement(pTHX_ OP *p_op, AST::Term *kid);
+
+      pj_loop_ctl_type get_loop_ctl_type() const { return ctl_type; }
+      std::vector<Term *> get_kids() const { return kids; }
+
+      bool has_label() const { return _has_label; }
+      bool label_is_dynamic() const { return _label_is_dynamic; }
+      bool label_is_utf8() const { return _label_is_utf8; }
+      const std::string &get_label() const { return label; }
+
+      PerlJIT::AST::Term *get_jump_target() const
+      { return jump_target; }
+      void set_jump_target(PerlJIT::AST::Term *target)
+      { jump_target = target; }
+
+      virtual void dump(int indent_lvl = 0) const;
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::LoopControlStatement"; }
+
+    private:
+      void init_label(pTHX);
+
+      pj_loop_ctl_type ctl_type;
+      std::vector<PerlJIT::AST::Term *> kids;
+      PerlJIT::AST::Term *jump_target;
+      bool _has_label;
+      bool _label_is_dynamic;
+      bool _label_is_utf8;
+      std::string label;
     };
 
     class Optree : public Term {

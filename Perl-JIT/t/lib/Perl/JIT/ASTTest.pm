@@ -36,6 +36,9 @@ our @EXPORT = (qw(
   ast_list
   ast_subcall
   ast_methodcall
+  ast_next
+  ast_redo
+  ast_last
 
   ast_contains
 ), @Perl::JIT::EXPORT_OK);
@@ -208,6 +211,47 @@ sub _matches {
 
       for my $i (0 .. $#args) {
         return 0 if !_matches($args[$i], $pattern->{args}[$i]);
+      }
+
+      return 1;
+    }
+    when ('next') {
+      return 0 unless $ast->get_type == pj_ttype_loop_control;
+      return 0 unless $ast->get_loop_ctl_type == pj_lctl_next;
+      return 0 unless $ast->get_label eq $pattern->{label};
+      if ($pattern->{kid}) {
+        return 0 if !_matches(($ast->get_kids())[0], $pattern->{kid});
+      }
+      else {
+        return 0 if scalar($ast->get_kids);
+      }
+
+      
+
+      return 1;
+    }
+    when ('redo') {
+      return 0 unless $ast->get_type == pj_ttype_loop_control;
+      return 0 unless $ast->get_loop_ctl_type == pj_lctl_redo;
+      return 0 unless $ast->get_label eq $pattern->{label};
+      if ($pattern->{kid}) {
+        return 0 if !_matches(($ast->get_kids())[0], $pattern->{kid});
+      }
+      else {
+        return 0 if scalar($ast->get_kids);
+      }
+
+      return 1;
+    }
+    when ('last') {
+      return 0 unless $ast->get_type == pj_ttype_loop_control;
+      return 0 unless $ast->get_loop_ctl_type == pj_lctl_last;
+      return 0 unless $ast->get_label eq $pattern->{label};
+      if ($pattern->{kid}) {
+        return 0 if !_matches(($ast->get_kids())[0], $pattern->{kid});
+      }
+      else {
+        return 0 if scalar($ast->get_kids);
       }
 
       return 1;
@@ -400,6 +444,27 @@ sub ast_methodcall {
 
   return {type => 'call', cv_source => $cv_src,
           invocant => $invocant, args => \@args};
+}
+
+sub ast_next {
+  my ($label, $target, $kid) = @_;
+
+  return {type => 'next', label => $label,
+          target => $target, kid => $kid};
+}
+
+sub ast_redo {
+  my ($label, $target, $kid) = @_;
+
+  return {type => 'redo', label => $label,
+          target => $target, kid => $kid};
+}
+
+sub ast_last {
+  my ($label, $target, $kid) = @_;
+
+  return {type => 'last', label => $label,
+          target => $target, kid => $kid};
 }
 
 package t::lib::Perl::JIT::ASTTest;

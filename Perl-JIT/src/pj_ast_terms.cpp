@@ -252,6 +252,90 @@ MethodCall::get_invocant() const
   return _invocant;
 }
 
+LoopControlStatement::LoopControlStatement(pTHX_ OP *p_op, AST::Term *kid)
+  : Term(p_op, pj_ttype_loop_control), jump_target(NULL)
+{
+  if (kid != NULL)
+    kids.push_back(kid);
+
+  switch (p_op->op_type) {
+  case OP_NEXT:
+    ctl_type = pj_lctl_next;
+    break;
+  case OP_REDO:
+    ctl_type = pj_lctl_redo;
+    break;
+  case OP_LAST:
+    ctl_type = pj_lctl_last;
+    break;
+  default:
+    abort();
+  };
+
+  init_label(aTHX);
+}
+
+void
+LoopControlStatement::init_label(pTHX)
+{
+  // Alas, it appears that loop control statements can be any of
+  // the following:
+  // - OP: if bare
+  // - PVOP: if using a constant label that has no embedded NUL's
+  //         NB: It seems that there is no way to have a label with
+  //             embedded NUL's?
+  // - SVOP: if using a constant label with embedded NUL's.
+  //         NB: Likely, this code path just exists for paranoia!
+  // - UNOP: (and OPf_STACKED set) if label is a variable, see example
+  //         below. In this case, we cannot compute the jump target
+  //         statically. :(
+  //
+  // Example for dynamic label (*sigh*):
+  // $ perl -MO=Concise -E 'last $foo'
+  // 5  <@> leave[1 ref] vKP/REFC ->(end)
+  // 1     <0> enter ->2
+  // 2     <;> nextstate(main 47 -e:1) v:%,{,469764096 ->3
+  // 4     <1> last vKS/1 ->5
+  // -        <1> ex-rv2sv sK/1 ->4
+  // 3           <$> gvsv(*foo) s ->4
+  // -e syntax OK
+
+  if (perl_op->op_flags & OPf_STACKED) {
+    // The dreaded "it's a dynamic label" case!
+    // Nothing much we can do.
+    _label_is_dynamic = true;
+    label = std::string("");
+    _label_is_utf8 = false; // ho-humm...
+    _has_label = true;
+    return;
+  }
+
+  _label_is_dynamic = false;
+  // OPf_SPECIAL set means it's a bare loop control statement.
+  if (perl_op->op_flags & OPf_SPECIAL) {
+    label = std::string("");
+    _label_is_dynamic = false;
+    _has_label = false;
+    _label_is_utf8 = false;
+    return;
+  }
+
+  // Must be a PVOP
+  _has_label = true;
+  const char * const label_str = cPVOPx(perl_op)->op_pv;
+#ifdef OPpPV_IS_UTF8
+  /* 5.16 and up */
+  _label_is_utf8 = cPVOPx(perl_op)->op_private & OPpPV_IS_UTF8;
+#else
+  _label_is_utf8 = false;
+#endif
+  if (label_str != NULL)
+    label = std::string(label_str, strlen(label_str));
+  else
+    label = std::string("");
+
+  return;
+}
 
 Statement::Statement(OP *p_nextstate, Term *term)
   : Term(p_nextstate, pj_ttype_statement)
@@ -581,6 +665,56 @@ MethodCall::dump(int indent_lvl) const
 
   S_dump_tree_indent(indent_lvl);
   printf(")\n");
+}
+
+void LoopControlStatement::dump(int indent_lvl) const
+{
+  static int recursive = 0;
+
+  S_dump_tree_indent(indent_lvl);
+  std::string name;
+  const char *target_unresolved = (jump_target == NULL)
+                                  ? " (jump target unresolved!) "
+                                  : "";
+
+  switch (ctl_type) {
+  case pj_lctl_next:
+    name = "Next";
+    break;
+  case pj_lctl_redo:
+    name = "Redo";
+    break;
+  case pj_lctl_last:
+    name = "Last";
+    break;
+  default:
+    abort(); // shouldn't happen!
+  }
+
+  if (label_is_dynamic()) {
+    printf("%s%s(\n", name.c_str(), target_unresolved);
+    get_kids()[0]->dump(indent_lvl+1);
+    S_dump_tree_indent(indent_lvl);
+    printf(")\n");
+  }
+  else {
+    if (has_label()) {
+      printf(
+        "%s '%s'%s\n",
+        name.c_str(),
+        get_label().c_str(),
+        target_unresolved
+      );
+    }
+    else {
+      printf("%s%s\n", name.c_str(), target_unresolved);
+    }
+  }
+  if (jump_target && !recursive) {
+    recursive = 1;
+    jump_target->dump(indent_lvl+10);
+    recursive = 0;
+  }
 }
 
 

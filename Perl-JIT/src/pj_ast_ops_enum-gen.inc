@@ -9,9 +9,6 @@ typedef enum {
   // Op class: pj_opc_baseop
   pj_baseop_time,
   pj_baseop_times,
-  pj_baseop_next,
-  pj_baseop_last,
-  pj_baseop_redo,
   pj_baseop_empty,
   pj_baseop_gethostent,
   pj_baseop_getnetent,
@@ -168,6 +165,9 @@ typedef enum {
   pj_unop_dofile,
   pj_unop_method,
   pj_unop_default,
+  pj_unop_next,
+  pj_unop_last,
+  pj_unop_redo,
 
   // Op class: pj_opc_binop
   pj_binop_add,
@@ -318,7 +318,7 @@ typedef enum {
   pj_baseop_LAST  = pj_baseop_break,
 
   pj_unop_FIRST = pj_unop_localtime,
-  pj_unop_LAST  = pj_unop_default,
+  pj_unop_LAST  = pj_unop_redo,
 
   pj_binop_FIRST = pj_binop_add,
   pj_binop_LAST  = pj_binop_when,

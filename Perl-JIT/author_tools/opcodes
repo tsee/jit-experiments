@@ -34,9 +34,6 @@
 # baseop
 pj_baseop_time,		pj_opc_baseop,	time(),		OP_TIME, 	0,	emit,	Integer
 pj_baseop_times,	pj_opc_baseop,	times(),	OP_TMS, 	0,	emit,	Scalar=Double List=Double Double Double Double
-pj_baseop_next,		pj_opc_baseop,	next,		OP_NEXT,	0,	emit,	Any # really never returns...
-pj_baseop_last,		pj_opc_baseop,	last,		OP_LAST,	0,	emit,	Any # really never returns...
-pj_baseop_redo,		pj_opc_baseop,	redo,		OP_REDO,	0,	emit,	Any # really never returns...
 pj_baseop_empty,	pj_opc_baseop,	(),		OP_STUB, 	0,	,	Any # really: empty list in list/void or undef in scalar context
 pj_baseop_gethostent,	pj_opc_baseop,  gethostent(),	OP_GHOSTENT,	0,	emit,	Scalar=Any List=List[Any]
 pj_baseop_getnetent,	pj_opc_baseop,  getnetent(),	OP_GNETENT,	0,	emit,	Scalar=Any List=List[Any]
@@ -193,6 +190,10 @@ pj_unop_require,	pj_opc_unop,	require(),	OP_REQUIRE,	KIDS_OPTIONAL,	emit,	Any
 pj_unop_dofile,		pj_opc_unop,	do 'file',	OP_DOFILE,	0,	emit,	Any
 pj_unop_method,		pj_opc_unop,	dyn meth lkup,	OP_METHOD,	0,	emit,	Any # always CV?
 pj_unop_default,	pj_opc_unop,	default{},	OP_LEAVEWHEN,	0,	,	Scalar=Any List=List[Any] # OP_LEAVEWHEN assigned to when(){} also
+# Not Unops. Handled as separate Term type.
+#pj_unop_next,		pj_opc_unop,	next,		OP_NEXT,	KIDS_OPTIONAL,	,	Any # really never returns...
+#pj_unop_last,		pj_opc_unop,	last,		OP_LAST,	KIDS_OPTIONAL,	,	Any # really never returns...
+#pj_unop_redo,		pj_opc_unop,	redo,		OP_REDO,	KIDS_OPTIONAL,	,	Any # really never returns...
 
 # binops
 pj_binop_add,		pj_opc_binop,	+,		OP_ADD,		HAS_ASSIGNMENT_FORM|OVERLOAD,	emit,	Numeric
