@@ -249,8 +249,11 @@ namespace PerlJIT {
     LoopCtlTracker &get_loop_control_tracker()
     { return loop_control_tracker; }
 
-    OP *get_last_nextstate()
+    OP *get_last_nextstate() const
     { return last_nextstate; }
+
+    void set_last_nextstate(OP *nextstate_op)
+    { last_nextstate = nextstate_op; }
 
   private:
     vector<PerlJIT::AST::Term *> candidates;
@@ -368,6 +371,8 @@ pj_build_block_or_term(pTHX_ OP *start, OPTreeJITCandidateFinder &visitor)
   // over in here.
   while (start && start->op_type == OP_NEXTSTATE && start->op_sibling) {
     OP *nextstate = start;
+    visitor.set_last_nextstate(nextstate);
+
     start = start->op_sibling;
     while (start && ((start->op_type == OP_NULL &&
                       !(start->op_flags & OPf_KIDS)) ||
