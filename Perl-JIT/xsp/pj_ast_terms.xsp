@@ -213,3 +213,12 @@ class Perl::JIT::AST::StatementSequence : public Perl::JIT::AST::Term
 {
   std::vector<Perl::JIT::AST::Term *> kids %get;
 };
+
+class Perl::JIT::AST::LoopControlStatement : public Perl::JIT::AST::Unop
+{
+  Perl::JIT::AST::Term *get_jump_target() const;
+  std::string get_label() const;
+  bool has_label() const;
+  bool label_is_dynamic() const;
+  bool label_is_utf8() const;
+};
