@@ -652,7 +652,7 @@ MethodCall::dump(int indent_lvl) const
 
 void LoopControlStatement::dump(int indent_lvl) const
 {
-  static int foo = 0;
+  static int recursive = 0;
 
   S_dump_tree_indent(indent_lvl);
   std::string name;
@@ -693,10 +693,10 @@ void LoopControlStatement::dump(int indent_lvl) const
       printf("%s%s\n", name.c_str(), target_unresolved);
     }
   }
-  if (jump_target && !foo) {
-    foo = 1;
+  if (jump_target && !recursive) {
+    recursive = 1;
     jump_target->dump(indent_lvl+10);
-    foo = 0;
+    recursive = 0;
   }
 }
 

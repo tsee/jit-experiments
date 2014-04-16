@@ -13,18 +13,24 @@
 namespace PerlJIT {
 
   typedef std::list<AST::LoopControlStatement *> LoopCtlStatementList;
-  typedef std::tr1::unordered_map<std::string, LoopCtlStatementList> LoopCtlIndex;
+  typedef std::list<LoopCtlStatementList> LoopCtlScopeStack;
+  typedef std::tr1::unordered_map<std::string, LoopCtlScopeStack> LoopCtlIndex;
 
   class LoopCtlTracker {
   public:
     LoopCtlTracker();
 
-    void add_loop_control_node(AST::LoopControlStatement *ctrl_term);
-    void add_jump_target_to_loop_control_nodes(pTHX_ AST::Statement *stmt);
+    static std::string get_label_from_nextstate(pTHX_ OP *nextstate_op);
+
+    void push_loop_scope(const std::string &label);
+    void add_loop_control_node(pTHX_ AST::LoopControlStatement *ctrl_term);
+    void pop_loop_scope(pTHX_ const std::string &label, AST::Term *loop);
+
     const LoopCtlIndex &get_loop_control_index() const;
 
+    void dump() const;
+
   private:
-    // label => control Terms; Keep track of next/redo/last label being "" means "none"
     LoopCtlIndex loop_control_index;
   };
 }

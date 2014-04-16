@@ -163,7 +163,6 @@ namespace PerlJIT {
     create_statement(pTHX_ AST::Term *expression)
     {
       AST::Statement *stmt = new AST::Statement(last_nextstate, expression);
-      loop_control_tracker.add_jump_target_to_loop_control_nodes(aTHX_ stmt);
 
       if (!current_sequence ||
           !current_sequence->kids.back()->get_perl_op()->op_sibling ||
@@ -247,11 +246,11 @@ namespace PerlJIT {
     const std::vector<PerlJIT::AST::Term *> get_candidates() const
     { return candidates; }
 
-    const LoopCtlTracker &get_loop_control_tracker() const
-    { return loop_control_tracker; }
-
     LoopCtlTracker &get_loop_control_tracker()
     { return loop_control_tracker; }
+
+    OP *get_last_nextstate()
+    { return last_nextstate; }
 
   private:
     vector<PerlJIT::AST::Term *> candidates;
@@ -543,7 +542,7 @@ pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinde
   LOGOP *cond = NULL;
   LISTOP *lineseq = NULL;
   OP *cont = NULL, *step = NULL;
-  bool has_cond = enter->op_sibling->op_type == OP_NULL;
+  const bool has_cond = enter->op_sibling->op_type == OP_NULL;
 
   if (has_cond) {
     cond = cLOGOPx(cUNOPx(enter->op_sibling)->op_first);
@@ -556,19 +555,18 @@ pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinde
     return NULL;
   }
 
-  bool is_loop = lineseq->op_last->op_type == OP_UNSTACK;
+  const bool is_loop = lineseq->op_last->op_type == OP_UNSTACK;
   // loops with a single block (for loops w/o a step, while/blocks
   // without a continue have an OP_NEXTSTATE as the kid of lineseq,
   // otherwise they have an OP_LEAVE/OP_ENTER pair or OP_SCOPE
-  bool has_one_subexpr = lineseq->op_first->op_type == OP_NEXTSTATE;
-  bool is_modifier = lineseq->op_first->op_sibling &&
-                     lineseq->op_first->op_sibling->op_type != OP_UNSTACK;
+  const bool has_one_subexpr = lineseq->op_first->op_type == OP_NEXTSTATE;
+  const bool is_modifier = lineseq->op_first->op_sibling &&
+                           lineseq->op_first->op_sibling->op_type != OP_UNSTACK;
   bool has_continue = false;
   OP *body = lineseq->op_first;
 
   if (!has_one_subexpr) {
-    unsigned int otype = lineseq->op_first->op_sibling->op_type;
-
+    const unsigned int otype = lineseq->op_first->op_sibling->op_type;
     has_continue = otype == OP_LEAVE || otype == OP_SCOPE;
   }
 
@@ -578,14 +576,40 @@ pj_build_loop(pTHX_ OP *start, PerlJIT::AST::Term *init, OPTreeJITCandidateFinde
            is_modifier)
     step = lineseq->op_first->op_sibling;
 
+  // Maybe setup loop scope tracking
+  LoopCtlTracker &loop_ctl = visitor.get_loop_control_tracker();
+  OP *loop_nextstate = NULL;
+  string loop_label;
+  // Modifier-loops don't behave as full loops
+  const bool is_full_loop = start->op_type == OP_LEAVELOOP;
+  if (is_full_loop) {
+    loop_nextstate = visitor.get_last_nextstate();
+    loop_label = LoopCtlTracker::get_label_from_nextstate(aTHX_ loop_nextstate);
+    PJ_DEBUG_2("LOOP LABEL: %s %p\n", loop_label.c_str(), start);
+    loop_ctl.push_loop_scope(loop_label);
+    if (loop_label.length() != 0)
+      loop_ctl.push_loop_scope(string(""));
+  }
+
+  AST::Term *retval;
   if (init || step)
-    return pj_build_for(aTHX_ start, init, cond, step, body, visitor);
+    retval = pj_build_for(aTHX_ start, init, cond, step, body, visitor);
   else if (enter->op_type == OP_ENTERITER)
-    return pj_build_foreach(aTHX_ start, body, cont, visitor);
+    retval = pj_build_foreach(aTHX_ start, body, cont, visitor);
   else if (is_loop)
-    return pj_build_while(aTHX_ start, cond, body, cont, visitor);
+    retval = pj_build_while(aTHX_ start, cond, body, cont, visitor);
   else
-    return pj_build_block(aTHX_ start, body, cont, visitor);
+    retval = pj_build_block(aTHX_ start, body, cont, visitor);
+
+  // Maybe tear down loop scope tracking
+  if (loop_nextstate != NULL) { // remembered for a reason
+    // Fixup loop control statements if necessary
+    loop_ctl.pop_loop_scope(aTHX_ loop_label, retval);
+    if (loop_label.length() != 0)
+      loop_ctl.pop_loop_scope(aTHX_ string(""), retval);
+  }
+
+  return retval;
 }
 
 static PerlJIT::AST::Term *
@@ -1282,7 +1306,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         = new AST::LoopControlStatement(aTHX_ o, t, kid_terms.empty() ? NULL : kid_terms[0]);
       retval = lcs;
       if (!lcs->label_is_dynamic())
-        visitor.get_loop_control_tracker().add_loop_control_node(lcs);
+        visitor.get_loop_control_tracker().add_loop_control_node(aTHX_ lcs);
       break;
     }
 
@@ -1415,6 +1439,7 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
 
   if (!visitor.get_loop_control_tracker().get_loop_control_index().empty()) {
     warn("Some loop control statements' jump targets could not be statically resolved");
+    visitor.get_loop_control_tracker().dump();
   }
 
   LEAVE;
