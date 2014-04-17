@@ -252,9 +252,26 @@ MethodCall::get_invocant() const
   return _invocant;
 }
 
-LoopControlStatement::LoopControlStatement(pTHX_ OP *p_op, pj_op_type t, AST::Term *kid)
-  : Unop(p_op, t, kid), jump_target(NULL)
+LoopControlStatement::LoopControlStatement(pTHX_ OP *p_op, AST::Term *kid)
+  : Term(p_op, pj_ttype_loop_control), jump_target(NULL)
 {
+  if (kid != NULL)
+    kids.push_back(kid);
+
+  switch (p_op->op_type) {
+  case OP_NEXT:
+    ctl_type = pj_lctl_next;
+    break;
+  case OP_REDO:
+    ctl_type = pj_lctl_redo;
+    break;
+  case OP_LAST:
+    ctl_type = pj_lctl_last;
+    break;
+  default:
+    abort();
+  };
+
   init_label(aTHX);
 }
 
@@ -660,14 +677,14 @@ void LoopControlStatement::dump(int indent_lvl) const
                                   ? " (jump target unresolved!) "
                                   : "";
 
-  switch (perl_op->op_type) {
-  case OP_NEXT:
+  switch (ctl_type) {
+  case pj_lctl_next:
     name = "Next";
     break;
-  case OP_REDO:
+  case pj_lctl_redo:
     name = "Redo";
     break;
-  case OP_LAST:
+  case pj_lctl_last:
     name = "Last";
     break;
   default:

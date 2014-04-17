@@ -485,9 +485,18 @@ namespace PerlJIT {
       PerlJIT::AST::Term *_invocant;
     };
 
-    class LoopControlStatement : public Unop {
+    class LoopControlStatement : public Term {
     public:
-      LoopControlStatement(pTHX_ OP *p_op, pj_op_type t, AST::Term *kid);
+      enum pj_loop_ctl_type {
+        pj_lctl_next,
+        pj_lctl_redo,
+        pj_lctl_last
+      };
+
+      LoopControlStatement(pTHX_ OP *p_op, AST::Term *kid);
+
+      pj_loop_ctl_type get_loop_ctl_type() const { return ctl_type; }
+      std::vector<Term *> get_kids() const { return kids; }
 
       bool has_label() const { return _has_label; }
       bool label_is_dynamic() const { return _label_is_dynamic; }
@@ -506,6 +515,8 @@ namespace PerlJIT {
     private:
       void init_label(pTHX);
 
+      pj_loop_ctl_type ctl_type;
+      std::vector<PerlJIT::AST::Term *> kids;
       PerlJIT::AST::Term *jump_target;
       bool _has_label;
       bool _label_is_dynamic;

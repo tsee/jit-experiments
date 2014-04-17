@@ -59,9 +59,9 @@ LoopCtlTracker::add_loop_control_node(pTHX_ AST::LoopControlStatement *ctrl_term
   if (!ss.empty()) {
     loop_control_index[label].back().push_back(ctrl_term);
   }
-  else {
-    warn("Found dangling loop control statement");
-  }
+  //else {
+  //  warn("Found dangling loop control statement");
+  //}
 }
 
 

@@ -1304,11 +1304,8 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
   case OP_REDO: {
       MAKE_DEFAULT_KID_VECTOR
       assert(kid_terms.size() == 1 || kid_terms.size() == 0);
-      pj_op_type t =   otype == OP_NEXT ? pj_unop_next
-                     : otype == OP_LAST ? pj_unop_last
-                     :                    pj_unop_redo;
       AST::LoopControlStatement *lcs
-        = new AST::LoopControlStatement(aTHX_ o, t, kid_terms.empty() ? NULL : kid_terms[0]);
+        = new AST::LoopControlStatement(aTHX_ o, kid_terms.empty() ? NULL : kid_terms[0]);
       retval = lcs;
       if (!lcs->label_is_dynamic())
         visitor.get_loop_control_tracker().add_loop_control_node(aTHX_ lcs);
@@ -1444,7 +1441,8 @@ pj_find_jit_candidates(pTHX_ SV *coderef)
 
   if (!visitor.get_loop_control_tracker().get_loop_control_index().empty()) {
     warn("Some loop control statements' jump targets could not be statically resolved");
-    visitor.get_loop_control_tracker().dump();
+    if (PJ_DEBUGGING)
+      visitor.get_loop_control_tracker().dump();
   }
 
   LEAVE;
