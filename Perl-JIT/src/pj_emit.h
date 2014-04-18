@@ -9,6 +9,7 @@
 #include "pj_optree.h"
 #include "pj_perlapi.h"
 #include "pj_types.h"
+// thx_member.h also defines the CXT_ARG_/DECL_CXT_MEMBER macros
 #include "thx_member.h"
 
 #include <llvm/IR/Module.h>

@@ -90,7 +90,7 @@ namespace PerlJIT {
   };
 }
 typedef Cxt my_cxt_t;
-START_MY_CXT;
+START_MY_CXT
 
 Cxt::Cxt() :
   builder(getGlobalContext()), module(NULL), fpm(NULL), pa(NULL)
