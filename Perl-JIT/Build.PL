@@ -18,6 +18,8 @@ GetOptions(
 
 use Module::Build::PerlJIT;
 
+# Likely among other things, this avoids the use of braced groups, a GCC extension.
+# These would otherwise cause a slurry of warnings.
 my @extra_compiler_flags = qw(-DPERL_GCC_PEDANTIC);
 if ($DEBUG) { # superset of $DEBUG_SYMBOLS
   push @extra_compiler_flags, qw(-O0 -ggdb3 -Wall -Wextra -DDEBUG_OUTPUT);
