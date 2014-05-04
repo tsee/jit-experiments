@@ -214,7 +214,7 @@ sub is_not_jitting {
     }
   }
 
-  Perl::JIT::Emit->jit_sub($sub);
+  Perl::JIT::Emit::jit_sub($sub);
 
   my @after = _count_matches($sub, $opgrep_patterns);
   for my $i (0..$#$opgrep_patterns) {
@@ -329,7 +329,7 @@ sub compile_and_test {
   my $jit_sub = eval $code
     or die "Failed to eval code: $@";
 
-  Perl::JIT::Emit->jit_sub($jit_sub);
+  Perl::JIT::Emit::jit_sub($jit_sub);
 
   my $exp = $perl_sub->(@args);
   my $res = $jit_sub->(@args);
