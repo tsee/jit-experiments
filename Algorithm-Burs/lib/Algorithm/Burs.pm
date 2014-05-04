@@ -116,7 +116,7 @@ sub generate_tables {
 
     while (@{$self->{worklist}}) {
         my $state_id = shift @{$self->{worklist}};
-        for my $functor (values %{$self->{functors}}) {
+        for my $functor (sort values %{$self->{functors}}) {
             $self->_compute_transitions($functor, $state_id);
         }
     }
