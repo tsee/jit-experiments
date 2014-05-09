@@ -34,6 +34,14 @@ sort		sort			ck_sort		dm@	C? L
 # reverse is "done", but requires thinking for sort
 reverse		reverse			ck_fun		mt@	L
 
+Cases for sort:
+@a = sort @b
+@a = reverse sort @b
+@a = sort BLOCK @b
+@a = sort SPECIAL_CASE_BLOCK @b
+@a = reverse sort BLOCK/SPECIAL_CASE_BLOCK @b
+...?
+
 range		flipflop		ck_null		|	S S
 flip		range (or flip)		ck_null		1	S S
 flop		range (or flop)		ck_null		1
