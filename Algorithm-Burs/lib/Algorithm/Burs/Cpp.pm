@@ -312,7 +312,7 @@ sub set_result_type {
 
 sub add_rule {
     my ($self, $weight, $code, $label, $rule) = @_;
-    my $rule_id = $self->_add_rule($weight, $label, $rule);
+    my $rule_id = $self->{burs}->add_rule($weight, $label, $rule);
 
     push @{$self->{rule_map}{$code}}, $rule_id if $code;
 }
@@ -321,28 +321,6 @@ sub set_root_label {
     my ($self, $label) = @_;
 
     $self->{root_label} = $self->{burs}->add_tag($label);
-}
-
-sub _add_rule {
-    my ($self, $weight, $label, $rule) = @_;
-    my $burs = $self->{burs};
-    my $label_id = $burs->add_tag($label);
-
-    if (ref $rule) {
-        my $functor_id = $burs->add_functor($rule->[0], @$rule - 1);
-        my $arg_ids;
-
-        if (@$rule > 1) {
-            # TODO convert rule to normal form
-            $arg_ids = [map $burs->add_tag($_), @{$rule}[1..$#$rule]];
-        }
-
-        return $burs->add_functor_rule($label_id, $functor_id, $arg_ids, $weight);
-    } else {
-        my $nt_id = $burs->add_tag($rule);
-
-        return $burs->add_chain_rule($label_id, $nt_id, $weight);
-    }
 }
 
 sub set_default_label {

@@ -56,6 +56,27 @@ sub functors {
     return $self->{functors};
 }
 
+sub add_rule {
+    my ($self, $weight, $label, $rule) = @_;
+    my $label_id = $self->add_tag($label);
+
+    if (ref $rule) {
+        my $functor_id = $self->add_functor($rule->[0], @$rule - 1);
+        my $arg_ids;
+
+        if (@$rule > 1) {
+            # TODO convert rule to normal form
+            $arg_ids = [map $self->add_tag($_), @{$rule}[1..$#$rule]];
+        }
+
+        return $self->add_functor_rule($label_id, $functor_id, $arg_ids, $weight);
+    } else {
+        my $nt_id = $self->add_tag($rule);
+
+        return $self->add_chain_rule($label_id, $nt_id, $weight);
+    }
+}
+
 sub add_functor_rule {
     my ($self, $label, $functor, $args, $weight) = @_;
     my $id = @{$self->{rules}};
