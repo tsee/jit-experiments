@@ -314,7 +314,7 @@ sub add_rule {
     my ($self, $weight, $code, $label, $rule) = @_;
     my $rule_id = $self->_add_rule($weight, $label, $rule);
 
-    $self->{rule_map}{$rule_id} = $code if $code;
+    push @{$self->{rule_map}{$code}}, $rule_id if $code;
 }
 
 sub set_root_label {
@@ -374,15 +374,6 @@ sub generate {
         $has_code{$_} = 1 for @{$self->{rule_map}{$code}};
         $rule_code .= sprintf <<'EOT', $cases, $code;
 %s {
-    %s
-    break;
-}
-EOT
-    }
-
-    for my $rule_id (sort keys %{$self->{rule_map}}) {
-        $rule_code .= sprintf <<'EOT', $rule_id, $self->{rule_map}{$rule_id};
-case %d: {
     %s
     break;
 }
