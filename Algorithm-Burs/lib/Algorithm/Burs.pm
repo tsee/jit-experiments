@@ -6,7 +6,7 @@ use warnings;
 use List::Util qw(min);
 
 sub new {
-    my ($class) = @_;
+    my ($class, %args) = @_;
     my $self = bless {
         tags        => {},
         functors    => {},
@@ -16,7 +16,8 @@ sub new {
         reps        => {},
         transition  => {},
         patterns    => {},
-        ordinal     => 0,
+        f_ordinal   => $args{functor_ordinal} // 0,
+        t_ordinal   => $args{tag_ordinal} // 0,
     }, $class;
 
     return $self;
@@ -25,7 +26,14 @@ sub new {
 sub add_tag {
     my ($self, $tag) = @_;
 
-    return $self->{tags}{$tag} ||= ++$self->{ordinal};
+    return $self->{tags}{$tag} ||= ++$self->{t_ordinal};
+}
+
+sub define_tag {
+    my ($self, $tag, $value) = @_;
+
+    # TODO check value is unique
+    $self->{tags}{$tag} = $value;
 }
 
 sub tag {
@@ -36,13 +44,20 @@ sub tag {
 
 sub add_functor {
     my ($self, $functor, $arity) = @_;
-    my $id = $self->{functors}{$functor} ||= ++$self->{ordinal};
+    my $id = $self->{functors}{$functor} ||= ++$self->{f_ordinal};
 
     die "Inconsistent functor arity"
         if exists $self->{arity}{$id} && $self->{arity}{$id} != $arity;
     $self->{arity}{$id} = $arity;
 
     return $id;
+}
+
+sub define_functor {
+    my ($self, $tag, $value) = @_;
+
+    # TODO check value is unique
+    $self->{functors}{$tag} = $value;
 }
 
 sub functor {
@@ -98,7 +113,7 @@ sub _add_normalized_rule {
             push @labels, $arg;
         }
     }
-    my $label = $self->{patterns}{join "\0", @labels} ||= "\0$self->{ordinal}";
+    my $label = $self->{patterns}{join "\0", @labels} ||= "\0$self->{t_ordinal}";
 
     $self->add_rule(0, $label, $rule);
 
@@ -286,7 +301,7 @@ sub _compute_transitions {
 
               MIN_COST: for my $rule_id (@{$self->{func_rules}}) {
                     my $rule = $self->{rules}[$rule_id];
-                    next unless $rule->{functor} == $functor;
+                    next unless $rule->{functor} eq $functor;
                     next MIN_COST unless exists $pstate->{items}{$rule->{args}[$i]};
                     my $cost = $rule->{weight} + $pstate->{items}{$rule->{args}[$i]}[1];
 
@@ -337,7 +352,7 @@ sub _project {
 
     for my $rule_id (@{$self->{func_rules}}) {
         my $rule = $self->{rules}[$rule_id];
-        next unless $rule->{functor} == $functor;
+        next unless $rule->{functor} eq $functor;
         my $n = $rule->{args}[$i];
 
         if (exists $state->{items}{$n}) {

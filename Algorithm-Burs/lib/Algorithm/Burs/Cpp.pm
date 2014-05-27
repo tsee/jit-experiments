@@ -259,9 +259,9 @@ $RULES
 EOT
 
 sub new {
-    my ($class) = @_;
+    my ($class, %args) = @_;
     my $self = bless {
-        burs                    => Algorithm::Burs->new,
+        burs                    => Algorithm::Burs->new(%args),
         rule_map                => {},
         fields                  => [],
         interface_headers       => [],
@@ -308,6 +308,12 @@ sub set_result_type {
     my ($self, $type) = @_;
 
     $self->{result_type} = $type;
+}
+
+sub define_functor {
+    my ($self, $tag, $value) = @_;
+
+    $self->{burs}->define_functor($tag, $value);
 }
 
 sub add_rule {
