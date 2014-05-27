@@ -15,6 +15,7 @@ sub new {
         rules       => [],
         reps        => {},
         transition  => {},
+        patterns    => {},
         ordinal     => 0,
     }, $class;
 
@@ -64,9 +65,16 @@ sub add_rule {
         my $functor_id = $self->add_functor($rule->[0], @$rule - 1);
         my $arg_ids;
 
-        if (@$rule > 1) {
-            # TODO convert rule to normal form
-            $arg_ids = [map $self->add_tag($_), @{$rule}[1..$#$rule]];
+        for (my $i = 1; $i < @$rule; ++$i) {
+            my $arg = $rule->[$i];
+
+            if (ref $arg) {
+                # add synthesized functor rule
+                my $label = $self->_add_normalized_rule($arg);
+                push @$arg_ids, $self->add_tag($label);
+            } else {
+                push @$arg_ids, $self->add_tag($arg);
+            }
         }
 
         return $self->add_functor_rule($label_id, $functor_id, $arg_ids, $weight);
@@ -75,6 +83,26 @@ sub add_rule {
 
         return $self->add_chain_rule($label_id, $nt_id, $weight);
     }
+}
+
+sub _add_normalized_rule {
+    my ($self, $rule) = @_;
+    my @labels = ($rule->[0]);
+
+    for (my $i = 1; $i < @$rule; ++$i) {
+        my $arg = $rule->[$i];
+
+        if (ref $arg) {
+            push @labels, $self->_add_normalized_rule($arg);
+        } else {
+            push @labels, $arg;
+        }
+    }
+    my $label = $self->{patterns}{join "\0", @labels} ||= "\0$self->{ordinal}";
+
+    $self->add_rule(0, $label, $rule);
+
+    return $label;
 }
 
 sub add_functor_rule {
