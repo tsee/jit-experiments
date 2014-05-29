@@ -1,6 +1,7 @@
 #include "pj_perlapi.h"
 
 #include <llvm/IR/Constants.h>
+#include <llvm/IR/ValueSymbolTable.h>
 
 using namespace PerlJIT;
 using namespace llvm;
@@ -44,6 +45,8 @@ PerlAPI::PerlAPI(Module *_module, IRBuilder<> *_builder, ExecutionEngine *ee) :
 void
 PerlAPI::alloc_sp()
 {
+  if (!arg_sp)
+    arg_sp = function->getValueSymbolTable().lookup("sp");
   if (!arg_sp)
     arg_sp = alloc_variable(ptr_ptr_sv_type, "sp");
 }
