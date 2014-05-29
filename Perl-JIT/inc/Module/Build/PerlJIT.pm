@@ -79,7 +79,7 @@ sub ACTION_perlapi {
     $source =~ s/^ \s+ //x;
     while ($source) {
         $source =~ s[
-            ^ (.*?) \s+ \( ([^)]+) \) \s+ {
+            ^ (.*?) \s+ \( ([^)]*) \) \s+ {
             (.*?)
             ^ } \s+
         ][]xms or die "Unable to parse '$source'";
