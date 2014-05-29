@@ -25,3 +25,84 @@ match: Optree
 emit_llvm: {
   $$ = _jit_emit_optree(state);
 }
+
+# Constants
+
+name: RootExpr
+match: AstConst(TypeDouble)
+match: AstConst(TypeInt)
+match: AstConst(TypeUnsignedInt)
+emit_llvm: {
+  $$ = EmitValue(OPTREE, &SCALAR_T);
+}
+
+name: DOUBLE_Expr
+match: AstConst(TypeDouble) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_const((Constant *) $OP.term, &DOUBLE_T);
+}
+
+name: INT_Expr
+match: AstConst(TypeInt) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_const((Constant *) $OP.term, &INT_T);
+}
+
+name: UINT_Expr
+match: AstConst(TypeUnsignedInt) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_const((Constant *) $OP.term, &UNSIGNED_INT_T);
+}
+
+# Lexicals
+
+name: RootExpr
+match: AstLexical(TypeDouble)
+match: AstLexical(TypeInt)
+match: AstLexical(TypeAny)
+match: AstLexicalDeclaration(TypeDouble)
+match: AstLexicalDeclaration(TypeInt)
+match: AstLexicalDeclaration(TypeAny)
+emit_llvm: {
+  $$ = EmitValue(OPTREE, &SCALAR_T);
+}
+
+name: DOUBLE_Expr
+match: AstLexical(TypeDouble) @ $OP
+emit_llvm: {
+  $$ = _jit_get_lexical_sv((Lexical *) $OP.term);
+}
+
+name: DOUBLE_Expr
+match: AstLexicalDeclaration(TypeDouble) @ $OP
+emit_llvm: {
+  $$ = _jit_get_lexical_declaration_sv((VariableDeclaration *) $OP.term);
+}
+
+name: INT_Expr
+match: AstLexical(TypeInt) @ $OP
+emit_llvm: {
+  $$ = _jit_get_lexical_sv((Lexical *) $OP.term);
+}
+
+name: INT_Expr
+match: AstLexicalDeclaration(TypeInt) @ $OP
+emit_llvm: {
+  $$ = _jit_get_lexical_declaration_sv((VariableDeclaration *) $OP.term);
+}
+
+name: OPAQUE_Expr
+match: AstLexical(TypeOpaque)
+match: AstLexicalDeclaration(TypeOpaque)
+
+name: Expr
+match: AstLexical(TypeAny) @ $OP
+emit_llvm: {
+  $$ = _jit_get_lexical_sv((Lexical *) $OP.term);
+}
+
+name: Expr
+match: AstLexicalDeclaration(TypeAny) @ $OP
+emit_llvm: {
+  $$ = _jit_get_lexical_declaration_sv((VariableDeclaration *) $OP.term);
+}
