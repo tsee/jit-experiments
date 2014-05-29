@@ -575,9 +575,41 @@ Emitter::_jit_emit_return(Term *ast, pj_op_context context, Value *value, const 
   return true;
 }
 
+llvm::Value *
+Emitter::_jit_emit_perl_int(llvm::Value *v)
+{
+  // TODO cache type
+  return MY_CXT.builder.CreateFPToSI(v, llvm::Type::getIntNTy(module->getContext(), sizeof(IV) * 8));
+}
+
+EmitValue
+Emitter::_jit_emit_unop(Unop *ast, const EmitValue &v, const PerlJIT::AST::Type *type)
+{
+  if (v.is_invalid())
+    return EmitValue::invalid();
+
+  Value *vv = _to_nv_value(v.value, v.type);
+
+  if (!vv)
+    return EmitValue::invalid();
+
+  Value *res = NULL;
+
+  switch (ast->get_op_type()) {
+  case pj_unop_perl_int:
+    return EmitValue(_jit_emit_perl_int(vv), &INT_T);
+    break;
+  }
+
+  return EmitValue::invalid();
+}
+
 EmitValue
 Emitter::_jit_emit_binop(Binop *ast, const EmitValue &lv, const EmitValue &rv, const PerlJIT::AST::Type *type)
 {
+  if (lv.is_invalid() || rv.is_invalid())
+    return EmitValue::invalid();
+
   Value *lvv = _to_nv_value(lv.value, lv.type),
         *rvv = _to_nv_value(rv.value, rv.type);
 
@@ -589,6 +621,9 @@ Emitter::_jit_emit_binop(Binop *ast, const EmitValue &lv, const EmitValue &rv, c
   switch (ast->get_op_type()) {
   case pj_binop_add:
     res = MY_CXT.builder.CreateFAdd(lvv, rvv);
+    break;
+  case pj_binop_multiply:
+    res = MY_CXT.builder.CreateFMul(lvv, rvv);
     break;
   default:
     return EmitValue::invalid();

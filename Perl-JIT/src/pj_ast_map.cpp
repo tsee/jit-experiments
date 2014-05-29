@@ -9,6 +9,29 @@ CodegenNode
 PerlJIT::map_codegen_arg(CodegenNode node, int functor_id, int index)
 {
   switch (functor_id) {
+  case Codegen::AstBinop: {
+    PerlJIT::AST::Binop *ast = static_cast<PerlJIT::AST::Binop *>(node.term);
+
+    switch (index) {
+    case 0:
+      return CodegenNode(ast->get_op_type());
+    case 1:
+    case 2:
+      return CodegenNode(ast->kids[index - 1]);
+    }
+  }
+    break;
+  case Codegen::AstUnop: {
+    PerlJIT::AST::Unop *ast = static_cast<PerlJIT::AST::Unop *>(node.term);
+
+    switch (index) {
+    case 0:
+      return CodegenNode(ast->get_op_type());
+    case 1:
+      return CodegenNode(ast->kids[0]);
+    }
+  }
+    break;
   case Codegen::AstConst:
   case Codegen::AstLexicalDeclaration:
   case Codegen::AstLexical: {
@@ -69,6 +92,16 @@ PerlJIT::map_codegen_functor(CodegenNode node, int *functor_id, int *arity, int 
       FUNCTOR(Codegen::AstLexical, 1);
     case pj_ttype_variabledeclaration:
       FUNCTOR(Codegen::AstLexicalDeclaration, 1);
+    case pj_ttype_op: {
+      Op * op = static_cast<Op *>(ast);
+
+      switch (op->get_op_type()) {
+// includes the switch for all ops mentioned by emitter.txt
+#include "pj_ast_map_ops-gen.inc"
+      default:
+        FUNCTOR_ARITY(Codegen::Optree, 0, ast->get_kids().size());
+      }
+    }
     default:
       FUNCTOR_ARITY(Codegen::Optree, 0, ast->get_kids().size());
     }

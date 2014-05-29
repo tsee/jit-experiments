@@ -12,7 +12,7 @@ our @EXPORT_OK = qw(create_codegen_class);
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 
 sub create_codegen_class {
-    my ($matcher_class, $emitter_class, $matcher_header, $matcher_source, $emitter_source) = @_;
+    my ($matcher_class, $emitter_class, $matcher_header, $matcher_source, $emitter_source, $ast_map_inc) = @_;
 
     my $burs = Algorithm::Burs::Cpp->new(
         functor_ordinal => 1000,
@@ -44,12 +44,13 @@ EOT
     $burs->set_root_label('RootExpr');
     $burs->set_default_label('RootExpr');
 
-    _add_rules($burs, _parse_rules('src/emitter.txt'));
+    my $ast_map_ops = _add_rules($burs, _parse_rules('src/emitter.txt'));
 
     my $source = $burs->generate($matcher_class, $emitter_class, $matcher_header, $matcher_source, $emitter_source);
     replace_if_changed($matcher_header, $source->{matcher_header});
     replace_if_changed($matcher_source, $source->{matcher_source});
     replace_if_changed($emitter_source, $source->{emitter_source});
+    replace_if_changed($ast_map_inc, $ast_map_ops);
 }
 
 sub _format_code {
@@ -185,9 +186,24 @@ sub _parse_delay {
 
 sub _add_rules {
     my ($burs, $rules, $constants) = @_;
+    my (@unops, @binops, $ast_map_ops);
 
-    for my $const (keys %$constants) {
+    for my $const (sort keys %$constants) {
         $burs->define_functor($constants->{$const}, $const);
+
+        push @unops, $const if $const =~ /^pj_unop_/;
+        push @binops, $const if $const =~ /^pj_binop_/;
+    }
+
+    if (@unops) {
+        $ast_map_ops .= join "\n",
+            (map "      case $_:", @unops),
+                 "        FUNCTOR(Codegen::AstUnop, 2);\n";
+    }
+    if (@binops) {
+        $ast_map_ops .= join "\n",
+            (map "      case $_:", @binops),
+                 "        FUNCTOR(Codegen::AstBinop, 3);\n";
     }
 
     for my $rule (@$rules) {
@@ -206,6 +222,8 @@ sub _add_rules {
             );
         }
     }
+
+    return $ast_map_ops;
 }
 
 1;

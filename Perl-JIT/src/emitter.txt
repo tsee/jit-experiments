@@ -106,3 +106,63 @@ match: AstLexicalDeclaration(TypeAny) @ $OP
 emit_llvm: {
   $$ = _jit_get_lexical_declaration_sv((VariableDeclaration *) $OP.term);
 }
+
+# Arithmetic unary
+
+name: INT_Expr
+match: AstUnop(pj_unop_perl_int, DOUBLE_Expr @ $A) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_unop((Unop *) $OP.term, _($A), &DOUBLE_T);
+}
+
+name: UNSIGNED_INT_Expr
+match: AstUnop(pj_unop_perl_int, INT_Expr @ $A) @ $OP
+emit_llvm: {
+  $$ = EmitValue(_($A).value, &UNSIGNED_INT_T);
+}
+
+name: OPAQUE_Expr
+match: AstUnop(pj_unop_perl_int, OPAQUE_Expr)
+
+# TODO questionable
+name: Expr
+match: AstUnop(pj_unop_perl_int, Expr @ $A) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_unop((Unop *) $OP.term, _($A), &DOUBLE_T);
+}
+
+# Arithmetic binary
+
+name: DOUBLE_Expr
+match: AstBinop(pj_binop_add, DOUBLE_Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(pj_binop_add, Expr @ $A, DOUBLE_Expr @ $B) @ $OP
+match: AstBinop(pj_binop_multiply, DOUBLE_Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(pj_binop_multiply, Expr @ $A, DOUBLE_Expr @ $B) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_binop((Binop *) $OP.term, _($A), _($B), &DOUBLE_T);
+}
+
+name: INT_Expr
+match: AstBinop(pj_binop_add, INT_Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(pj_binop_add, Expr @ $A, INT_Expr @ $B) @ $OP
+match: AstBinop(pj_binop_multiply, INT_Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(pj_binop_multiply, Expr @ $A, INT_Expr @ $B) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_binop((Binop *) $OP.term, _($A), _($B), &INT_T);
+}
+
+name: OPAQUE_Expr
+match: AstBinop(pj_binop_add, OPAQUE_Expr, Expr)
+match: AstBinop(pj_binop_add, Expr, OPAQUE_Expr)
+match: AstBinop(pj_binop_add, OPAQUE_Expr, OPAQUE_Expr)
+match: AstBinop(pj_binop_multiply, OPAQUE_Expr, Expr)
+match: AstBinop(pj_binop_multiply, Expr, OPAQUE_Expr)
+match: AstBinop(pj_binop_multiply, OPAQUE_Expr, OPAQUE_Expr)
+
+# TODO questionable
+name: Expr
+match: AstBinop(pj_binop_add, Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(pj_binop_multiply, Expr @ $A, Expr @ $B) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_binop((Binop *) $OP.term, _($A), _($B), &DOUBLE_T);
+}

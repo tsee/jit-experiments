@@ -11,6 +11,7 @@ _build
 src/pj_perlapibase.*
 src/pj_codegen.*
 src/pj_rules.cpp
+src/pj_ast_map_ops-gen.inc
 dev_Build.PL
 buildtmp/
 bytecode-*

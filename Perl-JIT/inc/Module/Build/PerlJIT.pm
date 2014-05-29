@@ -105,10 +105,12 @@ sub ACTION_codegen {
 
     $self->add_to_cleanup(
         'src/pj_codegen.h', 'src/pj_codegen.cpp', 'src/pj_rules.cpp',
+        'src/pj_ast_map_ops-gen.inc',
     );
     create_codegen_class(
         'Codegen', 'Emitter',
         'src/pj_codegen.h', 'src/pj_codegen.cpp', 'src/pj_rules.cpp',
+        'src/pj_ast_map_ops-gen.inc',
     );
 }
 
