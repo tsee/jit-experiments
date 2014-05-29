@@ -10,7 +10,7 @@ use File::Temp qw(tempfile);
 use File::Basename qw(basename);
 use Config;
 use ExtUtils::Embed;
-use autodie qw(open close);
+use Module::Build::Utils qw(replace_if_changed);
 
 our @EXPORT_OK = qw(create_function_declaration create_emitter_class);
 our %EXPORT_TAGS = ( all => \@EXPORT_OK );
@@ -138,25 +138,8 @@ EOT
         }
     }
 
-    _replace_if_changed($h_file, $h_code);
-    _replace_if_changed($c_file, $c_code);
-}
-
-sub _replace_if_changed {
-    my ($path, $content) = @_;
-    my $fh;
-
-    if (-f $path) {
-        local $/;
-        open $fh, '<', $path;
-        my $current = readline $fh;
-
-        return if $content eq $current;
-    }
-
-    open $fh, '>', $path;
-    print $fh $content;
-    close $fh;
+    replace_if_changed($h_file, $h_code);
+    replace_if_changed($c_file, $c_code);
 }
 
 sub _get_creation_code {
