@@ -29,7 +29,7 @@ namespace PerlJIT {
     llvm::FunctionType *function_type(llvm::Type *ret, ...);
 
     llvm::Type *ptr_type;
-    llvm::Type *interpreter_type, *ptr_sv_type, *ptr_ptr_sv_type;
+    llvm::Type *interpreter_type, *ptr_sv_type, *ptr_ptr_sv_type, *ptr_op_type;
     llvm::FunctionType *pp_type;
 
     // TODO autogenerate

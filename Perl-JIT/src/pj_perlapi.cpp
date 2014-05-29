@@ -26,18 +26,18 @@ PerlAPI::PerlAPI(Module *_module, IRBuilder<> *_builder, ExecutionEngine *ee) :
   PerlAPIBase(_module, _builder)
 {
   llvm::Type *void_type = Type::getVoidTy(module->getContext());
-  llvm::Type *op_ptr_type = module->getTypeByName("struct.op")->getPointerTo();
 
+  ptr_op_type = module->getTypeByName("struct.op")->getPointerTo();
   interpreter_type = module->getTypeByName("struct.interpreter")->getPointerTo();
   ptr_sv_type = module->getTypeByName("struct.sv")->getPointerTo();
 
   ptr_type = IntegerType::get(module->getContext(), 8)->getPointerTo();
   ptr_ptr_sv_type = ptr_sv_type->getPointerTo();
-  pp_type = function_type(op_ptr_type, jit_tTHX_ NULL);
+  pp_type = function_type(ptr_op_type, jit_tTHX_ NULL);
 
   // TODO autogenerate
   pa_call_runloop = Function::Create(
-      function_type(void_type, jit_tTHX_ ptr_type, NULL),
+      function_type(void_type, jit_tTHX_ ptr_op_type, NULL),
       GlobalValue::ExternalLinkage, "_pa_call_runloop", module);
   ee->addGlobalMapping(pa_call_runloop, (void *) _pa_call_runloop);
 }
@@ -54,7 +54,10 @@ PerlAPI::alloc_sp()
 void
 PerlAPI::emit_call_runloop(OP *op)
 {
-  builder->CreateCall2(pa_call_runloop, jit_aTHX_ UV_constant(PTR2UV(op)));
+  builder->CreateCall2(
+    pa_call_runloop, jit_aTHX_
+    builder->CreateIntToPtr(UV_constant(PTR2IV(op)), ptr_op_type)
+  );
 }
 
 Value *
