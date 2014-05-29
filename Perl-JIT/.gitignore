@@ -9,6 +9,8 @@ Perl-JIT-*
 _build
 /Build
 src/pj_perlapibase.*
+src/pj_codegen.*
+src/pj_rules.cpp
 dev_Build.PL
 buildtmp/
 bytecode-*

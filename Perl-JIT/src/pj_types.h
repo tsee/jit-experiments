@@ -45,6 +45,7 @@ namespace PerlJIT {
 
       virtual bool is_xv() const { return false; }
       virtual bool is_integer() const { return false; }
+      virtual bool is_unsigned() const { return false; }
       virtual bool is_numeric() const { return false; }
 
       virtual std::string to_string() const = 0;
@@ -68,6 +69,7 @@ namespace PerlJIT {
       virtual bool is_xv() const;
 
       virtual bool is_integer() const;
+      virtual bool is_unsigned() const;
       virtual bool is_numeric() const;
 
       virtual std::string to_string() const;

@@ -4,11 +4,10 @@
 #include "pj_emit.h"
 #include "xsp_typedefs.h"
 
-%name{_jit_sub} SV *Perl::JIT::pj_jit_sub(SV *coderef);
+%name{_jit_sub} void Perl::JIT::pj_jit_sub(SV *coderef);
 
 %{
 
 BOOT:
     Perl::JIT::pj_init_emitter(aTHX);
-
 %}

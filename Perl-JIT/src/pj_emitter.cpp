@@ -1,5 +1,7 @@
+#include "pj_emitter.h"
 #include "pj_emit.h"
 #include "pj_optree.h"
+#include "pj_codegen.h"
 
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/Analysis/Passes.h>
@@ -17,6 +19,12 @@ using namespace PerlJIT::AST;
 using namespace llvm;
 using namespace std;
 using namespace std::tr1;
+
+// part of B::Replace API
+#define KEEP_OPS     1
+#define KEEP_TARGETS 2
+#define REPLACE_TREE 4
+#define KEEP_OP_NEXT 8
 
 #define JIT_SCALAR_OP OP_STUB
 #define JIT_LIST_OP   OP_LIST
@@ -40,14 +48,6 @@ namespace {
   PerlMutex jit_ops_mutex;
   unordered_set<OP *> jit_ops;
 }
-
-static pj_op_type JITTABLE_OPS[] = {
-  pj_binop_add
-};
-static unordered_set<int> Jittable_Ops(
-  JITTABLE_OPS,
-  JITTABLE_OPS + ITEM_COUNT(JITTABLE_OPS)
-);
 
 struct ScalarOP : public OP {
   shared_ptr<ExecutionEngine> execution_engine;
@@ -155,344 +155,9 @@ PerlJIT::pj_init_emitter(pTHX)
   Perl_call_atexit(aTHX_ cleanup_emitter, NULL);
 }
 
-SV *
-PerlJIT::pj_jit_sub(SV *coderef)
-{
-  dTHX;
-  dMY_CXT;
-  SV *error = NULL;
 
-  MY_CXT.create_module();
-
-  {
-    std::vector<Term *> asts = pj_find_jit_candidates(aTHX_ coderef);
-    AV *ops = newAV();
-    Emitter emitter(aTHX_ aMY_CXT_ (CV *)SvRV(coderef), ops);
-
-    if (emitter.process_jit_candidates(asts))
-      return newRV_noinc((SV *) ops);
-
-    SvREFCNT_dec(ops);
-    std::string error_message = emitter.error();
-    error = sv_2mortal(newSVpv(error_message.c_str(), error_message.size()));
-  }
-
-  // here we can croak because all C++ objects have been destroyed
-  croak_sv(error);
-  return NULL;
-}
-
-
-Emitter::Emitter(pTHX_ pMY_CXT_ CV *_cv, AV *_ops) :
-  cv(_cv), ops(_ops),
-  module(MY_CXT.module), fpm(MY_CXT.fpm),
-  execution_engine(MY_CXT.engine),
-  pa(*MY_CXT.pa)
-{
-  SET_CXT_MEMBER;
-  SET_THX_MEMBER;
-}
-
-Emitter::Emitter(pTHX_ pMY_CXT_ const Emitter &other) :
-  cv(other.cv), ops(other.ops),
-  module(other.module), fpm(other.fpm),
-  execution_engine(other.execution_engine),
-  pa(other.pa)
-{
-  SET_CXT_MEMBER;
-  SET_THX_MEMBER;
-}
-
-Emitter::~Emitter()
-{
-}
-
-bool
-Emitter::process_jit_candidates(const std::vector<Term *> &asts)
-{
-  std::deque<Term *> queue(asts.begin(), asts.end());
-
-  error_message.clear();
-  while (queue.size()) {
-    Term *ast = queue.front();
-
-    queue.pop_front();
-
-    switch (ast->get_type()) {
-    case pj_ttype_lexical:
-    case pj_ttype_variabledeclaration:
-    case pj_ttype_global:
-    case pj_ttype_constant:
-      continue;
-    case pj_ttype_statementsequence: {
-      const std::vector<Term *> &kids = ast->get_kids();
-      std::vector<Term *> seq;
-
-      for (size_t i = 0, max = kids.size(); i < max; ++i) {
-        Term *stmt = kids[i];
-
-        if (is_jittable(stmt)) {
-          seq.push_back(static_cast<Statement *>(stmt));
-        } else {
-          if (seq.size()) {
-            if (!jit_statement_sequence(seq))
-              return false;
-            seq.clear();
-          }
-
-          if (!process_jit_candidates(stmt->get_kids()))
-            return false;
-        }
-      }
-
-      if (seq.size())
-        if (!jit_statement_sequence(seq))
-          return false;
-
-      break;
-    }
-    default:
-      if (is_jittable(ast)) {
-        jit_tree(ast);
-      } else {
-        const std::vector<Term *> &kids = ast->get_kids();
-
-        queue.insert(queue.begin(), kids.begin(), kids.end());
-      }
-      break;
-    }
-  }
-
-  return true;
-}
-
-bool
-Emitter::jit_tree(Term *ast)
-{
-  std::vector<Term *> asts(1, ast);
-  OP *op = _jit_trees(asts);
-  if (!op)
-    return false;
-
-  replace_sequence(ast->first_op(), ast->last_op(), op, false);
-  return true;
-}
-
-
-bool
-Emitter::jit_statement_sequence(const std::vector<Term *> &asts)
-{
-  OP *op = _jit_trees(asts);
-  if (!op)
-    return false;
-
-  // this assumes all the ASTs are statements, and that all nextstate
-  // OPs have been detached
-  replace_sequence(static_cast<Statement *>(asts.front())->kids[0]->first_op(),
-                   static_cast<Statement *>(asts.back())->kids[0]->last_op(),
-                   op, false);
-
-  return true;
-}
-
-OP *
-Emitter::_jit_trees(const std::vector<Term *> &asts)
-{
-  Function *f = Function::Create(pa.ppaddr_type(), GlobalValue::ExternalLinkage, "", module);
-  BasicBlock *bb = BasicBlock::Create(module->getContext(), "entry", f);
-
-  pa.set_current_function(f);
-  MY_CXT.builder.SetInsertPoint(bb);
-
-  bool valid = true;
-  for (size_t i = 0, max = asts.size(); i < max && valid; ++i)
-    valid = valid && _jit_emit_root(asts[i]);
-
-  MY_CXT.builder.CreateRet(pa.emit_OP_op_next());
-
-  if (!valid) {
-    subtrees.clear();
-    return NULL;
-  }
-
-  // f->dump();
-  verifyFunction(*f);
-  fpm->run(*f);
-  // f->dump();
-
-  // here it'd be nice to use custom ops, but they are registered by
-  // PP function address; we could use a trampoline address (with
-  // just an extra jump, but then we'd need to store the pointer to the
-  // JITted function as an extra op member
-  OP *op;
-
-  if (subtrees.size()) {
-    ListOP *listop;
-    NewOp(4242, listop, 1, ListOP);
-    new (listop) ListOP();
-
-    listop->op_type = JIT_LIST_OP;
-    listop->op_flags = OPf_KIDS;
-    listop->op_first = listop->op_last = subtrees[0];
-    listop->execution_engine = execution_engine;
-
-    for (size_t i = 1, max = subtrees.size(); i < max; ++i) {
-      OP *sibling = subtrees[i];
-
-      listop->op_last->op_sibling = sibling;
-      listop->op_last = sibling;
-      sibling->op_sibling = NULL;
-    }
-
-    op = (OP *) listop;
-  } else {
-      ScalarOP *scalarop;
-      NewOp(4242, scalarop, 1, ScalarOP);
-      new (scalarop) ScalarOP();
-
-      scalarop->op_type = JIT_SCALAR_OP;
-      scalarop->execution_engine = execution_engine;
-
-      op = (OP *) scalarop;
-  }
-
-  MUTEX_LOCK(jit_ops_mutex);
-  jit_ops.insert(op);
-  MUTEX_UNLOCK(jit_ops_mutex);
-
-  op->op_ppaddr = (OP *(*)(pTHX)) execution_engine->getPointerToFunction(f);
-  op->op_targ = asts.back()->get_perl_op()->op_targ;
-
-  subtrees.clear();
-
-  return op;
-}
-
-bool
-Emitter::_jit_emit_root(Term *ast)
-{
-  EmitValue jv = _jit_emit(ast, ast->get_perl_op()->op_targ ? &ANY_T : &SCALAR_T);
-
-  if (jv.is_invalid())
-    return false;
-  if (jv.value)
-    return _jit_emit_return(ast, ast->context(), jv.value, jv.type);
-}
-
-EmitValue
-Emitter::_jit_emit(Term *ast, const PerlJIT::AST::Type *type)
-{
-  switch (ast->get_type()) {
-  case pj_ttype_constant:
-    return _jit_emit_const(static_cast<PerlJIT::AST::Constant *>(ast), type);
-  case pj_ttype_lexical:
-    return _jit_get_lexical_sv(static_cast<Lexical *>(ast));
-  case pj_ttype_variabledeclaration:
-    return _jit_get_lexical_declaration_sv(static_cast<VariableDeclaration *>(ast));
-  case pj_ttype_op:
-    if (is_jittable(ast))
-      return _jit_emit_op(static_cast<Op *>(ast), type);
-    else
-      return _jit_emit_optree_jit_kids(ast, type);
-  default:
-    return _jit_emit_optree_jit_kids(ast, type);
-  }
-}
-
-EmitValue
-Emitter::_jit_emit_op(Op *ast, const PerlJIT::AST::Type *type)
-{
-  switch (ast->op_class()) {
-  case pj_opc_binop:
-    return _jit_emit_binop(static_cast<Binop *>(ast), type);
-  default:
-    return _jit_emit_optree_jit_kids(ast, type);
-  }
-}
-
-EmitValue
-Emitter::_jit_emit_optree_jit_kids(Term *ast, const PerlJIT::AST::Type *type)
-{
-  Emitter emitter(aTHX_ aMY_CXT_ *this);
-
-  if (!emitter.process_jit_candidates(ast->get_kids()))
-    return EmitValue::invalid();
-  return _jit_emit_optree(ast);
-}
-
-bool
-Emitter::is_jittable(PerlJIT::AST::Term *ast)
-{
-  switch (ast->get_type()) {
-  case pj_ttype_constant:
-  case pj_ttype_lexical:
-  case pj_ttype_variabledeclaration:
-    return true;
-  case pj_ttype_optree:
-    return false;
-  case pj_ttype_statement:
-    return is_jittable(static_cast<PerlJIT::AST::Statement *>(ast)->kids[0]);
-  case pj_ttype_statementsequence: {
-    std::vector<Term *> all = ast->get_kids();
-    unsigned int jittable = 0;
-
-    for (size_t i = 0, max = all.size(); i < max; ++i)
-      jittable += is_jittable(all[i]);
-
-    // TODO arbitrary threshold, it's probably better to look for
-    //      long stretches of JITtable ops
-    return jittable * 2 >= all.size();
-
-  }
-  case pj_ttype_op: {
-    Op *op = static_cast<Op *>(ast);
-    bool known = Jittable_Ops.find(op->get_op_type()) != Jittable_Ops.end();
-
-    if (!known)
-      return false;
-    if (op->may_have_explicit_overload())
-      return true;
-    if (op->op_class() == pj_opc_binop &&
-        static_cast<Binop *>(op)->is_synthesized_assignment())
-      return is_jittable(op->kids[1]);
-    return !needs_excessive_magic(op);
-  }
-  default:
-    return false;
-  }
-}
-
-bool
-Emitter::needs_excessive_magic(PerlJIT::AST::Op *ast)
-{
-  std::deque<Term *> nodes(1, ast);
-
-  while (nodes.size()) {
-    Term *node = nodes.front();
-    nodes.pop_front();
-
-    if ((node->get_type() == pj_ttype_lexical || node->get_type() == pj_ttype_variabledeclaration) &&
-            node->get_value_type()->is_opaque())
-      return true;
-
-    if (node->get_type() != pj_ttype_op)
-      continue;
-    Op *op = static_cast<Op *>(node);
-
-    bool known = Jittable_Ops.find(op->get_op_type()) != Jittable_Ops.end();
-
-    if (!known || !op->may_have_explicit_overload())
-      continue;
-
-    std::vector<Term *> kids = node->get_kids();
-    nodes.insert(nodes.end(), kids.begin(), kids.end());
-  }
-
-  return false;
-}
-
-void
-Emitter::_jit_clear_op_next(OP *op)
+static void
+_jit_clear_op_next(OP *op)
 {
   // in most cases, the exit point for an optree is the op_next
   // pointer of the root op, but conditional operators have interesting
@@ -523,14 +188,291 @@ Emitter::_jit_clear_op_next(OP *op)
   }
 }
 
-EmitValue
-Emitter::_jit_emit_optree(Term *ast)
+void
+PerlJIT::pj_jit_sub(SV *coderef)
 {
+  dTHX;
+  dMY_CXT;
+  SV *error = NULL;
+
+  MY_CXT.create_module();
+
+  {
+    std::vector<Term *> asts = pj_find_jit_candidates(aTHX_ coderef);
+    Emitter emitter(aTHX_ aMY_CXT_ (CV *)SvRV(coderef));
+
+    if (emitter.process_jit_candidates(asts))
+      return;
+
+    std::string error_message = emitter.error();
+    error = sv_2mortal(newSVpv(error_message.c_str(), error_message.size()));
+  }
+
+  // here we can croak because all C++ objects have been destroyed
+  croak_sv(error);
+}
+
+
+bool
+Emitter::FunctionState::empty()
+{
+  return function->empty() || (
+    function->size() == 1 && function->front().empty()
+  );
+}
+
+Emitter::Emitter(pTHX_ pMY_CXT_ CV *_cv) :
+  cv(_cv),
+  module(MY_CXT.module), fpm(MY_CXT.fpm),
+  execution_engine(MY_CXT.engine),
+  pa(*MY_CXT.pa)
+{
+  SET_CXT_MEMBER;
+  SET_THX_MEMBER;
+}
+
+Emitter::Emitter(pTHX_ pMY_CXT_ const Emitter &other) :
+  cv(other.cv),
+  module(other.module), fpm(other.fpm),
+  execution_engine(other.execution_engine),
+  pa(other.pa)
+{
+  SET_CXT_MEMBER;
+  SET_THX_MEMBER;
+}
+
+Emitter::~Emitter()
+{
+}
+
+bool
+Emitter::process_jit_candidates(const std::vector<Term *> &asts)
+{
+  std::deque<Term *> queue(asts.begin(), asts.end());
+
+  _push_empty_function();
+
+  error_message.clear();
+  while (queue.size()) {
+    Term *ast = queue.front();
+
+    queue.pop_front();
+
+    switch (ast->get_type()) {
+    case pj_ttype_lexical:
+    case pj_ttype_variabledeclaration:
+    case pj_ttype_global:
+    case pj_ttype_constant:
+      continue;
+    case pj_ttype_statementsequence: {
+      const std::vector<Term *> &kids = ast->get_kids();
+      Statement *first = NULL, *last = NULL;
+      EmitValue last_value;
+
+      for (size_t i = 0, max = kids.size(); i < max; ++i) {
+        Statement *stmt = static_cast<Statement *>(kids[i]);
+        EmitValue result = run(PerlJIT::CodegenNode(stmt));
+
+        if (result.value == OPTREE && first) {
+          _emit_current_function_and_push_empty(first, last, last_value);
+          first = last = NULL;
+        }
+        if (result.value != OPTREE) {
+          if (!first)
+            first = stmt;
+          last = stmt;
+          last_value = result;
+        }
+      }
+
+      if (last)
+        _emit_current_function_and_push_empty(first, last, last_value);
+    }
+      break;
+    default: {
+      EmitValue result = run(PerlJIT::CodegenNode(ast));
+
+      if (result.value != OPTREE)
+        _emit_current_function_and_push_empty(ast, ast, result);
+    }
+      break;
+    }
+  }
+
+  _pop_empty_function();
+
+  return true;
+}
+
+void
+Emitter::_emit_current_function_and_push_empty(Term *first, Term *last, const EmitValue &value)
+{
+  OP *op = _replace_with_clean_emitter_state(last, value);
+  if (!op)
+    return;
+  if (first->get_type() == pj_ttype_statement &&
+      last->get_type() == pj_ttype_statement) {
+    replace_sequence(static_cast<Statement *>(first)->kids[0]->first_op(),
+                     static_cast<Statement *>(last)->kids[0]->last_op(),
+                     op, KEEP_TARGETS|KEEP_OP_NEXT);
+  } else {
+    replace_sequence(first->first_op(),
+                     last->last_op(),
+                     op, KEEP_TARGETS|KEEP_OP_NEXT);
+  }
+}
+
+OP *
+Emitter::_replace_with_clean_emitter_state(Term *root, const EmitValue &value)
+{
+  if (emitter_states.back().empty())
+    return NULL;
+  OP *op = _generate_current_function(root, value);
+  if (!op)
+    return NULL;
+  _push_empty_function();
+  return op;
+}
+
+OP *
+Emitter::_generate_current_function(Term *root, const EmitValue &value)
+{
+  _jit_emit_return(root, root->context(), value.value, value.type);
+
+  FunctionState &last = emitter_states.back();
+  llvm::Function *f = last.function;
+
+  MY_CXT.builder.CreateRet(pa.emit_OP_op_next());
+
+  // f->dump();
+  verifyFunction(*f);
+  fpm->run(*f);
+  // f->dump();
+
+  // here it'd be nice to use custom ops, but they are registered by
+  // PP function address; we could use a trampoline address (with
+  // just an extra jump, but then we'd need to store the pointer to the
+  // JITted function as an extra op member
+  OP *op, *op_next = _jit_find_op_next(root->get_perl_op());
+
+  if (last.subtrees.size()) {
+    ListOP *listop;
+    NewOp(4242, listop, 1, ListOP);
+    new (listop) ListOP();
+
+    detach_tree(last.subtrees[0], KEEP_OPS);
+    _jit_clear_op_next(last.subtrees[0]);
+
+    listop->op_type = JIT_LIST_OP;
+    listop->op_flags = OPf_KIDS;
+    listop->op_first = listop->op_last = last.subtrees[0];
+    listop->execution_engine = execution_engine;
+
+    for (size_t i = 1, max = last.subtrees.size(); i < max; ++i) {
+      OP *sibling = last.subtrees[i];
+
+      detach_tree(sibling, KEEP_OPS);
+      _jit_clear_op_next(sibling);
+
+      listop->op_last->op_sibling = sibling;
+      listop->op_last = sibling;
+      sibling->op_sibling = NULL;
+    }
+
+    op = (OP *) listop;
+  } else {
+      ScalarOP *scalarop;
+      NewOp(4242, scalarop, 1, ScalarOP);
+      new (scalarop) ScalarOP();
+
+      scalarop->op_type = JIT_SCALAR_OP;
+      scalarop->execution_engine = execution_engine;
+
+      op = (OP *) scalarop;
+  }
+
+  MUTEX_LOCK(jit_ops_mutex);
+  jit_ops.insert(op);
+  MUTEX_UNLOCK(jit_ops_mutex);
+
+  op->op_ppaddr = (OP *(*)(pTHX)) execution_engine->getPointerToFunction(f);
+  op->op_targ = root->get_perl_op()->op_targ;
+  op->op_next = op_next;
+
+  emitter_states.pop_back();
+  pa.set_current_function(emitter_states.back().function);
+  MY_CXT.builder.SetInsertPoint(emitter_states.back().insertion_point);
+
+  return op;
+}
+
+void
+Emitter::_push_empty_function()
+{
+  if (emitter_states.size()) {
+    emitter_states.back().insertion_point = MY_CXT.builder.GetInsertBlock();
+  }
+  Function *f = Function::Create(pa.ppaddr_type(), GlobalValue::ExternalLinkage, "", module);
+  BasicBlock *bb = BasicBlock::Create(module->getContext(), "entry", f);
+
+  pa.set_current_function(f);
+  MY_CXT.builder.SetInsertPoint(bb);
+
+  emitter_states.push_back(FunctionState());
+  emitter_states.back().function = f;
+  emitter_states.back().insertion_point = bb;
+}
+
+void
+Emitter::_pop_empty_function()
+{
+  emitter_states.back().function->eraseFromParent();
+  emitter_states.pop_back();
+  if (emitter_states.size()) {
+    pa.set_current_function(emitter_states.back().function);
+    MY_CXT.builder.SetInsertPoint(emitter_states.back().insertion_point);
+  }
+}
+
+bool
+Emitter::_jit_emit_optree_args(State *state)
+{
+  _push_empty_function();
+
+  for (int i = 0; i < state->args.size(); ++i) {
+    State *arg = state->args[i];
+    reduce(arg);
+    if (arg->result.is_invalid())
+      return false;
+    if (arg->result.value != OPTREE) {
+      _emit_current_function_and_push_empty(arg->node.term, arg->node.term, arg->result);
+    }
+  }
+
+  _pop_empty_function();
+
+  return true;
+}
+
+EmitValue
+Emitter::_jit_emit_root_optree(State *state)
+{
+  if (!_jit_emit_optree_args(state))
+    return EmitValue::invalid();
+
+  return EmitValue(OPTREE, &SCALAR_T);
+}
+
+EmitValue
+Emitter::_jit_emit_optree(State *state)
+{
+  if (!_jit_emit_optree_args(state))
+    return EmitValue::invalid();
+
+  Term *ast = state->node.term;
   // unfortunately there is (currently) no way to clone an optree,
   // so just detach the ops from the root tree
-  detach_tree(ast->get_perl_op(), true);
-  _jit_clear_op_next(ast->get_perl_op());
-  subtrees.push_back(ast->get_perl_op());
+  emitter_states.back().subtrees.push_back(ast->get_perl_op());
 
   pa.emit_call_runloop(ast->start_op());
 
@@ -542,10 +484,28 @@ Emitter::_jit_emit_optree(Term *ast)
     return EmitValue(NULL, NULL);
 
   pa.alloc_sp();
+  pa.emit_SPAGAIN();
   llvm::Value *res = pa.emit_POPs();
   pa.emit_PUTBACK();
 
   return EmitValue(res, &SCALAR_T);
+}
+
+OP *
+Emitter::_jit_find_op_next(OP *op)
+{
+  // in most cases, the exit point for an optree is the op_next
+  // pointer of the root op, but conditional operators have interesting
+  // control flows
+  switch (op->op_type) {
+  case OP_COND_EXPR: {
+    LOGOP *logop = cLOGOPx(op);
+
+    return _jit_find_op_next(logop->op_first->op_sibling);
+  }
+  default:
+    return op->op_next;
+  }
 }
 
 bool
@@ -554,7 +514,6 @@ Emitter::_jit_emit_return(Term *ast, pj_op_context context, Value *value, const 
   // TODO OPs with OPpTARGET_MY flag are in scalar context even when
   // they should be in void context, so we're emitting an useless push
   // below
-
   if (context == pj_context_caller) {
     set_error("Caller-determined context not implemented");
     return false;
@@ -591,12 +550,14 @@ Emitter::_jit_emit_return(Term *ast, pj_op_context context, Value *value, const 
       }
     }
   }
+    break;
   case pj_opc_unop:
     if (!op->get_perl_op()->op_targ) {
       set_error("Unary OP without target");
       return false;
     }
     res = pa.emit_OP_targ();
+    break;
   default:
     res = pa.emit_sv_newmortal();
     break;
@@ -615,17 +576,23 @@ Emitter::_jit_emit_return(Term *ast, pj_op_context context, Value *value, const 
 }
 
 EmitValue
-Emitter::_jit_emit_binop(Binop *ast, const PerlJIT::AST::Type *type)
+Emitter::_jit_emit_binop(Binop *ast, const EmitValue &lv, const EmitValue &rv, const PerlJIT::AST::Type *type)
 {
-  EmitValue lv = _jit_emit(ast->kids[0], &DOUBLE_T);
-  EmitValue rv = _jit_emit(ast->kids[1], &DOUBLE_T);
   Value *lvv = _to_nv_value(lv.value, lv.type),
         *rvv = _to_nv_value(rv.value, rv.type);
 
   if (!lvv || !rvv)
     return EmitValue::invalid();
 
-  Value *res = MY_CXT.builder.CreateFAdd(lvv, rvv);
+  Value *res = NULL;
+
+  switch (ast->get_op_type()) {
+  case pj_binop_add:
+    res = MY_CXT.builder.CreateFAdd(lvv, rvv);
+    break;
+  default:
+    return EmitValue::invalid();
+  }
 
   if (ast->is_assignment_form()) {
     // TODO proper LVALUE treatment
@@ -635,6 +602,7 @@ Emitter::_jit_emit_binop(Binop *ast, const PerlJIT::AST::Type *type)
     }
     if (!_jit_assign_sv(lv.value, res, &DOUBLE_T))
       return EmitValue::invalid();
+    res = lv.value;
   }
 
   return EmitValue(res, &DOUBLE_T);
@@ -705,9 +673,13 @@ Emitter::_to_nv_value(Value *value, const PerlJIT::AST::Type *type)
 {
   if (type->equals(&DOUBLE_T))
     return value;
-  if (type->is_integer())
+  if (type->is_integer()) {
     // TODO cache type
-    return MY_CXT.builder.CreateFPCast(value, llvm::Type::getDoubleTy(module->getContext()));
+    if (type->is_unsigned())
+      return MY_CXT.builder.CreateUIToFP(value, llvm::Type::getDoubleTy(module->getContext()));
+    else
+      return MY_CXT.builder.CreateSIToFP(value, llvm::Type::getDoubleTy(module->getContext()));
+  }
   if (type->equals(&SCALAR_T) || type->equals(&UNSPECIFIED_T))
     return pa.emit_SvNV(value);
 
@@ -734,29 +706,33 @@ Emitter::error() const
 }
 
 void
-Emitter::replace_sequence(OP *first, OP *last, OP *op, bool keep)
+Emitter::replace_sequence(OP *first, OP *last, OP *op, int flags)
 {
-  AV *item = newAV();
+  dSP;
 
-  av_push(item, newSVpvs("replace"));
-  av_push(item, newRV_inc((SV *) cv));
-  av_push(item, op_2sv(aTHX_ first));
-  av_push(item, op_2sv(aTHX_ last));
-  av_push(item, op_2sv(aTHX_ op));
-  av_push(item, keep ? &PL_sv_yes : &PL_sv_no);
+  PUSHMARK(SP);
+  EXTEND(SP, 5);
+  PUSHs(newRV_inc((SV *) cv));
+  PUSHs(op_2sv(aTHX_ first));
+  PUSHs(op_2sv(aTHX_ last));
+  PUSHs(op_2sv(aTHX_ op));
+  PUSHs(newSViv(flags));
+  PUTBACK;
 
-  av_push(ops, newRV_noinc((SV *) item));
+  call_pv("B::Replace::replace_sequence", G_VOID|G_DISCARD);
 }
 
 void
-Emitter::detach_tree(OP *op, bool keep)
+Emitter::detach_tree(OP *op, int flags)
 {
-  AV *item = newAV();
+  dSP;
 
-  av_push(item, newSVpvs("detach"));
-  av_push(item, newRV_inc((SV *) cv));
-  av_push(item, op_2sv(aTHX_ op));
-  av_push(item, keep ? &PL_sv_yes : &PL_sv_no);
+  PUSHMARK(SP);
+  EXTEND(SP, 3);
+  PUSHs(newRV_inc((SV *) cv));
+  PUSHs(op_2sv(aTHX_ op));
+  PUSHs(newSViv(flags));
+  PUTBACK;
 
-  av_push(ops, newRV_noinc((SV *) item));
+  call_pv("B::Replace::detach_tree", G_VOID|G_DISCARD);
 }

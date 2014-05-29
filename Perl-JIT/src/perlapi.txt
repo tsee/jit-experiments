@@ -51,5 +51,5 @@ SV **emit_PAD_SV_address(PADOFFSET index) (thx) {
 }
 
 void emit_save_clearsv(SV **svp) (thx) {
-    save_clearsv(svp);
+  save_clearsv(svp);
 }

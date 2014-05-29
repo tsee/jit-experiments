@@ -12,16 +12,7 @@ our %EXPORT_TAGS = ( all => \@EXPORT_OK );
 sub jit_sub {
     my ($sub) = @_;
 
-    my $ops = _jit_sub($sub);
-
-    # TODO add C API for B::Replace and remove this horror
-    for my $op (@$ops) {
-        if (shift @$op eq 'replace') {
-            B::Replace::replace_sequence(@$op);
-        } else {
-            B::Replace::detach_tree(@$op);
-        }
-    }
+    _jit_sub($sub);
 }
 
 sub concise_dump {

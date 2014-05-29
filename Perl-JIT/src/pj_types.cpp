@@ -218,6 +218,11 @@ bool Scalar::is_integer() const
   return (_tag == pj_int_type || _tag == pj_uint_type);
 }
 
+bool Scalar::is_unsigned() const
+{
+  return _tag == pj_uint_type;
+}
+
 bool Scalar::is_numeric() const
 {
   return (   _tag == pj_int_type

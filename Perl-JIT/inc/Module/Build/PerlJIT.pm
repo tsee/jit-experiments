@@ -3,12 +3,14 @@ use 5.14.2;
 use warnings;
 use strict;
 use autodie qw(open);
+use lib '../Algorithm-Burs/lib';
 
 use Config;
 use Module::Build;
 use parent 'Module::Build::WithXSpp';
 
 use Module::Build::LLVM qw(create_function_declaration create_emitter_class);
+use Module::Build::Codegen qw(create_codegen_class);
 
 sub new {
     my ($class, %args) = @_;
@@ -64,6 +66,7 @@ sub ACTION_code {
     my ($self) = shift;
 
     $self->depends_on('perlapi');
+    $self->depends_on('codegen');
     $self->SUPER::ACTION_code(@_);
 }
 
@@ -94,6 +97,18 @@ sub ACTION_perlapi {
     create_emitter_class(
         \@prototypes, ['PerlJIT'], 'PerlAPIBase',
         'src/pj_perlapibase.h', 'src/pj_perlapibase.cpp',
+    );
+}
+
+sub ACTION_codegen {
+    my ($self) = @_;
+
+    $self->add_to_cleanup(
+        'src/pj_codegen.h', 'src/pj_codegen.cpp', 'src/pj_rules.cpp',
+    );
+    create_codegen_class(
+        'Codegen', 'Emitter',
+        'src/pj_codegen.h', 'src/pj_codegen.cpp', 'src/pj_rules.cpp',
     );
 }
 
