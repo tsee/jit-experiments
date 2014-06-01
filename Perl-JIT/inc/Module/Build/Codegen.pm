@@ -63,6 +63,7 @@ sub _format_code {
         my $in = $arg . '->node';
         my $out = $arg . '->result';
 
+        $code =~ s{__\(\s*\Q$name\E\s*\)}{$arg}g;
         $code =~ s{_\(\s*\Q$name\E\s*\)}{$out}g;
         $code =~ s{\Q$name\E}{$in}g;
     }
@@ -94,6 +95,7 @@ sub _parse_rules {
             push @rules, $rule;
             $names{$1} = 1;
         } elsif ($tag eq 'match' || $tag eq 'delay' || $tag eq 'emit_llvm' || $tag eq 'weight') {
+            $value =~ s{\A\s+}{}; $value =~ s{\s+\z}{};
             push @{$rule->{tags}{$tag}}, $value;
         } else {
             die "Unhandled tag '$tag'";
@@ -102,12 +104,12 @@ sub _parse_rules {
 
     for my $rule (@rules) {
         my $tags = delete $rule->{tags};
-        for my $value (@{$tags->{match}}) {
-            push @{$rule->{match}}, _parse_match(\%names, \%constants, $value);
-        }
         if ($tags->{delay}) {
             die "Multiple 'delay' tags in rule" if @{$tags->{delay}} > 1;
             $rule->{delay} = _parse_delay($tags->{delay}->[0]);
+        }
+        for my $value (@{$tags->{match}}) {
+            push @{$rule->{match}}, _parse_match(\%names, \%constants, $rule->{delay}, $value);
         }
         if ($tags->{weight}) {
             die "Multiple 'weight' tags in rule" if @{$tags->{weight}} > 1;
@@ -128,50 +130,61 @@ sub _parse_rules {
 }
 
 sub _parse_match {
-    my ($names, $constants, $value) = @_;
+    my ($names, $constants, $delay, $value) = @_;
     my (@rules, @consts, %args);
 
     if ($value =~ m{^\s*(\w+)\s*$} && exists $names->{$1}) {
         return {
-            rule => $1,
+            rule => { delay => 0, match => $1 },
         };
     }
 
-    $rules[0] = [];
+    $rules[0] = { delay => 0, match => [] };
     my $orig_value = $value;
     while (length($value)) {
         $value =~ s{^\s+}{};
 
         if ($value =~ s{^\@\s+(\$\w+)\s*}{}) {
-            $args{$1} = [map $#{$rules[$_]}, 0..$#rules - 1];
+            $args{$1} = [map $#{$rules[$_]{match}}, 0..$#rules - 1];
         } elsif ($value =~ s{^\s*(\w+)\s*}{}) {
             my $name = $1;
             if (exists $names->{$name}) {
-                $rules[-1] = $name;
+                $rules[-1] = { delay => 0, match => $name };
             } else {
                 if ($name =~ /^pj_/) {
                     $constants->{$name} ||= "Const_$name";
                     $name = "Const_$name";
                 }
-                $rules[-1][0] = $name;
+                $rules[-1]{match}[0] = $name;
 
                 if ($value =~ s{^\(\s*}{}) {
-                    push @rules, [];
+                    push @rules, { delay => 0, match => [] };
                 }
             }
         } elsif ($value =~ s{^\)\s*}{}) {
             die "Too many closed parentheses" if @rules == 1;
             my $rule = pop @rules;
-            push @{$rules[-1]}, $rule;
+            push @{$rules[-1]{match}}, $rule;
         } elsif ($value =~ s{^,\s*}{}) {
             my $rule = pop @rules;
-            push @{$rules[-1]}, $rule;
-            push @rules, [];
+            push @{$rules[-1]{match}}, $rule;
+            push @rules, { delay => 0, match => [] };
         } else {
             die "Error parsing match '$orig_value' near '$value'";
         }
     }
     die "Missing closing parenthesis" if @rules > 1;
+
+    for my $arg (keys %args) {
+        next unless $delay && ($delay->{'*'} || $delay->{$arg});
+        my $path = $args{$arg};
+        next unless @$path; # root expression is always delayed
+        my $expr = $rules[0];
+        for my $index (@$path) {
+            $expr = $expr->{match}[$index + 1];
+        }
+        $expr->{delay} = 1;
+    }
 
     return {
         rule    => $rules[0],
@@ -183,9 +196,13 @@ sub _parse_delay {
     my ($value) = @_;
     my @args = split /\s*,\s*/, $value;
 
-    # TODO check syntax sanity
+    return { '*' => 1 } if grep $_ eq '*', @args;
 
-    return \@args;
+    for my $arg (@args) {
+        die "Invalid delayed variable '$arg'" unless $arg =~ /^\$\w+/;
+    }
+
+    return { map { $_ => 1 } @args };
 }
 
 sub _add_rules {

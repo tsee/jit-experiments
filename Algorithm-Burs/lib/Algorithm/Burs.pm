@@ -74,38 +74,41 @@ sub functors {
 
 sub add_rule {
     my ($self, $weight, $label, $rule) = @_;
+    my $match = $rule->{match};
     my $label_id = $self->add_tag($label);
 
-    if (ref $rule) {
-        my $functor_id = $self->add_functor($rule->[0], @$rule - 1);
+    if (ref $match) {
+        my $functor_id = $self->add_functor($match->[0], @$match - 1);
         my $arg_ids;
 
-        for (my $i = 1; $i < @$rule; ++$i) {
-            my $arg = $rule->[$i];
+        for (my $i = 1; $i < @$match; ++$i) {
+            my $arg = $match->[$i];
+            my $match_arg = $arg->{match};
 
-            if (ref $arg) {
+            if (ref $match_arg) {
                 # add synthesized functor rule
                 my $label = $self->_add_normalized_rule($arg);
                 push @$arg_ids, $self->add_tag($label);
             } else {
-                push @$arg_ids, $self->add_tag($arg);
+                push @$arg_ids, $self->add_tag($match_arg);
             }
         }
 
-        return $self->add_functor_rule($label_id, $functor_id, $arg_ids, $weight);
+        return $self->add_functor_rule($label_id, $functor_id, $arg_ids, $weight, $rule);
     } else {
-        my $nt_id = $self->add_tag($rule);
+        my $nt_id = $self->add_tag($match);
 
-        return $self->add_chain_rule($label_id, $nt_id, $weight);
+        return $self->add_chain_rule($label_id, $nt_id, $weight, $rule);
     }
 }
 
 sub _add_normalized_rule {
     my ($self, $rule) = @_;
-    my @labels = ($rule->[0]);
+    my $match = $rule->{match};
+    my @labels = ($match->[0]);
 
-    for (my $i = 1; $i < @$rule; ++$i) {
-        my $arg = $rule->[$i];
+    for (my $i = 1; $i < @$match; ++$i) {
+        my $arg = $match->[$i];
 
         if (ref $arg) {
             push @labels, $self->_add_normalized_rule($arg);
@@ -121,7 +124,7 @@ sub _add_normalized_rule {
 }
 
 sub add_functor_rule {
-    my ($self, $label, $functor, $args, $weight) = @_;
+    my ($self, $label, $functor, $args, $weight, $rule) = @_;
     my $id = @{$self->{rules}};
 
     push @{$self->{rules}}, {
@@ -130,6 +133,7 @@ sub add_functor_rule {
         weight  => $weight // 0,
         functor => $functor,
         args    => $args,
+        rule    => $rule,
     };
     push @{$self->{func_rules}}, $id;
 
@@ -137,7 +141,7 @@ sub add_functor_rule {
 }
 
 sub add_chain_rule {
-    my ($self, $label, $label_to, $weight) = @_;
+    my ($self, $label, $label_to, $weight, $rule) = @_;
     my $id = @{$self->{rules}};
 
     push @{$self->{rules}}, {
@@ -145,6 +149,7 @@ sub add_chain_rule {
         from    => $label,
         weight  => $weight // 0,
         to      => $label_to,
+        rule    => $rule,
     };
     push @{$self->{chain_rules}}, $id;
 

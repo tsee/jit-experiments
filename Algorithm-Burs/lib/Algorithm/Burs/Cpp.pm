@@ -21,7 +21,7 @@ public:
 $RESULT_TYPE
 protected:
     struct State {
-        int label, arity;
+        int label, tag, arity;
         std::vector<State *> args;
         $NODE_TYPE node;
         Result result;
@@ -58,6 +58,8 @@ my $TEMPLATE_CPP = <<'EOT';
 #include <cstdlib>
 
 #define COUNT(A) (sizeof(A) / sizeof((A)[0]))
+#define RULE_DELAY 0x40000000
+#define RULE_MASK  0x3fffffff
 
 $IMPLEMENTATION_HEADER
 
@@ -90,6 +92,12 @@ namespace {
         Rule(int *_args, int count) :
             args(_args, _args + count)
         { }
+
+        bool
+        delay(int index) const
+        {
+            return args.at(index) & RULE_DELAY;
+        }
     };
 
     std::tr1::unordered_map<Label, RepState>
@@ -159,6 +167,7 @@ $NAME::label($NODE_TYPE node)
     FUNCTOR_$NAME_UC(node, (int *)&functor_id, &arity, &extra_arity);
     state->node = node;
     state->arity = arity;
+    state->tag = -1;
 
     labeled_states.push_back(state);
 
@@ -216,7 +225,7 @@ $NAME::label($NODE_TYPE node)
 void
 $NAME::reduce(State *state)
 {
-    reduce(state, $DEFAULT_LABEL);
+    reduce(state, state->tag == -1 ? $DEFAULT_LABEL : state->tag);
 }
 
 void
@@ -236,7 +245,9 @@ $NAME::reduce(State *state, int tag)
     for (int i = 0; i < rule.args.size(); ++i) {
         State *arg_state = state->args[i];
 
-        reduce(arg_state, rule.args.at(i));
+        arg_state->tag = rule.args.at(i) & RULE_MASK;
+        if (!rule.delay(i))
+            reduce(arg_state, arg_state->tag);
     }
 
     for (int i = 1; i < rule_ids.size(); ++i)
@@ -408,8 +419,15 @@ EOT
     for my $rule_id (0..$#$rules) {
         my $rule = $rules->[$rule_id];
         if ($rule->{type} eq 'functor' && $rule->{args}) {
+            my @ids;
+            for my $i (0..$#{$rule->{args}}) {
+                push @ids, $rule->{args}[$i];
+                if ($rule->{rule}{match}[$i + 1]{delay}) {
+                    $ids[-1] .= ' | RULE_DELAY';
+                }
+            }
             my $data = sprintf "_rule_args_%d", $rule_id;
-            $init_data .= sprintf "int %s[] = {%s};\n", $data, join(", ", @{$rule->{args}});
+            $init_data .= sprintf "int %s[] = {%s};\n", $data, join(", ", @ids);
             $init_code .= sprintf "rules.insert(std::make_pair(%d, Rule(%s, COUNT(%s))));\n", $rule_id, $data, $data;
         } else {
             $init_code .= sprintf "rules.insert(std::make_pair(%d, Rule(NULL, 0)));\n", $rule_id;
