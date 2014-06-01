@@ -93,7 +93,7 @@ sub _parse_rules {
             $rule = { name => $1, tags => {} };
             push @rules, $rule;
             $names{$1} = 1;
-        } elsif ($tag eq 'match' || $tag eq 'delay' || $tag eq 'emit_llvm') {
+        } elsif ($tag eq 'match' || $tag eq 'delay' || $tag eq 'emit_llvm' || $tag eq 'weight') {
             push @{$rule->{tags}{$tag}}, $value;
         } else {
             die "Unhandled tag '$tag'";
@@ -108,6 +108,10 @@ sub _parse_rules {
         if ($tags->{delay}) {
             die "Multiple 'delay' tags in rule" if @{$tags->{delay}} > 1;
             $rule->{delay} = _parse_delay($tags->{delay}->[0]);
+        }
+        if ($tags->{weight}) {
+            die "Multiple 'weight' tags in rule" if @{$tags->{weight}} > 1;
+            die "Weight must be a non-negative integer" unless $tags->{weight}[0] =~ /^[0-9]+$/;
         }
         if ($tags->{emit_llvm}) {
             die "Multiple 'emit_llvm' tags in rule" if @{$tags->{emit_llvm}} > 1;
