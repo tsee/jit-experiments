@@ -5,6 +5,8 @@
 using namespace PerlJIT::AST;
 using namespace PerlJIT;
 
+#define PJ_ABORT(msg) { fprintf(stderr, msg); abort(); }
+
 CodegenNode
 PerlJIT::map_codegen_arg(CodegenNode node, int functor_id, int index)
 {
@@ -45,7 +47,7 @@ PerlJIT::map_codegen_arg(CodegenNode node, int functor_id, int index)
     return CodegenNode(kids[index]);
   }
   default:
-    abort();
+    PJ_ABORT("Missing mapping in map_codegen_arg\n");
   }
 }
 
@@ -81,7 +83,7 @@ PerlJIT::map_codegen_functor(CodegenNode node, int *functor_id, int *arity, int 
       FUNCTOR(Codegen::TypeOpaque, 0);
     }
 
-    abort();
+    PJ_ABORT("Missing mapping for type in map_codegen_functor\n");
   } else if (node.value_kind == CodegenNode::TERM) {
     PerlJIT::AST::Term *ast = node.term;
 
@@ -107,5 +109,5 @@ PerlJIT::map_codegen_functor(CodegenNode node, int *functor_id, int *arity, int 
     }
   }
 
-  abort();
+  PJ_ABORT("Reached the bottom of map_codegen_functor, this should not happen\n");
 }

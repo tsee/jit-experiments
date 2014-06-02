@@ -61,6 +61,10 @@ my $TEMPLATE_CPP = <<'EOT';
 #define RULE_DELAY 0x40000000
 #define RULE_MASK  0x3fffffff
 
+#define PJ_ABORT(msg) { fprintf(stderr, msg); abort(); }
+#define PJ_ABORT1(msg, arg1) { fprintf(stderr, msg, arg1); abort(); }
+#define PJ_ABORT2(msg, arg1, arg2) { fprintf(stderr, msg, arg1, arg2); abort(); }
+
 $IMPLEMENTATION_HEADER
 
 namespace std { namespace tr1 {
@@ -182,7 +186,7 @@ $NAME::label($NODE_TYPE node)
             const StateMap &state_map = op_map[i];
             StateMap::const_iterator rep_state = state_map.find(arg_state->label);
             if (rep_state == state_map.end())
-                abort();
+                PJ_ABORT1("Could not find representative state for %d\n", arg_state->label);
 
             state->args.push_back(arg_state);
             arg_labels.push_back(rep_state->second);
@@ -200,7 +204,7 @@ $NAME::label($NODE_TYPE node)
         }
 
         if (state->label == -1)
-            std::abort();
+            PJ_ABORT("Could not find a transition in the transition map\n");
 
         for (int i = arity; i < extra_arity; ++i) {
             State *arg_state = label(ARG_$NAME_UC(node, i));
@@ -234,12 +238,12 @@ $NAME::reduce(State *state, int tag)
     const RuleMap &rule_map = states[state->label];
     RuleMap::const_iterator rule_it = rule_map.find(tag);
     if (rule_it == rule_map.end())
-        abort();
+        PJ_ABORT2("Could not find a rule for label %d and tag %d\n", state->label, tag);
     const std::vector<int> &rule_ids = rule_it->second;
     int rule_id = rule_ids.front();
     std::tr1::unordered_map<int, Rule>::iterator r = rules.find(rule_id);
     if (r == rules.end())
-        abort();
+        PJ_ABORT1("Could not find a rule object for rule id %d\n", rule_id);
     const Rule &rule = r->second;
 
     for (int i = 0; i < rule.args.size(); ++i) {
