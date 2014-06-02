@@ -25,5 +25,8 @@ Snippets::set_current_function(Function *_function)
 Value *
 Snippets::alloc_variable(llvm::Type *type, const Twine &name)
 {
-  return new AllocaInst(type, 0, name, &function->front().front());
+  if (function->front().size())
+    return new AllocaInst(type, 0, name, &function->front().front());
+  else
+    return new AllocaInst(type, 0, name, &function->front());
 }
