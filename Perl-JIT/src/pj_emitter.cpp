@@ -446,7 +446,7 @@ Emitter::_jit_emit_optree_args(State *state)
 {
   _push_empty_function();
 
-  for (int i = 0; i < state->args.size(); ++i) {
+  for (unsigned i = 0; i < state->args.size(); ++i) {
     State *arg = state->args[i];
     reduce(arg);
     if (arg->result.is_invalid())
@@ -604,10 +604,9 @@ Emitter::_jit_emit_unop(Unop *ast, const EmitValue &v, const PerlJIT::AST::Type 
   switch (ast->get_op_type()) {
   case pj_unop_perl_int:
     return EmitValue(_jit_emit_perl_int(vv), &INT_T);
-    break;
+  default:
+    return EmitValue::invalid();
   }
-
-  return EmitValue::invalid();
 }
 
 EmitValue

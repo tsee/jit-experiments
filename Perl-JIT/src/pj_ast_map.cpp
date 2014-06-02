@@ -49,6 +49,8 @@ PerlJIT::map_codegen_arg(CodegenNode node, int functor_id, int index)
   default:
     PJ_ABORT("Missing mapping in map_codegen_arg\n");
   }
+
+  PJ_ABORT("Reached the bottom of map_codegen_arg, this should not happen\n");
 }
 
 #define FUNCTOR(a, b) \

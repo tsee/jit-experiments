@@ -128,7 +128,7 @@ namespace {
 $INIT_DATA
     struct Init$NAME {
         Init$NAME() {
-            for (int i = 0; i < COUNT(_leaves_map); i += 2)
+            for (unsigned i = 0; i < COUNT(_leaves_map); i += 2)
                 leaves_map[Functor(_leaves_map[i])] = _leaves_map[i + 1];
 
 $INIT_CODE
@@ -194,7 +194,7 @@ $NAME::label($NODE_TYPE node)
 
         // TODO use a lookup table
         state->label = -1;
-        for (int i = 0; i < transitions.size(); ++i) {
+        for (unsigned i = 0; i < transitions.size(); ++i) {
             const Transition &transition = transitions[i];
 
             if (transition.arg_labels == arg_labels) {
@@ -246,7 +246,7 @@ $NAME::reduce(State *state, int tag)
         PJ_ABORT1("Could not find a rule object for rule id %d\n", rule_id);
     const Rule &rule = r->second;
 
-    for (int i = 0; i < rule.args.size(); ++i) {
+    for (unsigned i = 0; i < rule.args.size(); ++i) {
         State *arg_state = state->args[i];
 
         arg_state->tag = rule.args.at(i) & RULE_MASK;
@@ -254,7 +254,7 @@ $NAME::reduce(State *state, int tag)
             reduce(arg_state, arg_state->tag);
     }
 
-    for (int i = 1; i < rule_ids.size(); ++i)
+    for (unsigned i = 1; i < rule_ids.size(); ++i)
         reduce_action(state, rule_ids.at(i));
 }
 

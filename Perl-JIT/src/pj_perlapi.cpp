@@ -112,7 +112,7 @@ PerlAPI::function_type(llvm::Type *ret, ...)
   va_start(args, ret);
   std::vector<llvm::Type *> types;
 
-  for (llvm::Type *t; t = va_arg(args, llvm::Type*); )
+  for (llvm::Type *t; (t = va_arg(args, llvm::Type*)); )
     types.push_back(t);
 
   va_end(args);

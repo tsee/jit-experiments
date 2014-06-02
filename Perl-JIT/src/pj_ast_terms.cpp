@@ -412,6 +412,8 @@ S_sigil_character(pj_variable_sigil sigil)
     return '%';
   case pj_sigil_glob:
     return '*';
+  case pj_sigil_code:
+    return '&';
   }
   abort();
   return '\0';
