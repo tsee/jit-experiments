@@ -210,7 +210,7 @@ bool Scalar::is_opaque() const
 
 bool Scalar::is_xv() const
 {
-  return (_tag == pj_scalar_type || _tag == pj_gv_type);
+  return (_tag == pj_scalar_type || _tag == pj_gv_type || _tag == pj_opaque_type);
 }
 
 bool Scalar::is_integer() const
