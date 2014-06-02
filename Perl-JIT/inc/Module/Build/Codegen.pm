@@ -27,8 +27,8 @@ EOT
     $burs->add_implementation_header(<<'EOT');
 #define ARG_CODEGEN(node, index) \
   PerlJIT::map_codegen_arg(node, functor_id, index)
-#define FUNCTOR_CODEGEN(node, functor_id, arity, extra_arity) \
-  PerlJIT::map_codegen_functor(node, functor_id, arity, extra_arity)
+#define FUNCTOR_CODEGEN(node) \
+  PerlJIT::map_codegen_functor(node)
 
 EOT
     $burs->add_rules_header(<<'EOT');
@@ -40,6 +40,7 @@ using namespace PerlJIT::AST;
 
 EOT
     $burs->set_node_type('PerlJIT::CodegenNode');
+    $burs->set_mapped_functor_type('PerlJIT::MappedFunctor');
     $burs->set_result_type('PerlJIT::EmitValue');
     $burs->set_root_label('RootExpr');
     $burs->set_default_label('RootExpr');
@@ -219,12 +220,12 @@ sub _add_rules {
     if (@unops) {
         $ast_map_ops .= join "\n",
             (map "      case $_:", @unops),
-                 "        FUNCTOR(Codegen::AstUnop, 2);\n";
+                 "        return MappedFunctor(Codegen::AstUnop, 2);\n";
     }
     if (@binops) {
         $ast_map_ops .= join "\n",
             (map "      case $_:", @binops),
-                 "        FUNCTOR(Codegen::AstBinop, 3);\n";
+                 "        return MappedFunctor(Codegen::AstBinop, 3);\n";
     }
 
     for my $rule (@$rules) {

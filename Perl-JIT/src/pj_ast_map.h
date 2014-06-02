@@ -36,8 +36,18 @@ namespace PerlJIT {
     { }
   };
 
+  struct MappedFunctor {
+    int functor_id;
+    int arity;
+    int extra_arity;
+
+    MappedFunctor(int _functor_id, int _arity, int _extra_arity = 0) :
+      functor_id(_functor_id), arity(_arity), extra_arity(_extra_arity)
+    { }
+  };
+
   CodegenNode map_codegen_arg(CodegenNode node, int functor_id, int index);
-  void map_codegen_functor(CodegenNode node, int *functor_id, int *arity, int *extra_arity);
+  MappedFunctor map_codegen_functor(CodegenNode node);
 }
 
 #endif // _PJ_AST_MAP

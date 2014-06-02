@@ -53,36 +53,24 @@ PerlJIT::map_codegen_arg(CodegenNode node, int functor_id, int index)
   PJ_ABORT("Reached the bottom of map_codegen_arg, this should not happen\n");
 }
 
-#define FUNCTOR(a, b) \
-  *functor_id = (a); \
-  *arity = (b); \
-  *extra_arity = 0; \
-  return
-
-#define FUNCTOR_ARITY(a, b, c)   \
-  *functor_id = (a); \
-  *arity = (b); \
-  *extra_arity = (c); \
-  return
-
-void
-PerlJIT::map_codegen_functor(CodegenNode node, int *functor_id, int *arity, int *extra_arity)
+MappedFunctor
+PerlJIT::map_codegen_functor(CodegenNode node)
 {
   if (node.value_kind == CodegenNode::VALUE) {
-    FUNCTOR(node.value, 0);
+    return MappedFunctor(node.value, 0);
   } else if (node.value_kind == CodegenNode::TYPE) {
     PerlJIT::AST::Type *type = node.type;
 
     if (type->equals(&DOUBLE_T)) {
-      FUNCTOR(Codegen::TypeDouble, 0);
+      return MappedFunctor(Codegen::TypeDouble, 0);
     } else if (type->equals(&INT_T)) {
-      FUNCTOR(Codegen::TypeInt, 0);
+      return MappedFunctor(Codegen::TypeInt, 0);
     } else if (type->equals(&UNSIGNED_INT_T)) {
-      FUNCTOR(Codegen::TypeUnsignedInt, 0);
+      return MappedFunctor(Codegen::TypeUnsignedInt, 0);
     } else if (type->equals(&UNSPECIFIED_T)) {
-      FUNCTOR(Codegen::TypeAny, 0);
+      return MappedFunctor(Codegen::TypeAny, 0);
     } else if (type->equals(&OPAQUE_T)) {
-      FUNCTOR(Codegen::TypeOpaque, 0);
+      return MappedFunctor(Codegen::TypeOpaque, 0);
     }
 
     PJ_ABORT("Missing mapping for type in map_codegen_functor\n");
@@ -91,11 +79,11 @@ PerlJIT::map_codegen_functor(CodegenNode node, int *functor_id, int *arity, int 
 
     switch (ast->get_type()) {
     case pj_ttype_constant:
-      FUNCTOR(Codegen::AstConst, 1);
+      return MappedFunctor(Codegen::AstConst, 1);
     case pj_ttype_lexical:
-      FUNCTOR(Codegen::AstLexical, 1);
+      return MappedFunctor(Codegen::AstLexical, 1);
     case pj_ttype_variabledeclaration:
-      FUNCTOR(Codegen::AstLexicalDeclaration, 1);
+      return MappedFunctor(Codegen::AstLexicalDeclaration, 1);
     case pj_ttype_op: {
       Op * op = static_cast<Op *>(ast);
 
@@ -103,11 +91,11 @@ PerlJIT::map_codegen_functor(CodegenNode node, int *functor_id, int *arity, int 
 // includes the switch for all ops mentioned by emitter.txt
 #include "pj_ast_map_ops-gen.inc"
       default:
-        FUNCTOR_ARITY(Codegen::Optree, 0, ast->get_kids().size());
+        return MappedFunctor(Codegen::Optree, 0, ast->get_kids().size());
       }
     }
     default:
-      FUNCTOR_ARITY(Codegen::Optree, 0, ast->get_kids().size());
+      return MappedFunctor(Codegen::Optree, 0, ast->get_kids().size());
     }
   }
 

@@ -164,24 +164,23 @@ $NAME::run($NODE_TYPE node)
 $NAME::State *
 $NAME::label($NODE_TYPE node)
 {
-    int arity, extra_arity;
-    Functor functor_id;
+    $MAPPED_FUNCTOR_TYPE functor = FUNCTOR_$NAME_UC(node);
+    Functor functor_id = Functor(functor.functor_id);
     State *state = new State();
 
-    FUNCTOR_$NAME_UC(node, (int *)&functor_id, &arity, &extra_arity);
     state->node = node;
-    state->arity = arity;
+    state->arity = functor.arity;
     state->tag = -1;
 
     labeled_states.push_back(state);
 
-    if (arity) {
+    if (functor.arity) {
         const TransitionTable &transitions = transition_tables[functor_id];
         const OpMap &op_map = op_maps[functor_id];
         std::vector<int> arg_labels;
 
-        arg_labels.reserve(arity);
-        for (int i = 0; i < arity; ++i) {
+        arg_labels.reserve(functor.arity);
+        for (int i = 0; i < functor.arity; ++i) {
             State *arg_state = label(ARG_$NAME_UC(node, i));
             const StateMap &state_map = op_map[i];
             StateMap::const_iterator rep_state = state_map.find(arg_state->label);
@@ -206,7 +205,7 @@ $NAME::label($NODE_TYPE node)
         if (state->label == -1)
             PJ_ABORT("Could not find a transition in the transition map\n");
 
-        for (int i = arity; i < extra_arity; ++i) {
+        for (int i = functor.arity; i < functor.extra_arity; ++i) {
             State *arg_state = label(ARG_$NAME_UC(node, i));
 
             state->args.push_back(arg_state);
@@ -216,7 +215,7 @@ $NAME::label($NODE_TYPE node)
     } else {
         state->label = leaves_map[functor_id];
 
-        for (int i = arity; i < extra_arity; ++i) {
+        for (int i = functor.arity; i < functor.extra_arity; ++i) {
             State *arg_state = label(ARG_$NAME_UC(node, i));
 
             state->args.push_back(arg_state);
@@ -311,6 +310,12 @@ sub set_node_type {
     my ($self, $type) = @_;
 
     $self->{node_type} = $type;
+}
+
+sub set_mapped_functor_type {
+    my ($self, $type) = @_;
+
+    $self->{mapped_functor_type} = $type;
 }
 
 sub add_result_field {
@@ -466,6 +471,7 @@ EOT
             (join "\n", @{$self->{rules_headers}}),
         HEADER_NAME => File::Basename::basename($header_file),
         NODE_TYPE   => $self->{node_type},
+        MAPPED_FUNCTOR_TYPE => $self->{mapped_functor_type},
         RESULT_TYPE => $result_type,
         INIT_DATA   => _indent(4, $init_data),
         INIT_CODE   => _indent(12, $init_code),
