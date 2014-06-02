@@ -27,6 +27,10 @@ PerlAPI::PerlAPI(Module *_module, IRBuilder<> *_builder, ExecutionEngine *ee) :
 {
   llvm::Type *void_type = Type::getVoidTy(module->getContext());
 
+  iv_type = llvm::Type::getIntNTy(module->getContext(), sizeof(IV) * 8);
+  uv_type = llvm::Type::getIntNTy(module->getContext(), sizeof(UV) * 8);
+  nv_type = llvm::Type::getDoubleTy(module->getContext());
+
   ptr_op_type = module->getTypeByName("struct.op")->getPointerTo();
   interpreter_type = module->getTypeByName("struct.interpreter")->getPointerTo();
   ptr_sv_type = module->getTypeByName("struct.sv")->getPointerTo();

@@ -579,8 +579,7 @@ Emitter::_jit_emit_return(Term *ast, pj_op_context context, Value *value, const 
 llvm::Value *
 Emitter::_jit_emit_perl_int(llvm::Value *v)
 {
-  // TODO cache type
-  return MY_CXT.builder.CreateFPToSI(v, llvm::Type::getIntNTy(module->getContext(), sizeof(IV) * 8));
+  return MY_CXT.builder.CreateFPToSI(v, pa.IV_type());
 }
 
 EmitValue
@@ -710,11 +709,10 @@ Emitter::_to_nv_value(Value *value, const PerlJIT::AST::Type *type)
   if (type->equals(&DOUBLE_T))
     return value;
   if (type->is_integer()) {
-    // TODO cache type
     if (type->is_unsigned())
-      return MY_CXT.builder.CreateUIToFP(value, llvm::Type::getDoubleTy(module->getContext()));
+      return MY_CXT.builder.CreateUIToFP(value, pa.NV_type());
     else
-      return MY_CXT.builder.CreateSIToFP(value, llvm::Type::getDoubleTy(module->getContext()));
+      return MY_CXT.builder.CreateSIToFP(value, pa.NV_type());
   }
   if (type->equals(&SCALAR_T) || type->equals(&UNSPECIFIED_T))
     return pa.emit_SvNV(value);

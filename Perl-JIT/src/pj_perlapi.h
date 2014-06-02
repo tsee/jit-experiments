@@ -24,10 +24,16 @@ namespace PerlJIT {
     llvm::Constant *IV_constant(IV value);
     llvm::Constant *UV_constant(UV value);
     llvm::Constant *NV_constant(NV value);
+
+    llvm::Type *IV_type() { return iv_type; }
+    llvm::Type *UV_type() { return uv_type; }
+    llvm::Type *NV_type() { return nv_type; }
+    llvm::Type *SV_ptr_type() { return ptr_sv_type; }
   private:
     llvm::Value *interp_value(unsigned int offset, llvm::Type *type, const llvm::Twine &name);
     llvm::FunctionType *function_type(llvm::Type *ret, ...);
 
+    llvm::Type *iv_type, *uv_type, *nv_type;
     llvm::Type *ptr_type;
     llvm::Type *interpreter_type, *ptr_sv_type, *ptr_ptr_sv_type, *ptr_op_type;
     llvm::FunctionType *pp_type;
