@@ -10,6 +10,10 @@ NV emit_SvNV(SV *sv) (thx) {
   return SvNV(sv);
 }
 
+bool emit_SvTRUE(SV *sv) (thx) {
+  return SvTRUE(sv);
+}
+
 void emit_SvSetSV_nosteal(SV *dsv, SV *ssv) (thx) {
   SvSetSV_nosteal(dsv, ssv);
 }

@@ -44,6 +44,7 @@ namespace PerlJIT {
 
     bool _jit_emit_return(PerlJIT::AST::Term *ast, pj_op_context context, llvm::Value *value, const PerlJIT::AST::Type *type);
     EmitValue _jit_emit_binop(PerlJIT::AST::Binop *ast, const EmitValue &lv, const EmitValue &rv, const PerlJIT::AST::Type *type);
+    EmitValue _jit_emit_logop(PerlJIT::AST::Binop *ast, State *l, State *r, const PerlJIT::AST::Type *type);
     EmitValue _jit_emit_unop(PerlJIT::AST::Unop *ast, const EmitValue &v, const PerlJIT::AST::Type *type);
     EmitValue _jit_emit_optree(State *state);
     EmitValue _jit_emit_root_optree(State *state);
@@ -56,7 +57,13 @@ namespace PerlJIT {
     bool _jit_assign_sv(llvm::Value *sv, llvm::Value *value, const PerlJIT::AST::Type *type);
 
     llvm::Value *_to_nv_value(llvm::Value *value, const PerlJIT::AST::Type *type);
+    llvm::Value *_to_bool_value(llvm::Value *value, const PerlJIT::AST::Type *type);
+    llvm::Value *_to_type_value(llvm::Value *value, const PerlJIT::AST::Type *type, const PerlJIT::AST::Type *target);
     llvm::Value *_jit_emit_perl_int(llvm::Value *v);
+
+    llvm::Type *_map_to_llvm_type(const PerlJIT::AST::Type *type);
+
+    llvm::BasicBlock *_create_basic_block();
 
     void _push_empty_function();
     void _pop_empty_function();

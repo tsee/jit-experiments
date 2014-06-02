@@ -435,6 +435,12 @@ Emitter::_pop_empty_function()
   }
 }
 
+BasicBlock *
+Emitter::_create_basic_block()
+{
+  return BasicBlock::Create(module->getContext(), "", emitter_states.back().function);
+}
+
 bool
 Emitter::_jit_emit_optree_args(State *state)
 {
@@ -644,6 +650,35 @@ Emitter::_jit_emit_binop(Binop *ast, const EmitValue &lv, const EmitValue &rv, c
 }
 
 EmitValue
+Emitter::_jit_emit_logop(PerlJIT::AST::Binop *ast, State *l, State *r, const PerlJIT::AST::Type *type)
+{
+  Value *res = pa.alloc_variable(_map_to_llvm_type(type), "logop_res");
+  BasicBlock *rhs = _create_basic_block(), *end = _create_basic_block();
+
+  // evaluate LHS
+  reduce(l);
+  MY_CXT.builder.CreateStore(_to_type_value(l->result.value, l->result.type, type), res);
+  Value *cond = _to_bool_value(l->result.value, l->result.type);
+
+  if (ast->get_op_type() == pj_binop_bool_and)
+    // for && jump to end if false, evaluate RHS if true
+    MY_CXT.builder.CreateCondBr(cond, rhs, end);
+  else
+    // for || jump to end if true, evaluate RHS if false
+    MY_CXT.builder.CreateCondBr(cond, end, rhs);
+
+  // evaluate RHS and jump to end
+  MY_CXT.builder.SetInsertPoint(rhs);
+  reduce(r);
+  MY_CXT.builder.CreateStore(_to_type_value(r->result.value, r->result.type, type), res);
+  MY_CXT.builder.CreateBr(end);
+
+  MY_CXT.builder.SetInsertPoint(end);
+
+  return EmitValue(MY_CXT.builder.CreateLoad(res), type);
+}
+
+EmitValue
 Emitter::_jit_get_lexical_declaration_sv(PerlJIT::AST::VariableDeclaration *ast)
 {
   Value *svp = pa.emit_pad_sv_address(ast->get_pad_index());
@@ -719,6 +754,45 @@ Emitter::_to_nv_value(Value *value, const PerlJIT::AST::Type *type)
 
   set_error("Handle more NV coercion cases");
   return NULL;
+}
+
+Value *
+Emitter::_to_bool_value(Value *value, const PerlJIT::AST::Type *type)
+{
+  if (type->equals(&DOUBLE_T))
+    return MY_CXT.builder.CreateFCmpOEQ(value, pa.NV_constant(0.0));
+  if (type->is_integer())
+    return MY_CXT.builder.CreateICmpEQ(value, pa.IV_constant(0));
+  if (type->is_xv())
+    return pa.emit_SvTRUE(value);
+
+  set_error("Handle more bool coercion cases");
+  return NULL;
+}
+
+Value *
+Emitter::_to_type_value(Value *value, const PerlJIT::AST::Type *type, const PerlJIT::AST::Type *target)
+{
+  if (type->equals(target))
+    return value;
+  if (target->equals(&DOUBLE_T))
+    return _to_nv_value(value, type);
+
+  set_error("Handle more coercion cases");
+  return NULL;
+}
+
+llvm::Type *
+Emitter::_map_to_llvm_type(const PerlJIT::AST::Type *type)
+{
+  if (type->equals(&DOUBLE_T))
+    return pa.NV_type();
+  if (type->equals(&INT_T))
+    return pa.IV_type();
+  if (type->equals(&UNSIGNED_INT_T))
+    return pa.UV_type();
+
+  return pa.SV_ptr_type();
 }
 
 static SV *
