@@ -337,7 +337,8 @@ Emitter::_replace_with_clean_emitter_state(Term *root, const EmitValue &value)
 OP *
 Emitter::_generate_current_function(Term *root, const EmitValue &value)
 {
-  _jit_emit_return(root, root->context(), value.value, value.type);
+  if (!_jit_emit_return(root, root->context(), value.value, value.type))
+    return NULL;
 
   FunctionState &last = emitter_states.back();
   llvm::Function *f = last.function;
