@@ -123,9 +123,8 @@ namespace {
     std::tr1::unordered_map<Functor, int> leaves_map;
     std::tr1::unordered_map<Functor, TransitionTable> transition_tables;
     std::tr1::unordered_map<Functor, OpMap> op_maps;
-    std::vector<RuleMap> states;
 $INIT_DATA
-
+    RuleMap states[$STATE_COUNT];
     Rule rules[] = {
 $RULE_INIT
     };
@@ -415,15 +414,11 @@ EOT
     my $states = $tables->{states};
     my $i = 0;
     for my $map (@$states) {
-        $init_code .= "states.push_back(RuleMap());\n";
-        $init_code .= "{\n";
-        $init_code .= "    RuleMap &state = states[states.size() - 1];\n";
         for my $state (sort keys %$map) {
             my $data = sprintf "_state_map_%d_%d", $i, $state;
             $init_data .= sprintf "int %s[] = {%s};\n", $data, join(", ", $map->{$state}->[0], grep $has_code{$_}, @{$map->{$state}});
-            $init_code .= sprintf "    state[%d].assign(%s, %s + COUNT(%s));\n", $state, $data, $data, $data;
+            $init_code .= sprintf "states[%d][%d].assign(%s, %s + COUNT(%s));\n", $i, $state, $data, $data, $data;
         }
-        $init_code .= "}\n";
         ++$i;
     }
 
@@ -481,6 +476,7 @@ EOT
         INIT_CODE   => _indent(12, $init_code),
         RULES       => _indent(4, $rule_code),
         RULE_INIT   => _indent(8, $rule_init),
+        STATE_COUNT => scalar @$states,
         ROOT_LABEL  => $self->{root_label},
         DEFAULT_LABEL => $self->{default_label},
     );
