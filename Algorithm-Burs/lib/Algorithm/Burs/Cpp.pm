@@ -85,7 +85,7 @@ namespace {
         std::vector<RepState> arg_labels;
         Label label;
 
-        Transition(RepState *states, int count, Label _label) :
+        Transition(const RepState *states, int count, Label _label) :
             arg_labels(states, states + count), label(_label)
         { }
     };
@@ -93,7 +93,7 @@ namespace {
     struct Rule {
         std::vector<int> args;
 
-        Rule(int *_args, int count) :
+        Rule(const int *_args, int count) :
             args(_args, _args + count)
         { }
 
@@ -106,18 +106,18 @@ namespace {
 
     struct StateInit {
         int label, tag;
-        int *rule_ids;
+        const int * const rule_ids;
         int rule_ids_count;
     };
 
     struct TransitionInit {
         int functor, label;
-        RepState *arg_labels;
+        const RepState * const arg_labels;
         int arg_labels_count;
     };
 
     std::tr1::unordered_map<Label, RepState>
-    _make_map(int *data, int size) {
+    _make_map(const int *data, int size) {
         std::tr1::unordered_map<Label, RepState> res;
 
         for (int i = 0; i < size; i += 2)
@@ -136,14 +136,14 @@ namespace {
     std::tr1::unordered_map<Functor, TransitionTable> transition_tables;
     std::tr1::unordered_map<Functor, OpMap> op_maps;
 $INIT_DATA
-    StateInit states_init[] = {
+    const StateInit states_init[] = {
 $STATE_INIT
     };
-    TransitionInit transitions_init[] = {
+    const TransitionInit transitions_init[] = {
 $TRANSITION_INIT
     };
     RuleMap states[COUNT(states_init)];
-    Rule rules[] = {
+    const Rule rules[] = {
 $RULE_INIT
     };
 
@@ -416,7 +416,7 @@ sub generate {
 EOT
     }
 
-    $init_data .= sprintf "int _leaves_map[] = {%s};\n",
+    $init_data .= sprintf "const int _leaves_map[] = {%s};\n",
                           join(", ", _sortedmap($tables->{leaves_map}));
 
     my $transitions = $tables->{transitions};
@@ -425,7 +425,7 @@ EOT
         my $i = 0;
         for my $entry (@{$transitions->{$functor_id}}) {
             my $data = sprintf "_states_%d_%d", $functor_id, $i;
-            $init_data .= sprintf "RepState %s[] = {%s};\n", $data, join(", ", @{$entry}[0..$#$entry-1]);
+            $init_data .= sprintf "const RepState %s[] = {%s};\n", $data, join(", ", @{$entry}[0..$#$entry-1]);
             $transition_init .= sprintf "{%d, %d, %s, COUNT(%s)},\n", $functor_id, $entry->[-1], $data, $data;
             ++$i;
         }
@@ -436,7 +436,7 @@ EOT
         my $i = 0;
         for my $entry (@{$op_map->{$functor_id}}) {
             my $data = sprintf "_op_map_%d_%d", $functor_id, $i;
-            $init_data .= sprintf "int %s[] = {%s};\n", $data, join(", ", _sortedmap($entry));
+            $init_data .= sprintf "const int %s[] = {%s};\n", $data, join(", ", _sortedmap($entry));
             $init_code .= sprintf "op_maps[Functor(%d)].push_back(_make_map(%s, COUNT(%s)));\n", $functor_id, $data, $data;
             ++$i;
         }
@@ -448,7 +448,7 @@ EOT
     for my $map (@$states) {
         for my $state (sort keys %$map) {
             my $data = sprintf "_state_map_%d_%d", $i, $state;
-            $init_data .= sprintf "int %s[] = {%s};\n", $data, join(", ", $map->{$state}->[0], grep $has_code{$_}, @{$map->{$state}});
+            $init_data .= sprintf "const int %s[] = {%s};\n", $data, join(", ", $map->{$state}->[0], grep $has_code{$_}, @{$map->{$state}});
             $state_init .= sprintf "{%d, %d, %s, COUNT(%s)},\n", $i, $state, $data, $data;
         }
         ++$i;
@@ -467,7 +467,7 @@ EOT
                 }
             }
             my $data = sprintf "_rule_args_%d", $rule_id;
-            $init_data .= sprintf "int %s[] = {%s};\n", $data, join(", ", @ids);
+            $init_data .= sprintf "const int %s[] = {%s};\n", $data, join(", ", @ids);
             $rule_init .= sprintf "Rule(%s, COUNT(%s)), // %d\n", $data, $data, $rule_id;
         } else {
             $rule_init .= sprintf "Rule(NULL, 0), // %d\n", $rule_id;
