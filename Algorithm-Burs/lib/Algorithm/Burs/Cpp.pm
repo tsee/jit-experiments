@@ -104,6 +104,18 @@ namespace {
         }
     };
 
+    struct StateInit {
+        int label, tag;
+        int *rule_ids;
+        int rule_ids_count;
+    };
+
+    struct TransitionInit {
+        int functor, label;
+        RepState *arg_labels;
+        int arg_labels_count;
+    };
+
     std::tr1::unordered_map<Label, RepState>
     _make_map(int *data, int size) {
         std::tr1::unordered_map<Label, RepState> res;
@@ -124,7 +136,13 @@ namespace {
     std::tr1::unordered_map<Functor, TransitionTable> transition_tables;
     std::tr1::unordered_map<Functor, OpMap> op_maps;
 $INIT_DATA
-    RuleMap states[$STATE_COUNT];
+    StateInit states_init[] = {
+$STATE_INIT
+    };
+    TransitionInit transitions_init[] = {
+$TRANSITION_INIT
+    };
+    RuleMap states[COUNT(states_init)];
     Rule rules[] = {
 $RULE_INIT
     };
@@ -135,6 +153,18 @@ $RULE_INIT
                 leaves_map[Functor(_leaves_map[i])] = _leaves_map[i + 1];
 
 $INIT_CODE
+
+            for (unsigned i = 0; i < COUNT(transitions_init); ++i) {
+                const TransitionInit &init = transitions_init[i];
+
+                transition_tables[Functor(init.functor)].push_back(Transition(init.arg_labels, init.arg_labels_count, init.label));
+            }
+
+            for (unsigned i = 0; i < COUNT(states_init); ++i) {
+                const StateInit &init = states_init[i];
+
+                states[init.label][init.tag].assign(init.rule_ids, init.rule_ids + init.rule_ids_count);
+            }
         }
     } init_$NAME_LC;
 }
@@ -390,12 +420,13 @@ EOT
                           join(", ", _sortedmap($tables->{leaves_map}));
 
     my $transitions = $tables->{transitions};
+    my $transition_init = '';
     for my $functor_id (sort keys %$transitions) {
         my $i = 0;
         for my $entry (@{$transitions->{$functor_id}}) {
             my $data = sprintf "_states_%d_%d", $functor_id, $i;
             $init_data .= sprintf "RepState %s[] = {%s};\n", $data, join(", ", @{$entry}[0..$#$entry-1]);
-            $init_code .= sprintf "transition_tables[Functor(%d)].push_back(Transition(%s, COUNT(%s), %d));\n", $functor_id, $data, $data, $entry->[-1];
+            $transition_init .= sprintf "{%d, %d, %s, COUNT(%s)},\n", $functor_id, $entry->[-1], $data, $data;
             ++$i;
         }
     }
@@ -412,12 +443,13 @@ EOT
     }
 
     my $states = $tables->{states};
+    my $state_init = '';
     my $i = 0;
     for my $map (@$states) {
         for my $state (sort keys %$map) {
             my $data = sprintf "_state_map_%d_%d", $i, $state;
             $init_data .= sprintf "int %s[] = {%s};\n", $data, join(", ", $map->{$state}->[0], grep $has_code{$_}, @{$map->{$state}});
-            $init_code .= sprintf "states[%d][%d].assign(%s, %s + COUNT(%s));\n", $i, $state, $data, $data, $data;
+            $state_init .= sprintf "{%d, %d, %s, COUNT(%s)},\n", $i, $state, $data, $data;
         }
         ++$i;
     }
@@ -476,7 +508,8 @@ EOT
         INIT_CODE   => _indent(12, $init_code),
         RULES       => _indent(4, $rule_code),
         RULE_INIT   => _indent(8, $rule_init),
-        STATE_COUNT => scalar @$states,
+        STATE_INIT  => _indent(8, $state_init),
+        TRANSITION_INIT => _indent(8, $transition_init),
         ROOT_LABEL  => $self->{root_label},
         DEFAULT_LABEL => $self->{default_label},
     );
