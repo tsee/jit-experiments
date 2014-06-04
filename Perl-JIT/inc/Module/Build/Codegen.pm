@@ -79,7 +79,8 @@ sub _parse_rules {
         local $/;
         readline $fh;
     };
-    my (@rules, %names, %constants, $rule);
+    my (@rules, %names, %constants, %defines, $rule);
+    my $defines_rx = '(?!a)a'; # match nothing
 
     local $_ = $text;
     s{^#.*\n}{\n}mg;
@@ -90,14 +91,46 @@ sub _parse_rules {
         s{\A(.*?)(?=\z|^\w+:)}{}ms or die "Can't parse value in string '$_'";
         my $value = $1;
 
+        $value =~ s{\s+\z}{};
+
         if ($tag eq 'name') {
-            $value =~ m{^(\w+)\s*} or die "Invalid rule name '$value'";
+            $value =~ m{^(\w+)$} or die "Invalid rule name '$value'";
             $rule = { name => $1, tags => {} };
             push @rules, $rule;
             $names{$1} = 1;
-        } elsif ($tag eq 'match' || $tag eq 'delay' || $tag eq 'emit_llvm' || $tag eq 'weight') {
-            $value =~ s{\A\s+}{}; $value =~ s{\s+\z}{};
+        } elsif ($tag eq 'delay' || $tag eq 'emit_llvm' || $tag eq 'weight') {
             push @{$rule->{tags}{$tag}}, $value;
+        } elsif ($tag eq 'match') {
+            $value =~ s{$defines_rx}{$defines{$1}}eg;
+
+            if (index($value, '|') == -1) {
+                push @{$rule->{tags}{$tag}}, $value;
+            } else {
+                my (@queue, @values) = $value;
+
+                while (@queue) {
+                    my $item = pop @queue;
+
+                    $item =~ m{^(.*?)\b(\w+(?:\|\w+)+)\b(.*)$} or die "'$item' does not contain alternations";
+                    my @expanded = map "$1$_$3", split /\|/, $2;
+                    if (index($1, '|') == -1 && index($3, '|') == -1) {
+                        push @values, @expanded;
+                    } else {
+                        push @queue, @expanded;
+                    }
+                }
+
+                push @{$rule->{tags}{$tag}}, @values;
+            }
+        } elsif ($tag eq 'define') {
+            die "Invalid define tag '$value'" unless $value =~ /^(\w+)\s+(.+)$/m;
+            $defines{$1} = $2;
+
+            my @sorted_defines = sort {
+                length($b) - length($a)
+            } keys %defines;
+
+            $defines_rx = '\b(' . join('|', @sorted_defines) . ')\b';
         } else {
             die "Unhandled tag '$tag'";
         }

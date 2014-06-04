@@ -1,3 +1,8 @@
+define: DEFINITE_TYPES TypeDouble|TypeInt|TypeUnsignedInt|TypeAny
+define: ARITH_BINOPS   pj_binop_add|pj_binop_multiply
+define: LOGICAL_BINOPS pj_binop_bool_and|pj_binop_bool_or
+define: UNOPS          pj_unop_perl_int
+
 name: Expr
 match: DOUBLE_Expr
 match: INT_Expr
@@ -29,9 +34,7 @@ emit_llvm: {
 # Constants
 
 name: RootExpr
-match: AstConst(TypeDouble)
-match: AstConst(TypeInt)
-match: AstConst(TypeUnsignedInt)
+match: AstConst(DEFINITE_TYPES)
 emit_llvm: {
   $$ = EmitValue(OPTREE, &SCALAR_T);
 }
@@ -57,12 +60,8 @@ emit_llvm: {
 # Lexicals
 
 name: RootExpr
-match: AstLexical(TypeDouble)
-match: AstLexical(TypeInt)
-match: AstLexical(TypeAny)
-match: AstLexicalDeclaration(TypeDouble)
-match: AstLexicalDeclaration(TypeInt)
-match: AstLexicalDeclaration(TypeAny)
+match: AstLexical(DEFINITE_TYPES)
+match: AstLexicalDeclaration(DEFINITE_TYPES)
 emit_llvm: {
   $$ = EmitValue(OPTREE, &SCALAR_T);
 }
@@ -110,23 +109,23 @@ emit_llvm: {
 # Arithmetic unary
 
 name: INT_Expr
-match: AstUnop(pj_unop_perl_int, DOUBLE_Expr @ $A) @ $OP
+match: AstUnop(UNOPS, DOUBLE_Expr @ $A) @ $OP
 emit_llvm: {
   $$ = _jit_emit_unop((Unop *) $OP.term, _($A), &DOUBLE_T);
 }
 
 name: UNSIGNED_INT_Expr
-match: AstUnop(pj_unop_perl_int, INT_Expr @ $A) @ $OP
+match: AstUnop(UNOPS, INT_Expr @ $A) @ $OP
 emit_llvm: {
   $$ = EmitValue(_($A).value, &UNSIGNED_INT_T);
 }
 
 name: OPAQUE_Expr
-match: AstUnop(pj_unop_perl_int, OPAQUE_Expr)
+match: AstUnop(UNOPS, OPAQUE_Expr)
 
 # TODO questionable
 name: Expr
-match: AstUnop(pj_unop_perl_int, Expr @ $A) @ $OP
+match: AstUnop(UNOPS, Expr @ $A) @ $OP
 emit_llvm: {
   $$ = _jit_emit_unop((Unop *) $OP.term, _($A), &DOUBLE_T);
 }
@@ -134,35 +133,27 @@ emit_llvm: {
 # Arithmetic binary
 
 name: DOUBLE_Expr
-match: AstBinop(pj_binop_add, DOUBLE_Expr @ $A, Expr @ $B) @ $OP
-match: AstBinop(pj_binop_add, Expr @ $A, DOUBLE_Expr @ $B) @ $OP
-match: AstBinop(pj_binop_multiply, DOUBLE_Expr @ $A, Expr @ $B) @ $OP
-match: AstBinop(pj_binop_multiply, Expr @ $A, DOUBLE_Expr @ $B) @ $OP
+match: AstBinop(ARITH_BINOPS, DOUBLE_Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(ARITH_BINOPS, Expr @ $A, DOUBLE_Expr @ $B) @ $OP
 emit_llvm: {
   $$ = _jit_emit_binop((Binop *) $OP.term, _($A), _($B), &DOUBLE_T);
 }
 
 name: INT_Expr
-match: AstBinop(pj_binop_add, INT_Expr @ $A, Expr @ $B) @ $OP
-match: AstBinop(pj_binop_add, Expr @ $A, INT_Expr @ $B) @ $OP
-match: AstBinop(pj_binop_multiply, INT_Expr @ $A, Expr @ $B) @ $OP
-match: AstBinop(pj_binop_multiply, Expr @ $A, INT_Expr @ $B) @ $OP
+match: AstBinop(ARITH_BINOPS, INT_Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(ARITH_BINOPS, Expr @ $A, INT_Expr @ $B) @ $OP
 emit_llvm: {
   $$ = _jit_emit_binop((Binop *) $OP.term, _($A), _($B), &INT_T);
 }
 
 name: OPAQUE_Expr
-match: AstBinop(pj_binop_add, OPAQUE_Expr, Expr)
-match: AstBinop(pj_binop_add, Expr, OPAQUE_Expr)
-match: AstBinop(pj_binop_add, OPAQUE_Expr, OPAQUE_Expr)
-match: AstBinop(pj_binop_multiply, OPAQUE_Expr, Expr)
-match: AstBinop(pj_binop_multiply, Expr, OPAQUE_Expr)
-match: AstBinop(pj_binop_multiply, OPAQUE_Expr, OPAQUE_Expr)
+match: AstBinop(ARITH_BINOPS, OPAQUE_Expr, Expr)
+match: AstBinop(ARITH_BINOPS, Expr, OPAQUE_Expr)
+match: AstBinop(ARITH_BINOPS, OPAQUE_Expr, OPAQUE_Expr)
 
 # TODO questionable
 name: Expr
-match: AstBinop(pj_binop_add, Expr @ $A, Expr @ $B) @ $OP
-match: AstBinop(pj_binop_multiply, Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(ARITH_BINOPS, Expr @ $A, Expr @ $B) @ $OP
 emit_llvm: {
   $$ = _jit_emit_binop((Binop *) $OP.term, _($A), _($B), &DOUBLE_T);
 }
@@ -170,36 +161,28 @@ emit_llvm: {
 # Logical binary
 
 name: DOUBLE_Expr
-match: AstBinop(pj_binop_bool_and, DOUBLE_Expr @ $A, Expr @ $B) @ $OP
-match: AstBinop(pj_binop_bool_and, Expr @ $A, DOUBLE_Expr @ $B) @ $OP
-match: AstBinop(pj_binop_bool_or, DOUBLE_Expr @ $A, Expr @ $B) @ $OP
-match: AstBinop(pj_binop_bool_or, Expr @ $A, DOUBLE_Expr @ $B) @ $OP
+match: AstBinop(LOGICAL_BINOPS, DOUBLE_Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(LOGICAL_BINOPS, Expr @ $A, DOUBLE_Expr @ $B) @ $OP
 delay: $A, $B
 emit_llvm: {
   $$ = _jit_emit_logop((Binop *) $OP.term, __($A), __($B), &DOUBLE_T);
 }
 
 name: INT_Expr
-match: AstBinop(pj_binop_bool_and, INT_Expr @ $A, Expr @ $B) @ $OP
-match: AstBinop(pj_binop_bool_and, Expr @ $A, INT_Expr @ $B) @ $OP
-match: AstBinop(pj_binop_bool_or, INT_Expr @ $A, Expr @ $B) @ $OP
-match: AstBinop(pj_binop_bool_or, Expr @ $A, INT_Expr @ $B) @ $OP
+match: AstBinop(LOGICAL_BINOPS, INT_Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(LOGICAL_BINOPS, Expr @ $A, INT_Expr @ $B) @ $OP
 delay: $A, $B
 emit_llvm: {
   $$ = _jit_emit_logop((Binop *) $OP.term, __($A), __($B), &INT_T);
 }
 
 name: OPAQUE_Expr
-match: AstBinop(pj_binop_bool_and, OPAQUE_Expr, Expr)
-match: AstBinop(pj_binop_bool_and, Expr, OPAQUE_Expr)
-match: AstBinop(pj_binop_bool_and, OPAQUE_Expr, OPAQUE_Expr)
-match: AstBinop(pj_binop_bool_or, OPAQUE_Expr, Expr)
-match: AstBinop(pj_binop_bool_or, Expr, OPAQUE_Expr)
-match: AstBinop(pj_binop_bool_or, OPAQUE_Expr, OPAQUE_Expr)
+match: AstBinop(LOGICAL_BINOPS, OPAQUE_Expr, Expr)
+match: AstBinop(LOGICAL_BINOPS, Expr, OPAQUE_Expr)
+match: AstBinop(LOGICAL_BINOPS, OPAQUE_Expr, OPAQUE_Expr)
 
 name: Expr
-match: AstBinop(pj_binop_bool_and, Expr @ $A, Expr @ $B) @ $OP
-match: AstBinop(pj_binop_bool_or, Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(LOGICAL_BINOPS, Expr @ $A, Expr @ $B) @ $OP
 delay: $A, $B
 emit_llvm: {
   $$ = _jit_emit_logop((Binop *) $OP.term, __($A), __($B), &SCALAR_T);
