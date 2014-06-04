@@ -123,9 +123,13 @@ namespace {
     std::tr1::unordered_map<Functor, int> leaves_map;
     std::tr1::unordered_map<Functor, TransitionTable> transition_tables;
     std::tr1::unordered_map<Functor, OpMap> op_maps;
-    std::tr1::unordered_map<int, Rule> rules;
     std::vector<RuleMap> states;
 $INIT_DATA
+
+    Rule rules[] = {
+$RULE_INIT
+    };
+
     struct Init$NAME {
         Init$NAME() {
             for (unsigned i = 0; i < COUNT(_leaves_map); i += 2)
@@ -240,10 +244,9 @@ $NAME::reduce(State *state, int tag)
         PJ_ABORT2("Could not find a rule for label %d and tag %d\n", state->label, tag);
     const std::vector<int> &rule_ids = rule_it->second;
     int rule_id = rule_ids.front();
-    std::tr1::unordered_map<int, Rule>::iterator r = rules.find(rule_id);
-    if (r == rules.end())
+    if ((unsigned) rule_id >= COUNT(rules))
         PJ_ABORT1("Could not find a rule object for rule id %d\n", rule_id);
-    const Rule &rule = r->second;
+    const Rule &rule = rules[rule_id];
 
     for (unsigned i = 0; i < rule.args.size(); ++i) {
         State *arg_state = state->args[i];
@@ -425,6 +428,7 @@ EOT
     }
 
     my $rules = $self->{burs}->rules;
+    my $rule_init = '';
     for my $rule_id (0..$#$rules) {
         my $rule = $rules->[$rule_id];
         if ($rule->{type} eq 'functor' && $rule->{args}) {
@@ -437,9 +441,9 @@ EOT
             }
             my $data = sprintf "_rule_args_%d", $rule_id;
             $init_data .= sprintf "int %s[] = {%s};\n", $data, join(", ", @ids);
-            $init_code .= sprintf "rules.insert(std::make_pair(%d, Rule(%s, COUNT(%s))));\n", $rule_id, $data, $data;
+            $rule_init .= sprintf "Rule(%s, COUNT(%s)), // %d\n", $data, $data, $rule_id;
         } else {
-            $init_code .= sprintf "rules.insert(std::make_pair(%d, Rule(NULL, 0)));\n", $rule_id;
+            $rule_init .= sprintf "Rule(NULL, 0), // %d\n", $rule_id;
         }
     }
 
@@ -476,6 +480,7 @@ EOT
         INIT_DATA   => _indent(4, $init_data),
         INIT_CODE   => _indent(12, $init_code),
         RULES       => _indent(4, $rule_code),
+        RULE_INIT   => _indent(8, $rule_init),
         ROOT_LABEL  => $self->{root_label},
         DEFAULT_LABEL => $self->{default_label},
     );
