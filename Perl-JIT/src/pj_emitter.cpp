@@ -309,19 +309,16 @@ Emitter::process_jit_candidates(const std::vector<Term *> &asts)
 void
 Emitter::_emit_current_function_and_push_empty(Term *first, Term *last, const EmitValue &value)
 {
+  if (first->get_type() == pj_ttype_statement && last->get_type() == pj_ttype_statement) {
+    first = static_cast<Statement *>(first)->kids[0];
+    last = static_cast<Statement *>(last)->kids[0];
+  }
+
   OP *op = _replace_with_clean_emitter_state(last, value);
   if (!op)
     return;
-  if (first->get_type() == pj_ttype_statement &&
-      last->get_type() == pj_ttype_statement) {
-    replace_sequence(static_cast<Statement *>(first)->kids[0]->first_op(),
-                     static_cast<Statement *>(last)->kids[0]->last_op(),
-                     op, KEEP_TARGETS|KEEP_OP_NEXT);
-  } else {
-    replace_sequence(first->first_op(),
-                     last->last_op(),
-                     op, KEEP_TARGETS|KEEP_OP_NEXT);
-  }
+  replace_sequence(first->first_op(), last->last_op(),
+                   op, KEEP_TARGETS|KEEP_OP_NEXT);
 }
 
 OP *
