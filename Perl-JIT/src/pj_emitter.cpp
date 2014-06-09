@@ -404,8 +404,10 @@ Emitter::_generate_current_function(Term *root, const EmitValue &value)
   op->op_next = _jit_find_op_next(root->get_perl_op());
 
   emitter_states.pop_back();
-  pa.set_current_function(emitter_states.back().function);
-  MY_CXT.builder.SetInsertPoint(emitter_states.back().insertion_point);
+  if (emitter_states.size()) {
+    pa.set_current_function(emitter_states.back().function);
+    MY_CXT.builder.SetInsertPoint(emitter_states.back().insertion_point);
+  }
 
   return op;
 }
