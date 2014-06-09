@@ -273,6 +273,8 @@ Emitter::process_jit_candidates(const std::vector<Term *> &asts)
         Statement *stmt = static_cast<Statement *>(kids[i]);
         EmitValue result = run(PerlJIT::CodegenNode(stmt));
 
+        if (result.is_invalid())
+          return false;
         if (result.value == OPTREE && first) {
           _emit_current_function_and_push_empty(first, last, last_value);
           first = last = NULL;
