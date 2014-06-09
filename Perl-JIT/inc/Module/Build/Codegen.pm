@@ -148,6 +148,7 @@ sub _parse_rules {
         if ($tags->{weight}) {
             die "Multiple 'weight' tags in rule" if @{$tags->{weight}} > 1;
             die "Weight must be a non-negative integer" unless $tags->{weight}[0] =~ /^[0-9]+$/;
+            $rule->{weight} = $tags->{weight}[0];
         }
         if ($tags->{emit_llvm}) {
             die "Multiple 'emit_llvm' tags in rule" if @{$tags->{emit_llvm}} > 1;
@@ -270,7 +271,7 @@ sub _add_rules {
             }
 
             $burs->add_rule(
-                $rule->{weigth} || 0,
+                $rule->{weight} || 0,
                 $code,
                 $rule->{name},
                 $match->{rule},
