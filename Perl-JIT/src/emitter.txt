@@ -31,6 +31,24 @@ emit_llvm: {
   $$ = _jit_emit_optree(state);
 }
 
+# Statements
+
+name: Expr
+match: AstStatement(Expr @ $E) @ $OP
+weight: 2
+delay: $E
+emit_llvm: {
+  $$ = _jit_emit_statement((Statement *) $OP.term, __($E));
+}
+
+name: Expr
+match: AstStatement(Optree @ $O)
+weight: 1
+delay: $O
+emit_llvm: {
+  $$ = _jit_emit_root_optree(__($O));
+}
+
 # Constants
 
 name: RootExpr

@@ -17,6 +17,7 @@ namespace PerlJIT {
     llvm::FunctionType *ppaddr_type() const { return pp_type; }
 
     void emit_call_runloop(OP *op);
+    void emit_nextstate(OP *op);
 
     llvm::Value *emit_pad_sv(UV padix);
     llvm::Value *emit_pad_sv_address(UV padix);

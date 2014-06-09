@@ -54,6 +54,7 @@ namespace PerlJIT {
     EmitValue _jit_emit_const(PerlJIT::AST::Constant *ast, const PerlJIT::AST::Type *type);
     EmitValue _jit_get_lexical_sv(PerlJIT::AST::Lexical *ast);
     EmitValue _jit_get_lexical_declaration_sv(PerlJIT::AST::VariableDeclaration *ast);
+    EmitValue _jit_emit_statement(PerlJIT::AST::Statement *ast, State *expression);
     bool _jit_assign_sv(llvm::Value *sv, llvm::Value *value, const PerlJIT::AST::Type *type);
 
     llvm::Value *_to_nv_value(llvm::Value *value, const PerlJIT::AST::Type *type);

@@ -57,3 +57,11 @@ SV **emit_PAD_SV_address(PADOFFSET index) (thx) {
 void emit_save_clearsv(SV **svp) (thx) {
   save_clearsv(svp);
 }
+
+void emit_pp_nextstate(OP *cop) (thx) {
+    PL_curcop = cop;
+    TAINT_NOT;		/* Each statement is presumed innocent */
+    PL_stack_sp = PL_stack_base + cxstack[cxstack_ix].blk_oldsp;
+    FREETMPS;
+    PERL_ASYNC_CHECK();
+}

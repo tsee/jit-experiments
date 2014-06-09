@@ -64,6 +64,14 @@ PerlAPI::emit_call_runloop(OP *op)
   );
 }
 
+void
+PerlAPI::emit_nextstate(OP *op)
+{
+  return emit_pp_nextstate(
+    builder->CreateIntToPtr(UV_constant(PTR2IV(op)), ptr_op_type)
+  );
+}
+
 Value *
 PerlAPI::emit_pad_sv(UV padix)
 {

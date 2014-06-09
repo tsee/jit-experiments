@@ -41,6 +41,13 @@ PerlJIT::map_codegen_arg(CodegenNode node, int functor_id, int index)
       return CodegenNode(node.term->get_value_type());
   }
     break;
+  case Codegen::AstStatement: {
+    PerlJIT::AST::Statement *ast = static_cast<PerlJIT::AST::Statement *>(node.term);
+
+    if (index == 0)
+      return CodegenNode(ast->kids[0]);
+  }
+    break;
   case Codegen::Optree: {
     std::vector<Term *> kids = node.term->get_kids();
 
@@ -94,6 +101,8 @@ PerlJIT::map_codegen_functor(CodegenNode node)
         return MappedFunctor(Codegen::Optree, 0, ast->get_kids().size());
       }
     }
+    case pj_ttype_statement:
+      return MappedFunctor(Codegen::AstStatement, 1);
     default:
       return MappedFunctor(Codegen::Optree, 0, ast->get_kids().size());
     }

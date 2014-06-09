@@ -680,6 +680,16 @@ Emitter::_jit_emit_logop(PerlJIT::AST::Binop *ast, State *l, State *r, const Per
 }
 
 EmitValue
+Emitter::_jit_emit_statement(PerlJIT::AST::Statement *ast, State *expression)
+{
+  emitter_states.back().subtrees.push_back(ast->get_perl_op());
+  pa.emit_nextstate(ast->get_perl_op());
+  reduce(expression);
+
+  return expression->result;
+}
+
+EmitValue
 Emitter::_jit_get_lexical_declaration_sv(PerlJIT::AST::VariableDeclaration *ast)
 {
   Value *svp = pa.emit_pad_sv_address(ast->get_pad_index());
