@@ -356,7 +356,7 @@ Emitter::_generate_current_function(Term *root, const EmitValue &value)
   // PP function address; we could use a trampoline address (with
   // just an extra jump, but then we'd need to store the pointer to the
   // JITted function as an extra op member
-  OP *op, *op_next = _jit_find_op_next(root->get_perl_op());
+  OP *op;
 
   if (last.subtrees.size()) {
     ListOP *listop;
@@ -401,7 +401,7 @@ Emitter::_generate_current_function(Term *root, const EmitValue &value)
 
   op->op_ppaddr = (OP *(*)(pTHX)) execution_engine->getPointerToFunction(f);
   op->op_targ = root->get_perl_op()->op_targ;
-  op->op_next = op_next;
+  op->op_next = _jit_find_op_next(root->get_perl_op());
 
   emitter_states.pop_back();
   pa.set_current_function(emitter_states.back().function);
