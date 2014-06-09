@@ -369,6 +369,7 @@ Emitter::_generate_current_function(Term *root, const EmitValue &value)
     listop->op_type = JIT_LIST_OP;
     listop->op_flags = OPf_KIDS;
     listop->op_first = listop->op_last = last.subtrees[0];
+    listop->op_first->op_sibling = NULL;
     listop->execution_engine = execution_engine;
 
     for (size_t i = 1, max = last.subtrees.size(); i < max; ++i) {
