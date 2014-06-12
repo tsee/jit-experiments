@@ -31,7 +31,8 @@ typedef enum {
   pj_ttype_grep,
   pj_ttype_function_call,
   pj_ttype_empty,
-  pj_ttype_loop_control
+  pj_ttype_loop_control,
+  pj_ttype_sort
 } pj_term_type;
 
 typedef enum {
@@ -522,6 +523,28 @@ namespace PerlJIT {
       bool _label_is_dynamic;
       bool _label_is_utf8;
       std::string label;
+    };
+
+    class Sort : public Term {
+    public:
+      Sort(OP *p_op, bool reverse, bool std_numeric, Term *cmp_fun, const std::vector<Term *> & args);
+
+      bool is_reverse_sort() const { return needs_reverse; }
+      bool is_std_numeric_sort() const { return is_numeric; }
+      Term *get_cmp_function() const { return cmp_function; }
+      const std::vector<Term *> & get_arguments() const { return arguments; }
+
+      void set_reverse_sort(bool is_reverse) { needs_reverse = is_reverse; }
+
+      void dump(int indent_lvl = 0) const;
+      virtual const char *perl_class() const
+        { return "Perl::JIT::AST::Sort"; }
+
+    protected:
+      bool needs_reverse;
+      bool is_numeric;
+      Term *cmp_function;
+      std::vector<Term *> arguments;
     };
 
     class Optree : public Term {

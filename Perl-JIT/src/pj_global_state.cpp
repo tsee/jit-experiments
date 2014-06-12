@@ -94,6 +94,7 @@ void pj_define_constants(pTHX)
   INT_CONST(pj_ttype_function_call);
   INT_CONST(pj_ttype_empty);
   INT_CONST(pj_ttype_loop_control);
+  INT_CONST(pj_ttype_sort);
 
   INT_CONST(pj_sigil_scalar);
   INT_CONST(pj_sigil_array);

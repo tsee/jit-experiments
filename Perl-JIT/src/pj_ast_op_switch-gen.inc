@@ -163,7 +163,6 @@
   || (int)otype == OP_JOIN \
   || (int)otype == OP_KEYS \
   || (int)otype == OP_KILL \
-  || (int)otype == OP_LAST \
   || (int)otype == OP_LC \
   || (int)otype == OP_LCFIRST \
   || (int)otype == OP_LE \
@@ -196,7 +195,6 @@
   || (int)otype == OP_NCMP \
   || (int)otype == OP_NE \
   || (int)otype == OP_NEGATE \
-  || (int)otype == OP_NEXT \
   || (int)otype == OP_NOT \
   || (int)otype == OP_OCT \
   || (int)otype == OP_ONCE \
@@ -228,7 +226,6 @@
   || (int)otype == OP_READLINE \
   || (int)otype == OP_READLINK \
   || (int)otype == OP_RECV \
-  || (int)otype == OP_REDO \
   || (int)otype == OP_REF \
   || (int)otype == OP_REFGEN \
   || (int)otype == OP_RENAME \
@@ -283,6 +280,7 @@
   || (int)otype == OP_SNETENT \
   || (int)otype == OP_SOCKET \
   || (int)otype == OP_SOCKPAIR \
+  || (int)otype == OP_SORT \
   || (int)otype == OP_SPLICE \
   || (int)otype == OP_SPLIT \
   || (int)otype == OP_SPRINTF \
@@ -494,7 +492,6 @@
   || (int)otype == OP_JOIN \
   || (int)otype == OP_KEYS \
   || (int)otype == OP_KILL \
-  || (int)otype == OP_LAST \
   || (int)otype == OP_LC \
   || (int)otype == OP_LCFIRST \
   || (int)otype == OP_LE \
@@ -527,7 +524,6 @@
   || (int)otype == OP_NCMP \
   || (int)otype == OP_NE \
   || (int)otype == OP_NEGATE \
-  || (int)otype == OP_NEXT \
   || (int)otype == OP_NOT \
   || (int)otype == OP_NULL \
   || (int)otype == OP_OCT \
@@ -561,7 +557,6 @@
   || (int)otype == OP_READLINE \
   || (int)otype == OP_READLINK \
   || (int)otype == OP_RECV \
-  || (int)otype == OP_REDO \
   || (int)otype == OP_REF \
   || (int)otype == OP_REFGEN \
   || (int)otype == OP_RENAME \
@@ -616,6 +611,7 @@
   || (int)otype == OP_SNETENT \
   || (int)otype == OP_SOCKET \
   || (int)otype == OP_SOCKPAIR \
+  || (int)otype == OP_SORT \
   || (int)otype == OP_SPLICE \
   || (int)otype == OP_SPLIT \
   || (int)otype == OP_SPRINTF \

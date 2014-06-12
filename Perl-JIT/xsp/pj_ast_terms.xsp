@@ -225,3 +225,18 @@ class Perl::JIT::AST::LoopControlStatement : public Perl::JIT::AST::Unop
   std::vector<Perl::JIT::AST::Term *> get_kids()
     %code{% PERL_UNUSED_VAR(THIS); %};
 };
+
+class Perl::JIT::AST::Sort : public Perl::JIT::AST::Term
+{
+  bool is_reverse_sort() const;
+  bool is_std_numeric_sort() const;
+  SV *get_cmp_function() const
+    %code{%
+      PerlJIT::AST::Term *r = THIS->get_cmp_function();
+      RETVAL = newSV(0);
+      if (r)
+        sv_setref_pv(RETVAL, r->perl_class(), (void *)r);
+    %};
+     
+  std::vector<Perl::JIT::AST::Term *> get_arguments() const;
+};

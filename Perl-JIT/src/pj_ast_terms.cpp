@@ -344,6 +344,15 @@ Statement::Statement(OP *p_nextstate, Term *term)
   kids[0] = term;
 }
 
+Sort::Sort(OP *p_op, bool reverse, bool std_numeric, Term *cmp_fun, const std::vector<Term *> & args)
+  : Term(p_op, pj_ttype_sort),
+    needs_reverse(reverse),
+    is_numeric(std_numeric),
+    cmp_function(cmp_fun),
+    arguments(args)
+{
+}
+
 StatementSequence::StatementSequence()
   : Term(NULL, pj_ttype_statementsequence)
 {}
@@ -715,6 +724,33 @@ void LoopControlStatement::dump(int indent_lvl) const
     jump_target->dump(indent_lvl+10);
     recursive = 0;
   }
+}
+
+void
+Sort::dump(int indent_lvl) const
+{
+  S_dump_tree_indent(indent_lvl);
+  printf("%s(\n", (needs_reverse ? "Reverse Sort" : "Sort"));
+
+  S_dump_tree_indent(indent_lvl);
+  if (cmp_function) {
+    printf("Comparison function:\n");
+    cmp_function->dump(indent_lvl+1);
+  }
+  else {
+    if (is_numeric)
+      printf("Standard numeric sort.\n");
+    else
+      printf("Standard alphanumeric sort.\n");
+  }
+
+  S_dump_tree_indent(indent_lvl);
+  printf("Arguments:\n");
+  for (unsigned int i = 0; i < arguments.size(); ++i)
+    arguments[i]->dump(indent_lvl+1);
+
+  S_dump_tree_indent(indent_lvl);
+  printf(")\n");
 }
 
 

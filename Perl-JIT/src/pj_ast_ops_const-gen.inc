@@ -160,9 +160,6 @@
   INT_CONST(pj_unop_dofile);
   INT_CONST(pj_unop_method);
   INT_CONST(pj_unop_default);
-  INT_CONST(pj_unop_next);
-  INT_CONST(pj_unop_last);
-  INT_CONST(pj_unop_redo);
   INT_CONST(pj_binop_add);
   INT_CONST(pj_binop_subtract);
   INT_CONST(pj_binop_multiply);

@@ -39,6 +39,7 @@ our @EXPORT = (qw(
   ast_next
   ast_redo
   ast_last
+  ast_sort
 
   ast_contains
 ), @Perl::JIT::EXPORT_OK);
@@ -66,6 +67,9 @@ sub _matches {
         }
         when (pj_unspecified_type) {
           return !defined $pattern->{value};
+        }
+        when (pj_string_type) {
+          return $ast->get_string_value eq $pattern->{value};
         }
         default {
           die "Unhandled constant type in pattern" ;
@@ -252,6 +256,26 @@ sub _matches {
       }
       else {
         return 0 if scalar($ast->get_kids);
+      }
+
+      return 1;
+    }
+    when ('sort') {
+      return 0 unless $ast->get_type == pj_ttype_sort;
+      return unless !!$ast->is_reverse_sort == !!$pattern->{reverse};
+
+      my $cmp_fun = $ast->get_cmp_function();
+      if (!$cmp_fun) {
+        return 0 unless !!$ast->is_std_numeric_sort == !!$pattern->{numeric};
+      }
+      else {
+        return 0 unless $pattern->{cmp};
+        return 0 if !_matches($cmp_fun, $pattern->{cmp});
+      }
+      my @args = $ast->get_arguments;
+      return 0 if @args != @{$pattern->{args}};
+      for my $i (0 .. $#args) {
+        return 0 unless _matches($args[$i], $pattern->{args}[$i]);
       }
 
       return 1;
@@ -465,6 +489,15 @@ sub ast_last {
 
   return {type => 'last', label => $label,
           target => $target, kid => $kid};
+}
+
+sub ast_sort {
+  my (%args) = @_;
+
+  if (not $args{args}) {
+    croak("ast_sort: Need sort arguments");
+  }
+  return {cmp_fun => undef, %args, type => 'sort'};
 }
 
 package t::lib::Perl::JIT::ASTTest;

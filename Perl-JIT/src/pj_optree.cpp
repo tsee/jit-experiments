@@ -861,6 +861,57 @@ pj_build_sub_call(pTHX_ LISTOP *entersub, OPTreeJITCandidateFinder &visitor)
   return retval;
 }
 
+static PerlJIT::AST::Term *
+pj_build_sort(pTHX_ OP *sort, OPTreeJITCandidateFinder &visitor)
+{
+  PerlJIT::AST::Term *retval = NULL;
+  assert(sort);
+
+  PJ_DEBUG("Building sort AST node\n");
+
+  vector<AST::Term *> kid_terms;
+  if (pj_build_kid_terms(aTHX_ sort, visitor, kid_terms)) {
+    pj_free_term_vector(aTHX_ kid_terms);
+    return NULL;
+  }
+
+  // TODO pull prefixed "reverse" in correctly (this is buggy, it seems)
+  // TODO sort \&foo, @a
+  // TODO recognize and store quick sort, stable sort, integer sort, and possibly in-place sort flags
+
+  AST::Term *sort_cb = NULL;
+  bool is_reverse = sort->op_private & OPpSORT_DESCEND;
+  if (sort->op_private & OPpSORT_REVERSE)
+    is_reverse = is_reverse ? false : true;
+
+  vector<AST::Term *> args;
+  bool is_std_numeric = false;
+
+  // If have special case for num/alpha sort without explicit block
+  if (!(sort->op_flags & OPf_STACKED))
+  {
+    is_std_numeric = sort->op_private & OPpSORT_NUMERIC;
+    args = kid_terms;
+  }
+  else {
+    assert(!kid_terms.empty());
+    sort_cb = kid_terms[0];
+    // FTR, this is what finds the OP* equivalent of kid_terms[0] in pp_sort.
+    // OP *nullop = cLISTOPx(sort)->op_first->op_sibling;	/* pass pushmark */
+    // assert(nullop->op_type == OP_NULL);
+    // nullop->op_next;
+
+    args.reserve(kid_terms.size()-1);
+    for (unsigned int i = 1; i < kid_terms.size(); ++i)
+      args.push_back(kid_terms[i]);
+  }
+  assert(sort_cb);
+
+  retval = new AST::Sort(sort, is_reverse, is_std_numeric, sort_cb, args);
+
+  return retval;
+}
+
 /* Walk OP tree recursively, build ASTs, build subtrees */
 static PerlJIT::AST::Term *
 pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
@@ -1081,8 +1132,10 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     }
 
   case OP_NULL: {
+      retval = NULL;
       const unsigned int targ_otype = (unsigned int)o->op_targ;
       MAKE_DEFAULT_KID_VECTOR
+
       if (targ_otype == OP_AELEM) {
         // AELEMFASTified aelem!
         PJ_DEBUG("Passing through kid of ex-aelem\n");
@@ -1092,6 +1145,17 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       }
       else if (targ_otype == OP_LIST) {
         retval = new AST::List(kid_terms);
+      }
+      else if (targ_otype == OP_REVERSE
+               && kid_terms.size() == 1
+               && kid_terms[0]->get_type() == pj_ttype_sort)
+      {
+        // OP_REVERSE is nulled if it's been sucked into a sort
+        // (and maybe other things? Certainly also in some foreach
+        // special case, which is handled elsewhere, and likely also
+        // for ranges)
+        PJ_DEBUG("Identified compiled-out reversal");
+        retval = kid_terms[0];
       }
       else if (kid_terms.size() == 1) {
         if (o->op_targ == 0) {
@@ -1286,6 +1350,10 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         retval = new AST::Listop(o, pj_listop_list2scalar, kid_terms);
       break;
     }
+
+  case OP_SORT:
+    retval = pj_build_sort(aTHX_ o, visitor);
+    break;
 
   case OP_ENTERSUB:
     retval = pj_build_sub_call(aTHX_ cLISTOPo, visitor);
