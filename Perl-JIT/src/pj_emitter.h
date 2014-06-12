@@ -58,9 +58,10 @@ namespace PerlJIT {
     bool _jit_assign_sv(llvm::Value *sv, llvm::Value *value, const PerlJIT::AST::Type *type);
 
     llvm::Value *_to_nv_value(llvm::Value *value, const PerlJIT::AST::Type *type);
+    llvm::Value *_to_iv_value(llvm::Value *value, const PerlJIT::AST::Type *type);
     llvm::Value *_to_bool_value(llvm::Value *value, const PerlJIT::AST::Type *type);
     llvm::Value *_to_type_value(llvm::Value *value, const PerlJIT::AST::Type *type, const PerlJIT::AST::Type *target);
-    llvm::Value *_jit_emit_perl_int(llvm::Value *v);
+    EmitValue _jit_emit_perl_int(const EmitValue &v);
 
     llvm::Type *_map_to_llvm_type(const PerlJIT::AST::Type *type);
 

@@ -10,6 +10,10 @@ NV emit_SvNV(SV *sv) (thx) {
   return SvNV(sv);
 }
 
+NV emit_SvIV(SV *sv) (thx) {
+  return SvIV(sv);
+}
+
 bool emit_SvTRUE(SV *sv) (thx) {
   return SvTRUE(sv);
 }

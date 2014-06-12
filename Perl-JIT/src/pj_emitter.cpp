@@ -584,10 +584,17 @@ Emitter::_jit_emit_return(Term *ast, pj_op_context context, Value *value, const 
   return true;
 }
 
-llvm::Value *
-Emitter::_jit_emit_perl_int(llvm::Value *v)
+EmitValue
+Emitter::_jit_emit_perl_int(const EmitValue &v)
 {
-  return MY_CXT.builder.CreateFPToSI(v, pa.IV_type());
+  if (v.type->is_integer())
+    return v;
+
+  Value *vv = _to_nv_value(v.value, v.type);
+  if (!vv)
+    return EmitValue::invalid();
+
+  return EmitValue(MY_CXT.builder.CreateFPToSI(vv, pa.IV_type()), &INT_T);
 }
 
 EmitValue
@@ -596,16 +603,26 @@ Emitter::_jit_emit_unop(Unop *ast, const EmitValue &v, const PerlJIT::AST::Type 
   if (v.is_invalid())
     return EmitValue::invalid();
 
-  Value *vv = _to_nv_value(v.value, v.type);
-
-  if (!vv)
-    return EmitValue::invalid();
-
   Value *res = NULL;
 
   switch (ast->get_op_type()) {
   case pj_unop_perl_int:
-    return EmitValue(_jit_emit_perl_int(vv), &INT_T);
+    return _jit_emit_perl_int(v);
+  case pj_unop_negate: {
+    if (type->is_integer()) {
+      Value *vv = _to_iv_value(v.value, v.type);
+      if (!vv)
+        return EmitValue::invalid();
+
+      return EmitValue(MY_CXT.builder.CreateNSWNeg(vv), &INT_T);
+    } else {
+      Value *vv = _to_nv_value(v.value, v.type);
+      if (!vv)
+        return EmitValue::invalid();
+
+      return EmitValue(MY_CXT.builder.CreateFNeg(vv), &DOUBLE_T);
+    }
+  }
   default:
     return EmitValue::invalid();
   }
@@ -764,6 +781,20 @@ Emitter::_to_nv_value(Value *value, const PerlJIT::AST::Type *type)
     return pa.emit_SvNV(value);
 
   set_error("Handle more NV coercion cases");
+  return NULL;
+}
+
+Value *
+Emitter::_to_iv_value(Value *value, const PerlJIT::AST::Type *type)
+{
+  if (type->is_integer())
+    return value;
+  if (type->is_numeric())
+    return MY_CXT.builder.CreateFPToSI(value, pa.IV_type());
+  if (type->equals(&SCALAR_T) || type->equals(&UNSPECIFIED_T))
+    return pa.emit_SvIV(value);
+
+  set_error("Handle more IV coercion cases");
   return NULL;
 }
 

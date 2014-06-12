@@ -1,7 +1,7 @@
 define: DEFINITE_TYPES TypeDouble|TypeInt|TypeUnsignedInt|TypeAny
 define: ARITH_BINOPS   pj_binop_add|pj_binop_multiply
 define: LOGICAL_BINOPS pj_binop_bool_and|pj_binop_bool_or
-define: UNOPS          pj_unop_perl_int
+define: UNOPS          pj_unop_perl_int|pj_unop_negate
 
 name: Expr
 match: DOUBLE_Expr
