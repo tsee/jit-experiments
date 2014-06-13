@@ -21,35 +21,29 @@ ast_contains(
   "Simple bare sort"
 );
 
-TODO: {
-  local $TODO = "AST surrounding Sort is still messy";
-  ast_contains(
-    sub { @a = sort @b },
-    ast_binop(
-      pj_binop_aassign,
-      ast_lexical('@a'),
-      ast_sort(
-        reverse => 0,
-        numeric => 0,
-        args => [ast_lexical('@b')],
-      )
-    ),
-    "Simple bare sort with surrounding aassign"
-  );
-}
-
-TODO: {
-  local $TODO = "reverse sort is not correctly folded in yet !?";
-  ast_contains(
-    sub { @a = reverse sort @b },
-    ast_sort(
-      reverse => 1,
+ast_contains(
+  sub { @a = sort @b },
+  ast_binop(
+    pj_binop_aassign,
+    ast_list(ast_lexical('@a')),
+    ast_list(ast_sort(
+      reverse => 0,
       numeric => 0,
       args => [ast_lexical('@b')],
-    ),
-    "'reverse sort' without block"
-  );
-}
+    ))
+  ),
+  "Simple bare sort with surrounding aassign"
+);
+
+ast_contains(
+  sub { @a = reverse sort @b },
+  ast_sort(
+    reverse => 1,
+    numeric => 0,
+    args => [ast_lexical('@b')],
+  ),
+  "'reverse sort' without block"
+);
 
 ast_contains(
   sub { @a = sort {$a cmp $b} @b },
@@ -71,18 +65,15 @@ ast_contains(
   "Sort with reversed, optimized string comparison block"
 );
 
-TODO: {
-  local $TODO = "reverse sort is not correctly folded in yet !?";
-  ast_contains(
-    sub { @a = reverse sort {$b cmp $a} @b },
-    ast_sort(
-      reverse => 0,
-      numeric => 0,
-      args => [ast_lexical('@b')],
-    ),
-    "'reverse sort' with reversed, optimized string comparsion block"
-  );
-}
+ast_contains(
+  sub { @a = reverse sort {$b cmp $a} @b },
+  ast_sort(
+    reverse => 0,
+    numeric => 0,
+    args => [ast_lexical('@b')],
+  ),
+  "'reverse sort' with reversed, optimized string comparsion block"
+);
 
 ast_contains(
   sub { @a = sort {$b <=> $a} @b },
@@ -121,6 +112,17 @@ ast_contains(
   sub { @a = sort foo @b },
   ast_sort(
     reverse => 0,
+    numeric => 0,
+    args => [ast_lexical('@b')],
+    cmp => ast_constant("foo", pj_string_type),
+  ),
+  "Sort with named cmp block"
+);
+
+ast_contains(
+  sub { @a = reverse sort foo @b },
+  ast_sort(
+    reverse => 1,
     numeric => 0,
     args => [ast_lexical('@b')],
     cmp => ast_constant("foo", pj_string_type),
