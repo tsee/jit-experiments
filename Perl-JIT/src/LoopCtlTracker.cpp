@@ -15,13 +15,11 @@ LoopCtlTracker::get_label_from_nextstate(pTHX_ OP *nextstate_op)
 {
   assert(nextstate_op->op_type == OP_NEXTSTATE);
 
-  COP *ns = (COP *)nextstate_op;
-
   // *sigh* about the strlen dance
-  STRLEN cop_label_len = 0;
 
   string retval("");
 #ifdef CopLABEL_len
+  STRLEN cop_label_len = 0;
   const char *cop_label = CopLABEL_len((COP *)nextstate_op, &cop_label_len);
   if (cop_label != NULL)
     retval = string(cop_label, cop_label_len);
@@ -68,6 +66,8 @@ LoopCtlTracker::add_loop_control_node(pTHX_ AST::LoopControlStatement *ctrl_term
 void
 LoopCtlTracker::pop_loop_scope(pTHX_ const std::string &label, AST::Term *loop)
 {
+  PERL_UNUSED_ARG(aTHX);
+
   PJ_DEBUG_2("LoopCtlTracker: End scope for label='%s' (N scopes: %i)\n", label.c_str(), (int)loop_control_index[label].size());
 #ifndef NDEBUG
   pj_term_type t = loop->get_type();
