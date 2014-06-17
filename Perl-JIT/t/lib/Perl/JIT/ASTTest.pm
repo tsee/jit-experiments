@@ -263,6 +263,7 @@ sub _matches {
     when ('sort') {
       return 0 unless $ast->get_type == pj_ttype_sort;
       return unless !!$ast->is_reverse_sort == !!$pattern->{reverse};
+      return unless !!$ast->is_in_place_sort == !!$pattern->{inplace};
 
       my $cmp_fun = $ast->get_cmp_function();
       if (!$cmp_fun) {

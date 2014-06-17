@@ -130,5 +130,19 @@ ast_contains(
   "Sort with named cmp block"
 );
 
+TODO: {
+  local $TODO = "inplace sort OP trees make the tree walker barf";
+  ast_contains(
+    sub { @a = sort @a },
+    ast_sort(
+      reverse => 1,
+      numeric => 0,
+      inplace => 1,
+      args => [ast_lexical('@a')],
+    ),
+    "In-place sort"
+  );
+}
+
 
 done_testing();
