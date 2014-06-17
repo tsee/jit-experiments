@@ -130,6 +130,17 @@ ast_contains(
   "Sort with named cmp block"
 );
 
+ast_contains(
+  sub { use integer; @a = sort {$a <=> $b} @b },
+  ast_sort(
+    reverse => 0,
+    numeric => 1,
+    integer => 1,
+    args => [ast_lexical('@b')],
+  ),
+  "Standard integer sort"
+);
+
 TODO: {
   local $TODO = "inplace sort OP trees make the tree walker barf";
   ast_contains(

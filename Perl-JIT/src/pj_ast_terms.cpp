@@ -349,6 +349,7 @@ Sort::Sort(OP *p_op, Term *cmp_fun, const std::vector<Term *> & args)
     needs_reverse(false),
     is_numeric(false),
     is_inplace(false),
+    is_integer_sort(false),
     cmp_function(cmp_fun),
     arguments(args)
 {
@@ -731,7 +732,9 @@ void
 Sort::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
-  printf("%s(\n", (needs_reverse ? "Reverse Sort" : "Sort"));
+  printf("%s%sSort(\n",
+          (needs_reverse ? "Reverse " : ""),
+          (is_inplace ? "In-place " : "")    );
 
   S_dump_tree_indent(indent_lvl);
   if (cmp_function) {
@@ -739,8 +742,12 @@ Sort::dump(int indent_lvl) const
     cmp_function->dump(indent_lvl+1);
   }
   else {
-    if (is_numeric)
-      printf("Standard numeric sort.\n");
+    if (is_numeric) {
+      if (is_integer_sort)
+        printf("Standard integer sort.\n");
+      else
+        printf("Standard numeric sort.\n");
+    }
     else
       printf("Standard alphanumeric sort.\n");
   }

@@ -530,7 +530,12 @@ namespace PerlJIT {
       Sort(OP *p_op, Term *cmp_fun, const std::vector<Term *> & args);
 
       bool is_reverse_sort() const { return needs_reverse; }
+      // Note that "integer sort" should imply "numeric sort" in the sense of
+      // "@a = sort {$a <=> $b} @a" is a standard numeric sort, whereas
+      // "use integer; @a = sort {$a <=> $b} @a" is a standard integer
+      // sort.
       bool is_std_numeric_sort() const { return is_numeric; }
+      bool is_std_integer_sort() const { return is_integer_sort; }
       bool is_in_place_sort() const { return is_inplace; }
 
       Term *get_cmp_function() const { return cmp_function; }
@@ -538,6 +543,7 @@ namespace PerlJIT {
 
       void set_reverse_sort(bool is_reverse) { needs_reverse = is_reverse; }
       void set_std_numeric_sort(bool is_std_numeric) { is_numeric = is_std_numeric; }
+      void set_std_integer_sort(bool is_std_int) { is_integer_sort = is_std_int; }
       void set_in_place_sort(bool is_in_place) { is_inplace = is_in_place; }
 
       void dump(int indent_lvl = 0) const;
@@ -548,6 +554,7 @@ namespace PerlJIT {
       bool needs_reverse;
       bool is_numeric;
       bool is_inplace;
+      bool is_integer_sort;
       Term *cmp_function;
       std::vector<Term *> arguments;
     };

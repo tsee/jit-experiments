@@ -268,6 +268,7 @@ sub _matches {
       my $cmp_fun = $ast->get_cmp_function();
       if (!$cmp_fun) {
         return 0 unless !!$ast->is_std_numeric_sort == !!$pattern->{numeric};
+        return 0 unless !!$ast->is_std_integer_sort == !!$pattern->{integer};
       }
       else {
         return 0 unless $pattern->{cmp};

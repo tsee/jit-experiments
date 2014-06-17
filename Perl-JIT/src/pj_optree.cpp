@@ -907,8 +907,8 @@ pj_build_sort(pTHX_ OP *sort, OPTreeJITCandidateFinder &visitor)
   retval = new AST::Sort(sort, sort_cb, args);
   retval->set_reverse_sort(is_reverse);
   retval->set_std_numeric_sort(is_std_numeric);
-  if (sort->op_private & OPpSORT_INPLACE)
-    retval->set_in_place_sort(true);
+  retval->set_in_place_sort(sort->op_private & OPpSORT_INPLACE);
+  retval->set_std_integer_sort(sort->op_private & OPpSORT_INTEGER);
 
   return (AST::Term *)retval;
 }
