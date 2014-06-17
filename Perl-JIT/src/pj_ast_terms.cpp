@@ -344,10 +344,11 @@ Statement::Statement(OP *p_nextstate, Term *term)
   kids[0] = term;
 }
 
-Sort::Sort(OP *p_op, bool reverse, bool std_numeric, Term *cmp_fun, const std::vector<Term *> & args)
+Sort::Sort(OP *p_op, Term *cmp_fun, const std::vector<Term *> & args)
   : Term(p_op, pj_ttype_sort),
-    needs_reverse(reverse),
-    is_numeric(std_numeric),
+    needs_reverse(false),
+    is_numeric(false),
+    is_inplace(false),
     cmp_function(cmp_fun),
     arguments(args)
 {

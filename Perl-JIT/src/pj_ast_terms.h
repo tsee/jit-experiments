@@ -527,14 +527,18 @@ namespace PerlJIT {
 
     class Sort : public Term {
     public:
-      Sort(OP *p_op, bool reverse, bool std_numeric, Term *cmp_fun, const std::vector<Term *> & args);
+      Sort(OP *p_op, Term *cmp_fun, const std::vector<Term *> & args);
 
       bool is_reverse_sort() const { return needs_reverse; }
       bool is_std_numeric_sort() const { return is_numeric; }
+      bool is_in_place_sort() const { return is_inplace; }
+
       Term *get_cmp_function() const { return cmp_function; }
       const std::vector<Term *> & get_arguments() const { return arguments; }
 
       void set_reverse_sort(bool is_reverse) { needs_reverse = is_reverse; }
+      void set_std_numeric_sort(bool is_std_numeric) { is_numeric = is_std_numeric; }
+      void set_in_place_sort(bool is_in_place) { is_inplace = is_in_place; }
 
       void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
@@ -543,6 +547,7 @@ namespace PerlJIT {
     protected:
       bool needs_reverse;
       bool is_numeric;
+      bool is_inplace;
       Term *cmp_function;
       std::vector<Term *> arguments;
     };

@@ -864,7 +864,7 @@ pj_build_sub_call(pTHX_ LISTOP *entersub, OPTreeJITCandidateFinder &visitor)
 static PerlJIT::AST::Term *
 pj_build_sort(pTHX_ OP *sort, OPTreeJITCandidateFinder &visitor)
 {
-  PerlJIT::AST::Term *retval = NULL;
+  PerlJIT::AST::Sort *retval = NULL;
   assert(sort);
 
   PJ_DEBUG("Building sort AST node\n");
@@ -904,9 +904,13 @@ pj_build_sort(pTHX_ OP *sort, OPTreeJITCandidateFinder &visitor)
   }
   assert(sort_cb);
 
-  retval = new AST::Sort(sort, is_reverse, is_std_numeric, sort_cb, args);
+  retval = new AST::Sort(sort, sort_cb, args);
+  retval->set_reverse_sort(is_reverse);
+  retval->set_std_numeric_sort(is_std_numeric);
+  if (sort->op_private & OPpSORT_INPLACE)
+    retval->set_in_place_sort(true);
 
-  return retval;
+  return (AST::Term *)retval;
 }
 
 /* Walk OP tree recursively, build ASTs, build subtrees */

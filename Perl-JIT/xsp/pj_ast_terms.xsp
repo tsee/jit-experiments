@@ -230,6 +230,8 @@ class Perl::JIT::AST::Sort : public Perl::JIT::AST::Term
 {
   bool is_reverse_sort() const;
   bool is_std_numeric_sort() const;
+  bool is_in_place_sort() const;
+
   SV *get_cmp_function() const
     %code{%
       PerlJIT::AST::Term *r = THIS->get_cmp_function();
