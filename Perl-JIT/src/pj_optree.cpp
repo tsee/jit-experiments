@@ -875,10 +875,7 @@ pj_build_sort(pTHX_ OP *sort, OPTreeJITCandidateFinder &visitor)
     return NULL;
   }
 
-  // TODO pull prefixed "reverse" in correctly (this is buggy, it seems)
-  // TODO sort \&foo, @a
   // TODO recognize and store quick sort, stable sort, integer sort, and possibly in-place sort flags
-
   AST::Term *sort_cb = NULL;
   bool is_reverse = sort->op_private & OPpSORT_DESCEND;
   if (sort->op_private & OPpSORT_REVERSE)
