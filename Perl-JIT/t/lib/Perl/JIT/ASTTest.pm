@@ -262,8 +262,12 @@ sub _matches {
     }
     when ('sort') {
       return 0 unless $ast->get_type == pj_ttype_sort;
-      return unless !!$ast->is_reverse_sort == !!$pattern->{reverse};
-      return unless !!$ast->is_in_place_sort == !!$pattern->{inplace};
+      return 0 unless !!$ast->is_reverse_sort == !!$pattern->{reverse};
+      return 0 unless !!$ast->is_in_place_sort == !!$pattern->{inplace};
+      return 0 unless !!$ast->is_guaranteed_stable_sort == !!$pattern->{stable};
+
+      return 0 if defined $pattern->{algo}
+                  and $ast->get_sort_algorithm() ne $pattern->{algo};
 
       my $cmp_fun = $ast->get_cmp_function();
       if (!$cmp_fun) {

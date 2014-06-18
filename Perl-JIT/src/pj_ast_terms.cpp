@@ -349,9 +349,11 @@ Sort::Sort(OP *p_op, Term *cmp_fun, const std::vector<Term *> & args)
     needs_reverse(false),
     is_numeric(false),
     is_inplace(false),
+    is_guaranteed_stable(false),
     is_integer_sort(false),
     cmp_function(cmp_fun),
-    arguments(args)
+    arguments(args),
+    sort_algo(pj_sort_merge)
 {
 }
 
@@ -732,9 +734,11 @@ void
 Sort::dump(int indent_lvl) const
 {
   S_dump_tree_indent(indent_lvl);
-  printf("%s%sSort(\n",
+  printf("%s%s%s%sSort(\n",
           (needs_reverse ? "Reverse " : ""),
-          (is_inplace ? "In-place " : "")    );
+          (is_inplace ? "In-place " : ""),
+          (is_guaranteed_stable ? "Guaranteed-Stable " : ""),
+          (sort_algo == pj_sort_quick ? "Quick-" : "Merge-") );
 
   S_dump_tree_indent(indent_lvl);
   if (cmp_function) {

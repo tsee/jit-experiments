@@ -527,6 +527,11 @@ namespace PerlJIT {
 
     class Sort : public Term {
     public:
+      enum pj_sort_algorithm_type {
+        pj_sort_merge,
+        pj_sort_quick
+      };
+
       Sort(OP *p_op, Term *cmp_fun, const std::vector<Term *> & args);
 
       bool is_reverse_sort() const { return needs_reverse; }
@@ -537,6 +542,9 @@ namespace PerlJIT {
       bool is_std_numeric_sort() const { return is_numeric; }
       bool is_std_integer_sort() const { return is_integer_sort; }
       bool is_in_place_sort() const { return is_inplace; }
+      bool is_guaranteed_stable_sort() const { return is_guaranteed_stable; }
+
+      pj_sort_algorithm_type get_sort_algorithm() const { return sort_algo; }
 
       Term *get_cmp_function() const { return cmp_function; }
       const std::vector<Term *> & get_arguments() const { return arguments; }
@@ -545,6 +553,9 @@ namespace PerlJIT {
       void set_std_numeric_sort(bool is_std_numeric) { is_numeric = is_std_numeric; }
       void set_std_integer_sort(bool is_std_int) { is_integer_sort = is_std_int; }
       void set_in_place_sort(bool is_in_place) { is_inplace = is_in_place; }
+      void set_guaranteed_stable_sort(bool stable_sort_required) { is_guaranteed_stable = stable_sort_required; }
+
+      void set_sort_algorithm(pj_sort_algorithm_type t) { sort_algo = t; }
 
       void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
@@ -554,9 +565,11 @@ namespace PerlJIT {
       bool needs_reverse;
       bool is_numeric;
       bool is_inplace;
+      bool is_guaranteed_stable;
       bool is_integer_sort;
       Term *cmp_function;
       std::vector<Term *> arguments;
+      pj_sort_algorithm_type sort_algo;
     };
 
     class Optree : public Term {

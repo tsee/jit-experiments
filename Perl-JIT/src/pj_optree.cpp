@@ -875,7 +875,6 @@ pj_build_sort(pTHX_ OP *sort, OPTreeJITCandidateFinder &visitor)
     return NULL;
   }
 
-  // TODO recognize and store quick sort, stable sort flags.
   // TODO make in-place sort OP tree structure not blow up the tree walker.
 
   AST::Term *sort_cb = NULL;
@@ -911,6 +910,10 @@ pj_build_sort(pTHX_ OP *sort, OPTreeJITCandidateFinder &visitor)
   retval->set_std_numeric_sort(is_std_numeric);
   retval->set_in_place_sort(sort->op_private & OPpSORT_INPLACE);
   retval->set_std_integer_sort(sort->op_private & OPpSORT_INTEGER);
+  retval->set_guaranteed_stable_sort(sort->op_private & OPpSORT_STABLE);
+  // Merge is default
+  if (sort->op_private & OPpSORT_QSORT)
+    retval->set_sort_algorithm(AST::Sort::pj_sort_quick);
 
   return (AST::Term *)retval;
 }

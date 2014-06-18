@@ -16,6 +16,7 @@ ast_contains(
   ast_sort(
     reverse => 0,
     numeric => 0,
+    algo => "Merge",
     args => [ast_lexical('@b')],
   ),
   "Simple bare sort"
@@ -29,6 +30,7 @@ ast_contains(
     ast_list(ast_sort(
       reverse => 0,
       numeric => 0,
+      algo => "Merge",
       args => [ast_lexical('@b')],
     ))
   ),
@@ -39,6 +41,7 @@ ast_contains(
   sub { @a = reverse sort @b },
   ast_sort(
     reverse => 1,
+    algo => "Merge",
     numeric => 0,
     args => [ast_lexical('@b')],
   ),
@@ -49,6 +52,7 @@ ast_contains(
   sub { @a = sort {$a cmp $b} @b },
   ast_sort(
     reverse => 0,
+    algo => "Merge",
     numeric => 0,
     args => [ast_lexical('@b')],
   ),
@@ -60,6 +64,7 @@ ast_contains(
   ast_sort(
     reverse => 1,
     numeric => 0,
+    algo => "Merge",
     args => [ast_lexical('@b')],
   ),
   "Sort with reversed, optimized string comparison block"
@@ -70,6 +75,7 @@ ast_contains(
   ast_sort(
     reverse => 0,
     numeric => 0,
+    algo => "Merge",
     args => [ast_lexical('@b')],
   ),
   "'reverse sort' with reversed, optimized string comparsion block"
@@ -80,6 +86,7 @@ ast_contains(
   ast_sort(
     reverse => 1,
     numeric => 1,
+    algo => "Merge",
     args => [ast_lexical('@b')],
   ),
   "Sort with reversed, optimized numeric comparsion block"
@@ -90,6 +97,7 @@ ast_contains(
   ast_sort(
     reverse => 0,
     numeric => 0,
+    algo => "Merge",
     args => [ast_lexical('@b')],
     cmp => ast_block( ast_lexical('$x') ),
   ),
@@ -101,6 +109,7 @@ ast_contains(
   ast_sort(
     reverse => 0,
     numeric => 0,
+    algo => "Merge",
     args => [ast_constant(1), ast_constant(2)],
     cmp => ast_block( ast_lexical('$x') ),
   ),
@@ -113,6 +122,7 @@ ast_contains(
   ast_sort(
     reverse => 0,
     numeric => 0,
+    algo => "Merge",
     args => [ast_lexical('@b')],
     cmp => ast_constant("foo", pj_string_type),
   ),
@@ -124,6 +134,7 @@ ast_contains(
   ast_sort(
     reverse => 1,
     numeric => 0,
+    algo => "Merge",
     args => [ast_lexical('@b')],
     cmp => ast_constant("foo", pj_string_type),
   ),
@@ -136,6 +147,7 @@ ast_contains(
     reverse => 0,
     numeric => 1,
     integer => 1,
+    algo => "Merge",
     args => [ast_lexical('@b')],
   ),
   "Standard integer sort"
@@ -149,11 +161,26 @@ TODO: {
       reverse => 1,
       numeric => 0,
       inplace => 1,
+      algo => "Merge",
       args => [ast_lexical('@a')],
     ),
     "In-place sort"
   );
 }
+
+
+ast_contains(
+  sub { use sort "stable", "_quicksort"; @a = sort @b },
+  ast_sort(
+    reverse => 0,
+    numeric => 0,
+    integer => 0,
+    algo => "Quick",
+    stable => 1,
+    args => [ast_lexical('@b')],
+  ),
+  "Stable quick sort"
+);
 
 
 done_testing();

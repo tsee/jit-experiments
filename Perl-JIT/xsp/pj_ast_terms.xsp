@@ -232,6 +232,13 @@ class Perl::JIT::AST::Sort : public Perl::JIT::AST::Term
   bool is_std_numeric_sort() const;
   bool is_std_integer_sort() const;
   bool is_in_place_sort() const;
+  bool is_guaranteed_stable_sort() const;
+
+  SV *get_sort_algorithm() const
+    %code{%
+      PerlJIT::AST::Sort::pj_sort_algorithm_type t = THIS->get_sort_algorithm();
+      RETVAL = newSVpvn((t == PerlJIT::AST::Sort::pj_sort_quick ? "Quick" : "Merge"), 5);
+    %};
 
   SV *get_cmp_function() const
     %code{%
