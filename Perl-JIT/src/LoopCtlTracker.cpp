@@ -1,6 +1,7 @@
 #include "LoopCtlTracker.h"
 #include "ppport.h"
 #include "pj_debug.h"
+#include "assert.h"
 
 using namespace PerlJIT;
 using namespace std;
@@ -28,7 +29,7 @@ LoopCtlTracker::get_label_from_nextstate(pTHX_ OP *nextstate_op)
   if (cop_label != NULL)
     retval = string(cop_label, strlen(cop_label));
 #endif
-  PJ_DEBUG_2("get_label_from_nextstate: %p %s\n", nextstate_op, retval.c_str());
+  PJ_DEBUG_2("get_label_from_nextstate: %p %s\n", (void *)nextstate_op, retval.c_str());
   return retval;
 }
 
@@ -51,6 +52,7 @@ LoopCtlTracker::push_loop_scope(const std::string &label)
 void
 LoopCtlTracker::add_loop_control_node(pTHX_ AST::LoopControlStatement *ctrl_term)
 {
+  PERL_UNUSED_CONTEXT;
   PJ_DEBUG_1("LoopCtlTracker; Adding ctl statment for label='%s'\n", ctrl_term->get_label().c_str());
   const std::string label = ctrl_term->get_label();
   LoopCtlScopeStack &ss = loop_control_index[label];

@@ -15,6 +15,8 @@ int (*PJ_next_keyword_plugin)(pTHX_ char *, STRLEN, OP **);
 void
 pj_init_global_state(pTHX)
 {
+  PERL_UNUSED_CONTEXT;
+
   // Setup the actual keyword plugin
   PJ_next_keyword_plugin = PL_keyword_plugin;
   PL_keyword_plugin = pj_jit_type_keyword_plugin;
