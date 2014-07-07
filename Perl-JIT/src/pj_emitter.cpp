@@ -627,6 +627,13 @@ Emitter::_jit_emit_unop(Unop *ast, const EmitValue &v, const PerlJIT::AST::Type 
       return EmitValue(MY_CXT.builder.CreateFNeg(vv), &DOUBLE_T);
     }
   }
+  case pj_unop_bool_not: {
+    Value *vv = _to_bool_value(v.value, v.type);
+    if (!vv)
+      return EmitValue::invalid();
+
+    return EmitValue(MY_CXT.builder.CreateNot(vv), &INT_T);
+  }
   default:
     return EmitValue::invalid();
   }

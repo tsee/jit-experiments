@@ -157,6 +157,19 @@ emit_llvm: {
   $$ = _jit_emit_unop((Unop *) $OP.term, _($A), &DOUBLE_T);
 }
 
+# Logical not
+
+name: BOOL_Expr
+match: AstUnop(pj_unop_bool_not, DOUBLE_Expr @ $A) @ $OP
+match: AstUnop(pj_unop_bool_not, INT_Expr @ $A) @ $OP
+match: AstUnop(pj_unop_bool_not, Expr @ $A) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_unop((Unop *) $OP.term, _($A), &INT_T);
+}
+
+name: OPAQUE_Expr
+match: AstUnop(pj_unop_bool_not, OPAQUE_Expr)
+
 # Arithmetic binary
 
 name: DOUBLE_Expr

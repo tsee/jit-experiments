@@ -27,7 +27,7 @@ my @tests = (
   { name   => 'boolean not true to false',
     func   => build_jit_test_sub('$a', 'my $x = !$a;', '$x'),
     opgrep => [$ops{not}],
-    output => 0,
+    output => '',
     input  => [1], },
 
   { name   => 'wrapped-boolean and: yes with types',
