@@ -135,7 +135,7 @@ my @tests = (
   { name   => 'num ==, int, false',
     func   => build_jit_test_sub('$a, $b', 'my $x = ($a == $b);', '$x'),
     opgrep => [$ops{eq}],
-    output => 0, # FIXME should be ''
+    output => '',
     input  => [1, 2], },
   { name   => 'num ==, float, true',
     func   => build_jit_test_sub('$a, $b', 'my $x = ($a == $b);', '$x'),
@@ -145,7 +145,7 @@ my @tests = (
   { name   => 'num ==, float, false',
     func   => build_jit_test_sub('$a, $b', 'my $x = ($a == $b);', '$x'),
     opgrep => [$ops{eq}],
-    output => 0, # FIXME should be ''
+    output => '',
     input  => [1.123, 2.123], },
   { name   => 'num ==, typed int, true',
     func   => build_jit_test_sub(undef, 'typed Int ($a, $b)=@_; my $x = ($a == $b);', '$x'),
@@ -155,12 +155,12 @@ my @tests = (
   { name   => 'num ==, typed double, false',
     func   => build_jit_test_sub(undef, 'typed Double ($a, $b)=@_; my $x = ($a == $b);', '$x'),
     opgrep => [$ops{eq}],
-    output => 0, # FIXME shoule be ''
+    output => '',
     input  => [43, 42.123], },
   { name   => 'num !=, false',
     func   => build_jit_test_sub('$a, $b', 'my $x = ($a != $b);', '$x'),
     opgrep => [$ops{ne}],
-    output => 0, # FIXME should be ''
+    output => '',
     input  => [1, 1], },
   { name   => 'num !=, true',
     func   => build_jit_test_sub('$a, $b', 'my $x = ($a != $b);', '$x'),
@@ -170,7 +170,7 @@ my @tests = (
   { name   => 'num <, false',
     func   => build_jit_test_sub('$a, $b', 'my $x = ($a < $b);', '$x'),
     opgrep => [$ops{lt}],
-    output => 0, # FIXME should be ''
+    output => '',
     input  => [1, 1], },
   { name   => 'num <, true',
     func   => build_jit_test_sub('$a, $b', 'my $x = ($a < $b);', '$x'),
@@ -185,7 +185,7 @@ my @tests = (
   { name   => 'num <=, false',
     func   => build_jit_test_sub('$a, $b', 'my $x = ($a <= $b);', '$x'),
     opgrep => [$ops{le}],
-    output => 0, # FIXME should be ''
+    output => '',
     input  => [3, 2], },
   { name   => 'num >, true',
     func   => build_jit_test_sub('$a, $b', 'my $x = ($a > $b);', '$x'),
@@ -195,7 +195,7 @@ my @tests = (
   { name   => 'num >, false',
     func   => build_jit_test_sub('$a, $b', 'my $x = ($a > $b);', '$x'),
     opgrep => [$ops{gt}],
-    output => 0, # FIXME should be ''
+    output => '',
     input  => [1, 1], },
   { name   => 'num >=, true',
     func   => build_jit_test_sub('$a, $b', 'no warnings; my $x = ($a >= $b);', '$x'),
@@ -206,6 +206,11 @@ my @tests = (
     func   => build_jit_test_sub('$a, $b', 'my $x = ($a >= $b);', '$x'),
     opgrep => [$ops{ge}],
     output => 1,
+    input  => [2, 2], },
+  { name   => 'bool -> int coercion',
+    func   => build_jit_test_sub('$a, $b', 'my $x = 1 + ($a >= $b);', '$x'),
+    opgrep => [$ops{ge}, {name => 'add'}],
+    output => 2,
     input  => [2, 2], },
 );
 

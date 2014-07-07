@@ -44,6 +44,7 @@ namespace PerlJIT {
 
     bool _jit_emit_return(PerlJIT::AST::Term *ast, pj_op_context context, llvm::Value *value, const PerlJIT::AST::Type *type);
     EmitValue _jit_emit_binop(PerlJIT::AST::Binop *ast, const EmitValue &lv, const EmitValue &rv, const PerlJIT::AST::Type *type);
+    EmitValue _jit_emit_num_comparison(PerlJIT::AST::Binop *ast, const EmitValue &lv, const EmitValue &rv, const PerlJIT::AST::Type *arg_type);
     EmitValue _jit_emit_logop(PerlJIT::AST::Binop *ast, State *l, State *r, const PerlJIT::AST::Type *type);
     EmitValue _jit_emit_unop(PerlJIT::AST::Unop *ast, const EmitValue &v, const PerlJIT::AST::Type *type);
     EmitValue _jit_emit_optree(State *state);

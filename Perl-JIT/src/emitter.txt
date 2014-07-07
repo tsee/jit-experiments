@@ -1,6 +1,7 @@
 define: DEFINITE_TYPES TypeDouble|TypeInt|TypeUnsignedInt|TypeAny
 define: ARITH_BINOPS   pj_binop_add|pj_binop_multiply
 define: LOGICAL_BINOPS pj_binop_bool_and|pj_binop_bool_or
+define: NUM_COMPARISON pj_binop_num_eq|pj_binop_num_ne|pj_binop_num_lt|pj_binop_num_gt|pj_binop_num_le|pj_binop_num_ge
 define: UNOPS          pj_unop_perl_int|pj_unop_negate
 
 name: Expr
@@ -196,6 +197,33 @@ name: Expr
 match: AstBinop(ARITH_BINOPS, Expr @ $A, Expr @ $B) @ $OP
 emit_llvm: {
   $$ = _jit_emit_binop((Binop *) $OP.term, _($A), _($B), &DOUBLE_T);
+}
+
+# Numeric comparison
+
+name: BOOL_Expr
+match: AstBinop(NUM_COMPARISON, DOUBLE_Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(NUM_COMPARISON, Expr @ $A, DOUBLE_Expr @ $B) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_num_comparison((Binop *) $OP.term, _($A), _($B), &DOUBLE_T);
+}
+
+name: BOOL_Expr
+match: AstBinop(NUM_COMPARISON, INT_Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(NUM_COMPARISON, Expr @ $A, INT_Expr @ $B) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_num_comparison((Binop *) $OP.term, _($A), _($B), &INT_T);
+}
+
+name: OPAQUE_Expr
+match: AstBinop(NUM_COMPARISON, OPAQUE_Expr, Expr)
+match: AstBinop(NUM_COMPARISON, Expr, OPAQUE_Expr)
+match: AstBinop(NUM_COMPARISON, OPAQUE_Expr, OPAQUE_Expr)
+
+name: BOOL_Expr
+match: AstBinop(NUM_COMPARISON, Expr @ $A, Expr @ $B) @ $OP
+emit_llvm: {
+  $$ = _jit_emit_num_comparison((Binop *) $OP.term, _($A), _($B), &DOUBLE_T);
 }
 
 # Logical binary

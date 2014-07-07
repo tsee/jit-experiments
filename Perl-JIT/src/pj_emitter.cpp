@@ -679,6 +679,79 @@ Emitter::_jit_emit_binop(Binop *ast, const EmitValue &lv, const EmitValue &rv, c
 }
 
 EmitValue
+Emitter::_jit_emit_num_comparison(Binop *ast, const EmitValue &lv, const EmitValue &rv, const PerlJIT::AST::Type *arg_type)
+{
+  if (lv.is_invalid() || rv.is_invalid())
+    return EmitValue::invalid();
+
+  Value *lvv = _to_type_value(lv.value, lv.type, arg_type),
+        *rvv = _to_type_value(rv.value, rv.type, arg_type);
+
+  if (!lvv || !rvv)
+    return EmitValue::invalid();
+
+  Value *res = NULL;
+
+  if (arg_type->equals(&DOUBLE_T)) {
+    CmpInst::Predicate predicate;
+
+    switch (ast->get_op_type()) {
+    case pj_binop_num_eq:
+      predicate = FCmpInst::FCMP_UEQ;
+      break;
+    case pj_binop_num_ne:
+      predicate = FCmpInst::FCMP_UNE;
+      break;
+    case pj_binop_num_lt:
+      predicate = FCmpInst::FCMP_ULT;
+      break;
+    case pj_binop_num_le:
+      predicate = FCmpInst::FCMP_ULE;
+      break;
+    case pj_binop_num_gt:
+      predicate = FCmpInst::FCMP_UGT;
+      break;
+    case pj_binop_num_ge:
+      predicate = FCmpInst::FCMP_UGE;
+      break;
+    default:
+      return EmitValue::invalid();
+    }
+
+    res = MY_CXT.builder.CreateFCmp(predicate, lvv, rvv);
+  } else if (arg_type->equals(&INT_T)) {
+    CmpInst::Predicate predicate;
+
+    switch (ast->get_op_type()) {
+    case pj_binop_num_eq:
+      predicate = ICmpInst::ICMP_EQ;
+      break;
+    case pj_binop_num_ne:
+      predicate = ICmpInst::ICMP_NE;
+      break;
+    case pj_binop_num_lt:
+      predicate = ICmpInst::ICMP_SLT;
+      break;
+    case pj_binop_num_le:
+      predicate = ICmpInst::ICMP_SLE;
+      break;
+    case pj_binop_num_gt:
+      predicate = ICmpInst::ICMP_SGT;
+      break;
+    case pj_binop_num_ge:
+      predicate = ICmpInst::ICMP_SGE;
+      break;
+    default:
+      return EmitValue::invalid();
+    }
+
+    res = MY_CXT.builder.CreateICmp(predicate, lvv, rvv);
+  }
+
+  return EmitValue(res, &INT_T);
+}
+
+EmitValue
 Emitter::_jit_emit_logop(PerlJIT::AST::Binop *ast, State *l, State *r, const PerlJIT::AST::Type *type)
 {
   Value *res = pa.alloc_variable(_map_to_llvm_type(type), "logop_res");
@@ -836,6 +909,8 @@ Emitter::_to_type_value(Value *value, const PerlJIT::AST::Type *type, const Perl
     return value;
   if (target->equals(&DOUBLE_T))
     return _to_nv_value(value, type);
+  if (target->equals(&INT_T))
+    return _to_iv_value(value, type);
 
   set_error("Handle more coercion cases");
   return NULL;
