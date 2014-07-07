@@ -771,6 +771,12 @@ Emitter::_jit_emit_const(PerlJIT::AST::Constant *ast, const PerlJIT::AST::Type *
 }
 
 Value *
+Emitter::_bool_to_scalar_value(Value *value)
+{
+  return MY_CXT.builder.CreateSelect(value, pa.emit_PL_sv_yes(), pa.emit_PL_sv_no());
+}
+
+Value *
 Emitter::_to_nv_value(Value *value, const PerlJIT::AST::Type *type)
 {
   if (type->equals(&DOUBLE_T))

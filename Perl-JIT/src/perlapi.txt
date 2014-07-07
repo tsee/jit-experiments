@@ -62,6 +62,14 @@ void emit_save_clearsv(SV **svp) (thx) {
   save_clearsv(svp);
 }
 
+SV *emit_PL_sv_yes() (thx) {
+  return &PL_sv_yes;
+}
+
+SV *emit_PL_sv_no() (thx) {
+  return &PL_sv_no;
+}
+
 void emit_pp_nextstate(OP *cop) (thx) {
     PL_curcop = cop;
     TAINT_NOT;		/* Each statement is presumed innocent */

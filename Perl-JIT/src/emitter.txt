@@ -31,6 +31,15 @@ emit_llvm: {
   $$ = _jit_emit_optree(state);
 }
 
+name: Expr
+match: BOOL_Expr @ $OP
+emit_llvm: {
+  $$ = EmitValue(_bool_to_scalar_value(_($OP).value), &SCALAR_T);
+}
+
+name: INT_Expr
+match: BOOL_Expr
+
 # Statements
 
 name: Expr
