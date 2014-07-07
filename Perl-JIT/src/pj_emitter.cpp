@@ -561,11 +561,15 @@ Emitter::_jit_emit_return(Term *ast, pj_op_context context, Value *value, const 
   }
     break;
   case pj_opc_unop:
-    if (!op->get_perl_op()->op_targ) {
-      set_error("Unary OP without target");
-      return false;
+    if (!op->get_perl_op()->op_targ && type->equals(&SCALAR_T)) {
+      res = value;
+    } else {
+      if (!op->get_perl_op()->op_targ) {
+        set_error("Unary OP without target");
+        return false;
+      }
+      res = pa.emit_OP_targ();
     }
-    res = pa.emit_OP_targ();
     break;
   default:
     res = pa.emit_sv_newmortal();
