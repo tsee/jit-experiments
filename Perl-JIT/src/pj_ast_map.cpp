@@ -34,6 +34,17 @@ PerlJIT::map_codegen_arg(CodegenNode node, int functor_id, int index)
     }
   }
     break;
+  case Codegen::AstListop: {
+    PerlJIT::AST::Listop *ast = static_cast<PerlJIT::AST::Listop *>(node.term);
+
+    switch (index) {
+    case 0:
+      return CodegenNode(ast->get_op_type());
+    default:
+      return CodegenNode(ast->kids[index - 1]);
+    }
+  }
+    break;
   case Codegen::AstConst:
   case Codegen::AstLexicalDeclaration:
   case Codegen::AstLexical: {

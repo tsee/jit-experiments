@@ -781,6 +781,32 @@ Emitter::_jit_emit_logop(PerlJIT::AST::Binop *ast, State *l, State *r, const Per
 }
 
 EmitValue
+Emitter::_jit_emit_ternary(PerlJIT::AST::Listop *ast, const EmitValue &condition, State *l, State *r, const PerlJIT::AST::Type *type)
+{
+  Value *res = pa.alloc_variable(_map_to_llvm_type(type), "ternop_res");
+  BasicBlock *lhs = _create_basic_block(), *rhs = _create_basic_block(), *end = _create_basic_block();
+  Value *cond = _to_bool_value(condition.value, condition.type);
+
+  MY_CXT.builder.CreateCondBr(cond, lhs, rhs);
+
+  // evaluate LHS
+  MY_CXT.builder.SetInsertPoint(lhs);
+  reduce(l);
+  MY_CXT.builder.CreateStore(_to_type_value(l->result.value, l->result.type, type), res);
+  MY_CXT.builder.CreateBr(end);
+
+  // evaluate RHS
+  MY_CXT.builder.SetInsertPoint(rhs);
+  reduce(r);
+  MY_CXT.builder.CreateStore(_to_type_value(r->result.value, r->result.type, type), res);
+  MY_CXT.builder.CreateBr(end);
+
+  MY_CXT.builder.SetInsertPoint(end);
+
+  return EmitValue(MY_CXT.builder.CreateLoad(res), type);
+}
+
+EmitValue
 Emitter::_jit_emit_statement(PerlJIT::AST::Statement *ast, State *expression)
 {
   emitter_states.back().subtrees.push_back(ast->get_perl_op());

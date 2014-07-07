@@ -255,3 +255,33 @@ delay: $A, $B
 emit_llvm: {
   $$ = _jit_emit_logop((Binop *) $OP.term, __($A), __($B), &SCALAR_T);
 }
+
+# Ternary
+
+name: DOUBLE_Expr
+match: AstListop(pj_listop_ternary, Expr @ $COND, DOUBLE_Expr @ $A, Expr @ $B) @ $OP
+match: AstListop(pj_listop_ternary, Expr @ $COND, Expr @ $A, DOUBLE_Expr @ $B) @ $OP
+delay: $A, $B
+emit_llvm: {
+  $$ = _jit_emit_ternary((Listop *) $OP.term, _($COND), __($A), __($B), &DOUBLE_T);
+}
+
+name: INT_Expr
+match: AstListop(pj_listop_ternary, Expr @ $COND, INT_Expr @ $A, Expr @ $B) @ $OP
+match: AstListop(pj_listop_ternary, Expr @ $COND, Expr @ $A, INT_Expr @ $B) @ $OP
+delay: $A, $B
+emit_llvm: {
+  $$ = _jit_emit_ternary((Listop *) $OP.term, _($COND), __($A), __($B), &INT_T);
+}
+
+name: OPAQUE_Expr
+match: AstListop(pj_listop_ternary, Expr @ $COND, OPAQUE_Expr, Expr)
+match: AstListop(pj_listop_ternary, Expr @ $COND, Expr, OPAQUE_Expr)
+match: AstListop(pj_listop_ternary, Expr @ $COND, OPAQUE_Expr, OPAQUE_Expr)
+
+name: Expr
+match: AstListop(pj_listop_ternary, Expr @ $COND, Expr @ $A, Expr @ $B) @ $OP
+delay: $A, $B
+emit_llvm: {
+  $$ = _jit_emit_ternary((Listop *) $OP.term, _($COND), __($A), __($B), &SCALAR_T);
+}
