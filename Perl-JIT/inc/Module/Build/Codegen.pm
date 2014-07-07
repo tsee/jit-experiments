@@ -79,7 +79,7 @@ sub _parse_rules {
         local $/;
         readline $fh;
     };
-    my (@rules, %names, %constants, %defines, $rule);
+    my (@rules, %names, %constants, %arity, %defines, $rule);
     my $defines_rx = '(?!a)a'; # match nothing
 
     local $_ = $text;
@@ -143,7 +143,7 @@ sub _parse_rules {
             $rule->{delay} = _parse_delay($tags->{delay}->[0]);
         }
         for my $value (@{$tags->{match}}) {
-            push @{$rule->{match}}, _parse_match(\%names, \%constants, $rule->{delay}, $value);
+            push @{$rule->{match}}, _parse_match(\%names, \%constants, \%arity, $rule->{delay}, $value);
         }
         if ($tags->{weight}) {
             die "Multiple 'weight' tags in rule" if @{$tags->{weight}} > 1;
@@ -161,11 +161,23 @@ sub _parse_rules {
     }
 
     # print Data::Dumper::Dumper(\@rules);
-    return (\@rules, \%constants);
+    return (\@rules, \%constants, \%arity);
+}
+
+sub _set_listop_arity {
+    my ($rule, $arity) = @_;
+
+    return unless ref $rule->{match} && $rule->{match}[0] eq 'AstListop';
+    my $name = $rule->{match}[1]{match}[0] =~ s/^Const_//r;
+    my $a = @{$rule->{match}} - 1;
+
+    die "All list operators must match on the same number of arguments"
+        if exists $arity->{$name} && $arity->{$name} != $a;
+    $arity->{$name} = $a;
 }
 
 sub _parse_match {
-    my ($names, $constants, $delay, $value) = @_;
+    my ($names, $constants, $arity, $delay, $value) = @_;
     my (@rules, @consts, %args);
 
     if ($value =~ m{^\s*(\w+)\s*$} && exists $names->{$1}) {
@@ -199,6 +211,7 @@ sub _parse_match {
         } elsif ($value =~ s{^\)\s*}{}) {
             die "Too many closed parentheses" if @rules == 1;
             my $rule = pop @rules;
+            _set_listop_arity($rule, $arity);
             push @{$rules[-1]{match}}, $rule;
         } elsif ($value =~ s{^,\s*}{}) {
             my $rule = pop @rules;
@@ -221,6 +234,7 @@ sub _parse_match {
         $expr->{delay} = 1;
     }
 
+    _set_listop_arity($rules[0], $arity);
     return {
         rule    => $rules[0],
         args    => \%args,
@@ -241,14 +255,15 @@ sub _parse_delay {
 }
 
 sub _add_rules {
-    my ($burs, $rules, $constants) = @_;
-    my (@unops, @binops, $ast_map_ops);
+    my ($burs, $rules, $constants, $arity) = @_;
+    my (@unops, @binops, @listops, $ast_map_ops);
 
     for my $const (sort keys %$constants) {
         $burs->define_functor($constants->{$const}, $const);
 
         push @unops, $const if $const =~ /^pj_unop_/;
         push @binops, $const if $const =~ /^pj_binop_/;
+        push @listops, $const if $const =~ /^pj_listop_/;
     }
 
     if (@unops) {
@@ -260,6 +275,18 @@ sub _add_rules {
         $ast_map_ops .= join "\n",
             (map "      case $_:", @binops),
                  "        return MappedFunctor(Codegen::AstBinop, 3);\n";
+    }
+    if (@listops) {
+        my %arity_map;
+
+        push @{$arity_map{$arity->{$_}}}, $_
+            for keys %$arity;
+
+        for my $a (sort keys %arity_map) {
+            $ast_map_ops .= join "\n",
+                (map "      case $_:", @{$arity_map{$a}}),
+                     "        return MappedFunctor(Codegen::AstListop, $a);\n";
+        }
     }
 
     for my $rule (@$rules) {
