@@ -113,6 +113,7 @@ namespace PerlJIT {
     {
       unsigned int otype = o->op_type;
       bool astify_kid = false;
+      bool astify_null = false;
 
       // handles top-level do{} blocks and if()/unless() statements; can
       // be removed when removing the rest of the code handling statement
@@ -121,6 +122,7 @@ namespace PerlJIT {
         unsigned int ktype = cUNOPo->op_first->op_type;
 
         astify_kid = ktype == OP_SCOPE;
+        astify_null = astify_kid || o->op_targ == OP_CONCAT;
       }
 
       if (otype == OP_NEXTSTATE) {
@@ -139,10 +141,13 @@ namespace PerlJIT {
         return VISIT_SKIP;
       }
 
-      PJ_DEBUG_1("Considering %s\n", OP_NAME(o));
+      PJ_DEBUG_3("Considering %s%s%s\n",
+                 OP_NAME(o),
+                 (o->op_type == OP_NULL ? " which used to be " : ""),
+                 (o->op_type == OP_NULL ? PL_op_name[o->op_targ] : "") );
 
       /* Attempt JIT if the right OP type. Don't recurse if so. */
-      if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) || astify_kid) {
+      if (IS_AST_COMPATIBLE_ROOT_OP_TYPE(otype) || astify_null) {
         OP *source = astify_kid ? cUNOPo->op_first : o;
         PerlJIT::AST::Term *ast = pj_attempt_jit(aTHX_ source, *this);
         if (ast) {
@@ -1138,6 +1143,11 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
     }
 
   case OP_NULL: {
+      PJ_DEBUG_1("OP NULL that used to be %s\n", PL_op_name[o->op_targ]);
+      // Most of the cases in this block are about things that were
+      // optimized away/transformed and need special treatment.
+      // Other cases are about things that have been nulled and
+      // can be skipped across.
       retval = NULL;
       const unsigned int targ_otype = (unsigned int)o->op_targ;
       MAKE_DEFAULT_KID_VECTOR
@@ -1152,6 +1162,28 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
       else if (targ_otype == OP_LIST) {
         retval = new AST::List(kid_terms);
       }
+      // Handle the rcatline optimization for "$x .= <FOO>"
+      else if (targ_otype == OP_CONCAT
+               && kid_terms.size() == 2
+               && kid_terms[1]->get_type() == pj_ttype_op
+               && ((AST::Unop *)kid_terms[1])->get_op_type() == pj_unop_rcatline)
+      {
+        PJ_DEBUG("Found concat&readline-turned-rcatline.\n");
+        retval = kid_terms[1];
+        AST::Unop *rcatl = (AST::Unop *)kid_terms[1];
+        assert(rcatl->kids.size() == 1);
+        assert(rcatl->kids[0] == NULL);
+        rcatl->kids.clear();
+        rcatl->kids.push_back(kid_terms[0]);
+      }
+      // Inner part of "$x .= <FOO>"
+      else if (targ_otype == OP_READLINE
+               && cUNOPo->op_first->op_type == OP_RCATLINE)
+      {
+        PJ_DEBUG("Found inner part of rcatline optimization.\n");
+        retval = kid_terms[0];
+      }
+      // Handle the "reverse sort" case where "reverse" becomes a "sort" flag
       else if (targ_otype == OP_REVERSE
                && kid_terms.size() == 1
                && kid_terms[0]->get_type() == pj_ttype_sort)
@@ -1160,7 +1192,7 @@ pj_build_ast(pTHX_ OP *o, OPTreeJITCandidateFinder &visitor)
         // (and maybe other things? Certainly also in some foreach
         // special case, which is handled elsewhere, and likely also
         // for ranges)
-        PJ_DEBUG("Identified compiled-out reversal");
+        PJ_DEBUG("Identified compiled-out reversal.\n");
         retval = kid_terms[0];
       }
       else if (kid_terms.size() == 1) {

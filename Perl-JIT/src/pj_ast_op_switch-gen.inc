@@ -220,6 +220,7 @@
   || (int)otype == OP_PUSH \
   || (int)otype == OP_QUOTEMETA \
   || (int)otype == OP_RAND \
+  || (int)otype == OP_RCATLINE \
   || (int)otype == OP_REACH \
   || (int)otype == OP_READ \
   || (int)otype == OP_READDIR \
@@ -551,6 +552,7 @@
   || (int)otype == OP_PUSH \
   || (int)otype == OP_QUOTEMETA \
   || (int)otype == OP_RAND \
+  || (int)otype == OP_RCATLINE \
   || (int)otype == OP_REACH \
   || (int)otype == OP_READ \
   || (int)otype == OP_READDIR \

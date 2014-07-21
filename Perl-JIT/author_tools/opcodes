@@ -185,11 +185,12 @@ pj_unop_getsockname,	pj_opc_unop,	getsockname(),	OP_GETSOCKNAME,	0,	emit,	Any
 pj_unop_getpeername,	pj_opc_unop,	getpeername(),	OP_GETPEERNAME,	0,	emit,	Any
 pj_unop_getpgrp,	pj_opc_unop,	getpgrp(),	OP_GETPGRP,	KIDS_OPTIONAL,	emit,	Integer
 pj_unop_lock,		pj_opc_unop,	lock(),		OP_LOCK,	0,	emit,	Any
-pj_unop_readline,	pj_opc_unop,	readlone(),	OP_READLINE,	KIDS_OPTIONAL,	emit,	Any
+pj_unop_readline,	pj_opc_unop,	readline(),	OP_READLINE,	KIDS_OPTIONAL,	emit,	Any
 pj_unop_require,	pj_opc_unop,	require(),	OP_REQUIRE,	KIDS_OPTIONAL,	emit,	Any
 pj_unop_dofile,		pj_opc_unop,	do 'file',	OP_DOFILE,	0,	emit,	Any
 pj_unop_method,		pj_opc_unop,	dyn meth lkup,	OP_METHOD,	0,	emit,	Any # always CV?
 pj_unop_default,	pj_opc_unop,	default{},	OP_LEAVEWHEN,	0,	,	Scalar=Any List=List[Any] # OP_LEAVEWHEN assigned to when(){} also
+pj_unop_rcatline,	pj_opc_unop,	rcatline,	OP_RCATLINE,	KIDS_OPTIONAL,	emit,	String
 # Not Unops. Handled as separate Term type.
 #pj_unop_next,		pj_opc_unop,	next,		OP_NEXT,	KIDS_OPTIONAL,	,	Any # really never returns...
 #pj_unop_last,		pj_opc_unop,	last,		OP_LAST,	KIDS_OPTIONAL,	,	Any # really never returns...
