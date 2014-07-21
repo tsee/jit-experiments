@@ -72,6 +72,9 @@ sub ACTION_code {
 
 sub ACTION_perlapi {
     my ($self) = shift;
+
+    $self->log_info("Running code generation for Perl API wrappers.\n");
+
     my $source = do {
         local $/;
         open my $fh, '<', 'src/perlapi.txt';
@@ -102,6 +105,8 @@ sub ACTION_perlapi {
 
 sub ACTION_codegen {
     my ($self) = @_;
+
+    $self->log_info("Running code generation for compiler.\n");
 
     $self->add_to_cleanup(
         'src/pj_codegen.h', 'src/pj_codegen.cpp', 'src/pj_rules.cpp',
