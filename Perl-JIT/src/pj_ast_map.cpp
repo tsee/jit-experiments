@@ -89,6 +89,9 @@ PerlJIT::map_codegen_functor(CodegenNode node)
       return MappedFunctor(Codegen::TypeAny, 0);
     } else if (type->equals(&OPAQUE_T)) {
       return MappedFunctor(Codegen::TypeOpaque, 0);
+    } else if (type->is_composite()) {
+      // for now map composite types to unspecified types
+      return MappedFunctor(Codegen::TypeAny, 0);
     }
 
     PJ_ABORT("Missing mapping for type in map_codegen_functor\n");

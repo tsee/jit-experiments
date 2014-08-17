@@ -59,6 +59,12 @@ emit_llvm: {
   $$ = _jit_emit_root_optree(__($O));
 }
 
+name: Expr
+match: AstStatement(OPAQUE_Expr)
+emit_llvm: {
+  $$ = EmitValue(OPTREE, &SCALAR_T);
+}
+
 # Constants
 
 name: RootExpr
@@ -255,6 +261,32 @@ delay: $A, $B
 emit_llvm: {
   $$ = _jit_emit_logop((Binop *) $OP.term, __($A), __($B), &SCALAR_T);
 }
+
+# Assignment
+
+name: Expr
+match: AstBinop(pj_binop_sassign, Expr @ $A, Optree @ $B) @ $OP
+delay: $A
+emit_llvm: {
+  if (((Binop *) $OP.term)->is_synthesized_assignment()) {
+    $$ = EmitValue(OPTREE, &SCALAR_T);
+  } else {
+    reduce(__($A));
+    // when matching Optree directly this is required (in other cases
+    // it's the Optree -> Expr step that does the emission
+    $$ = _jit_emit_sassign(_($A), _jit_emit_optree(__($B)));
+  }
+}
+
+name: Expr
+match: AstBinop(pj_binop_sassign, Expr @ $A, Expr @ $B)
+emit_llvm: {
+  $$ = _jit_emit_sassign(_($A), _($B));
+}
+
+name: OPAQUE_Expr
+match: AstBinop(pj_binop_sassign, OPAQUE_Expr, Expr)
+match: AstBinop(pj_binop_sassign, Expr, OPAQUE_Expr)
 
 # Ternary
 

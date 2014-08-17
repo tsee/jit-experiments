@@ -652,6 +652,7 @@ Emitter::_jit_emit_binop(Binop *ast, const EmitValue &lv, const EmitValue &rv, c
     return EmitValue::invalid();
 
   Value *res = NULL;
+  const PerlJIT::AST::Type *res_type = &DOUBLE_T;
 
   switch (ast->get_op_type()) {
   case pj_binop_add:
@@ -673,9 +674,19 @@ Emitter::_jit_emit_binop(Binop *ast, const EmitValue &lv, const EmitValue &rv, c
     if (!_jit_assign_sv(lv.value, res, &DOUBLE_T))
       return EmitValue::invalid();
     res = lv.value;
+    res_type = lv.type;
   }
 
-  return EmitValue(res, &DOUBLE_T);
+  return EmitValue(res, res_type);
+}
+
+EmitValue
+Emitter::_jit_emit_sassign(const EmitValue &lv, const EmitValue &rv)
+{
+  if (!_jit_assign_sv(lv.value, rv.value, rv.type))
+    return EmitValue::invalid();
+
+  return lv;
 }
 
 EmitValue
