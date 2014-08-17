@@ -64,6 +64,7 @@ my $TEMPLATE_CPP = <<'EOT';
 #define PJ_ABORT(msg) { fprintf(stderr, msg); abort(); }
 #define PJ_ABORT1(msg, arg1) { fprintf(stderr, msg, arg1); abort(); }
 #define PJ_ABORT2(msg, arg1, arg2) { fprintf(stderr, msg, arg1, arg2); abort(); }
+#define PJ_ABORT3(msg, arg1, arg2, arg3) { fprintf(stderr, msg, arg1, arg2, arg3); abort(); }
 
 $IMPLEMENTATION_HEADER
 
@@ -218,7 +219,7 @@ $NAME::label($NODE_TYPE node)
             const StateMap &state_map = op_map[i];
             StateMap::const_iterator rep_state = state_map.find(arg_state->label);
             if (rep_state == state_map.end())
-                PJ_ABORT1("Could not find representative state for %d\n", arg_state->label);
+                PJ_ABORT3("Could not find the representative state for label %d (functor=%d index=%d)\n", arg_state->label, functor_id, i);
 
             state->args.push_back(arg_state);
             arg_labels.push_back(rep_state->second);
