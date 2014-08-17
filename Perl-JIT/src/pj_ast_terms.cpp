@@ -762,7 +762,9 @@ OP *Term::start_op()
 {
   OP *o = perl_op;
   while (1) {
-    if (o->op_flags & OPf_KIDS)
+    if (o->op_flags & OPf_KIDS &&
+        // do not recurse into the list op with JITted code
+        (o->op_type != OP_LIST || o->op_private != 1))
       o = cUNOPo->op_first;
     else
       return o;
