@@ -22,6 +22,21 @@ void emit_SvSetSV_nosteal(SV *dsv, SV *ssv) (thx) {
   SvSetSV_nosteal(dsv, ssv);
 }
 
+SV *emit_newSVavdefelem(AV *av, I32 idx, char extendible) (thx) {
+#if PERL_VERSION > 20
+  return newSVavdefelem(av, idx, extendible);
+#else
+  SV *lv = sv_newmortal();
+  sv_upgrade(lv, SVt_PVLV);
+  LvTYPE(lv) = 'y';
+  sv_magic(lv, NULL, PERL_MAGIC_defelem, NULL, 0);
+  LvTARG(lv) = SvREFCNT_inc_simple(av);
+  LvTARGOFF(lv) = idx;
+  LvTARGLEN(lv) = (extendible != 0) ? 1 : (STRLEN)UV_MAX;
+  return lv;
+#endif
+}
+
 SV *emit_sv_newmortal() (thx) {
   return sv_newmortal();
 }
@@ -62,6 +77,14 @@ void emit_save_clearsv(SV **svp) (thx) {
   save_clearsv(svp);
 }
 
+void emit_save_aelem(AV *av, I32 idx, SV **svp) (thx) {
+  save_aelem(av, idx, svp);
+}
+
+void emit_SAVEADELETE(AV *av, I32 idx) (thx) {
+  SAVEADELETE(av, idx);
+}
+
 SV *emit_PL_sv_yes() (thx) {
   return &PL_sv_yes;
 }
@@ -70,10 +93,46 @@ SV *emit_PL_sv_no() (thx) {
   return &PL_sv_no;
 }
 
+SV *emit_PL_sv_undef() (thx) {
+  return &PL_sv_undef;
+}
+
 void emit_pp_nextstate(OP *cop) (thx) {
     PL_curcop = cop;
     TAINT_NOT;		/* Each statement is presumed innocent */
     PL_stack_sp = PL_stack_base + cxstack[cxstack_ix].blk_oldsp;
     FREETMPS;
     PERL_ASYNC_CHECK();
+}
+
+SV **emit_av_fetch(AV *array, I32 key, I32 lval) (thx) {
+  return av_fetch(array, key, lval);
+}
+
+bool emit_av_exists(AV *array, I32 key) (thx) {
+  return av_exists(array, key);
+}
+
+I32 emit_av_top_index(AV *array) (thx) {
+  return av_top_index(array);
+}
+
+void emit_mg_get(SV *sv) (thx) {
+  mg_get(sv);
+}
+
+int emit_SvRMAGICAL(SV *sv) (thx) {
+  return SvRMAGICAL(sv);
+}
+
+int emit_SvGMAGICAL(SV *sv) (thx) {
+  return SvGMAGICAL(sv);
+}
+
+const char *emit_PL_no_aelem() (thx) {
+  return PL_no_aelem;
+}
+
+SV *emit_vivify_ref(SV *sv, U32 to_what) (thx) {
+  return vivify_ref(sv, to_what);
 }

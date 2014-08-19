@@ -28,20 +28,27 @@ PerlAPI::PerlAPI(Module *_module, IRBuilder<> *_builder, ExecutionEngine *ee) :
   llvm::Type *void_type = Type::getVoidTy(module->getContext());
 
   iv_type = llvm::Type::getIntNTy(module->getContext(), sizeof(IV) * 8);
+  i32_type = llvm::Type::getIntNTy(module->getContext(), sizeof(I32) * 8);
   uv_type = llvm::Type::getIntNTy(module->getContext(), sizeof(UV) * 8);
   nv_type = llvm::Type::getDoubleTy(module->getContext());
+  bool_type = llvm::Type::getIntNTy(module->getContext(), 1);
 
   ptr_op_type = module->getTypeByName("struct.op")->getPointerTo();
   interpreter_type = module->getTypeByName("struct.interpreter")->getPointerTo();
   ptr_sv_type = module->getTypeByName("struct.sv")->getPointerTo();
+  ptr_av_type = module->getTypeByName("struct.av")->getPointerTo();
+  ptr_hv_type = module->getTypeByName("struct.hv")->getPointerTo();
 
   ptr_type = IntegerType::get(module->getContext(), 8)->getPointerTo();
   ptr_ptr_sv_type = ptr_sv_type->getPointerTo();
-  pp_type = function_type(ptr_op_type, jit_tTHX_ NULL);
+  pp_type = function_type(false, ptr_op_type, jit_tTHX_ NULL);
 
   // TODO autogenerate
+  pa_croak = Function::Create(
+      function_type(true, void_type, jit_tTHX_ ptr_type, NULL),
+      GlobalValue::ExternalLinkage, "Perl_croak", module);
   pa_call_runloop = Function::Create(
-      function_type(void_type, jit_tTHX_ ptr_op_type, NULL),
+      function_type(false, void_type, jit_tTHX_ ptr_op_type, NULL),
       GlobalValue::ExternalLinkage, "_pa_call_runloop", module);
   ee->addGlobalMapping(pa_call_runloop, (void *) _pa_call_runloop);
 }
@@ -72,6 +79,24 @@ PerlAPI::emit_nextstate(OP *op)
   );
 }
 
+void
+PerlAPI::emit_croak(Value *format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  std::vector<Value *> params;
+
+  params.push_back(jit_aTHX);
+  params.push_back(format);
+
+  for (llvm::Value *v; (v = va_arg(args, llvm::Value*)); )
+    params.push_back(v);
+
+  va_end(args);
+
+  builder->CreateCall(pa_croak, params);
+}
+
 Value *
 PerlAPI::emit_pad_sv(UV padix)
 {
@@ -91,9 +116,27 @@ PerlAPI::IV_constant(IV value)
 }
 
 Constant *
+PerlAPI::I32_constant(I32 value)
+{
+  return ConstantInt::get(module->getContext(), APInt(sizeof(I32) * 8, value, true));
+}
+
+Constant *
+PerlAPI::BOOL_constant(bool value)
+{
+  return ConstantInt::get(module->getContext(), APInt(sizeof(bool) * 8, value, false));
+}
+
+Constant *
 PerlAPI::UV_constant(UV value)
 {
   return ConstantInt::get(module->getContext(), APInt(sizeof(UV) * 8, value, false));
+}
+
+Constant *
+PerlAPI::U32_constant(UV value)
+{
+  return ConstantInt::get(module->getContext(), APInt(sizeof(U32) * 8, value, false));
 }
 
 Constant *
@@ -114,7 +157,7 @@ PerlAPI::interp_value(unsigned int offset, llvm::Type *type, const llvm::Twine& 
 }
 
 llvm::FunctionType *
-PerlAPI::function_type(llvm::Type *ret, ...)
+PerlAPI::function_type(bool is_vararg, llvm::Type *ret, ...)
 {
   va_list args;
   va_start(args, ret);
@@ -125,5 +168,5 @@ PerlAPI::function_type(llvm::Type *ret, ...)
 
   va_end(args);
 
-  return FunctionType::get(ret, types, false);
+  return FunctionType::get(ret, types, is_vararg);
 }

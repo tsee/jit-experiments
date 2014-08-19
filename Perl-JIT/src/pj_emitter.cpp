@@ -540,7 +540,8 @@ Emitter::_jit_emit_return(Term *ast, pj_op_context context, Value *value, const 
     // the assumption here is that the OPf_STACKED assignment
     // has been handled by _jit_emit below, and here we only need
     // to handle cases like '$x = $y += 7'
-    if (op->get_op_type() == pj_binop_sassign) {
+    pj_op_type op_type = op->get_op_type();
+    if (op_type == pj_binop_sassign || op_type == pj_binop_aelem) {
       if (type->equals(&SCALAR_T)) {
         res = value;
       } else {
@@ -688,6 +689,110 @@ Emitter::_jit_emit_sassign(const EmitValue &lv, const EmitValue &rv)
     return EmitValue::invalid();
 
   return lv;
+}
+
+EmitValue
+Emitter::_jit_emit_array_fetch(const EmitValue &arr, const EmitValue &idx, bool is_lvalue, bool is_deref, bool is_deferred, bool is_localizing)
+{
+  Value *av = MY_CXT.builder.CreatePointerCast(arr.value, pa.AV_ptr_type());
+  Value *index = _to_i32_value(idx.value, idx.type);
+  Value *preeminent = NULL;
+
+  if (is_localizing)
+    preeminent = pa.emit_av_exists(av, index);
+
+  Value *svp = pa.emit_av_fetch(av, index, pa.I32_constant(is_lvalue && !is_deferred));
+  Value *result = pa.alloc_variable(pa.SV_ptr_type(), "av_elem");
+  BasicBlock *got_result = _create_basic_block();
+
+  // TODO when supporting lavlue subs, this becomes a runtime check
+  if (is_lvalue) {
+    // TODO PERL_MALLOC_WRAP
+    {
+      BasicBlock *is_null_sv = _create_basic_block(), *end = _create_basic_block();
+
+      // if (!svp || !*svp) {
+      MY_CXT.builder.CreateCondBr(
+        MY_CXT.builder.CreateOr(
+          MY_CXT.builder.CreateIsNull(svp),
+          MY_CXT.builder.CreateIsNull(MY_CXT.builder.CreateLoad(svp))
+        ),
+        is_null_sv,
+        end
+      );
+
+      // if() body
+      MY_CXT.builder.SetInsertPoint(is_null_sv);
+      if (!is_deferred) {
+        pa.emit_croak(pa.emit_PL_no_aelem(), index, NULL);
+        // dummy to preserve structure, croak does not return
+        MY_CXT.builder.CreateBr(end);
+      } else {
+        Value *len = pa.emit_av_top_index(av);
+        // adjusted_idx = elem < 0 && len + elem >= 0 ? len + elem : elem
+        Value *adjusted_idx = MY_CXT.builder.CreateSelect(
+          MY_CXT.builder.CreateAnd(
+            MY_CXT.builder.CreateICmpSLT(index, pa.I32_constant(0)),
+            MY_CXT.builder.CreateICmpSGE(
+              MY_CXT.builder.CreateAdd(len, index),
+              pa.I32_constant(0)
+            )
+          ),
+          MY_CXT.builder.CreateAdd(len, index),
+          index
+        );
+        MY_CXT.builder.CreateStore(pa.emit_newSVavdefelem(av, adjusted_idx, pa.BOOL_constant(1)), result);
+        MY_CXT.builder.CreateBr(got_result);
+      }
+      MY_CXT.builder.SetInsertPoint(end);
+    }
+
+    if (is_localizing) {
+      BasicBlock *is_preeminent = _create_basic_block(), *not_preeminent = _create_basic_block(), *end = _create_basic_block();
+
+      MY_CXT.builder.CreateCondBr(preeminent, is_preeminent, not_preeminent);
+
+      MY_CXT.builder.SetInsertPoint(is_preeminent);
+      pa.emit_save_aelem(av, index, svp);
+      MY_CXT.builder.CreateBr(end);
+
+      MY_CXT.builder.SetInsertPoint(not_preeminent);
+      pa.emit_SAVEADELETE(av, index);
+      MY_CXT.builder.CreateBr(end);
+
+      MY_CXT.builder.SetInsertPoint(end);
+    } else if (is_deref) {
+      MY_CXT.builder.CreateStore(pa.emit_vivify_ref(MY_CXT.builder.CreateLoad(svp), pa.U32_constant(OPpDEREF)), result);
+      MY_CXT.builder.CreateBr(got_result);
+    }
+  }
+
+  Value *svp_true = MY_CXT.builder.CreateIsNotNull(svp);
+  Value *sv = MY_CXT.builder.CreateSelect(svp_true, MY_CXT.builder.CreateLoad(svp), pa.emit_PL_sv_undef());
+
+  MY_CXT.builder.CreateStore(sv, result);
+
+  if (is_lvalue) {
+    BasicBlock *is_rmagical = _create_basic_block(), *is_gmagical = _create_basic_block(), *end = _create_basic_block();
+
+    MY_CXT.builder.CreateCondBr(MY_CXT.builder.CreateICmpNE(pa.emit_SvRMAGICAL(sv), pa.I32_constant(0)), is_rmagical, end);
+
+    MY_CXT.builder.SetInsertPoint(is_rmagical);
+    MY_CXT.builder.CreateCondBr(MY_CXT.builder.CreateICmpNE(pa.emit_SvGMAGICAL(sv), pa.I32_constant(0)), is_gmagical, end);
+
+    MY_CXT.builder.SetInsertPoint(is_gmagical);
+    pa.emit_mg_get(sv);
+    MY_CXT.builder.CreateBr(end);
+
+    MY_CXT.builder.SetInsertPoint(end);
+  }
+
+  MY_CXT.builder.CreateBr(got_result);
+
+  // return result value
+  MY_CXT.builder.SetInsertPoint(got_result);
+
+  return EmitValue(MY_CXT.builder.CreateLoad(result), &SCALAR_T);
 }
 
 EmitValue
@@ -915,12 +1020,24 @@ Emitter::_to_nv_value(Value *value, const PerlJIT::AST::Type *type)
 Value *
 Emitter::_to_iv_value(Value *value, const PerlJIT::AST::Type *type)
 {
+  return _to_int_value(value, type, pa.IV_type());
+}
+
+Value *
+Emitter::_to_i32_value(Value *value, const PerlJIT::AST::Type *type)
+{
+  return _to_int_value(value, type, pa.I32_type());
+}
+
+Value *
+Emitter::_to_int_value(Value *value, const PerlJIT::AST::Type *type, llvm::Type *llvm_type)
+{
   if (type->is_integer())
-    return value;
+    return MY_CXT.builder.CreateIntCast(value, llvm_type, true);
   if (type->is_numeric())
-    return MY_CXT.builder.CreateFPToSI(value, pa.IV_type());
+    return MY_CXT.builder.CreateFPToSI(value, llvm_type);
   if (type->equals(&SCALAR_T) || type->equals(&UNSPECIFIED_T))
-    return pa.emit_SvIV(value);
+    return MY_CXT.builder.CreateIntCast(pa.emit_SvIV(value), llvm_type, true);
 
   set_error("Handle more IV coercion cases");
   return NULL;

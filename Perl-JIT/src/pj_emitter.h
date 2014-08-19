@@ -47,6 +47,7 @@ namespace PerlJIT {
     EmitValue _jit_emit_num_comparison(PerlJIT::AST::Binop *ast, const EmitValue &lv, const EmitValue &rv, const PerlJIT::AST::Type *arg_type);
     EmitValue _jit_emit_logop(PerlJIT::AST::Binop *ast, State *l, State *r, const PerlJIT::AST::Type *type);
     EmitValue _jit_emit_sassign(const EmitValue &lv, const EmitValue &rv);
+    EmitValue _jit_emit_array_fetch(const EmitValue &arr, const EmitValue &idx, bool is_lvalue, bool is_deref, bool is_deferred, bool is_localizing);
 
     EmitValue _jit_emit_ternary(PerlJIT::AST::Listop *ast, const EmitValue &condition, State *l, State *r, const PerlJIT::AST::Type *type);
     EmitValue _jit_emit_unop(PerlJIT::AST::Unop *ast, const EmitValue &v, const PerlJIT::AST::Type *type);
@@ -63,6 +64,8 @@ namespace PerlJIT {
 
     llvm::Value *_to_nv_value(llvm::Value *value, const PerlJIT::AST::Type *type);
     llvm::Value *_to_iv_value(llvm::Value *value, const PerlJIT::AST::Type *type);
+    llvm::Value *_to_i32_value(llvm::Value *value, const PerlJIT::AST::Type *type);
+    llvm::Value *_to_int_value(llvm::Value *value, const PerlJIT::AST::Type *type, llvm::Type *llvm_type);
     llvm::Value *_to_bool_value(llvm::Value *value, const PerlJIT::AST::Type *type);
     llvm::Value *_bool_to_scalar_value(llvm::Value *value);
     llvm::Value *_to_type_value(llvm::Value *value, const PerlJIT::AST::Type *type, const PerlJIT::AST::Type *target);

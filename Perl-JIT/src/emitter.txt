@@ -288,6 +288,25 @@ name: OPAQUE_Expr
 match: AstBinop(pj_binop_sassign, OPAQUE_Expr, Expr)
 match: AstBinop(pj_binop_sassign, Expr, OPAQUE_Expr)
 
+# Array access
+
+name: Expr
+match: AstBinop(pj_binop_aelem, Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(pj_binop_aelem, Expr @ $A, OPAQUE_Expr @ $B) @ $OP
+match: AstBinop(pj_binop_aelem, OPAQUE_Expr @ $A, Expr @ $B) @ $OP
+match: AstBinop(pj_binop_aelem, OPAQUE_Expr @ $A, OPAQUE_Expr @ $B) @ $OP
+emit_llvm: {
+  OP *o = $OP.term->get_perl_op();
+  bool is_aelem = o->op_type == OP_AELEM;
+  // TODO does not handle OPpLVAL_MAYBE (lvaue sub return value)
+  bool is_lvalue = o->op_flags & OPf_MOD;
+  bool is_deferred = is_aelem ? o->op_private & OPpLVAL_DEFER : false;
+  bool is_localizing = is_aelem ? o->op_private & OPpLVAL_INTRO : false;
+  bool is_deref = is_aelem ? o->op_private & OPpDEREF : false;
+
+  $$ = _jit_emit_array_fetch(_($A), _($B), is_lvalue, is_deref, is_deferred, is_localizing);
+}
+
 # Ternary
 
 name: DOUBLE_Expr
