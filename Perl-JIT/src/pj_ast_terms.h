@@ -456,6 +456,8 @@ namespace PerlJIT {
               PerlJIT::AST::Term *cv_src,
               const std::vector<PerlJIT::AST::Term *> &args);
 
+      std::vector<PerlJIT::AST::Term *> get_kids() const;
+
       virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
         { return "Perl::JIT::AST::SubCall"; }

@@ -928,3 +928,13 @@ std::vector<PerlJIT::AST::Term *> ListTransformation::get_kids() const
 
   return kids;
 }
+
+std::vector<PerlJIT::AST::Term *> SubCall::get_kids() const
+{
+  std::vector<PerlJIT::AST::Term *> kids;
+
+  kids.insert(kids.end(), _arguments.begin(), _arguments.end());
+  kids.push_back(_cv_source);
+
+  return kids;
+}
