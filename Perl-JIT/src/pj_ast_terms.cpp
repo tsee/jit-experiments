@@ -919,7 +919,7 @@ std::vector<PerlJIT::AST::Term *> Foreach::get_kids() const
   return kids;
 }
 
-std::vector<PerlJIT::AST::Term *> ListTransformation::get_kids()
+std::vector<PerlJIT::AST::Term *> ListTransformation::get_kids() const
 {
   std::vector<PerlJIT::AST::Term *> kids;
 

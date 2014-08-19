@@ -427,7 +427,7 @@ namespace PerlJIT {
       Term *body;
       List *parameters;
 
-      std::vector<PerlJIT::AST::Term *> get_kids();
+      std::vector<PerlJIT::AST::Term *> get_kids() const;
 
       virtual void dump(int indent_lvl = 0) const;
       virtual const char *perl_class() const
