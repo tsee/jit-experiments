@@ -18,6 +18,7 @@ namespace PerlJIT {
 
     void emit_call_runloop(OP *op);
     void emit_nextstate(OP *op);
+    void emit_pp_unstack(bool leave);
     void emit_croak(llvm::Value *format, ...);
 
     llvm::Value *emit_pad_sv(UV padix);

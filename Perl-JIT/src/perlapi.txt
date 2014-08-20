@@ -105,6 +105,28 @@ void emit_pp_nextstate(OP *cop) (thx) {
     PERL_ASYNC_CHECK();
 }
 
+void emit_pp_enterloop() (thx) {
+  // enterloop only uses PL_op to return op_next, which we ignore
+  Perl_pp_enterloop(aTHX);
+}
+
+void emit_pp_leaveloop() (thx) {
+  // leaveloop only uses PL_op to return op_next, which we ignore
+  Perl_pp_leaveloop(aTHX);
+}
+
+void emit_pp_unstack_common() (thx) {
+  PERL_ASYNC_CHECK();
+  TAINT_NOT;
+  PL_stack_sp = PL_stack_base + cxstack[cxstack_ix].blk_oldsp;
+  FREETMPS;
+}
+
+void emit_pp_unstack_leave() (thx) {
+  I32 oldsave = PL_scopestack[PL_scopestack_ix - 1];
+  LEAVE_SCOPE(oldsave);
+}
+
 SV **emit_av_fetch(AV *array, I32 key, I32 lval) (thx) {
   return av_fetch(array, key, lval);
 }

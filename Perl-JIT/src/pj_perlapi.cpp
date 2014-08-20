@@ -80,6 +80,14 @@ PerlAPI::emit_nextstate(OP *op)
 }
 
 void
+PerlAPI::emit_pp_unstack(bool leave)
+{
+  emit_pp_unstack_common();
+  if (leave)
+    emit_pp_unstack_leave();
+}
+
+void
 PerlAPI::emit_croak(Value *format, ...)
 {
   va_list args;

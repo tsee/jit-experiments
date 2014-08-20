@@ -336,3 +336,12 @@ delay: $A, $B
 emit_llvm: {
   $$ = _jit_emit_ternary((Listop *) $OP.term, _($COND), __($A), __($B), &SCALAR_T);
 }
+
+# C-style for
+
+name: Expr
+match: AstFor(Expr @ $I, Expr @ $C, Expr @ $S, Expr @ $B) @ $OP
+delay: $I, $C, $S, $B
+emit_llvm: {
+  $$ = _jit_emit_for((For *) $OP.term, __($I), __($C), __($S), __($B));
+}

@@ -399,7 +399,7 @@ Emitter::_generate_current_function(Term *root, const EmitValue &value)
 
   op->op_ppaddr = (OP *(*)(pTHX)) execution_engine->getPointerToFunction(f);
   op->op_targ = root->get_perl_op()->op_targ;
-  op->op_next = _jit_find_op_next(root->get_perl_op());
+  op->op_next = _jit_find_op_next(root->last_op());
 
   emitter_states.pop_back();
   if (emitter_states.size()) {
@@ -931,6 +931,35 @@ Emitter::_jit_emit_statement(PerlJIT::AST::Statement *ast, State *expression)
   reduce(expression);
 
   return expression->result;
+}
+
+EmitValue
+Emitter::_jit_emit_for(PerlJIT::AST::For *ast, State *init, State *cond, State *step, State *body)
+{
+  if (ast->init->get_type() != pj_ttype_empty) {
+    reduce(init);
+    pa.emit_pp_unstack(false);
+  }
+
+  BasicBlock *loop = _create_basic_block(), *main = _create_basic_block(), *end = _create_basic_block();
+
+  pa.emit_pp_enterloop();
+  MY_CXT.builder.CreateBr(loop);
+
+  MY_CXT.builder.SetInsertPoint(loop);
+  reduce(cond);
+  MY_CXT.builder.CreateCondBr(_to_bool_value(cond->result.value, cond->result.type), main, end);
+
+  MY_CXT.builder.SetInsertPoint(main);
+  reduce(body);
+  reduce(step);
+  pa.emit_pp_unstack(true);
+  MY_CXT.builder.CreateBr(loop);
+
+  MY_CXT.builder.SetInsertPoint(end);
+  pa.emit_pp_leaveloop();
+
+  return EmitValue(pa.emit_PL_sv_undef(), &SCALAR_T);
 }
 
 EmitValue
