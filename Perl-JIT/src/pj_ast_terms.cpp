@@ -761,6 +761,12 @@ Type *Term::get_value_type() const
 OP *Term::start_op()
 {
   OP *o = perl_op;
+  if (!o) {
+    printf("Cannot find start_op of Term without (==NULL) perl_op!\n");
+    this->dump();
+    abort();
+  }
+
   while (1) {
     if (o->op_flags & OPf_KIDS &&
         // do not recurse into the list op with JITted code
